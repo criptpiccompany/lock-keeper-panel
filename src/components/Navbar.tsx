@@ -32,12 +32,12 @@ export function Navbar() {
 
   // Navigation items based on role
   const closerItems = [
-    { path: "/meu", label: "Meu Painel", icon: User },
+    { path: "/meu", label: "Minha Lista", icon: User },
     { path: "/painel", label: "Painel Geral", icon: LayoutGrid },
   ];
 
   const adminItems = [
-    { path: "/meu", label: "Meu Painel", icon: User },
+    { path: "/meu", label: "Minha Lista", icon: User },
     { path: "/dashboard", label: "Dashboard", icon: LayoutGrid },
     { path: "/diretorio", label: "Diretório", icon: Book },
     { path: "/auditoria", label: "Auditoria", icon: FileText },
