@@ -1,54 +1,60 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useStore } from "@/store/useStore";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Monitor,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  LayoutGrid,
   User,
   Book,
   FileText,
   Settings,
-  Users,
+  LogOut,
+  ChevronDown,
 } from "lucide-react";
-
-const navItems = [
-  { path: "/", label: "Telão", icon: Monitor },
-  { path: "/meu", label: "Meu Painel", icon: User },
-  { path: "/diretorio", label: "Diretório", icon: Book },
-  { path: "/auditoria", label: "Auditoria", icon: FileText },
-];
-
-const adminItems = [
-  { path: "/admin", label: "Admin", icon: Settings },
-];
 
 export function Navbar() {
   const location = useLocation();
-  const { currentUser, users, setCurrentUser } = useStore();
+  const navigate = useNavigate();
+  const { user, signOut, isAdmin } = useAuth();
 
-  const handleUserChange = (userId: string) => {
-    const user = users.find((u) => u.id === userId);
-    if (user) {
-      setCurrentUser(user);
-    }
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login');
   };
 
+  // Navigation items based on role
+  const closerItems = [
+    { path: "/meu", label: "Meu Painel", icon: User },
+    { path: "/painel", label: "Painel Geral", icon: LayoutGrid },
+  ];
+
+  const adminItems = [
+    { path: "/meu", label: "Meu Painel", icon: User },
+    { path: "/", label: "Dashboard", icon: LayoutGrid },
+    { path: "/diretorio", label: "Diretório", icon: Book },
+    { path: "/auditoria", label: "Auditoria", icon: FileText },
+    { path: "/admin", label: "Admin", icon: Settings },
+  ];
+
+  const navItems = isAdmin ? adminItems : closerItems;
+
   return (
-    <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="container flex h-14 items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-            <Monitor className="h-4 w-4 text-primary-foreground" />
+        <Link to={isAdmin ? "/" : "/meu"} className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <span className="text-sm font-bold text-primary-foreground">IB</span>
           </div>
-          <span className="font-bold text-lg tracking-tight">InfluBoard</span>
+          <span className="font-semibold text-base tracking-tight">InfluBoard</span>
         </Link>
 
         {/* Navigation Links */}
@@ -61,72 +67,53 @@ export function Navbar() {
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )}
               >
                 <Icon className="h-4 w-4" />
-                <span className="hidden md:inline">{item.label}</span>
+                <span className="hidden sm:inline">{item.label}</span>
               </Link>
             );
           })}
-          
-          {/* Admin link - only show if admin */}
-          {currentUser.role === "ADMIN" &&
-            adminItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={cn(
-                    "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-warning text-warning-foreground"
-                      : "text-warning/80 hover:text-warning hover:bg-warning/10"
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span className="hidden md:inline">{item.label}</span>
-                </Link>
-              );
-            })}
         </div>
 
-        {/* User Selector (for demo purposes) */}
-        <div className="flex items-center gap-3">
-          <Badge
-            variant="outline"
-            className={cn(
-              "text-xs",
-              currentUser.role === "ADMIN" ? "border-warning text-warning" : "border-primary text-primary"
-            )}
-          >
-            {currentUser.role}
-          </Badge>
-          
-          <Select value={currentUser.id} onValueChange={handleUserChange}>
-            <SelectTrigger className="w-[180px]">
-              <Users className="mr-2 h-4 w-4" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {users.map((user) => (
-                <SelectItem key={user.id} value={user.id}>
-                  <div className="flex items-center gap-2">
-                    <span>{user.nome}</span>
-                    <Badge variant="secondary" className="text-xs">
-                      {user.role}
-                    </Badge>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {/* User Menu */}
+        {user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted">
+                  <User className="h-3.5 w-3.5 text-muted-foreground" />
+                </div>
+                <span className="hidden sm:inline text-sm font-medium">{user.nome}</span>
+                <Badge 
+                  variant="outline" 
+                  className={cn(
+                    "text-xs ml-1",
+                    isAdmin ? "border-amber-300 text-amber-700 bg-amber-50" : "border-emerald-300 text-emerald-700 bg-emerald-50"
+                  )}
+                >
+                  {user.role}
+                </Badge>
+                <ChevronDown className="h-3 w-3 text-muted-foreground" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <div className="px-2 py-1.5">
+                <p className="text-sm font-medium">{user.nome}</p>
+                <p className="text-xs text-muted-foreground">{user.email}</p>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </nav>
   );

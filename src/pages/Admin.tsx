@@ -1,334 +1,130 @@
-import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ReasonModal } from "@/components/ReasonModal";
-import { useStore } from "@/store/useStore";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { formatDate, formatDateTime } from "@/lib/helpers";
-import {
-  Shield,
-  Settings,
-  Archive,
-  RefreshCw,
-  AlertTriangle,
-  User,
-  Calendar,
-  UserCog,
-} from "lucide-react";
+import { enrichInfluencer, formatDate } from "@/lib/helpers";
+import { InfluencerWithStatus } from "@/types";
+import { Settings, Archive, RefreshCw, AlertTriangle, Loader2 } from "lucide-react";
 
 export default function Admin() {
-  const { currentUser, getEnrichedInfluencers, users, archiveInfluencer, adminOverride } = useStore();
-  
-  // Redirect non-admins
-  if (currentUser.role !== "ADMIN") {
-    return <Navigate to="/" replace />;
-  }
-
-  const influencers = getEnrichedInfluencers();
-  const closers = users.filter((u) => u.role === "CLOSER");
-
-  // Archive state
-  const [selectedInfluencerArchive, setSelectedInfluencerArchive] = useState<string>("");
+  const { user } = useAuth();
+  const [influencers, setInfluencers] = useState<InfluencerWithStatus[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedId, setSelectedId] = useState("");
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
   const [archiveAction, setArchiveAction] = useState<"archive" | "unarchive">("archive");
 
-  // Override state
-  const [selectedInfluencerOverride, setSelectedInfluencerOverride] = useState<string>("");
-  const [newOwnerId, setNewOwnerId] = useState<string>("");
-  const [newDate, setNewDate] = useState<string>("");
-  const [overrideModalOpen, setOverrideModalOpen] = useState(false);
+  const fetchInfluencers = async () => {
+    const { data } = await supabase.from('influencers').select('*');
+    const enriched = (data || []).map(inf => enrichInfluencer({
+      id: inf.id, handle: inf.handle, ownerId: inf.owner_id, ownerNome: inf.owner_nome,
+      lastClosedAt: inf.last_closed_at, ativo: inf.ativo, notas: inf.notas || undefined
+    }));
+    setInfluencers(enriched);
+    setLoading(false);
+  };
 
-  const selectedForArchive = influencers.find((i) => i.id === selectedInfluencerArchive);
-  const selectedForOverride = influencers.find((i) => i.id === selectedInfluencerOverride);
+  useEffect(() => { fetchInfluencers(); }, []);
+
+  const selected = influencers.find(i => i.id === selectedId);
 
   const handleArchiveClick = (archive: boolean) => {
-    if (!selectedForArchive) return;
     setArchiveAction(archive ? "archive" : "unarchive");
     setArchiveModalOpen(true);
   };
 
-  const handleArchiveConfirm = (motivo: string) => {
-    if (!selectedForArchive) return;
-    archiveInfluencer(selectedForArchive.id, motivo, archiveAction === "archive");
-    toast.success(
-      archiveAction === "archive"
-        ? `${selectedForArchive.handle} foi arquivado`
-        : `${selectedForArchive.handle} foi desarquivado`
-    );
-    setSelectedInfluencerArchive("");
+  const handleArchiveConfirm = async (motivo: string) => {
+    if (!selected || !user) return;
+    
+    await supabase.from('influencers').update({ ativo: archiveAction !== "archive" }).eq('id', selected.id);
+    await supabase.from('close_events').insert({
+      influencer_id: selected.id, influencer_handle: selected.handle,
+      feito_por_id: user.id, feito_por_nome: user.nome,
+      feito_em: new Date().toISOString(), acao: 'ARQUIVAR',
+      motivo: `${archiveAction === "archive" ? "Arquivado" : "Desarquivado"}: ${motivo}`
+    });
+
+    toast.success(archiveAction === "archive" ? "Influenciador arquivado" : "Influenciador desarquivado");
+    setSelectedId("");
+    fetchInfluencers();
   };
 
-  const handleOverrideClick = () => {
-    if (!selectedForOverride) return;
-    if (!newOwnerId && !newDate) {
-      toast.error("Selecione pelo menos uma alteração (dono ou data)");
-      return;
-    }
-    setOverrideModalOpen(true);
-  };
-
-  const handleOverrideConfirm = (motivo: string) => {
-    if (!selectedForOverride) return;
-    
-    const ownerIdToSet = newOwnerId === "NONE" ? null : (newOwnerId || undefined);
-    const dateToSet = newDate ? new Date(newDate).toISOString() : undefined;
-    
-    adminOverride(
-      selectedForOverride.id,
-      ownerIdToSet !== undefined ? ownerIdToSet : selectedForOverride.ownerId,
-      dateToSet !== undefined ? dateToSet : selectedForOverride.lastClosedAt,
-      motivo
-    );
-    
-    toast.success(`Override aplicado em ${selectedForOverride.handle}`);
-    setSelectedInfluencerOverride("");
-    setNewOwnerId("");
-    setNewDate("");
-  };
+  if (loading) {
+    return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+  }
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="container py-6">
-          <div className="flex items-center gap-3">
-            <Settings className="h-8 w-8 text-warning" />
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Painel Administrativo</h1>
-              <p className="text-muted-foreground">
-                Gestão avançada de influenciadores (apenas admin)
-              </p>
-            </div>
-          </div>
+      <div className="border-b">
+        <div className="container py-8">
+          <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
+            <Settings className="h-6 w-6" />Painel Admin
+          </h1>
         </div>
       </div>
-
-      {/* Content */}
       <div className="container py-6">
-        <Alert className="mb-6 border-warning/50 bg-warning/5">
-          <AlertTriangle className="h-4 w-4 text-warning" />
-          <AlertTitle className="text-warning">Atenção</AlertTitle>
-          <AlertDescription>
-            Todas as ações realizadas neste painel são registradas no log de auditoria e não podem ser apagadas.
-            Use com responsabilidade.
-          </AlertDescription>
+        <Alert className="mb-6 border-amber-200 bg-amber-50">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertTitle className="text-amber-800">Atenção</AlertTitle>
+          <AlertDescription className="text-amber-700">Todas as ações são registradas no log de auditoria.</AlertDescription>
         </Alert>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Archive/Unarchive Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Archive className="h-5 w-5" />
-                Arquivar / Desarquivar
-              </CardTitle>
-              <CardDescription>
-                Arquive influenciadores inativos ou desarquive para reativar.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Selecionar Influenciador</Label>
-                <Select
-                  value={selectedInfluencerArchive}
-                  onValueChange={setSelectedInfluencerArchive}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Escolha um influenciador..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {influencers.map((inf) => (
-                      <SelectItem key={inf.id} value={inf.id}>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono">{inf.handle}</span>
-                          <StatusBadge status={inf.status} showIcon={false} />
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Archive className="h-5 w-5" />Arquivar/Desarquivar</CardTitle>
+            <CardDescription>Arquive influenciadores inativos</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Selecionar Influenciador</Label>
+              <Select value={selectedId} onValueChange={setSelectedId}>
+                <SelectTrigger><SelectValue placeholder="Escolha..." /></SelectTrigger>
+                <SelectContent>
+                  {influencers.map(inf => (
+                    <SelectItem key={inf.id} value={inf.id}>
+                      <div className="flex items-center gap-2">
+                        <span>{inf.handle}</span>
+                        <StatusBadge status={inf.status} showIcon={false} size="sm" />
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-              {selectedForArchive && (
-                <div className="rounded-lg border p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono font-medium">{selectedForArchive.handle}</span>
-                    <StatusBadge status={selectedForArchive.status} />
-                  </div>
-                  <div className="text-sm text-muted-foreground space-y-1">
-                    <p>Dono: {selectedForArchive.ownerNome || "Nenhum"}</p>
-                    <p>Último fechamento: {formatDateTime(selectedForArchive.lastClosedAt)}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    {selectedForArchive.status !== "ARQUIVADO" ? (
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => handleArchiveClick(true)}
-                      >
-                        <Archive className="mr-2 h-4 w-4" />
-                        Arquivar
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => handleArchiveClick(false)}
-                      >
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        Desarquivar
-                      </Button>
-                    )}
-                  </div>
+            {selected && (
+              <div className="rounded-lg border p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">{selected.handle}</span>
+                  <StatusBadge status={selected.status} />
                 </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Override Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-warning" />
-                Override Administrativo
-              </CardTitle>
-              <CardDescription>
-                Altere o dono ou a data do último fechamento de um influenciador.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Selecionar Influenciador</Label>
-                <Select
-                  value={selectedInfluencerOverride}
-                  onValueChange={(v) => {
-                    setSelectedInfluencerOverride(v);
-                    setNewOwnerId("");
-                    setNewDate("");
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Escolha um influenciador..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {influencers
-                      .filter((i) => i.status !== "ARQUIVADO")
-                      .map((inf) => (
-                        <SelectItem key={inf.id} value={inf.id}>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono">{inf.handle}</span>
-                            <StatusBadge status={inf.status} showIcon={false} />
-                          </div>
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {selectedForOverride && (
-                <div className="rounded-lg border p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono font-medium">{selectedForOverride.handle}</span>
-                    <StatusBadge status={selectedForOverride.status} />
-                  </div>
-
-                  <div className="text-sm text-muted-foreground space-y-1">
-                    <p className="flex items-center gap-2">
-                      <User className="h-3 w-3" />
-                      Dono atual: {selectedForOverride.ownerNome || "Nenhum"}
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <Calendar className="h-3 w-3" />
-                      Último fechamento: {formatDate(selectedForOverride.lastClosedAt)}
-                    </p>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2">
-                        <UserCog className="h-4 w-4" />
-                        Novo Dono (opcional)
-                      </Label>
-                      <Select value={newOwnerId} onValueChange={setNewOwnerId}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Manter dono atual" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="NONE">Sem dono (liberar)</SelectItem>
-                          {closers.map((user) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.nome}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        Nova Data de Fechamento (opcional)
-                      </Label>
-                      <Input
-                        type="datetime-local"
-                        value={newDate}
-                        onChange={(e) => setNewDate(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <Button
-                    className="w-full bg-warning text-warning-foreground hover:bg-warning/90"
-                    onClick={handleOverrideClick}
-                    disabled={!newOwnerId && !newDate}
-                  >
-                    <Shield className="mr-2 h-4 w-4" />
-                    Aplicar Override
-                  </Button>
+                <div className="text-sm text-muted-foreground">
+                  <p>Dono: {selected.ownerNome || "Nenhum"}</p>
+                  <p>Último fechamento: {formatDate(selected.lastClosedAt)}</p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                <Button variant="outline" className="w-full" onClick={() => handleArchiveClick(selected.status !== "ARQUIVADO")}>
+                  {selected.status !== "ARQUIVADO" ? <><Archive className="mr-2 h-4 w-4"/>Arquivar</> : <><RefreshCw className="mr-2 h-4 w-4"/>Desarquivar</>}
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Archive Modal */}
       <ReasonModal
         open={archiveModalOpen}
         onOpenChange={setArchiveModalOpen}
-        title={archiveAction === "archive" ? "Arquivar Influenciador" : "Desarquivar Influenciador"}
-        description={
-          archiveAction === "archive"
-            ? `Você está arquivando ${selectedForArchive?.handle}. O influenciador não aparecerá mais nas listagens padrão.`
-            : `Você está desarquivando ${selectedForArchive?.handle}. O influenciador voltará às listagens padrão.`
-        }
-        actionLabel={archiveAction === "archive" ? "Arquivar" : "Desarquivar"}
+        title={archiveAction === "archive" ? "Arquivar" : "Desarquivar"}
+        description={`Informe o motivo para ${archiveAction === "archive" ? "arquivar" : "desarquivar"} ${selected?.handle}`}
+        actionLabel="Confirmar"
         onConfirm={handleArchiveConfirm}
-        variant="warning"
-      />
-
-      {/* Override Modal */}
-      <ReasonModal
-        open={overrideModalOpen}
-        onOpenChange={setOverrideModalOpen}
-        title="Confirmar Override Administrativo"
-        description={`Você está alterando ${selectedForOverride?.handle}. Esta ação será registrada permanentemente no log de auditoria.`}
-        actionLabel="Confirmar Override"
-        onConfirm={handleOverrideConfirm}
-        variant="warning"
       />
     </div>
   );
