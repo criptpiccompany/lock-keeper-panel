@@ -15,6 +15,7 @@ interface PublicInfluencer {
   created_at: string;
   is_locked: boolean;
   locked_until: string | null;
+  owner_nome: string | null;
 }
 
 export default function PainelGeral() {
@@ -28,7 +29,7 @@ export default function PainelGeral() {
       // Admins can see the full table
       const { data, error } = await supabase
         .from('influencers')
-        .select('id, handle, last_closed_at, ativo, created_at, owner_id')
+        .select('id, handle, last_closed_at, ativo, created_at, owner_id, owner_nome')
         .eq('ativo', true);
 
       if (error) {
@@ -52,7 +53,8 @@ export default function PainelGeral() {
           ativo: inf.ativo,
           created_at: inf.created_at,
           is_locked: !!isLocked,
-          locked_until: lockedUntil
+          locked_until: lockedUntil,
+          owner_nome: inf.owner_nome
         };
       });
 
@@ -169,6 +171,7 @@ export default function PainelGeral() {
               <thead>
                 <tr>
                   <th>Influenciador</th>
+                  <th>Responsável</th>
                   <th>Último Fechamento</th>
                   <th>Libera em</th>
                   <th>Status</th>
@@ -187,7 +190,7 @@ export default function PainelGeral() {
                       {inf.locked_until ? formatDate(inf.locked_until) : "—"}
                     </td>
                     <td>
-                      <StatusBadge status={inf.is_locked ? "TRAVADO" : "LIBERADO"} size="sm" />
+                      <StatusBadge status="TRAVADO" size="sm" />
                     </td>
                   </tr>
                 ))}
@@ -196,11 +199,9 @@ export default function PainelGeral() {
           </div>
         )}
         
-        {!isAdmin && (
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Exibindo apenas influenciadores travados. Informações de responsável são privadas.
-          </p>
-        )}
+        <p className="text-xs text-muted-foreground mt-4 text-center">
+          Exibindo influenciadores travados na agência.
+        </p>
       </div>
     </div>
   );

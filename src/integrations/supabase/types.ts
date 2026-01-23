@@ -181,6 +181,7 @@ export type Database = {
           is_locked: boolean
           last_closed_at: string
           locked_until: string
+          owner_nome: string
         }[]
       }
       get_user_role: {
