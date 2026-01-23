@@ -5,7 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/helpers";
-import { Search, LayoutGrid, Loader2, Users, Info } from "lucide-react";
+import { Search, LayoutGrid, Loader2, Lock, Info } from "lucide-react";
 
 interface PublicInfluencer {
   id: string;
@@ -56,10 +56,10 @@ export default function PainelGeral() {
         };
       });
 
-      setInfluencers(mapped);
+      // Filter to only locked
+      setInfluencers(mapped.filter(inf => inf.is_locked));
     } else {
-      // Closers use the secure RPC function that returns ALL active influencers
-      // without exposing owner info
+      // Closers use the secure RPC function without exposing owner info
       const { data, error } = await supabase.rpc('get_public_influencers');
 
       if (error) {
@@ -68,7 +68,8 @@ export default function PainelGeral() {
         return;
       }
 
-      setInfluencers(data || []);
+      // Filter to only locked
+      setInfluencers((data || []).filter((inf: PublicInfluencer) => inf.is_locked));
     }
 
     setLoading(false);
@@ -115,7 +116,7 @@ export default function PainelGeral() {
                 Painel Geral
               </h1>
               <p className="text-muted-foreground text-sm mt-1">
-                Todos os influenciadores ativos na agência
+                Influenciadores atualmente travados na agência
               </p>
             </div>
             
@@ -148,10 +149,10 @@ export default function PainelGeral() {
       <div className="container py-6">
         {influencers.length === 0 ? (
           <div className="empty-state">
-            <Users className="empty-state-icon" />
-            <h3 className="empty-state-title">Nenhum influenciador ativo</h3>
+            <Lock className="empty-state-icon" />
+            <h3 className="empty-state-title">Nenhum influenciador travado</h3>
             <p className="empty-state-description">
-              Não há influenciadores ativos no momento.
+              Todos os influenciadores estão liberados no momento.
             </p>
           </div>
         ) : sortedInfluencers.length === 0 ? (
@@ -197,7 +198,7 @@ export default function PainelGeral() {
         
         {!isAdmin && (
           <p className="text-xs text-muted-foreground mt-4 text-center">
-            Exibindo todos os influenciadores ativos. Informações de responsável são privadas.
+            Exibindo apenas influenciadores travados. Informações de responsável são privadas.
           </p>
         )}
       </div>
