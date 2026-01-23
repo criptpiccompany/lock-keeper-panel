@@ -86,6 +86,13 @@ export type Database = {
             referencedRelation: "influencers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "close_events_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "influencers_public_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       influencers: {
@@ -168,9 +175,50 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      influencers_public_view: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          handle: string | null
+          id: string | null
+          is_locked: boolean | null
+          last_closed_at: string | null
+          locked_until: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          handle?: string | null
+          id?: string | null
+          is_locked?: never
+          last_closed_at?: string | null
+          locked_until?: never
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          handle?: string | null
+          id?: string | null
+          is_locked?: never
+          last_closed_at?: string | null
+          locked_until?: never
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      get_public_influencers: {
+        Args: never
+        Returns: {
+          ativo: boolean
+          created_at: string
+          handle: string
+          id: string
+          is_locked: boolean
+          last_closed_at: string
+          locked_until: string
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
