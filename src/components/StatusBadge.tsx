@@ -1,47 +1,48 @@
 import { Badge } from "@/components/ui/badge";
 import { InfluencerStatus } from "@/types";
-import { cn } from "@/lib/utils";
 import { Lock, Unlock, Archive } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface StatusBadgeProps {
   status: InfluencerStatus;
-  className?: string;
   showIcon?: boolean;
+  size?: "sm" | "default";
+  className?: string;
 }
 
-const statusConfig = {
-  TRAVADO: {
-    label: "TRAVADO",
-    icon: Lock,
-    className: "bg-status-locked/20 text-status-locked border-status-locked/50",
-  },
-  LIBERADO: {
-    label: "LIBERADO",
-    icon: Unlock,
-    className: "bg-status-released/20 text-status-released border-status-released/50",
-  },
-  ARQUIVADO: {
-    label: "ARQUIVADO",
-    icon: Archive,
-    className: "bg-status-archived/20 text-status-archived border-status-archived/50",
-  },
-};
+export function StatusBadge({ status, showIcon = true, size = "default", className }: StatusBadgeProps) {
+  const config: Record<InfluencerStatus, { label: string; icon: any; className: string }> = {
+    TRAVADO: {
+      label: "Travado",
+      icon: Lock,
+      className: "bg-amber-50 text-amber-700 border-amber-200/50 hover:bg-amber-50",
+    },
+    LIBERADO: {
+      label: "Liberado",
+      icon: Unlock,
+      className: "bg-emerald-50 text-emerald-700 border-emerald-200/50 hover:bg-emerald-50",
+    },
+    ARQUIVADO: {
+      label: "Arquivado",
+      icon: Archive,
+      className: "bg-slate-100 text-slate-500 border-slate-200/50 hover:bg-slate-100",
+    },
+  };
 
-export function StatusBadge({ status, className, showIcon = true }: StatusBadgeProps) {
-  const config = statusConfig[status];
-  const Icon = config.icon;
+  const { label, icon: Icon, className: statusClassName } = config[status];
 
   return (
-    <Badge
-      variant="outline"
+    <Badge 
+      variant="outline" 
       className={cn(
-        "font-mono text-xs font-semibold uppercase tracking-wider",
-        config.className,
+        "font-medium",
+        size === "sm" && "text-xs px-1.5 py-0",
+        statusClassName,
         className
       )}
     >
-      {showIcon && <Icon className="mr-1 h-3 w-3" />}
-      {config.label}
+      {showIcon && <Icon className={cn("mr-1", size === "sm" ? "h-3 w-3" : "h-3.5 w-3.5")} />}
+      {label}
     </Badge>
   );
 }

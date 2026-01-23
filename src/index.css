@@ -1,74 +1,74 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Airport Dashboard Design System - Dark Theme */
+/* Apple/Notion Light Design System - Premium Minimalist Theme */
 
 @layer base {
   :root {
-    /* Dark airport terminal theme */
-    --background: 220 20% 8%;
-    --foreground: 210 20% 95%;
+    /* Clean light background */
+    --background: 0 0% 100%;
+    --foreground: 220 15% 15%;
 
-    --card: 220 18% 12%;
-    --card-foreground: 210 20% 95%;
+    /* Cards with subtle elevation */
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 15%;
 
-    --popover: 220 18% 10%;
-    --popover-foreground: 210 20% 95%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 15%;
 
-    --primary: 199 89% 48%;
-    --primary-foreground: 220 20% 8%;
+    /* Primary - subtle blue */
+    --primary: 220 12% 15%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 18% 18%;
-    --secondary-foreground: 210 20% 90%;
+    /* Secondary - very light gray */
+    --secondary: 220 10% 96%;
+    --secondary-foreground: 220 15% 25%;
 
-    --muted: 220 15% 20%;
-    --muted-foreground: 215 15% 55%;
+    /* Muted - subtle backgrounds */
+    --muted: 220 10% 96%;
+    --muted-foreground: 220 10% 45%;
 
-    --accent: 199 89% 48%;
-    --accent-foreground: 220 20% 8%;
+    /* Accent - subtle highlight */
+    --accent: 220 10% 94%;
+    --accent-foreground: 220 15% 15%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 210 20% 98%;
+    /* Destructive - soft red */
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 20%;
-    --input: 220 15% 18%;
-    --ring: 199 89% 48%;
+    /* Borders and inputs - very subtle */
+    --border: 220 10% 90%;
+    --input: 220 10% 94%;
+    --ring: 220 12% 50%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    /* Status colors */
-    --status-locked: 38 92% 50%;
-    --status-locked-bg: 38 92% 50%;
-    --status-released: 142 76% 36%;
-    --status-released-bg: 142 76% 36%;
-    --status-archived: 220 10% 40%;
-    --status-archived-bg: 220 10% 40%;
+    /* Status colors - muted and professional */
+    --status-locked: 35 80% 50%;
+    --status-locked-bg: 35 80% 96%;
+    --status-released: 150 50% 40%;
+    --status-released-bg: 150 50% 96%;
+    --status-archived: 220 10% 55%;
+    --status-archived-bg: 220 10% 96%;
     
-    /* Warning states */
-    --warning: 38 92% 50%;
-    --warning-foreground: 220 20% 8%;
-    --success: 142 76% 36%;
-    --success-foreground: 220 20% 8%;
-
-    /* Airport board specific */
-    --board-bg: 220 25% 6%;
-    --board-row: 220 20% 10%;
-    --board-row-alt: 220 20% 12%;
-    --board-text: 48 100% 50%;
-    --board-highlight: 199 89% 48%;
+    /* Warning/Success - muted */
+    --warning: 35 80% 50%;
+    --warning-foreground: 0 0% 100%;
+    --success: 150 50% 40%;
+    --success-foreground: 0 0% 100%;
 
     /* Sidebar */
-    --sidebar-background: 220 20% 10%;
-    --sidebar-foreground: 210 20% 90%;
-    --sidebar-primary: 199 89% 48%;
-    --sidebar-primary-foreground: 220 20% 8%;
-    --sidebar-accent: 220 18% 15%;
-    --sidebar-accent-foreground: 210 20% 95%;
-    --sidebar-border: 220 15% 18%;
-    --sidebar-ring: 199 89% 48%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 220 15% 25%;
+    --sidebar-primary: 220 12% 15%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 10% 94%;
+    --sidebar-accent-foreground: 220 15% 15%;
+    --sidebar-border: 220 10% 92%;
+    --sidebar-ring: 220 12% 50%;
   }
 }
 
@@ -79,85 +79,125 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Monospace for airport displays */
-  .font-mono {
-    font-family: 'JetBrains Mono', monospace;
+  /* Premium typography */
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight font-semibold;
+    letter-spacing: -0.02em;
+  }
+
+  /* Subtle selection color */
+  ::selection {
+    background: hsl(220 12% 15% / 0.1);
   }
 }
 
 @layer components {
-  /* Airport board styles */
-  .airport-board {
-    @apply bg-board-bg rounded-lg border border-border overflow-hidden;
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  /* Premium container */
+  .container-premium {
+    @apply max-w-6xl mx-auto px-6 lg:px-8;
   }
 
-  .airport-row {
-    @apply bg-board-row border-b border-border/50 transition-colors;
+  /* Subtle card styling */
+  .card-premium {
+    @apply bg-card rounded-xl border border-border/50;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.03);
   }
 
-  .airport-row:nth-child(even) {
-    @apply bg-board-row-alt;
+  /* Minimal table styling */
+  .table-minimal {
+    @apply w-full;
   }
 
-  .airport-row:hover {
-    @apply bg-muted/50;
+  .table-minimal th {
+    @apply text-xs font-medium text-muted-foreground uppercase tracking-wider py-3 px-4 text-left border-b;
   }
 
-  /* Countdown display */
-  .countdown-display {
-    @apply font-mono text-lg tracking-wider;
-    text-shadow: 0 0 10px currentColor;
+  .table-minimal td {
+    @apply py-3 px-4 text-sm border-b border-border/50;
   }
 
-  /* Status glow effects */
-  .glow-amber {
-    text-shadow: 0 0 8px hsl(var(--status-locked));
+  .table-minimal tr:last-child td {
+    @apply border-b-0;
   }
 
-  .glow-green {
-    text-shadow: 0 0 8px hsl(var(--status-released));
+  .table-minimal tbody tr {
+    @apply transition-colors duration-150;
   }
 
-  .glow-blue {
-    text-shadow: 0 0 8px hsl(var(--primary));
+  .table-minimal tbody tr:hover {
+    @apply bg-muted/30;
   }
 
-  /* Handle styling */
-  .handle-text {
-    @apply font-mono font-medium tracking-tight;
+  /* Status badges - minimal */
+  .badge-status {
+    @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium;
   }
 
-  /* Pulse animation for expiring soon */
-  .pulse-warning {
-    animation: pulse-warn 2s ease-in-out infinite;
+  .badge-locked {
+    @apply bg-amber-50 text-amber-700 border border-amber-200/50;
   }
 
-  @keyframes pulse-warn {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.6;
-    }
+  .badge-released {
+    @apply bg-emerald-50 text-emerald-700 border border-emerald-200/50;
   }
 
-  /* Scan line effect for airport board */
-  .scanlines::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0, 0, 0, 0.1) 2px,
-      rgba(0, 0, 0, 0.1) 4px
-    );
-    pointer-events: none;
-    z-index: 10;
+  .badge-archived {
+    @apply bg-slate-100 text-slate-500 border border-slate-200/50;
   }
+
+  /* Countdown - subtle */
+  .countdown-subtle {
+    @apply text-sm text-muted-foreground font-medium tabular-nums;
+  }
+
+  /* Smooth transitions */
+  .transition-subtle {
+    @apply transition-all duration-150 ease-out;
+  }
+
+  /* Focus states */
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+
+  /* Empty state styling */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-16 text-center;
+  }
+
+  .empty-state-icon {
+    @apply h-12 w-12 text-muted-foreground/30 mb-4;
+  }
+
+  .empty-state-title {
+    @apply text-sm font-medium text-foreground mb-1;
+  }
+
+  .empty-state-description {
+    @apply text-sm text-muted-foreground;
+  }
+}
+
+/* Custom scrollbar - minimal */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(220 10% 85%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(220 10% 75%);
 }

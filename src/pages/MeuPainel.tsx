@@ -1,82 +1,153 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { InfluencerTable } from "@/components/InfluencerTable";
+import { StatusBadge } from "@/components/StatusBadge";
+import { CountdownChip } from "@/components/CountdownChip";
 import { AddInfluencerModal } from "@/components/AddInfluencerModal";
-import { useStore } from "@/store/useStore";
-import { Search, UserPlus, User, AlertTriangle } from "lucide-react";
+import { BulkAddModal } from "@/components/BulkAddModal";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { enrichInfluencer, formatDate } from "@/lib/helpers";
+import { InfluencerWithStatus } from "@/types";
+import { 
+  Search, 
+  UserPlus, 
+  Users, 
+  RefreshCw, 
+  Loader2,
+  Clock
+} from "lucide-react";
 
 export default function MeuPainel() {
-  const { getMyInfluencers, currentUser } = useStore();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const [influencers, setInfluencers] = useState<InfluencerWithStatus[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState<string | null>(null);
 
-  const myInfluencers = getMyInfluencers();
+  const fetchMyInfluencers = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('influencers')
+      .select('*')
+      .eq('owner_id', user.id)
+      .eq('ativo', true);
+
+    if (error) {
+      console.error('Error fetching influencers:', error);
+      toast.error('Erro ao carregar influenciadores');
+      return;
+    }
+
+    const enriched = (data || []).map(inf => enrichInfluencer({
+      id: inf.id,
+      handle: inf.handle,
+      ownerId: inf.owner_id,
+      ownerNome: inf.owner_nome,
+      lastClosedAt: inf.last_closed_at,
+      ativo: inf.ativo,
+      notas: inf.notas || undefined
+    }));
+
+    // Sort by days remaining (soonest first)
+    enriched.sort((a, b) => {
+      if (a.daysRemaining === null) return 1;
+      if (b.daysRemaining === null) return -1;
+      return a.daysRemaining - b.daysRemaining;
+    });
+
+    setInfluencers(enriched);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchMyInfluencers();
+  }, [user]);
+
+  const handleRenovar = async (influencer: InfluencerWithStatus) => {
+    if (!user) return;
+
+    setRefreshing(influencer.id);
+    const now = new Date().toISOString();
+
+    // Update influencer
+    const { error: updateError } = await supabase
+      .from('influencers')
+      .update({
+        last_closed_at: now,
+        owner_id: user.id,
+        owner_nome: user.nome
+      })
+      .eq('id', influencer.id);
+
+    if (updateError) {
+      toast.error('Erro ao renovar fechamento');
+      setRefreshing(null);
+      return;
+    }
+
+    // Create event
+    await supabase.from('close_events').insert({
+      influencer_id: influencer.id,
+      influencer_handle: influencer.handle,
+      feito_por_id: user.id,
+      feito_por_nome: user.nome,
+      feito_em: now,
+      acao: 'FECHAMENTO'
+    });
+
+    toast.success('Fechamento renovado!', {
+      description: `${influencer.handle} agora está travado por mais 10 dias.`
+    });
+
+    await fetchMyInfluencers();
+    setRefreshing(null);
+  };
 
   // Filter by search
-  const filteredInfluencers = useMemo(() => {
-    if (!searchQuery) return myInfluencers;
-    return myInfluencers.filter((inf) =>
-      inf.handle.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [myInfluencers, searchQuery]);
+  const filteredInfluencers = influencers.filter(inf =>
+    inf.handle.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  // Stats
-  const expiringSoon = myInfluencers.filter(
-    (i) => i.status === "TRAVADO" && i.daysRemaining !== null && i.daysRemaining <= 2
-  ).length;
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="border-b bg-card">
-        <div className="container py-6">
+      <div className="border-b">
+        <div className="container py-8">
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <User className="h-8 w-8 text-primary" />
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight">Meu Painel</h1>
-                <p className="text-muted-foreground">
-                  Influenciadores sob sua responsabilidade, {currentUser.nome}
-                </p>
-              </div>
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">Meu Painel</h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                Gerencie seus influenciadores
+              </p>
             </div>
 
-            <Button onClick={() => setAddModalOpen(true)}>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Adicionar Influenciador
-            </Button>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="rounded-lg border p-4">
-              <p className="text-sm text-muted-foreground">Meus Influenciadores</p>
-              <p className="text-2xl font-bold font-mono text-primary">{myInfluencers.length}</p>
-            </div>
-            <div className="rounded-lg border p-4 border-status-locked/50 bg-status-locked/5">
-              <p className="text-sm text-muted-foreground">Travados</p>
-              <p className="text-2xl font-bold font-mono text-status-locked">
-                {myInfluencers.filter((i) => i.status === "TRAVADO").length}
-              </p>
-            </div>
-            <div className="rounded-lg border p-4 border-status-released/50 bg-status-released/5">
-              <p className="text-sm text-muted-foreground">Liberados</p>
-              <p className="text-2xl font-bold font-mono text-status-released">
-                {myInfluencers.filter((i) => i.status === "LIBERADO").length}
-              </p>
-            </div>
-            <div className="rounded-lg border p-4 border-warning/50 bg-warning/5">
-              <p className="text-sm text-muted-foreground flex items-center gap-1">
-                <AlertTriangle className="h-3 w-3" />
-                Expirando em breve
-              </p>
-              <p className="text-2xl font-bold font-mono text-warning">{expiringSoon}</p>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setAddModalOpen(true)}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Adicionar
+              </Button>
+              <Button onClick={() => setBulkModalOpen(true)}>
+                <Users className="mr-2 h-4 w-4" />
+                Adicionar Vários
+              </Button>
             </div>
           </div>
 
           {/* Search */}
-          <div className="relative max-w-md">
+          <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar por @handle..."
@@ -90,35 +161,113 @@ export default function MeuPainel() {
 
       {/* Content */}
       <div className="container py-6">
-        {myInfluencers.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-            <User className="h-16 w-16 mb-4 opacity-30" />
-            <h3 className="text-lg font-medium mb-2">Nenhum influenciador no seu painel</h3>
-            <p className="text-sm mb-4">
-              Adicione influenciadores ou registre fechamentos no Telão para começar.
+        {influencers.length === 0 ? (
+          <div className="empty-state">
+            <Users className="empty-state-icon" />
+            <h3 className="empty-state-title">Nenhum influenciador ainda</h3>
+            <p className="empty-state-description mb-4">
+              Adicione influenciadores ou registre fechamentos para começar.
             </p>
-            <Button onClick={() => setAddModalOpen(true)}>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Adicionar Influenciador
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setAddModalOpen(true)}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Adicionar
+              </Button>
+              <Button onClick={() => setBulkModalOpen(true)}>
+                <Users className="mr-2 h-4 w-4" />
+                Adicionar Vários
+              </Button>
+            </div>
+          </div>
+        ) : filteredInfluencers.length === 0 ? (
+          <div className="empty-state">
+            <Search className="empty-state-icon" />
+            <h3 className="empty-state-title">Nenhum resultado</h3>
+            <p className="empty-state-description">
+              Nenhum influenciador encontrado com "{searchQuery}"
+            </p>
           </div>
         ) : (
-          <InfluencerTable
-            influencers={filteredInfluencers.sort((a, b) => {
-              // Sort by status priority: expiring soon first
-              if (a.daysRemaining !== null && b.daysRemaining !== null) {
-                return a.daysRemaining - b.daysRemaining;
-              }
-              return 0;
-            })}
-            columns={["handle", "lastClosed", "lockedUntil", "countdown", "status", "action"]}
-            airportStyle
-            emptyMessage="Nenhum influenciador encontrado com esse filtro"
-          />
+          <div className="bg-card rounded-xl border">
+            <table className="table-minimal">
+              <thead>
+                <tr>
+                  <th>Influenciador</th>
+                  <th>Último Fechamento</th>
+                  <th>Libera em</th>
+                  <th>Restante</th>
+                  <th>Status</th>
+                  <th className="text-right">Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredInfluencers.map((inf) => {
+                  const isExpiring = inf.daysRemaining !== null && inf.daysRemaining <= 2;
+                  
+                  return (
+                    <tr key={inf.id}>
+                      <td>
+                        <span className="font-medium">{inf.handle}</span>
+                      </td>
+                      <td className="text-muted-foreground text-sm">
+                        {formatDate(inf.lastClosedAt)}
+                      </td>
+                      <td className="text-muted-foreground text-sm">
+                        {inf.lockedUntil ? formatDate(inf.lockedUntil.toISOString()) : "—"}
+                      </td>
+                      <td>
+                        {inf.status === "TRAVADO" ? (
+                          <div className="flex items-center gap-1.5">
+                            <Clock className={`h-3.5 w-3.5 ${isExpiring ? 'text-amber-500' : 'text-muted-foreground'}`} />
+                            <CountdownChip 
+                              lockedUntil={inf.lockedUntil} 
+                              daysRemaining={inf.daysRemaining}
+                              variant="compact"
+                            />
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td>
+                        <StatusBadge status={inf.status} size="sm" />
+                      </td>
+                      <td className="text-right">
+                        <Button
+                          size="sm"
+                          variant={isExpiring ? "default" : "outline"}
+                          onClick={() => handleRenovar(inf)}
+                          disabled={refreshing === inf.id}
+                        >
+                          {refreshing === inf.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                              Renovar
+                            </>
+                          )}
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
-      <AddInfluencerModal open={addModalOpen} onOpenChange={setAddModalOpen} />
+      <AddInfluencerModal 
+        open={addModalOpen} 
+        onOpenChange={setAddModalOpen}
+        onSuccess={fetchMyInfluencers}
+      />
+      <BulkAddModal 
+        open={bulkModalOpen} 
+        onOpenChange={setBulkModalOpen}
+        onSuccess={fetchMyInfluencers}
+      />
     </div>
   );
 }
