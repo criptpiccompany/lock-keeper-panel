@@ -14,16 +14,147 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      close_events: {
+        Row: {
+          acao: string
+          created_at: string
+          feito_em: string
+          feito_por_id: string
+          feito_por_nome: string
+          id: string
+          influencer_handle: string
+          influencer_id: string
+          motivo: string | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          feito_em?: string
+          feito_por_id: string
+          feito_por_nome: string
+          id?: string
+          influencer_handle: string
+          influencer_id: string
+          motivo?: string | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          feito_em?: string
+          feito_por_id?: string
+          feito_por_nome?: string
+          id?: string
+          influencer_handle?: string
+          influencer_id?: string
+          motivo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "close_events_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "influencers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      influencers: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          handle: string
+          id: string
+          last_closed_at: string | null
+          notas: string | null
+          owner_id: string | null
+          owner_nome: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          handle: string
+          id?: string
+          last_closed_at?: string | null
+          notas?: string | null
+          owner_id?: string | null
+          owner_nome?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          handle?: string
+          id?: string
+          last_closed_at?: string | null
+          notas?: string | null
+          owner_id?: string | null
+          owner_nome?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "CLOSER" | "ADMIN"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +281,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["CLOSER", "ADMIN"],
+    },
   },
 } as const
