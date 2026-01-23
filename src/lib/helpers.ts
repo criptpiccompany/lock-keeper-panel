@@ -1,0 +1,95 @@
+import { Influencer, InfluencerStatus, InfluencerWithStatus, User } from "@/types";
+import { LOCK_DURATION_MS } from "./constants";
+
+// Calculate influencer status based on business rules
+export function calculateInfluencerStatus(influencer: Influencer): InfluencerStatus {
+  if (!influencer.ativo) return "ARQUIVADO";
+  if (!influencer.lastClosedAt) return "LIBERADO";
+  
+  const lockedUntil = new Date(new Date(influencer.lastClosedAt).getTime() + LOCK_DURATION_MS);
+  const now = new Date();
+  
+  return now < lockedUntil ? "TRAVADO" : "LIBERADO";
+}
+
+// Calculate locked until date
+export function calculateLockedUntil(lastClosedAt: string | null): Date | null {
+  if (!lastClosedAt) return null;
+  return new Date(new Date(lastClosedAt).getTime() + LOCK_DURATION_MS);
+}
+
+// Calculate time remaining in milliseconds
+export function calculateTimeRemaining(lockedUntil: Date | null): number | null {
+  if (!lockedUntil) return null;
+  const remaining = lockedUntil.getTime() - new Date().getTime();
+  return remaining > 0 ? remaining : 0;
+}
+
+// Convert milliseconds to days
+export function msToDays(ms: number | null): number | null {
+  if (ms === null) return null;
+  return Math.ceil(ms / (24 * 60 * 60 * 1000));
+}
+
+// Enrich influencer with computed fields
+export function enrichInfluencer(influencer: Influencer): InfluencerWithStatus {
+  const status = calculateInfluencerStatus(influencer);
+  const lockedUntil = calculateLockedUntil(influencer.lastClosedAt);
+  const timeRemaining = status === "TRAVADO" ? calculateTimeRemaining(lockedUntil) : null;
+  const daysRemaining = msToDays(timeRemaining);
+  
+  return {
+    ...influencer,
+    status,
+    lockedUntil,
+    timeRemaining,
+    daysRemaining,
+  };
+}
+
+// Check if user can register fechamento
+export function canRegisterFechamento(influencer: InfluencerWithStatus, user: User): boolean {
+  if (influencer.status === "ARQUIVADO") return false;
+  if (influencer.status === "LIBERADO") return true;
+  // TRAVADO: only owner can register
+  return influencer.ownerId === user.id;
+}
+
+// Format date for display
+export function formatDate(dateStr: string | null): string {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+// Format datetime for display
+export function formatDateTime(dateStr: string | null): string {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// Format countdown display
+export function formatCountdown(ms: number | null): string {
+  if (ms === null || ms <= 0) return "00:00:00:00";
+  
+  const days = Math.floor(ms / (24 * 60 * 60 * 1000));
+  const hours = Math.floor((ms % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+  const minutes = Math.floor((ms % (60 * 60 * 1000)) / (60 * 1000));
+  const seconds = Math.floor((ms % (60 * 1000)) / 1000);
+  
+  return `${String(days).padStart(2, "0")}:${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+// Generate UUID
+export function generateId(): string {
+  return crypto.randomUUID();
+}
