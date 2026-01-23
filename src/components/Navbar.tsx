@@ -38,7 +38,7 @@ export function Navbar() {
 
   const adminItems = [
     { path: "/meu", label: "Meu Painel", icon: User },
-    { path: "/", label: "Dashboard", icon: LayoutGrid },
+    { path: "/dashboard", label: "Dashboard", icon: LayoutGrid },
     { path: "/diretorio", label: "Diretório", icon: Book },
     { path: "/auditoria", label: "Auditoria", icon: FileText },
     { path: "/admin", label: "Admin", icon: Settings },
