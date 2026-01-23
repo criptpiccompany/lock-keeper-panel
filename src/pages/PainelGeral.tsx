@@ -5,7 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/helpers";
-import { Search, LayoutGrid, Loader2, Lock, Info } from "lucide-react";
+import { Search, LayoutGrid, Loader2, Users, Info } from "lucide-react";
 
 interface PublicInfluencer {
   id: string;
@@ -18,7 +18,7 @@ interface PublicInfluencer {
 }
 
 export default function PainelGeral() {
-  const { user, isAdmin } = useAuth();
+  const { isAdmin } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [influencers, setInfluencers] = useState<PublicInfluencer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,11 +56,10 @@ export default function PainelGeral() {
         };
       });
 
-      // Filter to only locked
-      const lockedOnly = mapped.filter(inf => inf.is_locked);
-      setInfluencers(lockedOnly);
+      setInfluencers(mapped);
     } else {
-      // Closers use the secure RPC function that doesn't expose owner info
+      // Closers use the secure RPC function that returns ALL active influencers
+      // without exposing owner info
       const { data, error } = await supabase.rpc('get_public_influencers');
 
       if (error) {
@@ -69,9 +68,7 @@ export default function PainelGeral() {
         return;
       }
 
-      // Filter to only locked
-      const lockedOnly = (data || []).filter((inf: PublicInfluencer) => inf.is_locked);
-      setInfluencers(lockedOnly);
+      setInfluencers(data || []);
     }
 
     setLoading(false);
@@ -86,11 +83,16 @@ export default function PainelGeral() {
     inf.handle.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Sort by locked_until (closest to unlock first)
+  // Sort: locked first (by unlock date), then unlocked
   const sortedInfluencers = [...filteredInfluencers].sort((a, b) => {
-    if (!a.locked_until) return 1;
-    if (!b.locked_until) return -1;
-    return new Date(a.locked_until).getTime() - new Date(b.locked_until).getTime();
+    if (a.is_locked && !b.is_locked) return -1;
+    if (!a.is_locked && b.is_locked) return 1;
+    if (a.is_locked && b.is_locked) {
+      if (!a.locked_until) return 1;
+      if (!b.locked_until) return -1;
+      return new Date(a.locked_until).getTime() - new Date(b.locked_until).getTime();
+    }
+    return a.handle.localeCompare(b.handle);
   });
 
   if (loading) {
@@ -113,7 +115,7 @@ export default function PainelGeral() {
                 Painel Geral
               </h1>
               <p className="text-muted-foreground text-sm mt-1">
-                Influenciadores atualmente travados na agência
+                Todos os influenciadores ativos na agência
               </p>
             </div>
             
@@ -124,7 +126,7 @@ export default function PainelGeral() {
                 </button>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
-                <p>Este painel mostra apenas influenciadores travados. Para ver influenciadores liberados, acesse Meu Painel e registre fechamentos.</p>
+                <p>Este painel mostra todos os influenciadores ativos. Influenciadores travados não podem ser fechados por outros closers.</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -146,10 +148,10 @@ export default function PainelGeral() {
       <div className="container py-6">
         {influencers.length === 0 ? (
           <div className="empty-state">
-            <Lock className="empty-state-icon" />
-            <h3 className="empty-state-title">Nenhum influenciador travado</h3>
+            <Users className="empty-state-icon" />
+            <h3 className="empty-state-title">Nenhum influenciador ativo</h3>
             <p className="empty-state-description">
-              Todos os influenciadores estão liberados no momento.
+              Não há influenciadores ativos no momento.
             </p>
           </div>
         ) : sortedInfluencers.length === 0 ? (
@@ -184,7 +186,7 @@ export default function PainelGeral() {
                       {inf.locked_until ? formatDate(inf.locked_until) : "—"}
                     </td>
                     <td>
-                      <StatusBadge status="TRAVADO" size="sm" />
+                      <StatusBadge status={inf.is_locked ? "TRAVADO" : "LIBERADO"} size="sm" />
                     </td>
                   </tr>
                 ))}
@@ -195,7 +197,7 @@ export default function PainelGeral() {
         
         {!isAdmin && (
           <p className="text-xs text-muted-foreground mt-4 text-center">
-            Exibindo apenas influenciadores travados. Informações de responsável são privadas.
+            Exibindo todos os influenciadores ativos. Informações de responsável são privadas.
           </p>
         )}
       </div>
