@@ -128,7 +128,7 @@ export default function MeuPainel() {
         <div className="container py-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Meu Painel</h1>
+              <h1 className="text-2xl font-semibold tracking-tight">Minha Lista</h1>
               <p className="text-muted-foreground text-sm mt-1">
                 Gerencie seus influenciadores
               </p>
