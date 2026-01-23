@@ -97,6 +97,15 @@ export default function Admin() {
 
       if (error) throw error;
       
+      // Log audit action
+      await supabase.from('audit_log').insert({
+        user_id: user!.id,
+        user_nome: user!.nome,
+        acao: 'PASSWORD_RESET',
+        descricao: `Reset de senha enviado para ${userNome}`,
+        detalhes: { target_user_id: userId, target_user_nome: userNome }
+      });
+
       toast.success(`Email de redefinição enviado para ${userNome}`);
     } catch (error: any) {
       toast.error('Erro ao enviar email', { description: error.message });
@@ -105,7 +114,7 @@ export default function Admin() {
     }
   };
 
-  const handleToggleRole = async (userId: string, currentRole: 'CLOSER' | 'ADMIN') => {
+  const handleToggleRole = async (userId: string, currentRole: 'CLOSER' | 'ADMIN', userNome: string) => {
     if (userId === user?.id) {
       toast.error('Você não pode alterar seu próprio papel');
       return;
@@ -122,6 +131,15 @@ export default function Admin() {
 
       if (error) throw error;
       
+      // Log audit action
+      await supabase.from('audit_log').insert({
+        user_id: user!.id,
+        user_nome: user!.nome,
+        acao: 'ROLE_CHANGE',
+        descricao: `Papel de ${userNome} alterado de ${currentRole} para ${newRole}`,
+        detalhes: { target_user_id: userId, target_user_nome: userNome, old_role: currentRole, new_role: newRole }
+      });
+
       toast.success(`Papel alterado para ${newRole}`);
       fetchUsers();
     } catch (error: any) {
@@ -195,7 +213,7 @@ export default function Admin() {
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => handleToggleRole(u.id, u.role)}
+                            onClick={() => handleToggleRole(u.id, u.role, u.nome)}
                             disabled={updatingRole === u.id || u.id === user?.id}
                           >
                             {updatingRole === u.id ? (
