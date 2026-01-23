@@ -86,13 +86,6 @@ export type Database = {
             referencedRelation: "influencers"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "close_events_influencer_id_fkey"
-            columns: ["influencer_id"]
-            isOneToOne: false
-            referencedRelation: "influencers_public_view"
-            referencedColumns: ["id"]
-          },
         ]
       }
       influencers: {
@@ -175,36 +168,7 @@ export type Database = {
       }
     }
     Views: {
-      influencers_public_view: {
-        Row: {
-          ativo: boolean | null
-          created_at: string | null
-          handle: string | null
-          id: string | null
-          is_locked: boolean | null
-          last_closed_at: string | null
-          locked_until: string | null
-        }
-        Insert: {
-          ativo?: boolean | null
-          created_at?: string | null
-          handle?: string | null
-          id?: string | null
-          is_locked?: never
-          last_closed_at?: string | null
-          locked_until?: never
-        }
-        Update: {
-          ativo?: boolean | null
-          created_at?: string | null
-          handle?: string | null
-          id?: string | null
-          is_locked?: never
-          last_closed_at?: string | null
-          locked_until?: never
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       get_public_influencers: {
