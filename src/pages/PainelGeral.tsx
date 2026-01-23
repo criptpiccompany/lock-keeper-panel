@@ -4,99 +4,60 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate } from "@/lib/helpers";
+import { enrichInfluencer, formatDate } from "@/lib/helpers";
+import { InfluencerWithStatus } from "@/types";
 import { Search, LayoutGrid, Loader2, Lock, Info } from "lucide-react";
 
-interface PublicInfluencer {
-  id: string;
-  handle: string;
-  last_closed_at: string | null;
-  ativo: boolean;
-  created_at: string;
-  is_locked: boolean;
-  locked_until: string | null;
-  owner_nome: string | null;
-}
-
 export default function PainelGeral() {
-  const { isAdmin } = useAuth();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [influencers, setInfluencers] = useState<PublicInfluencer[]>([]);
+  const [influencers, setInfluencers] = useState<InfluencerWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchInfluencers = async () => {
-    if (isAdmin) {
-      // Admins can see the full table
-      const { data, error } = await supabase
-        .from('influencers')
-        .select('id, handle, last_closed_at, ativo, created_at, owner_id, owner_nome')
-        .eq('ativo', true);
+    // Closers can only see active, locked influencers
+    const { data, error } = await supabase
+      .from('influencers')
+      .select('*')
+      .eq('ativo', true);
 
-      if (error) {
-        console.error('Error fetching influencers:', error);
-        setLoading(false);
-        return;
-      }
-
-      // Map to PublicInfluencer format with computed lock status
-      const mapped: PublicInfluencer[] = (data || []).map(inf => {
-        const isLocked = inf.owner_id && inf.last_closed_at && 
-          new Date(inf.last_closed_at).getTime() + (10 * 24 * 60 * 60 * 1000) > Date.now();
-        const lockedUntil = isLocked && inf.last_closed_at
-          ? new Date(new Date(inf.last_closed_at).getTime() + (10 * 24 * 60 * 60 * 1000)).toISOString()
-          : null;
-        
-        return {
-          id: inf.id,
-          handle: inf.handle,
-          last_closed_at: inf.last_closed_at,
-          ativo: inf.ativo,
-          created_at: inf.created_at,
-          is_locked: !!isLocked,
-          locked_until: lockedUntil,
-          owner_nome: inf.owner_nome
-        };
-      });
-
-      // Filter to only locked
-      setInfluencers(mapped.filter(inf => inf.is_locked));
-    } else {
-      // Closers use the secure RPC function without exposing owner info
-      const { data, error } = await supabase.rpc('get_public_influencers');
-
-      if (error) {
-        console.error('Error fetching public influencers:', error);
-        setLoading(false);
-        return;
-      }
-
-      // Filter to only locked
-      setInfluencers((data || []).filter((inf: PublicInfluencer) => inf.is_locked));
+    if (error) {
+      console.error('Error fetching influencers:', error);
+      return;
     }
 
+    const enriched = (data || []).map(inf => enrichInfluencer({
+      id: inf.id,
+      handle: inf.handle,
+      ownerId: inf.owner_id,
+      ownerNome: inf.owner_nome,
+      lastClosedAt: inf.last_closed_at,
+      ativo: inf.ativo,
+      notas: inf.notas || undefined
+    }));
+
+    // Filter to only show TRAVADO (locked) influencers for closers
+    const lockedOnly = enriched.filter(inf => inf.status === 'TRAVADO');
+
+    // Sort by days remaining
+    lockedOnly.sort((a, b) => {
+      if (a.daysRemaining === null) return 1;
+      if (b.daysRemaining === null) return -1;
+      return a.daysRemaining - b.daysRemaining;
+    });
+
+    setInfluencers(lockedOnly);
     setLoading(false);
   };
 
   useEffect(() => {
     fetchInfluencers();
-  }, [isAdmin]);
+  }, []);
 
   // Filter by search
   const filteredInfluencers = influencers.filter(inf =>
     inf.handle.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  // Sort: locked first (by unlock date), then unlocked
-  const sortedInfluencers = [...filteredInfluencers].sort((a, b) => {
-    if (a.is_locked && !b.is_locked) return -1;
-    if (!a.is_locked && b.is_locked) return 1;
-    if (a.is_locked && b.is_locked) {
-      if (!a.locked_until) return 1;
-      if (!b.locked_until) return -1;
-      return new Date(a.locked_until).getTime() - new Date(b.locked_until).getTime();
-    }
-    return a.handle.localeCompare(b.handle);
-  });
 
   if (loading) {
     return (
@@ -129,7 +90,7 @@ export default function PainelGeral() {
                 </button>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
-                <p>Este painel mostra todos os influenciadores ativos. Influenciadores travados não podem ser fechados por outros closers.</p>
+                <p>Este painel mostra apenas influenciadores travados. Para ver influenciadores liberados, acesse Meu Painel e registre fechamentos.</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -157,7 +118,7 @@ export default function PainelGeral() {
               Todos os influenciadores estão liberados no momento.
             </p>
           </div>
-        ) : sortedInfluencers.length === 0 ? (
+        ) : filteredInfluencers.length === 0 ? (
           <div className="empty-state">
             <Search className="empty-state-icon" />
             <h3 className="empty-state-title">Nenhum resultado</h3>
@@ -178,30 +139,35 @@ export default function PainelGeral() {
                 </tr>
               </thead>
               <tbody>
-                {sortedInfluencers.map((inf) => (
-                  <tr key={inf.id}>
-                    <td>
-                      <span className="font-medium">{inf.handle}</span>
-                    </td>
-                    <td className="text-muted-foreground text-sm">
-                      {formatDate(inf.last_closed_at)}
-                    </td>
-                    <td className="text-muted-foreground text-sm">
-                      {inf.locked_until ? formatDate(inf.locked_until) : "—"}
-                    </td>
-                    <td>
-                      <StatusBadge status="TRAVADO" size="sm" />
-                    </td>
-                  </tr>
-                ))}
+                {filteredInfluencers.map((inf) => {
+                  const isMine = inf.ownerId === user?.id;
+                  
+                  return (
+                    <tr key={inf.id}>
+                      <td>
+                        <span className="font-medium">{inf.handle}</span>
+                      </td>
+                      <td>
+                        <span className={isMine ? "text-primary font-medium" : "text-muted-foreground"}>
+                          {isMine ? "Você" : inf.ownerNome || "—"}
+                        </span>
+                      </td>
+                      <td className="text-muted-foreground text-sm">
+                        {formatDate(inf.lastClosedAt)}
+                      </td>
+                      <td className="text-muted-foreground text-sm">
+                        {inf.lockedUntil ? formatDate(inf.lockedUntil.toISOString()) : "—"}
+                      </td>
+                      <td>
+                        <StatusBadge status={inf.status} size="sm" />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
-        
-        <p className="text-xs text-muted-foreground mt-4 text-center">
-          Exibindo influenciadores travados na agência.
-        </p>
       </div>
     </div>
   );
