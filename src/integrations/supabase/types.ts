@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          acao: string
+          created_at: string
+          descricao: string
+          detalhes: Json | null
+          id: string
+          user_id: string
+          user_nome: string
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          descricao: string
+          detalhes?: Json | null
+          id?: string
+          user_id: string
+          user_nome: string
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          descricao?: string
+          detalhes?: Json | null
+          id?: string
+          user_id?: string
+          user_nome?: string
+        }
+        Relationships: []
+      }
       close_events: {
         Row: {
           acao: string
@@ -141,6 +171,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_public_influencers: {
+        Args: never
+        Returns: {
+          ativo: boolean
+          created_at: string
+          handle: string
+          id: string
+          is_locked: boolean
+          last_closed_at: string
+          locked_until: string
+          owner_nome: string
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
