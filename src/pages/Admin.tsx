@@ -5,6 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ReasonModal } from "@/components/ReasonModal";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { enrichInfluencer, formatDate } from "@/lib/helpers";
 import { InfluencerWithStatus } from "@/types";
-import { Settings, Archive, RefreshCw, AlertTriangle, Loader2, Users, Mail, Shield, ShieldCheck } from "lucide-react";
+import { Settings, Archive, RefreshCw, AlertTriangle, Loader2, Users, Mail, Shield, ShieldCheck, Pencil, Key } from "lucide-react";
 
 interface UserWithRole {
   id: string;
@@ -31,6 +33,19 @@ export default function Admin() {
   const [archiveAction, setArchiveAction] = useState<"archive" | "unarchive">("archive");
   const [sendingReset, setSendingReset] = useState<string | null>(null);
   const [updatingRole, setUpdatingRole] = useState<string | null>(null);
+  
+  // Edit name modal
+  const [editNameModalOpen, setEditNameModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
+  const [newName, setNewName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  
+  // Change password modal
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [passwordUser, setPasswordUser] = useState<UserWithRole | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
 
   const fetchInfluencers = async () => {
     const { data } = await supabase.from('influencers').select('*');
@@ -102,6 +117,70 @@ export default function Admin() {
       toast.error('Erro ao enviar email', { description: error.message });
     } finally {
       setSendingReset(null);
+    }
+  };
+
+  const handleOpenEditName = (u: UserWithRole) => {
+    setEditingUser(u);
+    setNewName(u.nome);
+    setEditNameModalOpen(true);
+  };
+
+  const handleSaveName = async () => {
+    if (!editingUser || !newName.trim()) return;
+    
+    setSavingName(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-update-user', {
+        body: { userId: editingUser.id, action: 'update_name', newName: newName.trim() }
+      });
+
+      if (error) throw error;
+      
+      toast.success(`Nome alterado para "${newName.trim()}"`);
+      setEditNameModalOpen(false);
+      fetchUsers();
+    } catch (error: any) {
+      toast.error('Erro ao alterar nome', { description: error.message });
+    } finally {
+      setSavingName(false);
+    }
+  };
+
+  const handleOpenPassword = (u: UserWithRole) => {
+    setPasswordUser(u);
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordModalOpen(true);
+  };
+
+  const handleSavePassword = async () => {
+    if (!passwordUser || !newPassword) return;
+    
+    if (newPassword !== confirmPassword) {
+      toast.error('As senhas não coincidem');
+      return;
+    }
+    
+    if (newPassword.length < 6) {
+      toast.error('A senha deve ter no mínimo 6 caracteres');
+      return;
+    }
+    
+    setSavingPassword(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-update-user', {
+        body: { userId: passwordUser.id, action: 'update_password', newPassword }
+      });
+
+      if (error) throw error;
+      
+      toast.success(`Senha alterada para ${passwordUser.nome}`);
+      setPasswordModalOpen(false);
+    } catch (error: any) {
+      toast.error('Erro ao alterar senha', { description: error.message });
+    } finally {
+      setSavingPassword(false);
     }
   };
 
@@ -193,6 +272,22 @@ export default function Admin() {
                       <td className="p-3">
                         <div className="flex items-center justify-end gap-2">
                           <Button 
+                            variant="ghost" 
+                            size="icon"
+                            title="Editar nome"
+                            onClick={() => handleOpenEditName(u)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            title="Alterar senha"
+                            onClick={() => handleOpenPassword(u)}
+                          >
+                            <Key className="h-4 w-4" />
+                          </Button>
+                          <Button 
                             variant="outline" 
                             size="sm"
                             onClick={() => handleToggleRole(u.id, u.role)}
@@ -218,7 +313,7 @@ export default function Admin() {
                             ) : (
                               <>
                                 <Mail className="h-4 w-4 mr-1" />
-                                Reset Senha
+                                Reset Email
                               </>
                             )}
                           </Button>
@@ -283,6 +378,84 @@ export default function Admin() {
         actionLabel="Confirmar"
         onConfirm={handleArchiveConfirm}
       />
+
+      {/* Edit Name Modal */}
+      <Dialog open={editNameModalOpen} onOpenChange={setEditNameModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Nome</DialogTitle>
+            <DialogDescription>
+              Altere o nome de {editingUser?.nome}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="newName">Novo nome</Label>
+              <Input
+                id="newName"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="Digite o novo nome"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditNameModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveName} disabled={savingName || !newName.trim()}>
+              {savingName && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Password Modal */}
+      <Dialog open={passwordModalOpen} onOpenChange={setPasswordModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Alterar Senha</DialogTitle>
+            <DialogDescription>
+              Defina uma nova senha para {passwordUser?.nome}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">Nova senha</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmar senha</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Digite novamente"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPasswordModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleSavePassword} 
+              disabled={savingPassword || !newPassword || newPassword !== confirmPassword}
+            >
+              {savingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Alterar Senha
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
