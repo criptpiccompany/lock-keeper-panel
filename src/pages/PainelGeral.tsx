@@ -39,12 +39,8 @@ export default function PainelGeral() {
     // Filter to only show TRAVADO (locked) influencers for closers
     const lockedOnly = enriched.filter(inf => inf.status === 'TRAVADO');
 
-    // Sort by days remaining
-    lockedOnly.sort((a, b) => {
-      if (a.daysRemaining === null) return 1;
-      if (b.daysRemaining === null) return -1;
-      return a.daysRemaining - b.daysRemaining;
-    });
+    // Sort alphabetically by handle
+    lockedOnly.sort((a, b) => a.handle.localeCompare(b.handle, 'pt-BR', { sensitivity: 'base' }));
 
     setInfluencers(lockedOnly);
     setLoading(false);
