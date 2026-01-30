@@ -115,13 +115,12 @@ export default function MeuPainel() {
 
     setRefreshing(influencer.id);
 
-    // Clear the lock by setting last_closed_at to null (or a date > 10 days ago)
+    // Clear the lock by setting last_closed_at to null
+    // Keep owner_id and owner_nome so the influencer stays in the closer's list
     const { error: updateError } = await supabase
       .from('influencers')
       .update({
-        last_closed_at: null,
-        owner_id: null,
-        owner_nome: null
+        last_closed_at: null
       })
       .eq('id', influencer.id);
 
