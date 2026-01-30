@@ -14,9 +14,11 @@ import {
   Search, 
   UserPlus, 
   Users, 
-  RefreshCw, 
   Loader2,
-  Clock
+  Clock,
+  Send,
+  CheckCircle2,
+  XCircle
 } from "lucide-react";
 
 export default function MeuPainel() {
@@ -68,7 +70,7 @@ export default function MeuPainel() {
     fetchMyInfluencers();
   }, [user]);
 
-  const handleRenovar = async (influencer: InfluencerWithStatus) => {
+  const handlePublicar = async (influencer: InfluencerWithStatus) => {
     if (!user) return;
 
     setRefreshing(influencer.id);
@@ -85,7 +87,7 @@ export default function MeuPainel() {
       .eq('id', influencer.id);
 
     if (updateError) {
-      toast.error('Erro ao renovar fechamento');
+      toast.error('Erro ao publicar');
       setRefreshing(null);
       return;
     }
@@ -100,8 +102,48 @@ export default function MeuPainel() {
       acao: 'FECHAMENTO'
     });
 
-    toast.success('Fechamento renovado!', {
-      description: `${influencer.handle} agora está travado por mais 10 dias.`
+    toast.success('Publicado!', {
+      description: `${influencer.handle} está publicado por 10 dias.`
+    });
+
+    await fetchMyInfluencers();
+    setRefreshing(null);
+  };
+
+  const handleDespublicar = async (influencer: InfluencerWithStatus) => {
+    if (!user) return;
+
+    setRefreshing(influencer.id);
+
+    // Clear the lock by setting last_closed_at to null (or a date > 10 days ago)
+    const { error: updateError } = await supabase
+      .from('influencers')
+      .update({
+        last_closed_at: null,
+        owner_id: null,
+        owner_nome: null
+      })
+      .eq('id', influencer.id);
+
+    if (updateError) {
+      toast.error('Erro ao despublicar');
+      setRefreshing(null);
+      return;
+    }
+
+    // Create event for audit
+    await supabase.from('close_events').insert({
+      influencer_id: influencer.id,
+      influencer_handle: influencer.handle,
+      feito_por_id: user.id,
+      feito_por_nome: user.nome,
+      feito_em: new Date().toISOString(),
+      acao: 'OVERRIDE_ADMIN',
+      motivo: 'Despublicado pelo closer'
+    });
+
+    toast.success('Despublicado!', {
+      description: `${influencer.handle} foi liberado e pode ser capturado por outros.`
     });
 
     await fetchMyInfluencers();
@@ -233,21 +275,66 @@ export default function MeuPainel() {
                         <StatusBadge status={inf.status} size="sm" />
                       </td>
                       <td className="text-right">
-                        <Button
-                          size="sm"
-                          variant={isExpiring ? "default" : "outline"}
-                          onClick={() => handleRenovar(inf)}
-                          disabled={refreshing === inf.id}
-                        >
-                          {refreshing === inf.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
+                        <div className="flex items-center justify-end gap-2">
+                          {inf.status === "TRAVADO" ? (
                             <>
-                              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-                              Renovar
+                              {/* Botão Publicado (verde) - clica para renovar */}
+                              <Button
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                                onClick={() => handlePublicar(inf)}
+                                disabled={refreshing === inf.id}
+                              >
+                                {refreshing === inf.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <>
+                                    <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+                                    <div className="flex flex-col items-start leading-none">
+                                      <span>Publicado</span>
+                                      <span className="text-[10px] opacity-80">
+                                        {formatDate(inf.lastClosedAt)}
+                                      </span>
+                                    </div>
+                                  </>
+                                )}
+                              </Button>
+                              {/* Botão Despublicar (vermelho) */}
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDespublicar(inf)}
+                                disabled={refreshing === inf.id}
+                              >
+                                {refreshing === inf.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <>
+                                    <XCircle className="mr-1.5 h-3.5 w-3.5" />
+                                    Despublicar
+                                  </>
+                                )}
+                              </Button>
                             </>
+                          ) : (
+                            /* Botão Publicar (laranja) - quando LIBERADO */
+                            <Button
+                              size="sm"
+                              className="bg-orange-500 hover:bg-orange-600 text-white"
+                              onClick={() => handlePublicar(inf)}
+                              disabled={refreshing === inf.id}
+                            >
+                              {refreshing === inf.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <Send className="mr-1.5 h-3.5 w-3.5" />
+                                  Publicar
+                                </>
+                              )}
+                            </Button>
                           )}
-                        </Button>
+                        </div>
                       </td>
                     </tr>
                   );
