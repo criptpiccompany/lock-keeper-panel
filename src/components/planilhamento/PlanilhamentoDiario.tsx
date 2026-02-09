@@ -39,7 +39,7 @@ import {
   Plus,
   FileText,
   Upload,
-  RefreshCw,
+  
   Paperclip,
   ChevronDown,
   ChevronRight,
@@ -296,7 +296,7 @@ export default function PlanilhamentoDiario() {
   const [influencers, setInfluencers] = useState<InfluencerOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
-  const [renewingId, setRenewingId] = useState<string | null>(null);
+  
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -630,50 +630,7 @@ export default function PlanilhamentoDiario() {
     setLightboxOpen(true);
   };
 
-  const handleRenovar = async (record: DailyRecord) => {
-    if (!user) return;
-    const { data: existingEvents } = await supabase
-      .from("close_events")
-      .select("id")
-      .eq("influencer_id", record.influencer_id)
-      .eq("feito_por_id", user.id)
-      .gte("feito_em", new Date().toISOString().split("T")[0] + "T00:00:00Z");
 
-    if (existingEvents && existingEvents.length > 0) {
-      toast.error("Já renovado hoje");
-      return;
-    }
-
-    setRenewingId(record.influencer_id);
-    const now2 = new Date().toISOString();
-    const handle = getInfluencerHandle(record.influencer_id);
-
-    const { error: updateError } = await supabase
-      .from("influencers")
-      .update({ last_closed_at: now2, owner_id: user.id, owner_nome: user.nome })
-      .eq("id", record.influencer_id);
-
-    if (updateError) {
-      console.error("Renovar error:", updateError);
-      toast.error("Erro ao renovar", { description: updateError.message });
-      setRenewingId(null);
-      return;
-    }
-
-    await supabase.from("close_events").insert({
-      influencer_id: record.influencer_id,
-      influencer_handle: handle,
-      feito_por_id: user.id,
-      feito_por_nome: user.nome,
-      feito_em: now2,
-      acao: "FECHAMENTO",
-      motivo: "Renovação via registro diário",
-    });
-
-    toast.success("Renovado!", { description: `${handle} renovado por +10 dias.` });
-    setRenewingId(null);
-    fetchData();
-  };
 
   // --- Month totals ---
   const monthTotals = useMemo(() => {
@@ -842,27 +799,9 @@ export default function PlanilhamentoDiario() {
                                   </button>
                                 </td>
                                 <td className="py-2.5 px-4 text-right">
-                                  <div className="flex items-center justify-end gap-1.5">
-                                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => openEditRecord(record)}>
+                                  <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => openEditRecord(record)}>
                                       Editar
                                     </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-7 text-xs"
-                                      onClick={() => handleRenovar(record)}
-                                      disabled={renewingId === record.influencer_id}
-                                    >
-                                      {renewingId === record.influencer_id ? (
-                                        <Loader2 className="h-3 w-3 animate-spin" />
-                                      ) : (
-                                        <>
-                                          <RefreshCw className="mr-1 h-3 w-3" />
-                                          Renovar
-                                        </>
-                                      )}
-                                    </Button>
-                                  </div>
                                 </td>
                               </tr>
                             );
