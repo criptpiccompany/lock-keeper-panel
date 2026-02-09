@@ -48,6 +48,7 @@ import {
   X,
   Download,
 } from "lucide-react";
+import ComprovanteThumbnail from "./ComprovanteThumbnail";
 
 // --- Types ---
 
