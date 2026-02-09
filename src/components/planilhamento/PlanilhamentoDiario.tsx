@@ -294,7 +294,8 @@ export default function PlanilhamentoDiario() {
   const [influencers, setInfluencers] = useState<InfluencerOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
-  
+import ComprovanteThumbnail from "./ComprovanteThumbnail";
+
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
