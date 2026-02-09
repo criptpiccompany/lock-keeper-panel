@@ -15,6 +15,7 @@ import Auditoria from "./pages/Auditoria";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import ImportData from "./pages/ImportData";
+import RegistroDiario from "./pages/RegistroDiario";
 
 const queryClient = new QueryClient();
 
@@ -92,6 +93,17 @@ function AppRoutes() {
           <ProtectedRoute requireAdmin>
             <Navbar />
             <Admin />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Registro Diário - all authenticated users */}
+      <Route
+        path="/registro"
+        element={
+          <ProtectedRoute>
+            <Navbar />
+            <RegistroDiario />
           </ProtectedRoute>
         }
       />

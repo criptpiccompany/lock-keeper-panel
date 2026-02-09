@@ -88,6 +88,53 @@ export type Database = {
           },
         ]
       }
+      daily_influencer_records: {
+        Row: {
+          closer_id: string
+          comprovante_url: string
+          created_at: string
+          date: string
+          faturamento: number | null
+          id: string
+          influencer_id: string
+          observacao: string | null
+          updated_at: string
+          valor_pago: number
+        }
+        Insert: {
+          closer_id: string
+          comprovante_url: string
+          created_at?: string
+          date?: string
+          faturamento?: number | null
+          id?: string
+          influencer_id: string
+          observacao?: string | null
+          updated_at?: string
+          valor_pago: number
+        }
+        Update: {
+          closer_id?: string
+          comprovante_url?: string
+          created_at?: string
+          date?: string
+          faturamento?: number | null
+          id?: string
+          influencer_id?: string
+          observacao?: string | null
+          updated_at?: string
+          valor_pago?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_influencer_records_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "influencers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       influencers: {
         Row: {
           ativo: boolean
