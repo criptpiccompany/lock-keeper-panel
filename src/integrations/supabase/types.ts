@@ -134,6 +134,8 @@ export type Database = {
           comprovante_url: string
           created_at: string
           date: string
+          deleted_at: string | null
+          deleted_by: string | null
           faturamento: number | null
           id: string
           influencer_id: string
@@ -148,6 +150,8 @@ export type Database = {
           comprovante_url: string
           created_at?: string
           date?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           faturamento?: number | null
           id?: string
           influencer_id: string
@@ -162,6 +166,8 @@ export type Database = {
           comprovante_url?: string
           created_at?: string
           date?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           faturamento?: number | null
           id?: string
           influencer_id?: string
@@ -185,6 +191,8 @@ export type Database = {
           closer_id: string
           created_at: string
           date: string
+          deleted_at: string | null
+          deleted_by: string | null
           id: string
           month: string
         }
@@ -192,6 +200,8 @@ export type Database = {
           closer_id: string
           created_at?: string
           date: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           month: string
         }
@@ -199,6 +209,8 @@ export type Database = {
           closer_id?: string
           created_at?: string
           date?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           month?: string
         }
@@ -208,6 +220,8 @@ export type Database = {
         Row: {
           ativo: boolean
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           handle: string
           id: string
           last_closed_at: string | null
@@ -219,6 +233,8 @@ export type Database = {
         Insert: {
           ativo?: boolean
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           handle: string
           id?: string
           last_closed_at?: string | null
@@ -230,6 +246,8 @@ export type Database = {
         Update: {
           ativo?: boolean
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           handle?: string
           id?: string
           last_closed_at?: string | null
