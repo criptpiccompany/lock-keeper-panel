@@ -18,7 +18,7 @@ export default function PlanilhamentoTabs() {
       {/* Header */}
       <div className="border-b">
         <div className="container py-8">
-          <h1 className="text-2xl font-semibold tracking-tight">Planilhamento</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Planilhamento</h1>
           <p className="text-muted-foreground text-sm mt-1">
             Gestão financeira diária dos influenciadores
           </p>

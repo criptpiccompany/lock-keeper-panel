@@ -138,6 +138,30 @@ export type Database = {
           },
         ]
       }
+      daily_sheets: {
+        Row: {
+          closer_id: string
+          created_at: string
+          date: string
+          id: string
+          month: string
+        }
+        Insert: {
+          closer_id: string
+          created_at?: string
+          date: string
+          id?: string
+          month: string
+        }
+        Update: {
+          closer_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          month?: string
+        }
+        Relationships: []
+      }
       influencers: {
         Row: {
           ativo: boolean

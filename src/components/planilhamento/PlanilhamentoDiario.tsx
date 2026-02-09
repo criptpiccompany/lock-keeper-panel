@@ -195,9 +195,10 @@ export default function PlanilhamentoDiario() {
   const [submitting, setSubmitting] = useState(false);
   const [comboOpen, setComboOpen] = useState(false);
 
-  // Extra days added by blue "+" button
-  const [extraDays, setExtraDays] = useState<string[]>([]);
+  // Persistent days from DB
+  const [persistedDays, setPersistedDays] = useState<string[]>([]);
 
+  const monthKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}`;
   const monthDays = useMemo(() => getMonthDays(selectedYear, selectedMonth), [selectedYear, selectedMonth]);
 
   const fetchData = useCallback(async () => {
@@ -207,6 +208,7 @@ export default function PlanilhamentoDiario() {
     const startDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`;
     const endDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-${new Date(selectedYear, selectedMonth + 1, 0).getDate()}`;
 
+    // Fetch records, influencers, and persisted days in parallel
     let recordsQuery = supabase
       .from("daily_influencer_records")
       .select("*")
@@ -219,16 +221,29 @@ export default function PlanilhamentoDiario() {
       recordsQuery = recordsQuery.eq("closer_id", user.id);
     }
 
-    const { data: recordsData } = await recordsQuery;
+    let sheetsQuery = supabase
+      .from("daily_sheets")
+      .select("date")
+      .eq("month", monthKey);
+
+    if (!isAdmin) {
+      sheetsQuery = sheetsQuery.eq("closer_id", user.id);
+    }
 
     let infQuery = supabase.from("influencers").select("id, handle, last_closed_at").eq("ativo", true);
     if (!isAdmin) {
       infQuery = infQuery.eq("owner_id", user.id);
     }
-    const { data: infData } = await infQuery;
 
-    setRecords((recordsData as DailyRecord[]) || []);
-    setInfluencers(infData || []);
+    const [recordsRes, infRes, sheetsRes] = await Promise.all([
+      recordsQuery,
+      infQuery,
+      sheetsQuery,
+    ]);
+
+    setRecords((recordsRes.data as DailyRecord[]) || []);
+    setInfluencers(infRes.data || []);
+    setPersistedDays((sheetsRes.data || []).map((s: any) => s.date));
     setLoading(false);
 
     // Auto-expand today
@@ -236,11 +251,10 @@ export default function PlanilhamentoDiario() {
     if (today >= startDate && today <= endDate) {
       setExpandedDays(new Set([today]));
     }
-  }, [user, isAdmin, selectedYear, selectedMonth]);
+  }, [user, isAdmin, selectedYear, selectedMonth, monthKey]);
 
   useEffect(() => {
     fetchData();
-    setExtraDays([]);
   }, [fetchData]);
 
   // Group records by date
@@ -254,16 +268,16 @@ export default function PlanilhamentoDiario() {
     return map;
   }, [records]);
 
-  // Days that have data + extra days
+  // Days that have data or are persisted
   const activeDays = useMemo(() => {
     const days = new Set<string>();
     for (const d of recordsByDate.keys()) days.add(d);
-    for (const d of extraDays) days.add(d);
+    for (const d of persistedDays) days.add(d);
     // Also add today if in current month
     const today = new Date().toISOString().split("T")[0];
     if (monthDays.includes(today)) days.add(today);
     return monthDays.filter((d) => days.has(d));
-  }, [recordsByDate, extraDays, monthDays]);
+  }, [recordsByDate, persistedDays, monthDays]);
 
   const getInfluencerHandle = (id: string) => {
     return influencers.find((i) => i.id === id)?.handle || id;
@@ -297,31 +311,59 @@ export default function PlanilhamentoDiario() {
     }
   };
 
-  // --- Add day (blue +) ---
-  const handleAddDay = () => {
+  // --- Add day (blue +) — now persists to DB ---
+  const handleAddDay = async () => {
+    if (!user) return;
+
     // Find the latest active day and add the next one
     const allDays = [...activeDays].sort();
     const lastDay = allDays[allDays.length - 1];
+    let targetDate: string;
+
     if (lastDay) {
       const next = new Date(lastDay + "T12:00:00");
       next.setDate(next.getDate() + 1);
       const nextStr = next.toISOString().split("T")[0];
-      if (monthDays.includes(nextStr)) {
-        setExtraDays((prev) => [...prev, nextStr]);
-        setExpandedDays((prev) => new Set([...prev, nextStr]));
-      } else {
+      if (!monthDays.includes(nextStr)) {
         toast.info("Fim do mês atingido");
+        return;
       }
+      targetDate = nextStr;
     } else {
-      // No days yet, add today or first day of month
       const today = new Date().toISOString().split("T")[0];
-      const target = monthDays.includes(today) ? today : monthDays[0];
-      setExtraDays((prev) => [...prev, target]);
-      setExpandedDays((prev) => new Set([...prev, target]));
+      targetDate = monthDays.includes(today) ? today : monthDays[0];
+    }
+
+    // Check if already exists
+    if (persistedDays.includes(targetDate)) {
+      setExpandedDays((prev) => new Set([...prev, targetDate]));
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from("daily_sheets").insert({
+        date: targetDate,
+        month: monthKey,
+        closer_id: user.id,
+      } as any);
+
+      if (error) {
+        console.error("Error inserting daily_sheet:", error);
+        toast.error("Erro ao adicionar dia", { description: error.message });
+        return;
+      }
+
+      setPersistedDays((prev) => [...prev, targetDate]);
+      setExpandedDays((prev) => new Set([...prev, targetDate]));
+      toast.success(`Dia ${new Date(targetDate + "T12:00:00").getDate()} adicionado`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      console.error("Error adding day:", err);
+      toast.error("Erro ao adicionar dia", { description: message });
     }
   };
 
-  // --- Add row (red +) ---
+  // --- Add row (red +) — always opens modal, shows empty state if no influencers ---
   const openNewRecord = (date: string) => {
     setEditRecord(null);
     setModalDate(date);
@@ -352,6 +394,12 @@ export default function PlanilhamentoDiario() {
 
   const handleSubmit = async () => {
     if (!user) return;
+
+    const available = getAvailableInfluencers(modalDate);
+    if (!editRecord && available.length === 0) {
+      toast.error("Sem influenciadores disponíveis para este dia");
+      return;
+    }
     if (!editRecord && !formInfluencerId) {
       toast.error("Selecione um influenciador");
       return;
@@ -376,6 +424,7 @@ export default function PlanilhamentoDiario() {
           .from("comprovantes")
           .upload(path, formFile);
         if (uploadError) {
+          console.error("Upload error:", uploadError);
           toast.error("Erro no upload do comprovante", { description: uploadError.message });
           setSubmitting(false);
           return;
@@ -396,7 +445,10 @@ export default function PlanilhamentoDiario() {
           .from("daily_influencer_records")
           .update(payload)
           .eq("id", editRecord.id);
-        if (error) throw error;
+        if (error) {
+          console.error("Update error:", error);
+          throw error;
+        }
         toast.success("Registro atualizado!");
       } else {
         payload.date = modalDate;
@@ -406,7 +458,10 @@ export default function PlanilhamentoDiario() {
         const { error } = await supabase
           .from("daily_influencer_records")
           .insert(payload as any);
-        if (error) throw error;
+        if (error) {
+          console.error("Insert error:", error);
+          throw error;
+        }
         toast.success("Registro criado!");
       }
 
@@ -414,6 +469,7 @@ export default function PlanilhamentoDiario() {
       fetchData();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro desconhecido";
+      console.error("Submit error:", err);
       toast.error("Erro ao salvar", { description: message });
     } finally {
       setSubmitting(false);
@@ -426,7 +482,8 @@ export default function PlanilhamentoDiario() {
       .update({ status: newStatus })
       .eq("id", recordId);
     if (error) {
-      toast.error("Erro ao atualizar status");
+      console.error("Status update error:", error);
+      toast.error("Erro ao atualizar status", { description: error.message });
       return;
     }
     setRecords((prev) =>
@@ -470,7 +527,8 @@ export default function PlanilhamentoDiario() {
       .eq("id", record.influencer_id);
 
     if (updateError) {
-      toast.error("Erro ao renovar");
+      console.error("Renovar error:", updateError);
+      toast.error("Erro ao renovar", { description: updateError.message });
       setRenewingId(null);
       return;
     }
@@ -490,7 +548,7 @@ export default function PlanilhamentoDiario() {
     fetchData();
   };
 
-  // --- Day totals ---
+  // --- Month totals ---
   const monthTotals = useMemo(() => {
     const totalInvestido = records.reduce((sum, r) => sum + Number(r.valor_pago), 0);
     const totalFaturado = records.reduce((sum, r) => sum + (Number(r.faturamento) || 0), 0);
@@ -514,6 +572,12 @@ export default function PlanilhamentoDiario() {
     return map;
   }, [activeDays, recordsByDate]);
 
+  // Check if modal has available influencers
+  const modalAvailableInfluencers = useMemo(() => {
+    if (!modalDate) return [];
+    return getAvailableInfluencers(modalDate);
+  }, [modalDate, influencers, recordsByDate]);
+
   if (loading) {
     return (
       <div className="min-h-[40vh] flex items-center justify-center">
@@ -530,7 +594,7 @@ export default function PlanilhamentoDiario() {
           <Button variant="ghost" size="icon" onClick={prevMonth} className="h-8 w-8">
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-base font-semibold min-w-[180px] text-center">
+          <span className="text-base font-bold text-foreground min-w-[180px] text-center">
             {MONTHS[selectedMonth]} {selectedYear}
           </span>
           <Button variant="ghost" size="icon" onClick={nextMonth} className="h-8 w-8">
@@ -585,7 +649,7 @@ export default function PlanilhamentoDiario() {
                     ) : (
                       <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     )}
-                    <span className="font-medium text-sm capitalize">{formatDayLabel(day)}</span>
+                    <span className="font-semibold text-sm text-foreground capitalize">{formatDayLabel(day)}</span>
                     <Badge variant="secondary" className="text-xs">
                       {dayRecords.length} {dayRecords.length === 1 ? "registro" : "registros"}
                     </Badge>
@@ -602,14 +666,14 @@ export default function PlanilhamentoDiario() {
                     <table className="w-full">
                       <thead>
                         <tr className="bg-muted/60">
-                          <th className="text-xs font-medium text-muted-foreground uppercase tracking-wider py-2.5 px-4 text-left">Nome</th>
-                          <th className="text-xs font-medium text-muted-foreground uppercase tracking-wider py-2.5 px-4 text-left">Valor Pago</th>
-                          <th className="text-xs font-medium text-muted-foreground uppercase tracking-wider py-2.5 px-4 text-left">Faturamento</th>
-                          <th className="text-xs font-medium text-muted-foreground uppercase tracking-wider py-2.5 px-4 text-left">Resultado</th>
-                          <th className="text-xs font-medium text-muted-foreground uppercase tracking-wider py-2.5 px-4 text-left">Acumulado</th>
-                          <th className="text-xs font-medium text-muted-foreground uppercase tracking-wider py-2.5 px-4 text-left">Status</th>
-                          <th className="text-xs font-medium text-muted-foreground uppercase tracking-wider py-2.5 px-4 text-center">📎</th>
-                          <th className="text-xs font-medium text-muted-foreground uppercase tracking-wider py-2.5 px-4 text-right">Ações</th>
+                          <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Nome</th>
+                          <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Valor Pago</th>
+                          <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Faturamento</th>
+                          <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Resultado</th>
+                          <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Acumulado</th>
+                          <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Status</th>
+                          <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-center">📎</th>
+                          <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-right">Ações</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -687,14 +751,13 @@ export default function PlanilhamentoDiario() {
                       </tbody>
                     </table>
 
-                    {/* Red + button: add row to this day */}
+                    {/* Red + button: add row to this day — always clickable */}
                     <div className="px-4 py-2 border-t border-border/30">
                       <Button
                         size="sm"
                         variant="ghost"
                         className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
                         onClick={() => openNewRecord(day)}
-                        disabled={getAvailableInfluencers(day).length === 0}
                       >
                         <Plus className="mr-1 h-3.5 w-3.5" />
                         Adicionar registro
@@ -749,139 +812,154 @@ export default function PlanilhamentoDiario() {
             <DialogTitle>{editRecord ? "Editar Registro" : "Novo Registro"}</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 py-2">
-            {!editRecord && (
+          {/* Empty state when no influencers available */}
+          {!editRecord && modalAvailableInfluencers.length === 0 ? (
+            <div className="py-8 text-center space-y-2">
+              <FileText className="h-10 w-10 mx-auto text-muted-foreground/50" />
+              <p className="text-sm font-medium text-muted-foreground">
+                Sem influenciadores disponíveis para este dia
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Todos os seus influenciadores já possuem registro nesta data.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4 py-2">
+              {!editRecord && (
+                <div className="space-y-2">
+                  <Label>Influenciador</Label>
+                  <Popover open={comboOpen} onOpenChange={setComboOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={comboOpen}
+                        className="w-full justify-between font-normal"
+                      >
+                        {formInfluencerId
+                          ? influencers.find((i) => i.id === formInfluencerId)?.handle
+                          : "Buscar influenciador..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0 bg-popover z-50" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar..." />
+                        <CommandList>
+                          <CommandEmpty>Nenhum encontrado.</CommandEmpty>
+                          <CommandGroup>
+                            {modalAvailableInfluencers.map((inf) => (
+                              <CommandItem
+                                key={inf.id}
+                                value={inf.handle}
+                                onSelect={() => {
+                                  setFormInfluencerId(inf.id);
+                                  setComboOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={`mr-2 h-4 w-4 ${formInfluencerId === inf.id ? "opacity-100" : "opacity-0"}`}
+                                />
+                                {inf.handle}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+
+              {editRecord && (
+                <div className="text-sm text-muted-foreground">
+                  Influenciador: <strong>{getInfluencerHandle(editRecord.influencer_id)}</strong>
+                </div>
+              )}
+
               <div className="space-y-2">
-                <Label>Influenciador</Label>
-                <Popover open={comboOpen} onOpenChange={setComboOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={comboOpen}
-                      className="w-full justify-between font-normal"
-                    >
-                      {formInfluencerId
-                        ? influencers.find((i) => i.id === formInfluencerId)?.handle
-                        : "Buscar influenciador..."}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0 bg-popover z-50" align="start">
-                    <Command>
-                      <CommandInput placeholder="Buscar..." />
-                      <CommandList>
-                        <CommandEmpty>Nenhum encontrado.</CommandEmpty>
-                        <CommandGroup>
-                          {getAvailableInfluencers(modalDate).map((inf) => (
-                            <CommandItem
-                              key={inf.id}
-                              value={inf.handle}
-                              onSelect={() => {
-                                setFormInfluencerId(inf.id);
-                                setComboOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={`mr-2 h-4 w-4 ${formInfluencerId === inf.id ? "opacity-100" : "opacity-0"}`}
-                              />
-                              {inf.handle}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            )}
-
-            {editRecord && (
-              <div className="text-sm text-muted-foreground">
-                Influenciador: <strong>{getInfluencerHandle(editRecord.influencer_id)}</strong>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label>Valor Pago (R$)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0,00"
-                value={formValorPago}
-                onChange={(e) => setFormValorPago(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Faturamento (R$) <span className="text-muted-foreground text-xs">— pode preencher depois</span></Label>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0,00"
-                value={formFaturamento}
-                onChange={(e) => setFormFaturamento(e.target.value)}
-              />
-            </div>
-
-            {formValorPago && formFaturamento && (
-              <div className="bg-muted/50 rounded-lg p-3 space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Taxa (10%)</span>
-                  <span>{formatCurrency(calcTaxaPlataforma(Number(formFaturamento)))}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Lucro líquido</span>
-                  <span className={`font-medium ${calcLucroLiquido(Number(formFaturamento), Number(formValorPago)) >= 0 ? "text-emerald-700" : "text-red-600"}`}>
-                    {formatCurrency(calcLucroLiquido(Number(formFaturamento), Number(formValorPago)))}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Margem</span>
-                  <span>{formatPercent(calcMargem(Number(formFaturamento), Number(formValorPago)))}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Status</span>
-                  <ResultadoChip status={getStatusResultado(Number(formFaturamento), Number(formValorPago))} />
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label>{editRecord ? "Substituir Comprovante" : "Comprovante de Pagamento *"}</Label>
-              <label className="cursor-pointer block">
-                <div className="flex items-center gap-2 border rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 transition-colors">
-                  <Upload className="h-4 w-4" />
-                  {formFile ? formFile.name : "Selecionar arquivo (JPG, PNG, PDF)"}
-                </div>
-                <input
-                  type="file"
-                  accept=".jpg,.jpeg,.png,.pdf"
-                  className="hidden"
-                  onChange={(e) => setFormFile(e.target.files?.[0] || null)}
+                <Label>Valor Pago (R$)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0,00"
+                  value={formValorPago}
+                  onChange={(e) => setFormValorPago(e.target.value)}
                 />
-              </label>
-            </div>
+              </div>
 
-            <div className="space-y-2">
-              <Label>Observação <span className="text-muted-foreground text-xs">(opcional)</span></Label>
-              <Textarea
-                placeholder="Observações sobre o registro..."
-                value={formObservacao}
-                onChange={(e) => setFormObservacao(e.target.value)}
-                rows={2}
-              />
+              <div className="space-y-2">
+                <Label>Faturamento (R$) <span className="text-muted-foreground text-xs">— pode preencher depois</span></Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0,00"
+                  value={formFaturamento}
+                  onChange={(e) => setFormFaturamento(e.target.value)}
+                />
+              </div>
+
+              {formValorPago && formFaturamento && (
+                <div className="bg-muted/50 rounded-lg p-3 space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Taxa (10%)</span>
+                    <span>{formatCurrency(calcTaxaPlataforma(Number(formFaturamento)))}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Lucro líquido</span>
+                    <span className={`font-medium ${calcLucroLiquido(Number(formFaturamento), Number(formValorPago)) >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                      {formatCurrency(calcLucroLiquido(Number(formFaturamento), Number(formValorPago)))}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Margem</span>
+                    <span>{formatPercent(calcMargem(Number(formFaturamento), Number(formValorPago)))}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Status</span>
+                    <ResultadoChip status={getStatusResultado(Number(formFaturamento), Number(formValorPago))} />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label>{editRecord ? "Substituir Comprovante" : "Comprovante de Pagamento *"}</Label>
+                <label className="cursor-pointer block">
+                  <div className="flex items-center gap-2 border rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 transition-colors">
+                    <Upload className="h-4 w-4" />
+                    {formFile ? formFile.name : "Selecionar arquivo (JPG, PNG, PDF)"}
+                  </div>
+                  <input
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    className="hidden"
+                    onChange={(e) => setFormFile(e.target.files?.[0] || null)}
+                  />
+                </label>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Observação <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+                <Textarea
+                  placeholder="Observações sobre o registro..."
+                  value={formObservacao}
+                  onChange={(e) => setFormObservacao(e.target.value)}
+                  rows={2}
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={submitting}>
-              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {editRecord ? "Salvar" : "Registrar"}
-            </Button>
+            {(editRecord || modalAvailableInfluencers.length > 0) && (
+              <Button onClick={handleSubmit} disabled={submitting}>
+                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {editRecord ? "Salvar" : "Registrar"}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
