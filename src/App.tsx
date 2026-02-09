@@ -14,6 +14,7 @@ import Diretorio from "./pages/Diretorio";
 import Auditoria from "./pages/Auditoria";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import ImportData from "./pages/ImportData";
 
 const queryClient = new QueryClient();
 
@@ -96,6 +97,9 @@ function AppRoutes() {
       />
 
       <Route path="*" element={<NotFound />} />
+      
+      {/* Temporary import route */}
+      <Route path="/import" element={<ImportData />} />
     </Routes>
   );
 }
