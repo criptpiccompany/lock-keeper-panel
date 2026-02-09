@@ -46,9 +46,9 @@ import {
   ChevronsUpDown,
   Pencil,
   X,
-  Download,
 } from "lucide-react";
 import ComprovanteThumbnail from "./ComprovanteThumbnail";
+import ComprovanteLightbox from "./ComprovanteLightbox";
 
 // --- Types ---
 
@@ -216,50 +216,7 @@ function InlineAcumulado({
   );
 }
 
-// --- Comprovante lightbox ---
-
-function ComprovanteLightbox({
-  open,
-  onClose,
-  url,
-}: {
-  open: boolean;
-  onClose: () => void;
-  url: string;
-}) {
-  const isPdf = url.toLowerCase().includes(".pdf");
-
-  return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            Comprovante
-          </DialogTitle>
-        </DialogHeader>
-        <div className="flex-1 overflow-auto flex items-center justify-center min-h-[300px]">
-          {isPdf ? (
-            <iframe src={url} className="w-full h-[70vh] rounded border" title="Comprovante PDF" />
-          ) : (
-            <img src={url} alt="Comprovante" className="max-w-full max-h-[70vh] object-contain rounded" />
-          )}
-        </div>
-        <div className="flex justify-end gap-2 pt-2">
-          <Button variant="outline" size="sm" asChild>
-            <a href={url} download target="_blank" rel="noopener noreferrer">
-              <Download className="mr-1.5 h-3.5 w-3.5" />
-              Download
-            </a>
-          </Button>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Fechar
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
+// ComprovanteLightbox extracted to ./ComprovanteLightbox.tsx
 // --- Month helpers ---
 
 function getMonthDays(year: number, month: number): string[] {
