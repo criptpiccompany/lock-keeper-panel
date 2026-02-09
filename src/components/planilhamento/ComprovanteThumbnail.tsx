@@ -34,14 +34,17 @@ export default function ComprovanteThumbnail({ url, onClick }: Props) {
     return () => { cancelled = true; };
   }, [url, isPdf]);
 
+  const showPlaceholder = isPdf || failed || !thumbSrc;
+  const badge = isPdf ? "PDF" : "IMG";
+
   return (
     <button
       onClick={onClick}
-      className="inline-block rounded border border-border/50 overflow-hidden hover:ring-2 hover:ring-ring/30 transition-all w-8 h-8"
+      className="relative inline-flex w-9 h-9 rounded-lg overflow-hidden bg-muted/60 border border-border/30 hover:scale-105 hover:shadow-[0_2px_10px_0_hsl(var(--primary)/0.18)] transition-all duration-150 cursor-pointer group"
       title="Ver comprovante"
     >
-      {isPdf || failed || !thumbSrc ? (
-        <span className="w-full h-full bg-muted flex items-center justify-center">
+      {showPlaceholder ? (
+        <span className="w-full h-full flex items-center justify-center">
           {isPdf ? (
             <FileText className="h-4 w-4 text-muted-foreground" />
           ) : (
@@ -56,6 +59,10 @@ export default function ComprovanteThumbnail({ url, onClick }: Props) {
           onError={() => setFailed(true)}
         />
       )}
+      {/* File type badge */}
+      <span className="absolute bottom-0 right-0 text-[7px] leading-none font-semibold px-1 py-[1px] rounded-tl-md bg-foreground/70 text-background tracking-wide">
+        {badge}
+      </span>
     </button>
   );
 }
