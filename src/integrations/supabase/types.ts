@@ -44,6 +44,45 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action: string
+          actor_nome: string | null
+          actor_role: string | null
+          actor_user_id: string | null
+          created_at: string
+          description: string | null
+          entity_id: string | null
+          entity_type: string
+          field_changes: Json | null
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_nome?: string | null
+          actor_role?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          description?: string | null
+          entity_id?: string | null
+          entity_type: string
+          field_changes?: Json | null
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_nome?: string | null
+          actor_role?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          description?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          field_changes?: Json | null
+          id?: string
+        }
+        Relationships: []
+      }
       close_events: {
         Row: {
           acao: string
