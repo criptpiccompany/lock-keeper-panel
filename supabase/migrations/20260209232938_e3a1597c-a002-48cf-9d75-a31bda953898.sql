@@ -1,0 +1,1 @@
+ALTER TABLE public.daily_influencer_records ADD COLUMN acumulado NUMERIC DEFAULT NULL;
