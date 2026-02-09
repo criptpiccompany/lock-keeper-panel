@@ -756,10 +756,10 @@ export default function PlanilhamentoDiario() {
                           dayRecords.map((record, idx) => {
                             const lucro = calcLucroLiquido(record.faturamento, record.valor_pago);
                             const resultado = getStatusResultado(record.faturamento, record.valor_pago);
-                            const zebraClass = idx % 2 === 1 ? "bg-muted/20" : "";
+                            const zebraClass = idx % 2 === 1 ? "bg-muted/50" : "bg-background";
 
                             return (
-                              <tr key={record.id} className={`border-t border-border/30 hover:bg-muted/30 transition-colors ${zebraClass}`}>
+                              <tr key={record.id} className={`border-t border-border/30 hover:bg-muted/60 transition-colors ${zebraClass}`}>
                                 <td className="py-2.5 px-4 text-sm font-medium">{getInfluencerHandle(record.influencer_id)}</td>
                                 <td className="py-2.5 px-4 text-sm">{formatCurrency(record.valor_pago)}</td>
                                 <td className="py-2.5 px-4 text-sm">
