@@ -98,6 +98,7 @@ export type Database = {
           id: string
           influencer_id: string
           observacao: string | null
+          status: string | null
           updated_at: string
           valor_pago: number
         }
@@ -110,6 +111,7 @@ export type Database = {
           id?: string
           influencer_id: string
           observacao?: string | null
+          status?: string | null
           updated_at?: string
           valor_pago: number
         }
@@ -122,6 +124,7 @@ export type Database = {
           id?: string
           influencer_id?: string
           observacao?: string | null
+          status?: string | null
           updated_at?: string
           valor_pago?: number
         }
