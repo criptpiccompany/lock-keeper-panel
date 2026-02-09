@@ -823,12 +823,12 @@ export default function PlanilhamentoDiario() {
                       </tbody>
                     </table>
 
-                    {/* Red + button: add influencer to this day */}
+                    {/* Blue + button: add influencer to this day */}
                     <div className="px-4 py-2 border-t border-border/30">
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="h-7 text-xs text-primary bg-primary/10 shadow-[0_1px_4px_0_hsl(var(--primary)/0.2)] rounded-md hover:bg-primary/15 hover:shadow-[0_2px_8px_0_hsl(var(--primary)/0.25)] transition-all"
                         onClick={() => openNewRecord(day)}
                       >
                         <Plus className="mr-1 h-3.5 w-3.5" />
