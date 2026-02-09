@@ -39,8 +39,6 @@ import {
   Plus,
   FileText,
   Upload,
-  
-  Paperclip,
   ChevronDown,
   ChevronRight,
   ChevronLeft,
@@ -790,13 +788,28 @@ export default function PlanilhamentoDiario() {
                                   />
                                 </td>
                                 <td className="py-2.5 px-4 text-center">
-                                  <button
-                                    onClick={() => handleViewComprovante(record.comprovante_url)}
-                                    className="text-muted-foreground hover:text-foreground transition-colors"
-                                    title="Ver comprovante"
-                                  >
-                                    <Paperclip className="h-4 w-4" />
-                                  </button>
+                                  {record.comprovante_url ? (() => {
+                                    const isPdf = record.comprovante_url.toLowerCase().includes(".pdf");
+                                    return (
+                                      <button
+                                        onClick={() => handleViewComprovante(record.comprovante_url)}
+                                        className="inline-block rounded border border-border/50 overflow-hidden hover:ring-2 hover:ring-ring/30 transition-all w-8 h-8"
+                                        title="Ver comprovante"
+                                      >
+                                        {isPdf ? (
+                                          <span className="w-full h-full bg-muted flex items-center justify-center">
+                                            <FileText className="h-4 w-4 text-muted-foreground" />
+                                          </span>
+                                        ) : (
+                                          <img src={record.comprovante_url} alt="Comprovante" className="w-full h-full object-cover" />
+                                        )}
+                                      </button>
+                                    );
+                                  })() : (
+                                    <span className="inline-flex w-8 h-8 rounded border border-dashed border-border/40 items-center justify-center">
+                                      <Plus className="h-3 w-3 text-muted-foreground/40" />
+                                    </span>
+                                  )}
                                 </td>
                                 <td className="py-2.5 px-4 text-right">
                                   <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => openEditRecord(record)}>
