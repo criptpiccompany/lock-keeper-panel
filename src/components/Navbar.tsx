@@ -33,13 +33,13 @@ export function Navbar() {
   // Navigation items based on role
   const closerItems = [
     { path: "/meu", label: "Minha Lista", icon: User },
-    { path: "/registro", label: "Registro Diário", icon: FileText },
+    { path: "/registro", label: "Planilhamento", icon: FileText },
     { path: "/painel", label: "Painel Geral", icon: LayoutGrid },
   ];
 
   const adminItems = [
     { path: "/meu", label: "Minha Lista", icon: User },
-    { path: "/registro", label: "Registro Diário", icon: FileText },
+    { path: "/registro", label: "Planilhamento", icon: FileText },
     { path: "/dashboard", label: "Dashboard", icon: LayoutGrid },
     { path: "/diretorio", label: "Diretório", icon: Book },
     { path: "/auditoria", label: "Auditoria", icon: FileText },
