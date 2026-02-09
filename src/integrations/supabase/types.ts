@@ -90,6 +90,7 @@ export type Database = {
       }
       daily_influencer_records: {
         Row: {
+          acumulado: number | null
           closer_id: string
           comprovante_url: string
           created_at: string
@@ -103,6 +104,7 @@ export type Database = {
           valor_pago: number
         }
         Insert: {
+          acumulado?: number | null
           closer_id: string
           comprovante_url: string
           created_at?: string
@@ -116,6 +118,7 @@ export type Database = {
           valor_pago: number
         }
         Update: {
+          acumulado?: number | null
           closer_id?: string
           comprovante_url?: string
           created_at?: string

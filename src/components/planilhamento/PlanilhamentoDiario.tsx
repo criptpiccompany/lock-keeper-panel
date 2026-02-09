@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,6 +46,9 @@ import {
   ChevronLeft,
   Check,
   ChevronsUpDown,
+  Pencil,
+  X,
+  Download,
 } from "lucide-react";
 
 // --- Types ---
@@ -60,6 +63,7 @@ interface DailyRecord {
   comprovante_url: string;
   observacao: string | null;
   status: string | null;
+  acumulado: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -91,11 +95,11 @@ function calcMargem(faturamento: number | null, valorPago: number): number | nul
 
 function getStatusResultado(faturamento: number | null, valorPago: number): StatusResultado {
   if (!faturamento) return null;
+  const lucro = calcLucroLiquido(faturamento, valorPago);
   const margem = calcMargem(faturamento, valorPago);
-  if (margem === null) return null;
-  if (margem >= 0.30) return "VERDE";
-  if (margem > 0) return "AMARELO";
-  return "VERMELHO";
+  if (lucro <= 0) return "VERMELHO";
+  if (margem !== null && margem >= 0.30) return "VERDE";
+  return "AMARELO";
 }
 
 function formatCurrency(val: number | null): string {
@@ -121,6 +125,14 @@ function ResultadoChip({ status }: { status: StatusResultado }) {
   return <Badge variant="outline" className={c.className}>{c.label}</Badge>;
 }
 
+// Color for resultado cell text
+function resultadoColor(status: StatusResultado): string {
+  if (!status) return "";
+  if (status === "VERDE") return "text-emerald-700";
+  if (status === "AMARELO") return "text-amber-600";
+  return "text-red-600";
+}
+
 const WORKFLOW_STATUSES = ["Gravando", "Postou", "Apagou"] as const;
 
 function WorkflowStatusDropdown({
@@ -128,14 +140,15 @@ function WorkflowStatusDropdown({
   onChange,
 }: {
   value: string | null;
-  onChange: (val: string) => void;
+  onChange: (val: string | null) => void;
 }) {
   return (
-    <Select value={value || ""} onValueChange={onChange}>
+    <Select value={value || "__none__"} onValueChange={(v) => onChange(v === "__none__" ? null : v)}>
       <SelectTrigger className="h-7 text-xs w-[110px] border-border/50">
         <SelectValue placeholder="Status..." />
       </SelectTrigger>
       <SelectContent className="bg-popover z-50">
+        <SelectItem value="__none__" className="text-xs text-muted-foreground">— Sem status</SelectItem>
         {WORKFLOW_STATUSES.map((s) => (
           <SelectItem key={s} value={s} className="text-xs">
             {s}
@@ -143,6 +156,108 @@ function WorkflowStatusDropdown({
         ))}
       </SelectContent>
     </Select>
+  );
+}
+
+// --- Inline editable acumulado ---
+
+function InlineAcumulado({
+  value,
+  onSave,
+}: {
+  value: number | null;
+  onSave: (val: number | null) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value !== null ? String(value) : "");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) {
+      setDraft(value !== null ? String(value) : "");
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }
+  }, [editing, value]);
+
+  const commit = () => {
+    setEditing(false);
+    const num = draft ? Number(draft) : null;
+    if (num !== value) onSave(num);
+  };
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="number"
+        step="0.01"
+        className="h-7 w-[100px] rounded border border-input bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commit();
+          if (e.key === "Escape") setEditing(false);
+        }}
+      />
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setEditing(true)}
+      className="inline-flex items-center gap-1.5 group text-sm"
+      title="Editar acumulado"
+    >
+      <span className={value !== null && value < 0 ? "text-red-600 font-medium" : value !== null && value > 0 ? "text-emerald-700 font-medium" : ""}>
+        {value !== null ? formatCurrency(value) : "—"}
+      </span>
+      <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+    </button>
+  );
+}
+
+// --- Comprovante lightbox ---
+
+function ComprovanteLightbox({
+  open,
+  onClose,
+  url,
+}: {
+  open: boolean;
+  onClose: () => void;
+  url: string;
+}) {
+  const isPdf = url.toLowerCase().includes(".pdf");
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center justify-between">
+            Comprovante
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex-1 overflow-auto flex items-center justify-center min-h-[300px]">
+          {isPdf ? (
+            <iframe src={url} className="w-full h-[70vh] rounded border" title="Comprovante PDF" />
+          ) : (
+            <img src={url} alt="Comprovante" className="max-w-full max-h-[70vh] object-contain rounded" />
+          )}
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" size="sm" asChild>
+            <a href={url} download target="_blank" rel="noopener noreferrer">
+              <Download className="mr-1.5 h-3.5 w-3.5" />
+              Download
+            </a>
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            Fechar
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -195,6 +310,10 @@ export default function PlanilhamentoDiario() {
   const [submitting, setSubmitting] = useState(false);
   const [comboOpen, setComboOpen] = useState(false);
 
+  // Comprovante lightbox
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState("");
+
   // Persistent days from DB
   const [persistedDays, setPersistedDays] = useState<string[]>([]);
 
@@ -208,7 +327,6 @@ export default function PlanilhamentoDiario() {
     const startDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`;
     const endDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-${new Date(selectedYear, selectedMonth + 1, 0).getDate()}`;
 
-    // Fetch records, influencers, and persisted days in parallel
     let recordsQuery = supabase
       .from("daily_influencer_records")
       .select("*")
@@ -246,7 +364,6 @@ export default function PlanilhamentoDiario() {
     setPersistedDays((sheetsRes.data || []).map((s: any) => s.date));
     setLoading(false);
 
-    // Auto-expand today
     const today = new Date().toISOString().split("T")[0];
     if (today >= startDate && today <= endDate) {
       setExpandedDays(new Set([today]));
@@ -257,7 +374,6 @@ export default function PlanilhamentoDiario() {
     fetchData();
   }, [fetchData]);
 
-  // Group records by date
   const recordsByDate = useMemo(() => {
     const map = new Map<string, DailyRecord[]>();
     for (const r of records) {
@@ -268,12 +384,10 @@ export default function PlanilhamentoDiario() {
     return map;
   }, [records]);
 
-  // Days that have data or are persisted
   const activeDays = useMemo(() => {
     const days = new Set<string>();
     for (const d of recordsByDate.keys()) days.add(d);
     for (const d of persistedDays) days.add(d);
-    // Also add today if in current month
     const today = new Date().toISOString().split("T")[0];
     if (monthDays.includes(today)) days.add(today);
     return monthDays.filter((d) => days.has(d));
@@ -292,7 +406,6 @@ export default function PlanilhamentoDiario() {
     });
   };
 
-  // Month navigation
   const prevMonth = () => {
     if (selectedMonth === 0) {
       setSelectedMonth(11);
@@ -311,11 +424,9 @@ export default function PlanilhamentoDiario() {
     }
   };
 
-  // --- Add day (blue +) — now persists to DB ---
+  // --- Add day (blue +) ---
   const handleAddDay = async () => {
     if (!user) return;
-
-    // Find the latest active day and add the next one
     const allDays = [...activeDays].sort();
     const lastDay = allDays[allDays.length - 1];
     let targetDate: string;
@@ -334,7 +445,6 @@ export default function PlanilhamentoDiario() {
       targetDate = monthDays.includes(today) ? today : monthDays[0];
     }
 
-    // Check if already exists
     if (persistedDays.includes(targetDate)) {
       setExpandedDays((prev) => new Set([...prev, targetDate]));
       return;
@@ -363,7 +473,7 @@ export default function PlanilhamentoDiario() {
     }
   };
 
-  // --- Add row (red +) — always opens modal, shows empty state if no influencers ---
+  // --- Add row ---
   const openNewRecord = (date: string) => {
     setEditRecord(null);
     setModalDate(date);
@@ -476,10 +586,10 @@ export default function PlanilhamentoDiario() {
     }
   };
 
-  const handleStatusChange = async (recordId: string, newStatus: string) => {
+  const handleStatusChange = async (recordId: string, newStatus: string | null) => {
     const { error } = await supabase
       .from("daily_influencer_records")
-      .update({ status: newStatus })
+      .update({ status: newStatus } as any)
       .eq("id", recordId);
     if (error) {
       console.error("Status update error:", error);
@@ -491,16 +601,33 @@ export default function PlanilhamentoDiario() {
     );
   };
 
+  const handleAcumuladoSave = async (recordId: string, val: number | null) => {
+    const { error } = await supabase
+      .from("daily_influencer_records")
+      .update({ acumulado: val } as any)
+      .eq("id", recordId);
+    if (error) {
+      console.error("Acumulado update error:", error);
+      toast.error("Erro ao salvar acumulado", { description: error.message });
+      return;
+    }
+    setRecords((prev) =>
+      prev.map((r) => (r.id === recordId ? { ...r, acumulado: val } : r))
+    );
+  };
+
   const handleViewComprovante = async (url: string) => {
     const path = url.split("/comprovantes/")[1];
     if (path) {
       const { data } = await supabase.storage.from("comprovantes").createSignedUrl(path, 300);
       if (data?.signedUrl) {
-        window.open(data.signedUrl, "_blank");
+        setLightboxUrl(data.signedUrl);
+        setLightboxOpen(true);
         return;
       }
     }
-    window.open(url, "_blank");
+    setLightboxUrl(url);
+    setLightboxOpen(true);
   };
 
   const handleRenovar = async (record: DailyRecord) => {
@@ -556,21 +683,6 @@ export default function PlanilhamentoDiario() {
     const resultadoLiquido = totalFaturado - totalInvestido - totalTaxa;
     return { totalInvestido, totalFaturado, totalTaxa, resultadoLiquido };
   }, [records]);
-
-  // Running accumulated total
-  const accumulatedByDate = useMemo(() => {
-    const sorted = [...activeDays].sort();
-    const map = new Map<string, number>();
-    let acc = 0;
-    for (const day of sorted) {
-      const dayRecords = recordsByDate.get(day) || [];
-      for (const r of dayRecords) {
-        acc += calcLucroLiquido(r.faturamento, r.valor_pago);
-      }
-      map.set(day, acc);
-    }
-    return map;
-  }, [activeDays, recordsByDate]);
 
   // Check if modal has available influencers
   const modalAvailableInfluencers = useMemo(() => {
@@ -684,13 +796,13 @@ export default function PlanilhamentoDiario() {
                             </td>
                           </tr>
                         ) : (
-                          dayRecords.map((record) => {
+                          dayRecords.map((record, idx) => {
                             const lucro = calcLucroLiquido(record.faturamento, record.valor_pago);
                             const resultado = getStatusResultado(record.faturamento, record.valor_pago);
-                            const accumulated = accumulatedByDate.get(day) ?? 0;
+                            const zebraClass = idx % 2 === 1 ? "bg-muted/20" : "";
 
                             return (
-                              <tr key={record.id} className="border-t border-border/30 hover:bg-muted/20 transition-colors">
+                              <tr key={record.id} className={`border-t border-border/30 hover:bg-muted/30 transition-colors ${zebraClass}`}>
                                 <td className="py-2.5 px-4 text-sm font-medium">{getInfluencerHandle(record.influencer_id)}</td>
                                 <td className="py-2.5 px-4 text-sm">{formatCurrency(record.valor_pago)}</td>
                                 <td className="py-2.5 px-4 text-sm">
@@ -700,11 +812,19 @@ export default function PlanilhamentoDiario() {
                                     <span className="text-muted-foreground italic text-xs">pendente</span>
                                   )}
                                 </td>
-                                <td className={`py-2.5 px-4 text-sm font-medium ${lucro > 0 ? "text-emerald-700" : lucro < 0 ? "text-red-600" : ""}`}>
-                                  {record.faturamento !== null ? formatCurrency(lucro) : "—"}
+                                <td className="py-2.5 px-4">
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-sm font-medium ${resultadoColor(resultado)}`}>
+                                      {record.faturamento !== null ? formatCurrency(lucro) : "—"}
+                                    </span>
+                                    {resultado && <ResultadoChip status={resultado} />}
+                                  </div>
                                 </td>
-                                <td className={`py-2.5 px-4 text-sm font-medium ${accumulated >= 0 ? "text-emerald-700" : "text-red-600"}`}>
-                                  {formatCurrency(accumulated)}
+                                <td className="py-2.5 px-4">
+                                  <InlineAcumulado
+                                    value={record.acumulado ?? null}
+                                    onSave={(val) => handleAcumuladoSave(record.id, val)}
+                                  />
                                 </td>
                                 <td className="py-2.5 px-4">
                                   <WorkflowStatusDropdown
@@ -751,7 +871,7 @@ export default function PlanilhamentoDiario() {
                       </tbody>
                     </table>
 
-                    {/* Red + button: add row to this day — always clickable */}
+                    {/* Red + button: add influencer to this day */}
                     <div className="px-4 py-2 border-t border-border/30">
                       <Button
                         size="sm"
@@ -760,7 +880,7 @@ export default function PlanilhamentoDiario() {
                         onClick={() => openNewRecord(day)}
                       >
                         <Plus className="mr-1 h-3.5 w-3.5" />
-                        Adicionar registro
+                        Adicionar influenciador
                       </Button>
                     </div>
                   </div>
@@ -963,6 +1083,13 @@ export default function PlanilhamentoDiario() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Comprovante Lightbox */}
+      <ComprovanteLightbox
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        url={lightboxUrl}
+      />
     </div>
   );
 }
