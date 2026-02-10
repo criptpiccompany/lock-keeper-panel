@@ -1199,30 +1199,77 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
 
                 {formIsShared && (
                   <div className="space-y-3 pl-1">
-                    {/* Partner selection */}
+                    {/* Partner selection - combobox style like influencer selector */}
                     <div className="space-y-2">
                       <Label className="text-xs text-muted-foreground">Parceiros (até 4)</Label>
-                      <div className="space-y-1.5 max-h-[140px] overflow-y-auto">
-                        {allClosers
-                          .filter((c) => c.id !== user?.id)
-                          .map((c) => (
-                            <label key={c.id} className="flex items-center gap-2 text-sm cursor-pointer">
-                              <Checkbox
-                                checked={formSelectedPartners.includes(c.id)}
-                                onCheckedChange={(checked) => {
-                                  if (checked && formSelectedPartners.length >= 4) {
-                                    toast.info("Máximo de 4 parceiros");
-                                    return;
-                                  }
-                                  setFormSelectedPartners((prev) =>
-                                    checked ? [...prev, c.id] : prev.filter((id) => id !== c.id)
-                                  );
-                                }}
-                              />
-                              {c.nome}
-                            </label>
-                          ))}
-                      </div>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="w-full justify-between font-normal h-9 text-sm"
+                          >
+                            {formSelectedPartners.length > 0
+                              ? `${formSelectedPartners.length} parceiro${formSelectedPartners.length > 1 ? "s" : ""} selecionado${formSelectedPartners.length > 1 ? "s" : ""}`
+                              : "Buscar parceiro..."}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0 bg-popover z-50" align="start">
+                          <Command>
+                            <CommandInput placeholder="Buscar parceiro..." />
+                            <CommandList>
+                              <CommandEmpty>Nenhum encontrado.</CommandEmpty>
+                              <CommandGroup>
+                                {allClosers
+                                  .filter((c) => c.id !== user?.id)
+                                  .map((c) => (
+                                    <CommandItem
+                                      key={c.id}
+                                      value={c.nome}
+                                      onSelect={() => {
+                                        if (formSelectedPartners.includes(c.id)) {
+                                          setFormSelectedPartners((prev) => prev.filter((id) => id !== c.id));
+                                        } else {
+                                          if (formSelectedPartners.length >= 4) {
+                                            toast.info("Máximo de 4 parceiros");
+                                            return;
+                                          }
+                                          setFormSelectedPartners((prev) => [...prev, c.id]);
+                                        }
+                                      }}
+                                    >
+                                      <Check
+                                        className={`mr-2 h-4 w-4 ${formSelectedPartners.includes(c.id) ? "opacity-100" : "opacity-0"}`}
+                                      />
+                                      {c.nome}
+                                    </CommandItem>
+                                  ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      {/* Selected partners chips */}
+                      {formSelectedPartners.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {formSelectedPartners.map((pid) => {
+                            const nome = allClosers.find((c) => c.id === pid)?.nome || pid;
+                            return (
+                              <Badge key={pid} variant="secondary" className="gap-1 text-xs pr-1">
+                                {nome}
+                                <button
+                                  type="button"
+                                  className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5"
+                                  onClick={() => setFormSelectedPartners((prev) => prev.filter((id) => id !== pid))}
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
 
                     {/* Division type + amounts (optional) */}
