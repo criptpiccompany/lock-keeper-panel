@@ -65,6 +65,7 @@ interface DailyRecord {
   valor_pago: number;
   faturamento: number | null;
   comprovante_url: string;
+  comprovante_url_2: string | null;
   observacao: string | null;
   status: string | null;
   acumulado: number | null;
@@ -278,7 +279,8 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
   const [formValorPago, setFormValorPago] = useState("");
   const [formFaturamento, setFormFaturamento] = useState("");
   const [formObservacao, setFormObservacao] = useState("");
-  const [formFile, setFormFile] = useState<File | null>(null);
+  const [formFile1, setFormFile1] = useState<File | null>(null);
+  const [formFile2, setFormFile2] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [comboOpen, setComboOpen] = useState(false);
 
@@ -484,7 +486,8 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
     setFormValorPago("");
     setFormFaturamento("");
     setFormObservacao("");
-    setFormFile(null);
+    setFormFile1(null);
+    setFormFile2(null);
     setFormIsShared(false);
     setFormSharedNote("");
     setFormPartnerNames([]);
@@ -501,7 +504,8 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
     setFormValorPago(String(record.valor_pago));
     setFormFaturamento(record.faturamento !== null ? String(record.faturamento) : "");
     setFormObservacao(record.observacao || "");
-    setFormFile(null);
+    setFormFile1(null);
+    setFormFile2(null);
     setFormIsShared(record.is_shared || false);
     setFormSharedNote(record.shared_note || "");
     // Load existing partners (by name)
@@ -544,10 +548,12 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
       diffs.push({ field: "faturamento", label: formatFieldLabel("faturamento"), before: String(oldFaturamento), after: String(newFaturamento ?? "") });
     }
     // Require reason when REPLACING existing comprovante (not when adding for the first time)
-    if (formFile && editRecord.comprovante_url) {
-      diffs.push({ field: "comprovante_url", label: formatFieldLabel("comprovante_url"), before: "(arquivo anterior)", after: formFile.name });
+    if (formFile1 && editRecord.comprovante_url) {
+      diffs.push({ field: "comprovante_url", label: formatFieldLabel("comprovante_url"), before: "(arquivo anterior)", after: formFile1.name });
     }
-    // Require reason when changing influencer (not applicable from current UI, but future-proof)
+    if (formFile2 && editRecord.comprovante_url_2) {
+      diffs.push({ field: "comprovante_url_2", label: "Comprovante 2", before: "(arquivo anterior)", after: formFile2.name });
+    }
     return diffs;
   };
 
@@ -585,21 +591,40 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
     setSubmitting(true);
     try {
       let comprovanteUrl = editRecord?.comprovante_url || "";
+      let comprovanteUrl2 = editRecord?.comprovante_url_2 || "";
 
-      if (formFile) {
-        const ext = formFile.name.split(".").pop();
-        const path = `${user.id}/${Date.now()}.${ext}`;
+      // Upload comprovante 1
+      if (formFile1) {
+        const ext = formFile1.name.split(".").pop();
+        const path = `${user.id}/${Date.now()}_1.${ext}`;
         const { error: uploadError } = await supabase.storage
           .from("comprovantes")
-          .upload(path, formFile);
+          .upload(path, formFile1);
         if (uploadError) {
           console.error("Upload error:", uploadError);
-          toast.error("Erro no upload do comprovante", { description: uploadError.message });
+          toast.error("Erro no upload do comprovante 1", { description: uploadError.message });
           setSubmitting(false);
           return;
         }
         const { data: urlData } = supabase.storage.from("comprovantes").getPublicUrl(path);
         comprovanteUrl = urlData.publicUrl;
+      }
+
+      // Upload comprovante 2
+      if (formFile2) {
+        const ext = formFile2.name.split(".").pop();
+        const path = `${user.id}/${Date.now()}_2.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("comprovantes")
+          .upload(path, formFile2);
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          toast.error("Erro no upload do comprovante 2", { description: uploadError.message });
+          setSubmitting(false);
+          return;
+        }
+        const { data: urlData } = supabase.storage.from("comprovantes").getPublicUrl(path);
+        comprovanteUrl2 = urlData.publicUrl;
       }
 
       const payload: Record<string, unknown> = {
@@ -613,7 +638,8 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
       let savedRecordId: string | null = null;
 
       if (editRecord) {
-        if (formFile) payload.comprovante_url = comprovanteUrl;
+        if (formFile1) payload.comprovante_url = comprovanteUrl;
+        if (formFile2) payload.comprovante_url_2 = comprovanteUrl2;
 
         const { error } = await supabase
           .from("daily_influencer_records")
@@ -647,6 +673,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
         payload.influencer_id = formInfluencerId;
         payload.closer_id = user.id;
         payload.comprovante_url = comprovanteUrl || null;
+        payload.comprovante_url_2 = comprovanteUrl2 || null;
         const { data: insertData, error } = await supabase
           .from("daily_influencer_records")
           .insert(payload as any)
@@ -767,7 +794,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
     const totalFaturado = records.reduce((sum, r) => sum + (Number(r.faturamento) || 0), 0);
     const totalTaxa = calcTaxaPlataforma(totalFaturado);
     const resultadoLiquido = totalFaturado - totalInvestido - totalTaxa;
-    const totalPending = records.filter((r) => !r.comprovante_url).length;
+    const totalPending = records.filter((r) => !r.comprovante_url && !r.comprovante_url_2).length;
     return { totalInvestido, totalFaturado, totalTaxa, resultadoLiquido, totalPending };
   }, [records]);
 
@@ -842,7 +869,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
             const isExpanded = expandedDays.has(day);
             const dayTotal = dayRecords.reduce((s, r) => s + Number(r.valor_pago), 0);
             const dayFat = dayRecords.reduce((s, r) => s + (Number(r.faturamento) || 0), 0);
-            const pendingCount = dayRecords.filter((r) => !r.comprovante_url).length;
+            const pendingCount = dayRecords.filter((r) => !r.comprovante_url && !r.comprovante_url_2).length;
 
             return (
               <div key={day} className="bg-card rounded-xl border overflow-hidden">
@@ -956,17 +983,26 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                                   )}
                                 </td>
                                 <td className="py-2.5 px-4 text-center">
-                                  {record.comprovante_url ? (
-                                    <ComprovanteThumbnail
-                                      url={record.comprovante_url}
-                                      onClick={() => handleViewComprovante(record.comprovante_url)}
-                                    />
-                                  ) : (
-                                    <div className="flex flex-col items-center gap-1">
-                                      <AlertCircle className="h-4 w-4 text-destructive" />
-                                      <span className="text-[10px] text-destructive font-medium leading-tight">Pendente</span>
-                                    </div>
-                                  )}
+                                  <div className="flex items-center justify-center gap-1">
+                                    {record.comprovante_url ? (
+                                      <ComprovanteThumbnail
+                                        url={record.comprovante_url}
+                                        onClick={() => handleViewComprovante(record.comprovante_url)}
+                                      />
+                                    ) : null}
+                                    {record.comprovante_url_2 ? (
+                                      <ComprovanteThumbnail
+                                        url={record.comprovante_url_2}
+                                        onClick={() => handleViewComprovante(record.comprovante_url_2!)}
+                                      />
+                                    ) : null}
+                                    {!record.comprovante_url && !record.comprovante_url_2 && (
+                                      <div className="flex flex-col items-center gap-1">
+                                        <AlertCircle className="h-4 w-4 text-destructive" />
+                                        <span className="text-[10px] text-destructive font-medium leading-tight">Pendente</span>
+                                      </div>
+                                    )}
+                                  </div>
                                 </td>
                                 {!viewingOther && (
                                   <td className="py-2.5 px-4 text-right">
@@ -1162,20 +1198,41 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
               <div className="space-y-2">
                 <Label>
                   {editRecord
-                    ? (editRecord.comprovante_url ? "Substituir Comprovante" : "Anexar Comprovante")
-                    : "Comprovante de Pagamento"}
+                    ? (editRecord.comprovante_url ? "Substituir Comprovante 1" : "Anexar Comprovante 1")
+                    : "Comprovante 1"}
                   {" "}<span className="text-muted-foreground text-xs">— pode anexar depois</span>
                 </Label>
                 <label className="cursor-pointer block">
                   <div className="flex items-center gap-2 border rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 transition-colors">
                     <Upload className="h-4 w-4" />
-                    {formFile ? formFile.name : "Selecionar arquivo (JPG, PNG, PDF)"}
+                    {formFile1 ? formFile1.name : "Selecionar arquivo (JPG, PNG, PDF)"}
                   </div>
                   <input
                     type="file"
                     accept=".jpg,.jpeg,.png,.pdf"
                     className="hidden"
-                    onChange={(e) => setFormFile(e.target.files?.[0] || null)}
+                    onChange={(e) => setFormFile1(e.target.files?.[0] || null)}
+                  />
+                </label>
+              </div>
+
+              <div className="space-y-2">
+                <Label>
+                  {editRecord
+                    ? (editRecord.comprovante_url_2 ? "Substituir Comprovante 2" : "Anexar Comprovante 2")
+                    : "Comprovante 2"}
+                  {" "}<span className="text-muted-foreground text-xs">(opcional)</span>
+                </Label>
+                <label className="cursor-pointer block">
+                  <div className="flex items-center gap-2 border rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 transition-colors">
+                    <Upload className="h-4 w-4" />
+                    {formFile2 ? formFile2.name : "Selecionar arquivo (JPG, PNG, PDF)"}
+                  </div>
+                  <input
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    className="hidden"
+                    onChange={(e) => setFormFile2(e.target.files?.[0] || null)}
                   />
                 </label>
               </div>
