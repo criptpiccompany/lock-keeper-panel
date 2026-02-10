@@ -24,7 +24,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
   }
 
   if (user.status !== 'approved' && user.role !== 'ADMIN') {
-    return <Navigate to="/aguardando" replace />;
+    return <Navigate to="/aguardando-aprovacao" replace />;
   }
 
   if (requireAdmin && user.role !== 'ADMIN') {

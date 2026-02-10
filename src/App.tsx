@@ -42,7 +42,7 @@ function AppRoutes() {
     <Routes>
       {/* Public routes */}
       <Route path="/login" element={<Login />} />
-      <Route path="/aguardando" element={<PendingApprovalRoute />} />
+      <Route path="/aguardando-aprovacao" element={<PendingApprovalRoute />} />
 
       {/* Default redirect */}
       <Route path="/" element={<DefaultRedirect />} />
