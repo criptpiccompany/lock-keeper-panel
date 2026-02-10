@@ -275,7 +275,7 @@ export default function Balanco() {
                   })}
                 </tbody>
                 <tfoot>
-                  <tr className="border-t border-border/70 bg-muted/40 font-medium">
+                  <tr className="border-t border-border/60 bg-muted/60 font-semibold">
                     <td className="py-3 px-4 text-xs">Total</td>
                     <td className="py-3 px-4 text-xs text-right tabular-nums">{formatBRL(totals.invested)}</td>
                     <td className="py-3 px-4 text-xs text-right tabular-nums">{formatBRL(totals.revenue)}</td>
