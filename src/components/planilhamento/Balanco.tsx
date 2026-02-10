@@ -238,14 +238,14 @@ export default function Balanco() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border/60 bg-foreground">
-                    <th className="text-left py-2.5 px-4 font-semibold text-background text-xs tracking-wide uppercase">Data</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-background text-xs tracking-wide uppercase">Investido</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-background text-xs tracking-wide uppercase">Faturado</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-background text-xs tracking-wide uppercase">Taxa 10%</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-background text-xs tracking-wide uppercase">Resultado</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-background text-xs tracking-wide uppercase">Comissão</th>
-                    {isAdmin && <th className="text-right py-2.5 px-4 font-semibold text-background text-xs tracking-wide uppercase">Saldo</th>}
+                  <tr className="border-b border-border/60 text-foreground" style={{ backgroundColor: '#E9E9EA' }}>
+                    <th className="text-left py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Data</th>
+                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Investido</th>
+                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Faturado</th>
+                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Taxa 10%</th>
+                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Resultado</th>
+                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Comissão</th>
+                    {isAdmin && <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Saldo</th>}
                   </tr>
                 </thead>
                 <tbody>
