@@ -202,7 +202,9 @@ export type Database = {
           faturamento: number | null
           id: string
           influencer_id: string
+          is_shared: boolean
           observacao: string | null
+          shared_note: string | null
           status: string | null
           updated_at: string
           valor_pago: number
@@ -218,7 +220,9 @@ export type Database = {
           faturamento?: number | null
           id?: string
           influencer_id: string
+          is_shared?: boolean
           observacao?: string | null
+          shared_note?: string | null
           status?: string | null
           updated_at?: string
           valor_pago: number
@@ -234,7 +238,9 @@ export type Database = {
           faturamento?: number | null
           id?: string
           influencer_id?: string
+          is_shared?: boolean
           observacao?: string | null
+          shared_note?: string | null
           status?: string | null
           updated_at?: string
           valor_pago?: number
@@ -245,6 +251,44 @@ export type Database = {
             columns: ["influencer_id"]
             isOneToOne: false
             referencedRelation: "influencers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_record_shared_partners: {
+        Row: {
+          created_at: string
+          id: string
+          partner_nome: string | null
+          partner_user_id: string
+          record_id: string
+          share_amount: number | null
+          share_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          partner_nome?: string | null
+          partner_user_id: string
+          record_id: string
+          share_amount?: number | null
+          share_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          partner_nome?: string | null
+          partner_user_id?: string
+          record_id?: string
+          share_amount?: number | null
+          share_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_record_shared_partners_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "daily_influencer_records"
             referencedColumns: ["id"]
           },
         ]

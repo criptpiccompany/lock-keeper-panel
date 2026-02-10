@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -51,6 +53,7 @@ import {
 import ComprovanteThumbnail from "./ComprovanteThumbnail";
 import ComprovanteLightbox from "./ComprovanteLightbox";
 import EditReasonModal, { formatFieldLabel, type FieldDiff } from "./EditReasonModal";
+import SharedPartnersPopover, { type SharedPartner } from "./SharedPartnersPopover";
 
 // --- Types ---
 
@@ -65,8 +68,15 @@ interface DailyRecord {
   observacao: string | null;
   status: string | null;
   acumulado: number | null;
+  is_shared: boolean;
+  shared_note: string | null;
   created_at: string;
   updated_at: string;
+}
+
+interface CloserOption {
+  id: string;
+  nome: string;
 }
 
 interface InfluencerOption {
@@ -276,6 +286,15 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState("");
 
+  // Shared/partners state
+  const [formIsShared, setFormIsShared] = useState(false);
+  const [formSharedNote, setFormSharedNote] = useState("");
+  const [formSelectedPartners, setFormSelectedPartners] = useState<string[]>([]);
+  const [formShareType, setFormShareType] = useState<string>("percent");
+  const [formPartnerAmounts, setFormPartnerAmounts] = useState<Record<string, string>>({});
+  const [allClosers, setAllClosers] = useState<CloserOption[]>([]);
+  const [sharedPartnersMap, setSharedPartnersMap] = useState<Map<string, SharedPartner[]>>(new Map());
+
   // Persistent days from DB
   const [persistedDays, setPersistedDays] = useState<string[]>([]);
 
@@ -317,15 +336,37 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
       infQuery = infQuery.eq("owner_id", targetId);
     }
 
-    const [recordsRes, infRes, sheetsRes] = await Promise.all([
+    const [recordsRes, infRes, sheetsRes, closersRes] = await Promise.all([
       recordsQuery,
       infQuery,
       sheetsQuery,
+      supabase.from("profiles").select("id, nome").eq("status", "approved").order("nome"),
     ]);
 
-    setRecords((recordsRes.data as DailyRecord[]) || []);
+    const fetchedRecords = (recordsRes.data as DailyRecord[]) || [];
+    setRecords(fetchedRecords);
     setInfluencers(infRes.data || []);
     setPersistedDays((sheetsRes.data || []).map((s: any) => s.date));
+    setAllClosers((closersRes.data || []) as CloserOption[]);
+
+    // Fetch shared partners for all records that are shared
+    const sharedRecordIds = fetchedRecords.filter((r) => r.is_shared).map((r) => r.id);
+    if (sharedRecordIds.length > 0) {
+      const { data: partnersData } = await supabase
+        .from("daily_record_shared_partners")
+        .select("*")
+        .in("record_id", sharedRecordIds);
+      const map = new Map<string, SharedPartner[]>();
+      for (const p of (partnersData || []) as any[]) {
+        const list = map.get(p.record_id) || [];
+        list.push({ id: p.id, partner_user_id: p.partner_user_id, partner_nome: p.partner_nome, share_type: p.share_type, share_amount: p.share_amount ? Number(p.share_amount) : null });
+        map.set(p.record_id, list);
+      }
+      setSharedPartnersMap(map);
+    } else {
+      setSharedPartnersMap(new Map());
+    }
+
     setLoading(false);
 
     const today = new Date().toISOString().split("T")[0];
@@ -446,6 +487,11 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
     setFormFaturamento("");
     setFormObservacao("");
     setFormFile(null);
+    setFormIsShared(false);
+    setFormSharedNote("");
+    setFormSelectedPartners([]);
+    setFormShareType("percent");
+    setFormPartnerAmounts({});
     setModalOpen(true);
   };
 
@@ -457,6 +503,17 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
     setFormFaturamento(record.faturamento !== null ? String(record.faturamento) : "");
     setFormObservacao(record.observacao || "");
     setFormFile(null);
+    setFormIsShared(record.is_shared || false);
+    setFormSharedNote(record.shared_note || "");
+    // Load existing partners
+    const existingPartners = sharedPartnersMap.get(record.id) || [];
+    setFormSelectedPartners(existingPartners.map((p) => p.partner_user_id));
+    setFormShareType(existingPartners[0]?.share_type || "percent");
+    const amounts: Record<string, string> = {};
+    existingPartners.forEach((p) => {
+      if (p.share_amount != null) amounts[p.partner_user_id] = String(p.share_amount);
+    });
+    setFormPartnerAmounts(amounts);
     setModalOpen(true);
   };
 
@@ -548,7 +605,11 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
         valor_pago: Number(formValorPago),
         faturamento: formFaturamento ? Number(formFaturamento) : null,
         observacao: formObservacao || null,
+        is_shared: formIsShared,
+        shared_note: formIsShared ? (formSharedNote || null) : null,
       };
+
+      let savedRecordId: string | null = null;
 
       if (editRecord) {
         if (formFile) payload.comprovante_url = comprovanteUrl;
@@ -561,6 +622,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
           console.error("Update error:", error);
           throw error;
         }
+        savedRecordId = editRecord.id;
 
         // Store edit reason via edge function (server-side, bypasses RLS)
         if (editReason) {
@@ -584,14 +646,40 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
         payload.influencer_id = formInfluencerId;
         payload.closer_id = user.id;
         payload.comprovante_url = comprovanteUrl || null;
-        const { error } = await supabase
+        const { data: insertData, error } = await supabase
           .from("daily_influencer_records")
-          .insert(payload as any);
+          .insert(payload as any)
+          .select("id")
+          .single();
         if (error) {
           console.error("Insert error:", error);
           throw error;
         }
+        savedRecordId = insertData?.id || null;
         toast.success("Registro criado!");
+      }
+
+      // Save shared partners
+      if (savedRecordId) {
+        // Delete existing partners first
+        if (editRecord) {
+          await supabase
+            .from("daily_record_shared_partners")
+            .delete()
+            .eq("record_id", savedRecordId);
+        }
+        // Insert new partners if shared
+        if (formIsShared && formSelectedPartners.length > 0) {
+          const closerNameMap = new Map(allClosers.map((c) => [c.id, c.nome]));
+          const partnersToInsert = formSelectedPartners.map((partnerId) => ({
+            record_id: savedRecordId!,
+            partner_user_id: partnerId,
+            partner_nome: closerNameMap.get(partnerId) || null,
+            share_type: formPartnerAmounts[partnerId] ? formShareType : null,
+            share_amount: formPartnerAmounts[partnerId] ? Number(formPartnerAmounts[partnerId]) : null,
+          }));
+          await supabase.from("daily_record_shared_partners").insert(partnersToInsert);
+        }
       }
 
       setModalOpen(false);
@@ -817,7 +905,18 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
 
                             return (
                               <tr key={record.id} className={`border-t border-border/30 hover:bg-muted/60 transition-colors ${zebraClass}`}>
-                                <td className="py-2.5 px-4 text-sm font-medium">{getInfluencerHandle(record.influencer_id)}</td>
+                                <td className="py-2.5 px-4 text-sm font-medium">
+                                  <div className="flex items-center gap-1.5">
+                                    {getInfluencerHandle(record.influencer_id)}
+                                    {record.is_shared && (
+                                      <SharedPartnersPopover
+                                        partners={sharedPartnersMap.get(record.id) || []}
+                                        sharedNote={record.shared_note}
+                                        compact
+                                      />
+                                    )}
+                                  </div>
+                                </td>
                                 <td className="py-2.5 px-4 text-sm">{formatCurrency(record.valor_pago)}</td>
                                 <td className="py-2.5 px-4 text-sm">
                                   {record.faturamento !== null ? (
@@ -1089,6 +1188,93 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                   onChange={(e) => setFormObservacao(e.target.value)}
                   rows={2}
                 />
+              </div>
+
+              {/* Shared / Partners toggle */}
+              <div className="space-y-3 border-t border-border/40 pt-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Foi dividido com alguém?</Label>
+                  <Switch checked={formIsShared} onCheckedChange={setFormIsShared} />
+                </div>
+
+                {formIsShared && (
+                  <div className="space-y-3 pl-1">
+                    {/* Partner selection */}
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">Parceiros (até 4)</Label>
+                      <div className="space-y-1.5 max-h-[140px] overflow-y-auto">
+                        {allClosers
+                          .filter((c) => c.id !== user?.id)
+                          .map((c) => (
+                            <label key={c.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                              <Checkbox
+                                checked={formSelectedPartners.includes(c.id)}
+                                onCheckedChange={(checked) => {
+                                  if (checked && formSelectedPartners.length >= 4) {
+                                    toast.info("Máximo de 4 parceiros");
+                                    return;
+                                  }
+                                  setFormSelectedPartners((prev) =>
+                                    checked ? [...prev, c.id] : prev.filter((id) => id !== c.id)
+                                  );
+                                }}
+                              />
+                              {c.nome}
+                            </label>
+                          ))}
+                      </div>
+                    </div>
+
+                    {/* Division type + amounts (optional) */}
+                    {formSelectedPartners.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs text-muted-foreground">Tipo de divisão</Label>
+                          <Select value={formShareType} onValueChange={setFormShareType}>
+                            <SelectTrigger className="h-7 w-[120px] text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="percent" className="text-xs">Porcentagem</SelectItem>
+                              <SelectItem value="value" className="text-xs">Valor (R$)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {formSelectedPartners.map((pid) => {
+                          const nome = allClosers.find((c) => c.id === pid)?.nome || pid;
+                          return (
+                            <div key={pid} className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground w-24 truncate">{nome}</span>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder={formShareType === "percent" ? "%" : "R$"}
+                                className="h-7 text-xs w-24"
+                                value={formPartnerAmounts[pid] || ""}
+                                onChange={(e) =>
+                                  setFormPartnerAmounts((prev) => ({ ...prev, [pid]: e.target.value }))
+                                }
+                              />
+                              <span className="text-[10px] text-muted-foreground">(opcional)</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Shared note */}
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Observação do split</Label>
+                      <Input
+                        placeholder="Ex: 50/50, pagamento em 2 pix..."
+                        className="h-8 text-sm"
+                        value={formSharedNote}
+                        onChange={(e) => setFormSharedNote(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
