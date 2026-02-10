@@ -250,26 +250,26 @@ export default function ListaDoMes() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border/60 bg-foreground">
-                  <th className="text-left py-2.5 px-4 font-semibold text-background text-xs tracking-wide uppercase">
+                <tr className="border-b border-border/60 text-foreground" style={{ backgroundColor: '#E9E9EA' }}>
+                  <th className="text-left py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
                     Influenciador
                   </th>
-                  <th className="text-left py-2.5 px-4 font-semibold text-background text-xs tracking-wide uppercase">
+                  <th className="text-left py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
                     Email afiliado
                   </th>
-                  <th className="text-left py-2.5 px-4 font-semibold text-background text-xs tracking-wide uppercase">
+                  <th className="text-left py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
                     Link 1
                   </th>
-                  <th className="text-left py-2.5 px-4 font-semibold text-background text-xs tracking-wide uppercase">
+                  <th className="text-left py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
                     Link 2
                   </th>
-                  <th className="text-left py-2.5 px-4 font-semibold text-background text-xs tracking-wide uppercase">
+                  <th className="text-left py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
                     Link 3
                   </th>
-                  <th className="text-right py-2.5 px-4 font-semibold text-background text-xs tracking-wide uppercase">
+                  <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
                     Valor total
                   </th>
-                  <th className="text-left py-2.5 px-4 font-semibold text-background text-xs tracking-wide uppercase">
+                  <th className="text-left py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
                     Obs
                   </th>
                 </tr>
