@@ -14,13 +14,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { enrichInfluencer, formatDate } from "@/lib/helpers";
 import { InfluencerWithStatus } from "@/types";
-import { Settings, Archive, RefreshCw, AlertTriangle, Loader2, Users, Mail, Shield, ShieldCheck, Pencil, Key } from "lucide-react";
+import { Settings, Archive, RefreshCw, AlertTriangle, Loader2, Users, Mail, Shield, ShieldCheck, Pencil, Key, Percent } from "lucide-react";
 
 interface UserWithRole {
   id: string;
   nome: string;
   email: string;
   role: 'CLOSER' | 'ADMIN';
+  commission_rate: number;
 }
 
 export default function Admin() {
@@ -46,7 +47,11 @@ export default function Admin() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingPassword, setSavingPassword] = useState(false);
-
+  
+  // Commission rate
+  const [editingCommission, setEditingCommission] = useState<string | null>(null);
+  const [commissionInput, setCommissionInput] = useState("");
+  const [savingCommission, setSavingCommission] = useState(false);
   const fetchInfluencers = async () => {
     const { data } = await supabase.from('influencers').select('*');
     const enriched = (data || []).map(inf => enrichInfluencer({
@@ -57,18 +62,18 @@ export default function Admin() {
   };
 
   const fetchUsers = async () => {
-    // Fetch profiles and roles
-    const { data: profiles } = await supabase.from('profiles').select('id, nome');
+    const { data: profiles } = await supabase.from('profiles').select('id, nome, commission_rate');
     const { data: roles } = await supabase.from('user_roles').select('user_id, role');
     
     if (profiles && roles) {
-      const usersWithRoles: UserWithRole[] = profiles.map(profile => {
+      const usersWithRoles: UserWithRole[] = (profiles as any[]).map(profile => {
         const userRole = roles.find(r => r.user_id === profile.id);
         return {
           id: profile.id,
           nome: profile.nome,
-          email: '', // We'll need to get this from auth
-          role: (userRole?.role as 'CLOSER' | 'ADMIN') || 'CLOSER'
+          email: '',
+          role: (userRole?.role as 'CLOSER' | 'ADMIN') || 'CLOSER',
+          commission_rate: profile.commission_rate ?? 0.1,
         };
       });
       setUsers(usersWithRoles);
@@ -207,6 +212,29 @@ export default function Admin() {
       toast.error('Erro ao alterar papel', { description: error.message });
     } finally {
       setUpdatingRole(null);
+    }
+  };
+
+  const handleSaveCommission = async (userId: string) => {
+    const rate = parseFloat(commissionInput);
+    if (isNaN(rate) || rate < 0 || rate > 1) {
+      toast.error("Taxa inválida. Use valores entre 0 e 1 (ex: 0.10 = 10%)");
+      return;
+    }
+    setSavingCommission(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ commission_rate: rate } as any)
+        .eq("id", userId);
+      if (error) throw error;
+      toast.success(`Comissão alterada para ${(rate * 100).toFixed(0)}%`);
+      setEditingCommission(null);
+      fetchUsers();
+    } catch (error: any) {
+      toast.error("Erro ao salvar comissão", { description: error.message });
+    } finally {
+      setSavingCommission(false);
     }
   };
 
@@ -366,6 +394,92 @@ export default function Admin() {
                 </Button>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Commission Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Percent className="h-5 w-5" />Comissão por Closer</CardTitle>
+            <CardDescription>Defina a taxa de comissão individual (ex: 0.10 = 10%)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-lg border">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="text-left p-3 font-medium text-sm">Closer</th>
+                    <th className="text-left p-3 font-medium text-sm">Papel</th>
+                    <th className="text-right p-3 font-medium text-sm">Comissão</th>
+                    <th className="text-right p-3 font-medium text-sm w-32">Ação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map(u => (
+                    <tr key={u.id} className="border-b last:border-0">
+                      <td className="p-3 font-medium text-sm">{u.nome}</td>
+                      <td className="p-3">
+                        <Badge variant="outline" className="text-xs">
+                          {u.role}
+                        </Badge>
+                      </td>
+                      <td className="p-3 text-right">
+                        {editingCommission === u.id ? (
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max="1"
+                            value={commissionInput}
+                            onChange={(e) => setCommissionInput(e.target.value)}
+                            className="w-24 h-8 text-sm text-right ml-auto"
+                            autoFocus
+                          />
+                        ) : (
+                          <span className="text-sm font-medium tabular-nums">
+                            {(u.commission_rate * 100).toFixed(0)}%
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-3 text-right">
+                        {editingCommission === u.id ? (
+                          <div className="flex gap-1 justify-end">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setEditingCommission(null)}
+                              disabled={savingCommission}
+                            >
+                              Cancelar
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleSaveCommission(u.id)}
+                              disabled={savingCommission}
+                            >
+                              {savingCommission && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
+                              Salvar
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setEditingCommission(u.id);
+                              setCommissionInput(String(u.commission_rate));
+                            }}
+                          >
+                            <Pencil className="h-3.5 w-3.5 mr-1" />
+                            Editar
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FileText, BarChart3, ListChecks } from "lucide-react";
 import PlanilhamentoDiario from "./PlanilhamentoDiario";
+import Balanco from "./Balanco";
 
 const tabs = [
   { id: "diario", label: "Planilhamento Diário", icon: FileText },
@@ -59,13 +60,7 @@ export default function PlanilhamentoTabs() {
       {/* Tab content */}
       <div className="container py-6">
         {activeTab === "diario" && <PlanilhamentoDiario />}
-        {activeTab === "balanco" && (
-          <div className="empty-state">
-            <BarChart3 className="empty-state-icon" />
-            <h3 className="empty-state-title">Balanço</h3>
-            <p className="empty-state-description">Em breve — visão consolidada por período.</p>
-          </div>
-        )}
+        {activeTab === "balanco" && <Balanco />}
         {activeTab === "lista-mes" && (
           <div className="empty-state">
             <ListChecks className="empty-state-icon" />
