@@ -41,6 +41,7 @@ interface AuditLog {
   action: string;
   field_changes: Record<string, any> | null;
   description: string | null;
+  edit_reason: string | null;
 }
 
 const ENTITY_LABELS: Record<string, string> = {
@@ -426,6 +427,15 @@ function AuditDetailDialog({ log, open, onClose }: { log: AuditLog; open: boolea
               <span className="font-mono text-[11px] break-all">{log.id}</span>
             </div>
           </div>
+
+          {log.edit_reason && (
+            <>
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                <p className="text-xs font-semibold text-amber-800 mb-1">Motivo da edição</p>
+                <p className="text-sm text-amber-900">{log.edit_reason}</p>
+              </div>
+            </>
+          )}
 
           <hr className="border-border/30" />
 

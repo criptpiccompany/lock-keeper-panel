@@ -49,6 +49,7 @@ import {
 } from "lucide-react";
 import ComprovanteThumbnail from "./ComprovanteThumbnail";
 import ComprovanteLightbox from "./ComprovanteLightbox";
+import EditReasonModal, { formatFieldLabel, type FieldDiff } from "./EditReasonModal";
 
 // --- Types ---
 
@@ -253,7 +254,10 @@ export default function PlanilhamentoDiario() {
   const [loading, setLoading] = useState(true);
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
 
-
+  // Edit reason modal state
+  const [reasonModalOpen, setReasonModalOpen] = useState(false);
+  const [pendingDiffs, setPendingDiffs] = useState<FieldDiff[]>([]);
+  const [pendingInlineAction, setPendingInlineAction] = useState<(() => Promise<void>) | null>(null);
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [editRecord, setEditRecord] = useState<DailyRecord | null>(null);
@@ -458,7 +462,30 @@ export default function PlanilhamentoDiario() {
     return influencers.filter((i) => !usedIds.has(i.id));
   };
 
-  const handleSubmit = async () => {
+  // Critical fields that require a reason for editing
+  const CRITICAL_FIELDS = ["valor_pago", "faturamento", "comprovante_url"];
+
+  const detectCriticalDiffs = (): FieldDiff[] => {
+    if (!editRecord) return [];
+    const diffs: FieldDiff[] = [];
+    const newValorPago = Number(formValorPago);
+    const newFaturamento = formFaturamento ? Number(formFaturamento) : null;
+    if (newValorPago !== Number(editRecord.valor_pago)) {
+      diffs.push({ field: "valor_pago", label: formatFieldLabel("valor_pago"), before: String(editRecord.valor_pago), after: String(newValorPago) });
+    }
+    if (newFaturamento !== (editRecord.faturamento != null ? Number(editRecord.faturamento) : null)) {
+      diffs.push({ field: "faturamento", label: formatFieldLabel("faturamento"), before: String(editRecord.faturamento ?? ""), after: String(newFaturamento ?? "") });
+    }
+    if (formFile) {
+      diffs.push({ field: "comprovante_url", label: formatFieldLabel("comprovante_url"), before: "(arquivo anterior)", after: formFile.name });
+    }
+    return diffs;
+  };
+
+
+
+
+  const handleSubmit = async (editReason?: string) => {
     if (!user) return;
 
     const available = getAvailableInfluencers(modalDate);
@@ -477,6 +504,16 @@ export default function PlanilhamentoDiario() {
     if (!editRecord && !formFile) {
       toast.error("O comprovante é obrigatório");
       return;
+    }
+
+    // If editing and has critical changes, require reason
+    if (editRecord && !editReason) {
+      const diffs = detectCriticalDiffs();
+      if (diffs.length > 0) {
+        setPendingDiffs(diffs);
+        setReasonModalOpen(true);
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -507,6 +544,7 @@ export default function PlanilhamentoDiario() {
 
       if (editRecord) {
         if (formFile) payload.comprovante_url = comprovanteUrl;
+
         const { error } = await supabase
           .from("daily_influencer_records")
           .update(payload)
@@ -515,6 +553,14 @@ export default function PlanilhamentoDiario() {
           console.error("Update error:", error);
           throw error;
         }
+
+        // Store edit reason via edge function (server-side, bypasses RLS)
+        if (editReason) {
+          await supabase.functions.invoke("store-edit-reason", {
+            body: { entity_id: editRecord.id, entity_type: "daily_influencer_records", edit_reason: editReason },
+          });
+        }
+
         toast.success("Registro atualizado!");
       } else {
         payload.date = modalDate;
@@ -532,6 +578,7 @@ export default function PlanilhamentoDiario() {
       }
 
       setModalOpen(false);
+      setReasonModalOpen(false);
       fetchData();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro desconhecido";
@@ -542,34 +589,81 @@ export default function PlanilhamentoDiario() {
     }
   };
 
-  const handleStatusChange = async (recordId: string, newStatus: string | null) => {
-    const { error } = await supabase
-      .from("daily_influencer_records")
-      .update({ status: newStatus } as any)
-      .eq("id", recordId);
-    if (error) {
-      console.error("Status update error:", error);
-      toast.error("Erro ao atualizar status", { description: error.message });
-      return;
+  const handleReasonConfirm = (reason: string) => {
+    if (pendingInlineAction) {
+      // Inline edit (status/acumulado)
+      (pendingInlineAction as any)(reason);
+      setReasonModalOpen(false);
+      setPendingInlineAction(null);
+      setPendingDiffs([]);
+    } else {
+      // Form edit
+      handleSubmit(reason);
     }
-    setRecords((prev) =>
-      prev.map((r) => (r.id === recordId ? { ...r, status: newStatus } : r))
-    );
+  };
+
+  const handleStatusChange = async (recordId: string, newStatus: string | null) => {
+    const record = records.find((r) => r.id === recordId);
+    const oldStatus = record?.status || null;
+    if (oldStatus === newStatus) return;
+
+    // Require reason for status change
+    const diffs: FieldDiff[] = [
+      { field: "status", label: formatFieldLabel("status"), before: oldStatus || "(vazio)", after: newStatus || "(vazio)" },
+    ];
+    setPendingDiffs(diffs);
+    setPendingInlineAction(() => async () => {
+      // This will be called with reason from modal via handleInlineReasonConfirm
+    });
+
+    // Store the actual save action
+    const doSave = async (reason: string) => {
+      const { error } = await supabase
+        .from("daily_influencer_records")
+        .update({ status: newStatus } as any)
+        .eq("id", recordId);
+      if (error) {
+        toast.error("Erro ao atualizar status", { description: error.message });
+        return;
+      }
+      setRecords((prev) =>
+        prev.map((r) => (r.id === recordId ? { ...r, status: newStatus } : r))
+      );
+      await supabase.functions.invoke("store-edit-reason", {
+        body: { entity_id: recordId, entity_type: "daily_influencer_records", edit_reason: reason },
+      });
+    };
+    setPendingInlineAction(() => doSave as any);
+    setReasonModalOpen(true);
   };
 
   const handleAcumuladoSave = async (recordId: string, val: number | null) => {
-    const { error } = await supabase
-      .from("daily_influencer_records")
-      .update({ acumulado: val } as any)
-      .eq("id", recordId);
-    if (error) {
-      console.error("Acumulado update error:", error);
-      toast.error("Erro ao salvar acumulado", { description: error.message });
-      return;
-    }
-    setRecords((prev) =>
-      prev.map((r) => (r.id === recordId ? { ...r, acumulado: val } : r))
-    );
+    const record = records.find((r) => r.id === recordId);
+    const oldVal = record?.acumulado;
+    if (oldVal === val) return;
+
+    const diffs: FieldDiff[] = [
+      { field: "acumulado", label: formatFieldLabel("acumulado"), before: String(oldVal ?? "(vazio)"), after: String(val ?? "(vazio)") },
+    ];
+    const doSave = async (reason: string) => {
+      const { error } = await supabase
+        .from("daily_influencer_records")
+        .update({ acumulado: val } as any)
+        .eq("id", recordId);
+      if (error) {
+        toast.error("Erro ao salvar acumulado", { description: error.message });
+        return;
+      }
+      setRecords((prev) =>
+        prev.map((r) => (r.id === recordId ? { ...r, acumulado: val } : r))
+      );
+      await supabase.functions.invoke("store-edit-reason", {
+        body: { entity_id: recordId, entity_type: "daily_influencer_records", edit_reason: reason },
+      });
+    };
+    setPendingDiffs(diffs);
+    setPendingInlineAction(() => doSave as any);
+    setReasonModalOpen(true);
   };
 
   const handleViewComprovante = async (url: string) => {
@@ -973,7 +1067,7 @@ export default function PlanilhamentoDiario() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
             {(editRecord || modalAvailableInfluencers.length > 0) && (
-              <Button onClick={handleSubmit} disabled={submitting}>
+              <Button onClick={() => handleSubmit()} disabled={submitting}>
                 {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {editRecord ? "Salvar" : "Registrar"}
               </Button>
@@ -987,6 +1081,19 @@ export default function PlanilhamentoDiario() {
         open={lightboxOpen}
         onClose={() => setLightboxOpen(false)}
         url={lightboxUrl}
+      />
+
+      {/* Edit Reason Modal */}
+      <EditReasonModal
+        open={reasonModalOpen}
+        onClose={() => {
+          setReasonModalOpen(false);
+          setPendingInlineAction(null);
+          setPendingDiffs([]);
+        }}
+        onConfirm={handleReasonConfirm}
+        diffs={pendingDiffs}
+        submitting={submitting}
       />
     </div>
   );
