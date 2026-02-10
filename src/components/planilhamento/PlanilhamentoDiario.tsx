@@ -794,7 +794,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
     const totalFaturado = records.reduce((sum, r) => sum + (Number(r.faturamento) || 0), 0);
     const totalTaxa = calcTaxaPlataforma(totalFaturado);
     const resultadoLiquido = totalFaturado - totalInvestido - totalTaxa;
-    const totalPending = records.filter((r) => !r.comprovante_url && !r.comprovante_url_2).length;
+    const totalPending = records.filter((r) => !r.comprovante_url).length;
     return { totalInvestido, totalFaturado, totalTaxa, resultadoLiquido, totalPending };
   }, [records]);
 
@@ -869,7 +869,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
             const isExpanded = expandedDays.has(day);
             const dayTotal = dayRecords.reduce((s, r) => s + Number(r.valor_pago), 0);
             const dayFat = dayRecords.reduce((s, r) => s + (Number(r.faturamento) || 0), 0);
-            const pendingCount = dayRecords.filter((r) => !r.comprovante_url && !r.comprovante_url_2).length;
+            const pendingCount = dayRecords.filter((r) => !r.comprovante_url).length;
 
             return (
               <div key={day} className="bg-card rounded-xl border overflow-hidden">
@@ -996,7 +996,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                                         onClick={() => handleViewComprovante(record.comprovante_url_2!)}
                                       />
                                     ) : null}
-                                    {!record.comprovante_url && !record.comprovante_url_2 && (
+                                    {!record.comprovante_url && (
                                       <div className="flex flex-col items-center gap-1">
                                         <AlertCircle className="h-4 w-4 text-destructive" />
                                         <span className="text-[10px] text-destructive font-medium leading-tight">Pendente</span>
