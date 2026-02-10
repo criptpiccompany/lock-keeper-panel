@@ -238,14 +238,14 @@ export default function Balanco() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border/40 bg-muted/40">
-                    <th className="text-left py-2.5 px-4 font-semibold text-muted-foreground text-xs">Data</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-muted-foreground text-xs">Investido</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-muted-foreground text-xs">Faturado</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-muted-foreground text-xs">Taxa 10%</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-muted-foreground text-xs">Resultado</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-muted-foreground text-xs">Comissão</th>
-                    {isAdmin && <th className="text-right py-2.5 px-4 font-semibold text-muted-foreground text-xs">Saldo</th>}
+                  <tr className="border-b border-border/60 bg-muted/60">
+                    <th className="text-left py-2.5 px-4 font-semibold text-foreground/70 text-xs tracking-wide uppercase">Data</th>
+                    <th className="text-right py-2.5 px-4 font-semibold text-foreground/70 text-xs tracking-wide uppercase">Investido</th>
+                    <th className="text-right py-2.5 px-4 font-semibold text-foreground/70 text-xs tracking-wide uppercase">Faturado</th>
+                    <th className="text-right py-2.5 px-4 font-semibold text-foreground/70 text-xs tracking-wide uppercase">Taxa 10%</th>
+                    <th className="text-right py-2.5 px-4 font-semibold text-foreground/70 text-xs tracking-wide uppercase">Resultado</th>
+                    <th className="text-right py-2.5 px-4 font-semibold text-foreground/70 text-xs tracking-wide uppercase">Comissão</th>
+                    {isAdmin && <th className="text-right py-2.5 px-4 font-semibold text-foreground/70 text-xs tracking-wide uppercase">Saldo</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -275,7 +275,7 @@ export default function Balanco() {
                   })}
                 </tbody>
                 <tfoot>
-                  <tr className="border-t-2 border-border/60 bg-muted/50 font-semibold">
+                  <tr className="border-t border-border/70 bg-muted/40 font-medium">
                     <td className="py-3 px-4 text-xs">Total</td>
                     <td className="py-3 px-4 text-xs text-right tabular-nums">{formatBRL(totals.invested)}</td>
                     <td className="py-3 px-4 text-xs text-right tabular-nums">{formatBRL(totals.revenue)}</td>
