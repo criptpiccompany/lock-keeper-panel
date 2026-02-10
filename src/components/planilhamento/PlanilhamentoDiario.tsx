@@ -46,6 +46,7 @@ import {
   ChevronsUpDown,
   Pencil,
   X,
+  AlertCircle,
 } from "lucide-react";
 import ComprovanteThumbnail from "./ComprovanteThumbnail";
 import ComprovanteLightbox from "./ComprovanteLightbox";
@@ -465,7 +466,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
     return influencers.filter((i) => !usedIds.has(i.id));
   };
 
-  // Critical fields that require a reason for editing
+  // Critical fields that require a reason for editing (only exceptions)
   const CRITICAL_FIELDS = ["valor_pago", "faturamento", "comprovante_url"];
 
   const detectCriticalDiffs = (): FieldDiff[] => {
@@ -473,15 +474,22 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
     const diffs: FieldDiff[] = [];
     const newValorPago = Number(formValorPago);
     const newFaturamento = formFaturamento ? Number(formFaturamento) : null;
-    if (newValorPago !== Number(editRecord.valor_pago)) {
-      diffs.push({ field: "valor_pago", label: formatFieldLabel("valor_pago"), before: String(editRecord.valor_pago), after: String(newValorPago) });
+    const oldValorPago = Number(editRecord.valor_pago);
+    const oldFaturamento = editRecord.faturamento != null ? Number(editRecord.faturamento) : null;
+
+    // Require reason only when REDUCING valor_pago (when there was already a value > 0)
+    if (oldValorPago > 0 && newValorPago < oldValorPago) {
+      diffs.push({ field: "valor_pago", label: formatFieldLabel("valor_pago"), before: String(oldValorPago), after: String(newValorPago) });
     }
-    if (newFaturamento !== (editRecord.faturamento != null ? Number(editRecord.faturamento) : null)) {
-      diffs.push({ field: "faturamento", label: formatFieldLabel("faturamento"), before: String(editRecord.faturamento ?? ""), after: String(newFaturamento ?? "") });
+    // Require reason only when REDUCING faturamento (when there was already a value > 0)
+    if (oldFaturamento !== null && oldFaturamento > 0 && (newFaturamento === null || newFaturamento < oldFaturamento)) {
+      diffs.push({ field: "faturamento", label: formatFieldLabel("faturamento"), before: String(oldFaturamento), after: String(newFaturamento ?? "") });
     }
-    if (formFile) {
+    // Require reason when REPLACING existing comprovante (not when adding for the first time)
+    if (formFile && editRecord.comprovante_url) {
       diffs.push({ field: "comprovante_url", label: formatFieldLabel("comprovante_url"), before: "(arquivo anterior)", after: formFile.name });
     }
+    // Require reason when changing influencer (not applicable from current UI, but future-proof)
     return diffs;
   };
 
@@ -504,10 +512,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
       toast.error("Informe o valor pago");
       return;
     }
-    if (!editRecord && !formFile) {
-      toast.error("O comprovante é obrigatório");
-      return;
-    }
+    // Comprovante is NOT required - record will be marked as pending
 
     // If editing and has critical changes, require reason
     if (editRecord && !editReason) {
@@ -619,40 +624,18 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
     const oldStatus = record?.status || null;
     if (oldStatus === newStatus) return;
 
-    // Require reason for status change
-    const diffs: FieldDiff[] = [
-      { field: "status", label: formatFieldLabel("status"), before: oldStatus || "(vazio)", after: newStatus || "(vazio)" },
-    ];
-    setPendingDiffs(diffs);
-    setPendingInlineAction(() => async () => {
-      // This will be called with reason from modal via handleInlineReasonConfirm
-    });
-
-    // Store the actual save action
-    const doSave = async (reason: string) => {
-      const { error } = await supabase
-        .from("daily_influencer_records")
-        .update({ status: newStatus } as any)
-        .eq("id", recordId);
-      if (error) {
-        toast.error("Erro ao atualizar status", { description: error.message });
-        return;
-      }
-      setRecords((prev) =>
-        prev.map((r) => (r.id === recordId ? { ...r, status: newStatus } : r))
-      );
-      await supabase.functions.invoke("store-edit-reason", {
-        body: {
-          entity_id: recordId,
-          entity_type: "daily_influencer_records",
-          edit_reason: reason,
-          field_changes: { status: { before: oldStatus || "(vazio)", after: newStatus || "(vazio)" } },
-          influencer_handle: record ? getInfluencerHandle(record.influencer_id) : undefined,
-        },
-      });
-    };
-    setPendingInlineAction(() => doSave as any);
-    setReasonModalOpen(true);
+    // Save directly without requiring reason (status is not critical)
+    const { error } = await supabase
+      .from("daily_influencer_records")
+      .update({ status: newStatus } as any)
+      .eq("id", recordId);
+    if (error) {
+      toast.error("Erro ao atualizar status", { description: error.message });
+      return;
+    }
+    setRecords((prev) =>
+      prev.map((r) => (r.id === recordId ? { ...r, status: newStatus } : r))
+    );
   };
 
   const handleAcumuladoSave = async (recordId: string, val: number | null) => {
@@ -660,34 +643,18 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
     const oldVal = record?.acumulado;
     if (oldVal === val) return;
 
-    const diffs: FieldDiff[] = [
-      { field: "acumulado", label: formatFieldLabel("acumulado"), before: String(oldVal ?? "(vazio)"), after: String(val ?? "(vazio)") },
-    ];
-    const doSave = async (reason: string) => {
-      const { error } = await supabase
-        .from("daily_influencer_records")
-        .update({ acumulado: val } as any)
-        .eq("id", recordId);
-      if (error) {
-        toast.error("Erro ao salvar acumulado", { description: error.message });
-        return;
-      }
-      setRecords((prev) =>
-        prev.map((r) => (r.id === recordId ? { ...r, acumulado: val } : r))
-      );
-      await supabase.functions.invoke("store-edit-reason", {
-        body: {
-          entity_id: recordId,
-          entity_type: "daily_influencer_records",
-          edit_reason: reason,
-          field_changes: { acumulado: { before: String(oldVal ?? "(vazio)"), after: String(val ?? "(vazio)") } },
-          influencer_handle: record ? getInfluencerHandle(record.influencer_id) : undefined,
-        },
-      });
-    };
-    setPendingDiffs(diffs);
-    setPendingInlineAction(() => doSave as any);
-    setReasonModalOpen(true);
+    // Save directly without requiring reason (acumulado is not critical)
+    const { error } = await supabase
+      .from("daily_influencer_records")
+      .update({ acumulado: val } as any)
+      .eq("id", recordId);
+    if (error) {
+      toast.error("Erro ao salvar acumulado", { description: error.message });
+      return;
+    }
+    setRecords((prev) =>
+      prev.map((r) => (r.id === recordId ? { ...r, acumulado: val } : r))
+    );
   };
 
   const handleViewComprovante = async (url: string) => {
@@ -712,7 +679,8 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
     const totalFaturado = records.reduce((sum, r) => sum + (Number(r.faturamento) || 0), 0);
     const totalTaxa = calcTaxaPlataforma(totalFaturado);
     const resultadoLiquido = totalFaturado - totalInvestido - totalTaxa;
-    return { totalInvestido, totalFaturado, totalTaxa, resultadoLiquido };
+    const totalPending = records.filter((r) => !r.comprovante_url).length;
+    return { totalInvestido, totalFaturado, totalTaxa, resultadoLiquido, totalPending };
   }, [records]);
 
   // Check if modal has available influencers
@@ -763,6 +731,12 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
               {formatCurrency(monthTotals.resultadoLiquido)}
             </span>
           </div>
+          {monthTotals.totalPending > 0 && (
+            <Badge variant="destructive" className="text-xs gap-1">
+              <AlertCircle className="h-3 w-3" />
+              {monthTotals.totalPending} pendência{monthTotals.totalPending > 1 ? "s" : ""}
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -780,6 +754,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
             const isExpanded = expandedDays.has(day);
             const dayTotal = dayRecords.reduce((s, r) => s + Number(r.valor_pago), 0);
             const dayFat = dayRecords.reduce((s, r) => s + (Number(r.faturamento) || 0), 0);
+            const pendingCount = dayRecords.filter((r) => !r.comprovante_url).length;
 
             return (
               <div key={day} className="bg-card rounded-xl border overflow-hidden">
@@ -798,6 +773,12 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                     <Badge variant="secondary" className="text-xs">
                       {dayRecords.length} {dayRecords.length === 1 ? "registro" : "registros"}
                     </Badge>
+                    {pendingCount > 0 && (
+                      <Badge variant="destructive" className="text-xs gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        {pendingCount} sem comprovante
+                      </Badge>
+                    )}
                   </div>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span>Pago: {formatCurrency(dayTotal)}</span>
@@ -882,9 +863,10 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                                       onClick={() => handleViewComprovante(record.comprovante_url)}
                                     />
                                   ) : (
-                                    <span className="inline-flex w-8 h-8 rounded border border-dashed border-border/40 items-center justify-center">
-                                      <Plus className="h-3 w-3 text-muted-foreground/40" />
-                                    </span>
+                                    <div className="flex flex-col items-center gap-1">
+                                      <AlertCircle className="h-4 w-4 text-destructive" />
+                                      <span className="text-[10px] text-destructive font-medium leading-tight">Pendente</span>
+                                    </div>
                                   )}
                                 </td>
                                 {!viewingOther && (
@@ -1079,7 +1061,12 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
               )}
 
               <div className="space-y-2">
-                <Label>{editRecord ? "Substituir Comprovante" : "Comprovante de Pagamento *"}</Label>
+                <Label>
+                  {editRecord
+                    ? (editRecord.comprovante_url ? "Substituir Comprovante" : "Anexar Comprovante")
+                    : "Comprovante de Pagamento"}
+                  {" "}<span className="text-muted-foreground text-xs">— pode anexar depois</span>
+                </Label>
                 <label className="cursor-pointer block">
                   <div className="flex items-center gap-2 border rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 transition-colors">
                     <Upload className="h-4 w-4" />
