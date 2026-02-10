@@ -5,11 +5,15 @@ import { toast } from 'sonner';
 
 type UserRole = 'CLOSER' | 'ADMIN';
 
+type AccountStatus = 'pending' | 'approved' | 'rejected' | 'blocked';
+
 interface AuthUser {
   id: string;
   email: string;
   nome: string;
   role: UserRole;
+  status: AccountStatus;
+  rejectionReason: string | null;
 }
 
 interface AuthContextType {
@@ -35,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Fetch profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('nome')
+        .select('nome, status, rejection_reason')
         .eq('id', userId)
         .single();
 
@@ -63,6 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: authUser?.email || '',
         nome: profile.nome,
         role: roleData.role as UserRole,
+        status: (profile as any).status as AccountStatus || 'pending',
+        rejectionReason: (profile as any).rejection_reason || null,
       };
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);

@@ -1,18 +1,32 @@
-import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Login() {
   const { user, loading, signIn, signUp } = useAuth();
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get('invite');
+  const [isSignUp, setIsSignUp] = useState(!!inviteToken);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nome, setNome] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [inviteValid, setInviteValid] = useState<boolean | null>(inviteToken ? null : true);
+
+  useEffect(() => {
+    if (inviteToken) {
+      supabase.rpc('validate_invite_token', { _token: inviteToken }).then(({ data }) => {
+        setInviteValid(!!data);
+        if (!data) toast.error('Convite inválido ou expirado');
+      });
+    }
+  }, [inviteToken]);
 
   // Redirect if already logged in
   if (!loading && user) {
@@ -24,7 +38,19 @@ export default function Login() {
     setIsSubmitting(true);
 
     if (isSignUp) {
+      if (inviteToken && !inviteValid) {
+        toast.error('Convite inválido');
+        setIsSubmitting(false);
+        return;
+      }
       const { error } = await signUp(email, password, nome);
+      if (!error && inviteToken) {
+        // Consume the invite after successful signup
+        const { data: { user: newUser } } = await supabase.auth.getUser();
+        if (newUser) {
+          await supabase.rpc('consume_invite_token', { _token: inviteToken, _user_id: newUser.id });
+        }
+      }
       if (!error) {
         setIsSignUp(false);
         setPassword('');
@@ -63,6 +89,22 @@ export default function Login() {
           <h2 className="text-lg font-medium mb-6">
             {isSignUp ? 'Criar conta' : 'Entrar'}
           </h2>
+
+          {isSignUp && !inviteToken && (
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 mb-4">
+              <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+              <p className="text-xs text-amber-700">
+                Cadastro requer um link de convite. Solicite ao administrador.
+              </p>
+            </div>
+          )}
+
+          {inviteToken && inviteValid === false && (
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 mb-4">
+              <AlertCircle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+              <p className="text-xs text-destructive">Convite inválido ou expirado.</p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
@@ -110,7 +152,7 @@ export default function Login() {
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={isSubmitting}
+              disabled={isSubmitting || (isSignUp && (!inviteToken || !inviteValid))}
             >
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isSignUp ? 'Criar conta' : 'Entrar'}
@@ -130,8 +172,8 @@ export default function Login() {
         </div>
 
         <p className="text-xs text-center text-muted-foreground mt-6">
-          Novos usuários são criados como Closers.<br />
-          Contate um admin para acesso administrativo.
+          Cadastro requer convite de um administrador.<br />
+          Após criar conta, aguarde aprovação.
         </p>
       </div>
     </div>

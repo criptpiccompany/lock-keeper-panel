@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import ImportData from "./pages/ImportData";
 import RegistroDiario from "./pages/RegistroDiario";
 import Notificacoes from "./pages/Notificacoes";
+import PendingApproval from "./pages/PendingApproval";
 
 const queryClient = new QueryClient();
 
@@ -30,10 +31,18 @@ function AppRoutes() {
     return <Navigate to="/meu" replace />;
   };
 
+  const PendingApprovalRoute = () => {
+    if (loading) return null;
+    if (!user) return <Navigate to="/login" replace />;
+    if (user.status === 'approved' || user.role === 'ADMIN') return <Navigate to="/meu" replace />;
+    return <PendingApproval />;
+  };
+
   return (
     <Routes>
-      {/* Public route */}
+      {/* Public routes */}
       <Route path="/login" element={<Login />} />
+      <Route path="/aguardando" element={<PendingApprovalRoute />} />
 
       {/* Default redirect */}
       <Route path="/" element={<DefaultRedirect />} />
