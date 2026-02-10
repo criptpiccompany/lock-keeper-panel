@@ -556,8 +556,17 @@ export default function PlanilhamentoDiario() {
 
         // Store edit reason via edge function (server-side, bypasses RLS)
         if (editReason) {
+          const diffs = detectCriticalDiffs();
+          const fieldChangesObj: Record<string, { before: any; after: any }> = {};
+          diffs.forEach((d) => { fieldChangesObj[d.field] = { before: d.before, after: d.after }; });
           await supabase.functions.invoke("store-edit-reason", {
-            body: { entity_id: editRecord.id, entity_type: "daily_influencer_records", edit_reason: editReason },
+            body: {
+              entity_id: editRecord.id,
+              entity_type: "daily_influencer_records",
+              edit_reason: editReason,
+              field_changes: fieldChangesObj,
+              influencer_handle: getInfluencerHandle(editRecord.influencer_id),
+            },
           });
         }
 
@@ -630,7 +639,13 @@ export default function PlanilhamentoDiario() {
         prev.map((r) => (r.id === recordId ? { ...r, status: newStatus } : r))
       );
       await supabase.functions.invoke("store-edit-reason", {
-        body: { entity_id: recordId, entity_type: "daily_influencer_records", edit_reason: reason },
+        body: {
+          entity_id: recordId,
+          entity_type: "daily_influencer_records",
+          edit_reason: reason,
+          field_changes: { status: { before: oldStatus || "(vazio)", after: newStatus || "(vazio)" } },
+          influencer_handle: record ? getInfluencerHandle(record.influencer_id) : undefined,
+        },
       });
     };
     setPendingInlineAction(() => doSave as any);
@@ -658,7 +673,13 @@ export default function PlanilhamentoDiario() {
         prev.map((r) => (r.id === recordId ? { ...r, acumulado: val } : r))
       );
       await supabase.functions.invoke("store-edit-reason", {
-        body: { entity_id: recordId, entity_type: "daily_influencer_records", edit_reason: reason },
+        body: {
+          entity_id: recordId,
+          entity_type: "daily_influencer_records",
+          edit_reason: reason,
+          field_changes: { acumulado: { before: String(oldVal ?? "(vazio)"), after: String(val ?? "(vazio)") } },
+          influencer_handle: record ? getInfluencerHandle(record.influencer_id) : undefined,
+        },
       });
     };
     setPendingDiffs(diffs);
