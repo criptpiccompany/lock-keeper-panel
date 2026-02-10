@@ -12,6 +12,7 @@ import MeuPainel from "./pages/MeuPainel";
 import PainelGeral from "./pages/PainelGeral";
 import Diretorio from "./pages/Diretorio";
 import Auditoria from "./pages/Auditoria";
+import UserAuditoria from "./pages/UserAuditoria";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import ImportData from "./pages/ImportData";
@@ -94,6 +95,15 @@ function AppRoutes() {
           <ProtectedRoute requireAdmin>
             <Navbar />
             <Auditoria />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/auditoria/user/:userId"
+        element={
+          <ProtectedRoute requireAdmin>
+            <Navbar />
+            <UserAuditoria />
           </ProtectedRoute>
         }
       />
