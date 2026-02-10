@@ -323,18 +323,21 @@ export type Database = {
       }
       profiles: {
         Row: {
+          commission_rate: number
           created_at: string
           id: string
           nome: string
           updated_at: string
         }
         Insert: {
+          commission_rate?: number
           created_at?: string
           id: string
           nome: string
           updated_at?: string
         }
         Update: {
+          commission_rate?: number
           created_at?: string
           id?: string
           nome?: string
