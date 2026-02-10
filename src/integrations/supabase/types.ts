@@ -194,7 +194,7 @@ export type Database = {
         Row: {
           acumulado: number | null
           closer_id: string
-          comprovante_url: string
+          comprovante_url: string | null
           created_at: string
           date: string
           deleted_at: string | null
@@ -210,7 +210,7 @@ export type Database = {
         Insert: {
           acumulado?: number | null
           closer_id: string
-          comprovante_url: string
+          comprovante_url?: string | null
           created_at?: string
           date?: string
           deleted_at?: string | null
@@ -226,7 +226,7 @@ export type Database = {
         Update: {
           acumulado?: number | null
           closer_id?: string
-          comprovante_url?: string
+          comprovante_url?: string | null
           created_at?: string
           date?: string
           deleted_at?: string | null
