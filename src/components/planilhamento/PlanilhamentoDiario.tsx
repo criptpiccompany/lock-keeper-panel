@@ -244,8 +244,9 @@ const MONTHS = [
 
 // --- Main Component ---
 
-export default function PlanilhamentoDiario() {
+export default function PlanilhamentoDiario({ closerId }: { closerId?: string }) {
   const { user, isAdmin } = useAuth();
+  const viewingOther = !!closerId && closerId !== user?.id;
   const now = new Date();
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
@@ -287,6 +288,8 @@ export default function PlanilhamentoDiario() {
     const startDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`;
     const endDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-${new Date(selectedYear, selectedMonth + 1, 0).getDate()}`;
 
+    const targetId = closerId || (!isAdmin ? user.id : undefined);
+
     let recordsQuery = supabase
       .from("daily_influencer_records")
       .select("*")
@@ -295,8 +298,8 @@ export default function PlanilhamentoDiario() {
       .order("date", { ascending: true })
       .order("created_at", { ascending: true });
 
-    if (!isAdmin) {
-      recordsQuery = recordsQuery.eq("closer_id", user.id);
+    if (targetId) {
+      recordsQuery = recordsQuery.eq("closer_id", targetId);
     }
 
     let sheetsQuery = supabase
@@ -304,13 +307,13 @@ export default function PlanilhamentoDiario() {
       .select("date")
       .eq("month", monthKey);
 
-    if (!isAdmin) {
-      sheetsQuery = sheetsQuery.eq("closer_id", user.id);
+    if (targetId) {
+      sheetsQuery = sheetsQuery.eq("closer_id", targetId);
     }
 
     let infQuery = supabase.from("influencers").select("id, handle, last_closed_at").eq("ativo", true);
-    if (!isAdmin) {
-      infQuery = infQuery.eq("owner_id", user.id);
+    if (targetId) {
+      infQuery = infQuery.eq("owner_id", targetId);
     }
 
     const [recordsRes, infRes, sheetsRes] = await Promise.all([
@@ -328,7 +331,7 @@ export default function PlanilhamentoDiario() {
     if (today >= startDate && today <= endDate) {
       setExpandedDays(new Set([today]));
     }
-  }, [user, isAdmin, selectedYear, selectedMonth, monthKey]);
+  }, [user, isAdmin, closerId, selectedYear, selectedMonth, monthKey]);
 
   useEffect(() => {
     fetchData();
@@ -813,7 +816,7 @@ export default function PlanilhamentoDiario() {
                           <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Acumulado</th>
                           <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Status</th>
                           <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-center">📎</th>
-                          <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-right">Ações</th>
+                          {!viewingOther && <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-right">Ações</th>}
                         </tr>
                       </thead>
                       <tbody>
@@ -849,16 +852,26 @@ export default function PlanilhamentoDiario() {
                                   </div>
                                 </td>
                                 <td className="py-2.5 px-4">
-                                  <InlineAcumulado
-                                    value={record.acumulado ?? null}
-                                    onSave={(val) => handleAcumuladoSave(record.id, val)}
-                                  />
+                                  {viewingOther ? (
+                                    <span className={`text-sm ${record.acumulado !== null && record.acumulado < 0 ? "text-red-600 font-medium" : record.acumulado !== null && record.acumulado > 0 ? "text-emerald-700 font-medium" : ""}`}>
+                                      {record.acumulado !== null ? formatCurrency(record.acumulado) : "—"}
+                                    </span>
+                                  ) : (
+                                    <InlineAcumulado
+                                      value={record.acumulado ?? null}
+                                      onSave={(val) => handleAcumuladoSave(record.id, val)}
+                                    />
+                                  )}
                                 </td>
                                 <td className="py-2.5 px-4">
-                                  <WorkflowStatusDropdown
-                                    value={record.status}
-                                    onChange={(val) => handleStatusChange(record.id, val)}
-                                  />
+                                  {viewingOther ? (
+                                    <span className="text-xs text-muted-foreground">{record.status || "—"}</span>
+                                  ) : (
+                                    <WorkflowStatusDropdown
+                                      value={record.status}
+                                      onChange={(val) => handleStatusChange(record.id, val)}
+                                    />
+                                  )}
                                 </td>
                                 <td className="py-2.5 px-4 text-center">
                                   {record.comprovante_url ? (
@@ -872,11 +885,13 @@ export default function PlanilhamentoDiario() {
                                     </span>
                                   )}
                                 </td>
-                                <td className="py-2.5 px-4 text-right">
-                                  <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => openEditRecord(record)}>
+                                {!viewingOther && (
+                                  <td className="py-2.5 px-4 text-right">
+                                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => openEditRecord(record)}>
                                       Editar
                                     </Button>
-                                </td>
+                                  </td>
+                                )}
                               </tr>
                             );
                           })
@@ -885,17 +900,19 @@ export default function PlanilhamentoDiario() {
                     </table>
 
                     {/* Blue + button: add influencer to this day */}
-                    <div className="px-4 py-2 border-t border-border/30">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 text-xs text-primary bg-primary/10 shadow-[0_1px_4px_0_hsl(var(--primary)/0.2)] rounded-md hover:bg-primary/15 hover:shadow-[0_2px_8px_0_hsl(var(--primary)/0.25)] transition-all"
-                        onClick={() => openNewRecord(day)}
-                      >
-                        <Plus className="mr-1 h-3.5 w-3.5" />
-                        Adicionar influenciador
-                      </Button>
-                    </div>
+                    {!viewingOther && (
+                      <div className="px-4 py-2 border-t border-border/30">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 text-xs text-primary bg-primary/10 shadow-[0_1px_4px_0_hsl(var(--primary)/0.2)] rounded-md hover:bg-primary/15 hover:shadow-[0_2px_8px_0_hsl(var(--primary)/0.25)] transition-all"
+                          onClick={() => openNewRecord(day)}
+                        >
+                          <Plus className="mr-1 h-3.5 w-3.5" />
+                          Adicionar influenciador
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -905,16 +922,18 @@ export default function PlanilhamentoDiario() {
       )}
 
       {/* Blue + button: add new day */}
-      <div className="flex justify-center">
-        <Button
-          variant="outline"
-          className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-          onClick={handleAddDay}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Adicionar dia
-        </Button>
-      </div>
+      {!viewingOther && (
+        <div className="flex justify-center">
+          <Button
+            variant="outline"
+            className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+            onClick={handleAddDay}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Adicionar dia
+          </Button>
+        </div>
+      )}
 
       {/* Mobile month totals */}
       <div className="md:hidden grid grid-cols-2 gap-3">
