@@ -494,6 +494,56 @@ function EditableHeader({ value, onChange }: { value: string; onChange: (v: stri
   );
 }
 
+function CurrencyInput({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  const formatDisplay = (cents: number): string => {
+    return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  };
+
+  const [cents, setCents] = useState(Math.round(value * 100));
+  const [display, setDisplay] = useState(value ? formatDisplay(Math.round(value * 100)) : "");
+
+  useEffect(() => {
+    const newCents = Math.round(value * 100);
+    setCents(newCents);
+    setDisplay(value ? formatDisplay(newCents) : "");
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, "");
+    if (raw === "") {
+      setCents(0);
+      setDisplay("");
+      return;
+    }
+    const newCents = parseInt(raw, 10);
+    setCents(newCents);
+    setDisplay(formatDisplay(newCents));
+  };
+
+  const handleBlur = () => {
+    const numericValue = cents / 100;
+    if (numericValue !== value) onChange(numericValue);
+    if (cents === 0) setDisplay("");
+  };
+
+  return (
+    <Input
+      className="h-7 text-xs text-right tabular-nums w-full"
+      inputMode="numeric"
+      value={display}
+      placeholder="R$ 0,00"
+      onChange={handleChange}
+      onBlur={handleBlur}
+    />
+  );
+}
+
 function CasaCell({
   valor,
   email,
@@ -505,26 +555,13 @@ function CasaCell({
   onValorChange: (v: number) => void;
   onEmailChange: (v: string) => void;
 }) {
-  const [localValor, setLocalValor] = useState(String(valor || ""));
   const [localEmail, setLocalEmail] = useState(email);
-
-  useEffect(() => { setLocalValor(String(valor || "")); }, [valor]);
   useEffect(() => { setLocalEmail(email); }, [email]);
 
   return (
     <td className="py-1.5 px-2">
       <div className="flex flex-col gap-1.5">
-        <Input
-          type="number"
-          className="h-7 text-xs text-right tabular-nums w-full"
-          value={localValor}
-          placeholder="R$ 0,00"
-          onChange={(e) => setLocalValor(e.target.value)}
-          onBlur={() => {
-            const val = parseFloat(localValor) || 0;
-            if (val !== valor) onValorChange(val);
-          }}
-        />
+        <CurrencyInput value={valor} onChange={onValorChange} />
         <div className="flex items-center gap-1 rounded-md bg-muted/60 px-1.5 py-0.5">
           <Mail className="h-3 w-3 text-muted-foreground/70 shrink-0" />
           <input
