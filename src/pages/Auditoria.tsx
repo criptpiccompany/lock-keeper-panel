@@ -27,6 +27,7 @@ import {
   humanDescription,
   extractHandle,
   isAttachmentAction,
+  isSensitiveAction,
   isFinancialField,
   financialDirection,
   formatValue,
@@ -137,10 +138,14 @@ export default function Auditoria() {
     setLastViewed(updated);
   };
 
-  const hasUnseenActions = (userId: string, lastAction: string): boolean => {
+  // Returns "sensitive" | "common" | null based on unseen actions
+  const unseenLevel = (userId: string): "sensitive" | "common" | null => {
     const viewed = lastViewed[userId];
-    if (!viewed) return true;
-    return lastAction > viewed;
+    const userLogs = allLogs.filter((l) => l.actor_user_id === userId);
+    const unseen = viewed ? userLogs.filter((l) => l.created_at > viewed) : userLogs;
+    if (unseen.length === 0) return null;
+    if (unseen.some(isSensitiveAction)) return "sensitive";
+    return "common";
   };
 
   const handleTabClick = (userId: string) => {
@@ -201,9 +206,14 @@ export default function Auditoria() {
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-full" />
               )}
             </button>
-            {userTabs.map(([userId, nome, lastAction]) => {
+            {userTabs.map(([userId, nome]) => {
               const isActive = activeTab === userId;
-              const unseen = hasUnseenActions(userId, lastAction);
+              const level = unseenLevel(userId);
+              const dotColor = level === "sensitive"
+                ? { ping: "bg-red-400", dot: "bg-red-500" }
+                : level === "common"
+                  ? { ping: "bg-orange-400", dot: "bg-orange-500" }
+                  : null;
               return (
                 <button
                   key={userId}
@@ -218,10 +228,10 @@ export default function Auditoria() {
                 >
                   <User className="h-4 w-4" />
                   {nome}
-                  {unseen && !isActive && (
+                  {dotColor && !isActive && (
                     <span className="relative flex h-2.5 w-2.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500" />
+                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${dotColor.ping} opacity-75`} />
+                      <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${dotColor.dot}`} />
                     </span>
                   )}
                   {isActive && (
