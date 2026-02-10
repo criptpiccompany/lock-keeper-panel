@@ -52,6 +52,7 @@ export type Database = {
           actor_user_id: string | null
           created_at: string
           description: string | null
+          edit_reason: string | null
           entity_id: string | null
           entity_type: string
           field_changes: Json | null
@@ -64,6 +65,7 @@ export type Database = {
           actor_user_id?: string | null
           created_at?: string
           description?: string | null
+          edit_reason?: string | null
           entity_id?: string | null
           entity_type: string
           field_changes?: Json | null
@@ -76,6 +78,7 @@ export type Database = {
           actor_user_id?: string | null
           created_at?: string
           description?: string | null
+          edit_reason?: string | null
           entity_id?: string | null
           entity_type?: string
           field_changes?: Json | null
