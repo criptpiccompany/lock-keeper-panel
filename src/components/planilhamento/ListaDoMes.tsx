@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Loader2, ListChecks, DollarSign, TrendingUp, TrendingDown, Receipt, Percent } from "lucide-react";
+import { Loader2, ListChecks, DollarSign, TrendingUp, TrendingDown, Receipt, Percent, Mail } from "lucide-react";
 import { toast } from "sonner";
 
 /* ───── types ───── */
@@ -513,7 +513,7 @@ function CasaCell({
 
   return (
     <td className="py-1.5 px-2">
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <Input
           type="number"
           className="h-7 text-xs text-right tabular-nums w-full"
@@ -525,13 +525,16 @@ function CasaCell({
             if (val !== valor) onValorChange(val);
           }}
         />
-        <input
-          className="h-5 text-[10px] text-muted-foreground w-full bg-transparent border-b border-border/30 outline-none focus:border-border px-1 transition-colors placeholder:text-muted-foreground/50"
-          value={localEmail}
-          placeholder="email afiliado"
-          onChange={(e) => setLocalEmail(e.target.value)}
-          onBlur={() => { if (localEmail !== email) onEmailChange(localEmail); }}
-        />
+        <div className="flex items-center gap-1 rounded-md bg-muted/60 px-1.5 py-0.5">
+          <Mail className="h-3 w-3 text-muted-foreground/70 shrink-0" />
+          <input
+            className="h-5 text-[11px] text-foreground/70 w-full bg-transparent outline-none focus:text-foreground transition-colors placeholder:text-muted-foreground/50"
+            value={localEmail}
+            placeholder="email afiliado"
+            onChange={(e) => setLocalEmail(e.target.value)}
+            onBlur={() => { if (localEmail !== email) onEmailChange(localEmail); }}
+          />
+        </div>
       </div>
     </td>
   );
