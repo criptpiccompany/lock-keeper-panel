@@ -321,6 +321,54 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_influencer_list: {
+        Row: {
+          closer_id: string
+          created_at: string
+          email_afiliado: string | null
+          id: string
+          influencer_handle: string
+          influencer_id: string
+          link_1: string | null
+          link_2: string | null
+          link_3: string | null
+          month: string
+          observacoes: string | null
+          updated_at: string
+          valor_total: number | null
+        }
+        Insert: {
+          closer_id: string
+          created_at?: string
+          email_afiliado?: string | null
+          id?: string
+          influencer_handle: string
+          influencer_id: string
+          link_1?: string | null
+          link_2?: string | null
+          link_3?: string | null
+          month: string
+          observacoes?: string | null
+          updated_at?: string
+          valor_total?: number | null
+        }
+        Update: {
+          closer_id?: string
+          created_at?: string
+          email_afiliado?: string | null
+          id?: string
+          influencer_handle?: string
+          influencer_id?: string
+          link_1?: string | null
+          link_2?: string | null
+          link_3?: string | null
+          month?: string
+          observacoes?: string | null
+          updated_at?: string
+          valor_total?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           commission_rate: number
