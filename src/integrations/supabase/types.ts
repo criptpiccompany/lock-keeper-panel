@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_conflicts: {
+        Row: {
+          affiliate_email: string | null
+          created_at: string
+          handle: string | null
+          id: string
+          meta: Json | null
+          month_key: string
+          note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          type: string
+          users_involved: Json
+        }
+        Insert: {
+          affiliate_email?: string | null
+          created_at?: string
+          handle?: string | null
+          id?: string
+          meta?: Json | null
+          month_key: string
+          note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity: string
+          type: string
+          users_involved?: Json
+        }
+        Update: {
+          affiliate_email?: string | null
+          created_at?: string
+          handle?: string | null
+          id?: string
+          meta?: Json | null
+          month_key?: string
+          note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          type?: string
+          users_involved?: Json
+        }
+        Relationships: []
+      }
       admin_notifications: {
         Row: {
           action: string
