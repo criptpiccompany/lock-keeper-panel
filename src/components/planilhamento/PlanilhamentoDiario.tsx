@@ -340,7 +340,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
       recordsQuery,
       infQuery,
       sheetsQuery,
-      supabase.from("profiles").select("id, nome").eq("status", "approved").order("nome"),
+      supabase.rpc("get_approved_closers"),
     ]);
 
     const fetchedRecords = (recordsRes.data as DailyRecord[]) || [];
