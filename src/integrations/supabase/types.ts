@@ -260,7 +260,7 @@ export type Database = {
           created_at: string
           id: string
           partner_nome: string | null
-          partner_user_id: string
+          partner_user_id: string | null
           record_id: string
           share_amount: number | null
           share_type: string | null
@@ -269,7 +269,7 @@ export type Database = {
           created_at?: string
           id?: string
           partner_nome?: string | null
-          partner_user_id: string
+          partner_user_id?: string | null
           record_id: string
           share_amount?: number | null
           share_type?: string | null
@@ -278,7 +278,7 @@ export type Database = {
           created_at?: string
           id?: string
           partner_nome?: string | null
-          partner_user_id?: string
+          partner_user_id?: string | null
           record_id?: string
           share_amount?: number | null
           share_type?: string | null

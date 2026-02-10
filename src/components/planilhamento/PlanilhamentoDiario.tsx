@@ -286,13 +286,13 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState("");
 
-  // Shared/partners state
+  // Shared/partners state — partners are now free-text names (not user IDs)
   const [formIsShared, setFormIsShared] = useState(false);
   const [formSharedNote, setFormSharedNote] = useState("");
-  const [formSelectedPartners, setFormSelectedPartners] = useState<string[]>([]);
+  const [formPartnerNames, setFormPartnerNames] = useState<string[]>([]);
+  const [formPartnerInput, setFormPartnerInput] = useState("");
   const [formShareType, setFormShareType] = useState<string>("percent");
   const [formPartnerAmounts, setFormPartnerAmounts] = useState<Record<string, string>>({});
-  const [allClosers, setAllClosers] = useState<CloserOption[]>([]);
   const [sharedPartnersMap, setSharedPartnersMap] = useState<Map<string, SharedPartner[]>>(new Map());
 
   // Persistent days from DB
@@ -336,18 +336,16 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
       infQuery = infQuery.eq("owner_id", targetId);
     }
 
-    const [recordsRes, infRes, sheetsRes, closersRes] = await Promise.all([
+    const [recordsRes, infRes, sheetsRes] = await Promise.all([
       recordsQuery,
       infQuery,
       sheetsQuery,
-      supabase.rpc("get_approved_closers"),
     ]);
 
     const fetchedRecords = (recordsRes.data as DailyRecord[]) || [];
     setRecords(fetchedRecords);
     setInfluencers(infRes.data || []);
     setPersistedDays((sheetsRes.data || []).map((s: any) => s.date));
-    setAllClosers((closersRes.data || []) as CloserOption[]);
 
     // Fetch shared partners for all records that are shared
     const sharedRecordIds = fetchedRecords.filter((r) => r.is_shared).map((r) => r.id);
@@ -489,7 +487,8 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
     setFormFile(null);
     setFormIsShared(false);
     setFormSharedNote("");
-    setFormSelectedPartners([]);
+    setFormPartnerNames([]);
+    setFormPartnerInput("");
     setFormShareType("percent");
     setFormPartnerAmounts({});
     setModalOpen(true);
@@ -505,13 +504,15 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
     setFormFile(null);
     setFormIsShared(record.is_shared || false);
     setFormSharedNote(record.shared_note || "");
-    // Load existing partners
+    // Load existing partners (by name)
     const existingPartners = sharedPartnersMap.get(record.id) || [];
-    setFormSelectedPartners(existingPartners.map((p) => p.partner_user_id));
+    setFormPartnerNames(existingPartners.map((p) => p.partner_nome || ""));
+    setFormPartnerInput("");
     setFormShareType(existingPartners[0]?.share_type || "percent");
     const amounts: Record<string, string> = {};
     existingPartners.forEach((p) => {
-      if (p.share_amount != null) amounts[p.partner_user_id] = String(p.share_amount);
+      const key = p.partner_nome || p.id;
+      if (p.share_amount != null) amounts[key] = String(p.share_amount);
     });
     setFormPartnerAmounts(amounts);
     setModalOpen(true);
@@ -669,14 +670,13 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
             .eq("record_id", savedRecordId);
         }
         // Insert new partners if shared
-        if (formIsShared && formSelectedPartners.length > 0) {
-          const closerNameMap = new Map(allClosers.map((c) => [c.id, c.nome]));
-          const partnersToInsert = formSelectedPartners.map((partnerId) => ({
+        if (formIsShared && formPartnerNames.length > 0) {
+          const partnersToInsert = formPartnerNames.map((name) => ({
             record_id: savedRecordId!,
-            partner_user_id: partnerId,
-            partner_nome: closerNameMap.get(partnerId) || null,
-            share_type: formPartnerAmounts[partnerId] ? formShareType : null,
-            share_amount: formPartnerAmounts[partnerId] ? Number(formPartnerAmounts[partnerId]) : null,
+            partner_user_id: null,
+            partner_nome: name,
+            share_type: formPartnerAmounts[name] ? formShareType : null,
+            share_amount: formPartnerAmounts[name] ? Number(formPartnerAmounts[name]) : null,
           }));
           await supabase.from("daily_record_shared_partners").insert(partnersToInsert);
         }
@@ -1199,81 +1199,72 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
 
                 {formIsShared && (
                   <div className="space-y-3 pl-1">
-                    {/* Partner selection - combobox style like influencer selector */}
+                    {/* Partner input - free text */}
                     <div className="space-y-2">
                       <Label className="text-xs text-muted-foreground">Parceiros (até 4)</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className="w-full justify-between font-normal h-9 text-sm"
-                          >
-                            {formSelectedPartners.length > 0
-                              ? `${formSelectedPartners.length} parceiro${formSelectedPartners.length > 1 ? "s" : ""} selecionado${formSelectedPartners.length > 1 ? "s" : ""}`
-                              : "Buscar parceiro..."}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-full p-0 bg-popover z-50" align="start">
-                          <Command>
-                            <CommandInput placeholder="Buscar parceiro..." />
-                            <CommandList>
-                              <CommandEmpty>Nenhum encontrado.</CommandEmpty>
-                              <CommandGroup>
-                                {allClosers
-                                  .filter((c) => c.id !== user?.id)
-                                  .map((c) => (
-                                    <CommandItem
-                                      key={c.id}
-                                      value={c.nome}
-                                      onSelect={() => {
-                                        if (formSelectedPartners.includes(c.id)) {
-                                          setFormSelectedPartners((prev) => prev.filter((id) => id !== c.id));
-                                        } else {
-                                          if (formSelectedPartners.length >= 4) {
-                                            toast.info("Máximo de 4 parceiros");
-                                            return;
-                                          }
-                                          setFormSelectedPartners((prev) => [...prev, c.id]);
-                                        }
-                                      }}
-                                    >
-                                      <Check
-                                        className={`mr-2 h-4 w-4 ${formSelectedPartners.includes(c.id) ? "opacity-100" : "opacity-0"}`}
-                                      />
-                                      {c.nome}
-                                    </CommandItem>
-                                  ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                      {/* Selected partners chips */}
-                      {formSelectedPartners.length > 0 && (
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Nome do parceiro"
+                          className="h-9 text-sm flex-1"
+                          value={formPartnerInput}
+                          onChange={(e) => setFormPartnerInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              const name = formPartnerInput.trim();
+                              if (!name) return;
+                              if (formPartnerNames.length >= 4) {
+                                toast.info("Máximo de 4 parceiros");
+                                return;
+                              }
+                              if (formPartnerNames.some((n) => n.toLowerCase() === name.toLowerCase())) {
+                                toast.info("Parceiro já adicionado");
+                                return;
+                              }
+                              setFormPartnerNames((prev) => [...prev, name]);
+                              setFormPartnerInput("");
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          className="h-9 px-3"
+                          disabled={!formPartnerInput.trim() || formPartnerNames.length >= 4}
+                          onClick={() => {
+                            const name = formPartnerInput.trim();
+                            if (!name) return;
+                            if (formPartnerNames.some((n) => n.toLowerCase() === name.toLowerCase())) {
+                              toast.info("Parceiro já adicionado");
+                              return;
+                            }
+                            setFormPartnerNames((prev) => [...prev, name]);
+                            setFormPartnerInput("");
+                          }}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {formPartnerNames.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">
-                          {formSelectedPartners.map((pid) => {
-                            const nome = allClosers.find((c) => c.id === pid)?.nome || pid;
-                            return (
-                              <Badge key={pid} variant="secondary" className="gap-1 text-xs pr-1">
-                                {nome}
-                                <button
-                                  type="button"
-                                  className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5"
-                                  onClick={() => setFormSelectedPartners((prev) => prev.filter((id) => id !== pid))}
-                                >
-                                  <X className="h-3 w-3" />
-                                </button>
-                              </Badge>
-                            );
-                          })}
+                          {formPartnerNames.map((name) => (
+                            <Badge key={name} variant="secondary" className="gap-1 text-xs pr-1">
+                              {name}
+                              <button
+                                type="button"
+                                className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5"
+                                onClick={() => setFormPartnerNames((prev) => prev.filter((n) => n !== name))}
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))}
                         </div>
                       )}
                     </div>
 
-                    {/* Division type + amounts (optional) */}
-                    {formSelectedPartners.length > 0 && (
+                    {formPartnerNames.length > 0 && (
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <Label className="text-xs text-muted-foreground">Tipo de divisão</Label>
@@ -1287,26 +1278,23 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                             </SelectContent>
                           </Select>
                         </div>
-                        {formSelectedPartners.map((pid) => {
-                          const nome = allClosers.find((c) => c.id === pid)?.nome || pid;
-                          return (
-                            <div key={pid} className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground w-24 truncate">{nome}</span>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                placeholder={formShareType === "percent" ? "%" : "R$"}
-                                className="h-7 text-xs w-24"
-                                value={formPartnerAmounts[pid] || ""}
-                                onChange={(e) =>
-                                  setFormPartnerAmounts((prev) => ({ ...prev, [pid]: e.target.value }))
-                                }
-                              />
-                              <span className="text-[10px] text-muted-foreground">(opcional)</span>
-                            </div>
-                          );
-                        })}
+                        {formPartnerNames.map((name) => (
+                          <div key={name} className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground w-24 truncate">{name}</span>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder={formShareType === "percent" ? "%" : "R$"}
+                              className="h-7 text-xs w-24"
+                              value={formPartnerAmounts[name] || ""}
+                              onChange={(e) =>
+                                setFormPartnerAmounts((prev) => ({ ...prev, [name]: e.target.value }))
+                              }
+                            />
+                            <span className="text-[10px] text-muted-foreground">(opcional)</span>
+                          </div>
+                        ))}
                       </div>
                     )}
 
