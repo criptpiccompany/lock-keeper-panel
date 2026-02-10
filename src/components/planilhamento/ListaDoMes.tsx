@@ -67,7 +67,7 @@ const DEFAULT_PLATFORMS: PlatformNames = {
 
 /* ───── main component ───── */
 
-export default function ListaDoMes() {
+export default function ListaDoMes({ closerId }: { closerId?: string }) {
   const { user, isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<ListRow[]>([]);
@@ -78,7 +78,7 @@ export default function ListaDoMes() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
-  const [selectedCloserId, setSelectedCloserId] = useState<string>("");
+  const [selectedCloserId, setSelectedCloserId] = useState<string>(closerId || "");
 
   const monthOptions = useMemo(() => getMonthOptions(), []);
 
@@ -86,6 +86,18 @@ export default function ListaDoMes() {
   useEffect(() => {
     const fetchClosers = async () => {
       if (!user) return;
+      if (closerId) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id, nome, commission_rate")
+          .eq("id", closerId)
+          .single();
+        if (data) {
+          setClosers([data as any as CloserProfile]);
+          setSelectedCloserId(closerId);
+        }
+        return;
+      }
       if (isAdmin) {
         const { data } = await supabase
           .from("profiles")
@@ -108,7 +120,7 @@ export default function ListaDoMes() {
       }
     };
     fetchClosers();
-  }, [user, isAdmin]);
+  }, [user, isAdmin, closerId]);
 
   /* ── load data ── */
   useEffect(() => {
@@ -306,7 +318,7 @@ export default function ListaDoMes() {
           </SelectContent>
         </Select>
 
-        {isAdmin && closers.length > 1 && (
+        {!closerId && isAdmin && closers.length > 1 && (
           <Select value={selectedCloserId} onValueChange={setSelectedCloserId}>
             <SelectTrigger className="w-[180px] h-9 text-sm">
               <SelectValue placeholder="Selecionar closer" />
