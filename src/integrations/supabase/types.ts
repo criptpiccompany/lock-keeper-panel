@@ -323,49 +323,88 @@ export type Database = {
       }
       monthly_influencer_list: {
         Row: {
+          casa_1_email: string | null
+          casa_1_valor: number | null
+          casa_2_email: string | null
+          casa_2_valor: number | null
+          casa_3_email: string | null
+          casa_3_valor: number | null
           closer_id: string
           created_at: string
-          email_afiliado: string | null
           id: string
           influencer_handle: string
           influencer_id: string
-          link_1: string | null
-          link_2: string | null
-          link_3: string | null
           month: string
           observacoes: string | null
           updated_at: string
           valor_total: number | null
         }
         Insert: {
+          casa_1_email?: string | null
+          casa_1_valor?: number | null
+          casa_2_email?: string | null
+          casa_2_valor?: number | null
+          casa_3_email?: string | null
+          casa_3_valor?: number | null
           closer_id: string
           created_at?: string
-          email_afiliado?: string | null
           id?: string
           influencer_handle: string
           influencer_id: string
-          link_1?: string | null
-          link_2?: string | null
-          link_3?: string | null
           month: string
           observacoes?: string | null
           updated_at?: string
           valor_total?: number | null
         }
         Update: {
+          casa_1_email?: string | null
+          casa_1_valor?: number | null
+          casa_2_email?: string | null
+          casa_2_valor?: number | null
+          casa_3_email?: string | null
+          casa_3_valor?: number | null
           closer_id?: string
           created_at?: string
-          email_afiliado?: string | null
           id?: string
           influencer_handle?: string
           influencer_id?: string
-          link_1?: string | null
-          link_2?: string | null
-          link_3?: string | null
           month?: string
           observacoes?: string | null
           updated_at?: string
           valor_total?: number | null
+        }
+        Relationships: []
+      }
+      monthly_platform_names: {
+        Row: {
+          closer_id: string
+          created_at: string
+          id: string
+          month: string
+          platform_1_name: string | null
+          platform_2_name: string | null
+          platform_3_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          closer_id: string
+          created_at?: string
+          id?: string
+          month: string
+          platform_1_name?: string | null
+          platform_2_name?: string | null
+          platform_3_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          closer_id?: string
+          created_at?: string
+          id?: string
+          month?: string
+          platform_1_name?: string | null
+          platform_2_name?: string | null
+          platform_3_name?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
