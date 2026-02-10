@@ -11,11 +11,19 @@ export default function ImportData() {
     const csv = await file.text();
     setStatus(prev => [...prev, `Importing ${table} (${csv.split('\n').length - 1} rows)...`]);
     
-    const { data, error } = await supabase.functions.invoke('import-data', {
-      body: { table, csv },
-    });
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/import-data`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ table, csv }),
+      }
+    );
     
-    const result = error ? { error: error.message } : data;
+    const result = await response.json();
     setStatus(prev => [...prev, `${table}: ${JSON.stringify(result)}`]);
     return result;
   };
@@ -63,8 +71,6 @@ export default function ImportData() {
         <h1 className="text-2xl font-bold">Importar Dados</h1>
         <p className="text-muted-foreground">
           Selecione os 4 arquivos CSV exportados (profiles, user_roles, influencers, close_events).
-          <br />
-          <strong>Requer login como ADMIN.</strong>
         </p>
         
         <Button onClick={handleImport} disabled={loading} size="lg">

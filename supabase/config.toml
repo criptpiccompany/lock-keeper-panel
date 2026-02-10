@@ -1,4 +1,1 @@
 project_id = "cqtbtilfmmooykrmwjie"
-
-[functions.import-data]
-verify_jwt = false
