@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
-import { FileText, BarChart3, ListChecks, Trophy, User } from "lucide-react";
+import { FileText, BarChart3, ListChecks, Trophy, User, Radar } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import PlanilhamentoDiario from "./PlanilhamentoDiario";
 import Balanco from "./Balanco";
 import ListaDoMes from "./ListaDoMes";
 import RankingSemanal from "./RankingSemanal";
+import ConflictRadar from "./ConflictRadar";
 
 const subTabs = [
   { id: "diario", label: "Planilhamento Diário", icon: FileText },
@@ -180,6 +181,18 @@ export default function PlanilhamentoTabs() {
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-full" />
               )}
             </button>
+            <button
+              onClick={() => handleAdminTabClick("conflitos")}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
+                adminTab === "conflitos" ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"
+              }`}
+            >
+              <Radar className="h-4 w-4" />
+              Conflitos
+              {adminTab === "conflitos" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-full" />
+              )}
+            </button>
             {closers.map((closer) => {
               const isActive = adminTab === closer.id;
               const unseen = hasUnseen(closer.id, closer.lastActivity);
@@ -209,8 +222,8 @@ export default function PlanilhamentoTabs() {
         </div>
       </div>
 
-      {/* Level 2 sub-tabs (when user selected) */}
-      {adminTab !== "ranking" && (
+      {/* Level 2 sub-tabs (when user selected, not for ranking/conflitos) */}
+      {adminTab !== "ranking" && adminTab !== "conflitos" && (
         <div className="border-b bg-muted/20">
           <div className="container">
             <div className="flex items-center gap-4">
@@ -246,13 +259,14 @@ export default function PlanilhamentoTabs() {
       {/* Content */}
       <div className="container py-6">
         {adminTab === "ranking" && <RankingSemanal />}
-        {adminTab !== "ranking" && subTab === "diario" && (
+        {adminTab === "conflitos" && <ConflictRadar />}
+        {adminTab !== "ranking" && adminTab !== "conflitos" && subTab === "diario" && (
           <PlanilhamentoDiario closerId={adminTab} />
         )}
-        {adminTab !== "ranking" && subTab === "balanco" && (
+        {adminTab !== "ranking" && adminTab !== "conflitos" && subTab === "balanco" && (
           <Balanco closerId={adminTab} />
         )}
-        {adminTab !== "ranking" && subTab === "lista-mes" && (
+        {adminTab !== "ranking" && adminTab !== "conflitos" && subTab === "lista-mes" && (
           <ListaDoMes closerId={adminTab} />
         )}
       </div>
