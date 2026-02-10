@@ -212,7 +212,7 @@ export default function Balanco() {
       ) : (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className={`grid grid-cols-2 md:grid-cols-3 ${isAdmin ? 'lg:grid-cols-6' : 'lg:grid-cols-5'} gap-3`}>
             <SummaryCard label="Faturamento" value={totals.revenue} icon={TrendingUp} />
             <SummaryCard label="Investido" value={totals.invested} icon={DollarSign} />
             <SummaryCard label="Taxa 10%" value={totals.fee} icon={Percent} variant="muted" />
@@ -223,12 +223,14 @@ export default function Balanco() {
               variant={totals.profit > 0 ? (totals.profit / totals.invested >= 0.3 ? "positive" : "warning") : "negative"}
             />
             <SummaryCard label="Comissão" value={totals.commission} icon={Receipt} />
-            <SummaryCard
-              label="Saldo Final"
-              value={totals.saldo}
-              icon={Wallet}
-              variant={totals.saldo >= 0 ? "positive" : "negative"}
-            />
+            {isAdmin && (
+              <SummaryCard
+                label="Saldo Final"
+                value={totals.saldo}
+                icon={Wallet}
+                variant={totals.saldo >= 0 ? "positive" : "negative"}
+              />
+            )}
           </div>
 
           {/* Daily Breakdown Table */}
@@ -243,7 +245,7 @@ export default function Balanco() {
                     <th className="text-right py-2.5 px-4 font-semibold text-muted-foreground text-xs">Taxa 10%</th>
                     <th className="text-right py-2.5 px-4 font-semibold text-muted-foreground text-xs">Resultado</th>
                     <th className="text-right py-2.5 px-4 font-semibold text-muted-foreground text-xs">Comissão</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-muted-foreground text-xs">Saldo</th>
+                    {isAdmin && <th className="text-right py-2.5 px-4 font-semibold text-muted-foreground text-xs">Saldo</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -263,9 +265,11 @@ export default function Balanco() {
                           {formatBRL(day.profit)}
                         </td>
                         <td className="py-2.5 px-4 text-xs text-right tabular-nums">{formatBRL(day.commission)}</td>
-                        <td className={`py-2.5 px-4 text-xs text-right tabular-nums font-medium ${day.saldo < 0 ? "text-red-600" : ""}`}>
-                          {formatBRL(day.saldo)}
-                        </td>
+                        {isAdmin && (
+                          <td className={`py-2.5 px-4 text-xs text-right tabular-nums font-medium ${day.saldo < 0 ? "text-red-600" : ""}`}>
+                            {formatBRL(day.saldo)}
+                          </td>
+                        )}
                       </tr>
                     );
                   })}
@@ -280,9 +284,11 @@ export default function Balanco() {
                       {formatBRL(totals.profit)}
                     </td>
                     <td className="py-3 px-4 text-xs text-right tabular-nums">{formatBRL(totals.commission)}</td>
-                    <td className={`py-3 px-4 text-xs text-right tabular-nums ${totals.saldo < 0 ? "text-red-600" : "text-emerald-700"}`}>
-                      {formatBRL(totals.saldo)}
-                    </td>
+                    {isAdmin && (
+                      <td className={`py-3 px-4 text-xs text-right tabular-nums ${totals.saldo < 0 ? "text-red-600" : "text-emerald-700"}`}>
+                        {formatBRL(totals.saldo)}
+                      </td>
+                    )}
                   </tr>
                 </tfoot>
               </table>
