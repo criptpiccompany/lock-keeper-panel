@@ -718,7 +718,9 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
   // Check if modal has available influencers
   const modalAvailableInfluencers = useMemo(() => {
     if (!modalDate) return [];
-    return getAvailableInfluencers(modalDate);
+    return getAvailableInfluencers(modalDate).sort((a, b) =>
+      a.handle.localeCompare(b.handle, 'pt-BR')
+    );
   }, [modalDate, influencers, recordsByDate]);
 
   if (loading) {
