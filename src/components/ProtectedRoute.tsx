@@ -23,6 +23,10 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  if (user.status !== 'approved' && user.role !== 'ADMIN') {
+    return <Navigate to="/aguardando" replace />;
+  }
+
   if (requireAdmin && user.role !== 'ADMIN') {
     return <Navigate to="/meu" replace />;
   }

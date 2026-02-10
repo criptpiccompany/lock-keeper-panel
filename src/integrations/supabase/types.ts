@@ -321,6 +321,42 @@ export type Database = {
         }
         Relationships: []
       }
+      invites: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          max_uses: number
+          token: string
+          use_count: number
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at?: string
+          id?: string
+          max_uses?: number
+          token?: string
+          use_count?: number
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          max_uses?: number
+          token?: string
+          use_count?: number
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: []
+      }
       monthly_influencer_list: {
         Row: {
           casa_1_email: string | null
@@ -410,24 +446,36 @@ export type Database = {
       }
       profiles: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           commission_rate: number
           created_at: string
           id: string
           nome: string
+          rejection_reason: string | null
+          status: string
           updated_at: string
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           commission_rate?: number
           created_at?: string
           id: string
           nome: string
+          rejection_reason?: string | null
+          status?: string
           updated_at?: string
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           commission_rate?: number
           created_at?: string
           id?: string
           nome?: string
+          rejection_reason?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: []
@@ -458,6 +506,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consume_invite_token: {
+        Args: { _token: string; _user_id: string }
+        Returns: undefined
+      }
       get_public_influencers: {
         Args: never
         Returns: {
@@ -482,6 +534,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_approved: { Args: { _user_id: string }; Returns: boolean }
+      validate_invite_token: { Args: { _token: string }; Returns: boolean }
     }
     Enums: {
       app_role: "CLOSER" | "ADMIN"

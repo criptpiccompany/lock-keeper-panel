@@ -8,13 +8,15 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { StatusBadge } from "@/components/StatusBadge";
+import { ApprovalsTab } from "@/components/admin/ApprovalsTab";
 import { ReasonModal } from "@/components/ReasonModal";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { enrichInfluencer, formatDate } from "@/lib/helpers";
 import { InfluencerWithStatus } from "@/types";
-import { Settings, Archive, RefreshCw, AlertTriangle, Loader2, Users, Mail, Shield, ShieldCheck, Pencil, Key, Percent } from "lucide-react";
+import { Settings, Archive, RefreshCw, AlertTriangle, Loader2, Users, Mail, Shield, ShieldCheck, Pencil, Key, Percent, UserCheck } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface UserWithRole {
   id: string;
@@ -251,12 +253,20 @@ export default function Admin() {
           </h1>
         </div>
       </div>
-      <div className="container py-6 space-y-6">
+       <div className="container py-6 space-y-6">
         <Alert className="border-amber-200 bg-amber-50">
           <AlertTriangle className="h-4 w-4 text-amber-600" />
           <AlertTitle className="text-amber-800">Atenção</AlertTitle>
           <AlertDescription className="text-amber-700">Todas as ações são registradas no log de auditoria.</AlertDescription>
         </Alert>
+
+        <Tabs defaultValue="gestao" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="gestao"><Users className="h-4 w-4 mr-1.5" />Gestão</TabsTrigger>
+            <TabsTrigger value="aprovacoes"><UserCheck className="h-4 w-4 mr-1.5" />Aprovações</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="gestao" className="space-y-6">
 
         {/* Users Management */}
         <Card>
@@ -482,6 +492,12 @@ export default function Admin() {
             </div>
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="aprovacoes">
+            <ApprovalsTab />
+          </TabsContent>
+        </Tabs>
       </div>
 
       <ReasonModal
