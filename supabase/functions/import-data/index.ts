@@ -31,19 +31,64 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    // --- Authentication: require a valid user ---
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: userError } = await userClient.auth.getUser();
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // --- Authorization: require ADMIN role ---
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+    const { data: roleCheck } = await adminClient.rpc("has_role", {
+      _user_id: user.id,
+      _role: "ADMIN",
+    });
+
+    if (!roleCheck) {
+      return new Response(JSON.stringify({ error: "Forbidden: admin only" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const { table, csv, clear_all } = await req.json();
 
     // Clear all tables first if requested
     if (clear_all) {
-      await supabase.from("close_events").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      await supabase.from("influencers").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      await supabase.from("user_roles").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      await supabase.from("profiles").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await adminClient.from("close_events").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await adminClient.from("influencers").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await adminClient.from("user_roles").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await adminClient.from("profiles").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+
+      // Audit log
+      await adminClient.from("audit_log").insert({
+        user_id: user.id,
+        user_nome: user.email || "admin",
+        acao: "Importação",
+        descricao: "Limpou todas as tabelas antes de importação",
+        detalhes: { action: "clear_all" },
+      });
+
       return new Response(JSON.stringify({ success: true, message: "All tables cleared" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -82,13 +127,22 @@ Deno.serve(async (req) => {
     
     for (let i = 0; i < rows.length; i += batchSize) {
       const batch = rows.slice(i, i + batchSize);
-      const { error } = await supabase.from(table).insert(batch);
+      const { error } = await adminClient.from(table).insert(batch);
       if (error) {
         console.error(`${table} batch ${i} error:`, error.message);
         errorMessages.push(`Batch ${i}: ${error.message}`);
         totalErrors++;
       }
     }
+
+    // Audit log
+    await adminClient.from("audit_log").insert({
+      user_id: user.id,
+      user_nome: user.email || "admin",
+      acao: "Importação",
+      descricao: `Importou ${rows.length} registros na tabela ${table}`,
+      detalhes: { table, count: rows.length, errors: totalErrors },
+    });
 
     return new Response(JSON.stringify({ 
       success: totalErrors === 0, 
