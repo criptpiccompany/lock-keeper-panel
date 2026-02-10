@@ -554,6 +554,13 @@ export type Database = {
         Args: { _token: string; _user_id: string }
         Returns: undefined
       }
+      get_approved_closers: {
+        Args: never
+        Returns: {
+          id: string
+          nome: string
+        }[]
+      }
       get_public_influencers: {
         Args: never
         Returns: {
