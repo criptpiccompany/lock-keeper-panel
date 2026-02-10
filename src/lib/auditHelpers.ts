@@ -36,7 +36,7 @@ export const FIELD_LABELS: Record<string, string> = {
   status: "Status",
   comprovante_url: "Comprovante",
   observacao: "Observação",
-  handle: "Handle",
+  handle: "Influenciador",
   owner_id: "Responsável",
   owner_nome: "Responsável",
   ativo: "Ativo",
@@ -63,18 +63,20 @@ export const FIELD_LABELS: Record<string, string> = {
   platform_3_name: "Nome Plataforma 3",
 };
 
-// Fields we don't show in the detail modal (internal IDs)
+const FINANCIAL_FIELDS = new Set([
+  "valor_pago", "faturamento", "acumulado", "valor_total",
+  "casa_1_valor", "casa_2_valor", "casa_3_valor",
+]);
+
 const HIDDEN_DETAIL_FIELDS = new Set([
   "id", "closer_id", "influencer_id", "owner_id", "feito_por_id",
   "deleted_at", "deleted_by",
 ]);
 
 /** Extract a handle from field_changes data */
-function extractHandle(log: AuditLog): string | null {
+export function extractHandle(log: AuditLog): string | null {
   const fc = log.field_changes;
   if (!fc) return null;
-
-  // Check nested after/before (INSERT/DELETE)
   const data = fc.after || fc.before || fc;
   if (data.handle) return `@${data.handle}`;
   if (data.influencer_handle) return `@${data.influencer_handle}`;
@@ -94,6 +96,32 @@ function extractDate(log: AuditLog): string | null {
   return null;
 }
 
+/** Check if a log involves a comprovante/attachment change */
+export function isAttachmentAction(log: AuditLog): boolean {
+  if (!log.field_changes) return false;
+  if (log.action === "UPDATE") {
+    return Object.keys(log.field_changes).some(k => k === "comprovante_url");
+  }
+  if (log.action === "INSERT" && log.field_changes.after) {
+    return !!(log.field_changes.after as any).comprovante_url;
+  }
+  return false;
+}
+
+/** Check if a field change is financial and return direction */
+export function financialDirection(key: string, change: { before: any; after: any }): "up" | "down" | null {
+  if (!FINANCIAL_FIELDS.has(key)) return null;
+  const before = parseFloat(change.before) || 0;
+  const after = parseFloat(change.after) || 0;
+  if (after > before) return "up";
+  if (after < before) return "down";
+  return null;
+}
+
+export function isFinancialField(key: string): boolean {
+  return FINANCIAL_FIELDS.has(key);
+}
+
 /** Generate a human-readable description for an audit log */
 export function humanDescription(log: AuditLog): string {
   const handle = extractHandle(log);
@@ -102,7 +130,6 @@ export function humanDescription(log: AuditLog): string {
   const action = log.action;
   const fc = log.field_changes;
 
-  // --- daily_influencer_records ---
   if (entity === "daily_influencer_records") {
     const suffix = handle ? ` para ${handle}` : "";
     const dateSuffix = date ? ` no dia ${date}` : "";
@@ -110,7 +137,6 @@ export function humanDescription(log: AuditLog): string {
     if (action === "INSERT") return `Adicionou registro diário${suffix}${dateSuffix}`;
     if (action === "DELETE") return `Removeu registro diário${suffix}${dateSuffix}`;
 
-    // UPDATE — describe which fields changed
     if (fc) {
       const keys = Object.keys(fc).filter(k => k !== "before" && k !== "after");
       if (keys.length === 1) {
@@ -118,7 +144,7 @@ export function humanDescription(log: AuditLog): string {
         if (k === "valor_pago") return `Alterou valor pago${suffix}${dateSuffix}`;
         if (k === "faturamento") return `Alterou faturamento${suffix}${dateSuffix}`;
         if (k === "acumulado") return `Alterou acumulado${suffix}${dateSuffix}`;
-        if (k === "comprovante_url") return `Atualizou comprovante de pagamento${suffix}${dateSuffix}`;
+        if (k === "comprovante_url") return `Inseriu comprovante de pagamento${suffix}${dateSuffix}`;
         if (k === "status") {
           const after = (fc[k] as any)?.after;
           return `Alterou status${suffix} para "${after || "—"}"${dateSuffix}`;
@@ -133,7 +159,6 @@ export function humanDescription(log: AuditLog): string {
     return `Editou registro diário${suffix}${dateSuffix}`;
   }
 
-  // --- influencers ---
   if (entity === "influencers") {
     if (action === "INSERT") return `Cadastrou influenciador ${handle || ""}`.trim();
     if (action === "DELETE") return `Removeu influenciador ${handle || ""} do sistema`.trim();
@@ -155,7 +180,6 @@ export function humanDescription(log: AuditLog): string {
     return `Editou influenciador ${handle || ""}`.trim();
   }
 
-  // --- close_events ---
   if (entity === "close_events") {
     if (action === "INSERT") {
       const acao = fc?.after?.acao || fc?.acao;
@@ -167,14 +191,12 @@ export function humanDescription(log: AuditLog): string {
     return `Editou evento de fechamento de ${handle || "influenciador"}`.trim();
   }
 
-  // --- daily_sheets ---
   if (entity === "daily_sheets") {
     if (action === "INSERT") return `Criou seção do dia ${date || ""}`.trim();
     if (action === "DELETE") return `Removeu seção do dia ${date || ""}`.trim();
     return `Editou seção do dia ${date || ""}`.trim();
   }
 
-  // --- monthly_influencer_list ---
   if (entity === "monthly_influencer_list") {
     if (action === "INSERT") return `Adicionou ${handle || "influenciador"} na lista do mês`.trim();
     if (action === "DELETE") return `Removeu ${handle || "influenciador"} da lista do mês`.trim();
@@ -189,13 +211,11 @@ export function humanDescription(log: AuditLog): string {
     return `Editou ${handle || "influenciador"} na lista do mês`.trim();
   }
 
-  // --- monthly_platform_names ---
   if (entity === "monthly_platform_names") {
     if (action === "INSERT") return "Configurou nomes de plataformas do mês";
     return "Editou nomes de plataformas do mês";
   }
 
-  // --- Fallback ---
   const entityLabel = ENTITY_LABELS[entity] || entity;
   if (action === "INSERT") return `Criou ${entityLabel.toLowerCase()}`;
   if (action === "DELETE") return `Removeu ${entityLabel.toLowerCase()}`;
@@ -213,7 +233,6 @@ export function getDisplayFields(fields: Record<string, any>): Record<string, an
   return result;
 }
 
-/** Filter INSERT/DELETE data object to remove internal fields */
 export function getDisplayData(data: Record<string, any>): Record<string, any> {
   const result: Record<string, any> = {};
   for (const [key, val] of Object.entries(data)) {
@@ -228,6 +247,13 @@ export function formatValue(val: any): string {
   if (typeof val === "boolean") return val ? "Sim" : "Não";
   if (typeof val === "object") return JSON.stringify(val);
   return String(val);
+}
+
+/** Format a numeric value as BRL currency */
+export function formatCurrency(val: any): string {
+  const num = parseFloat(val);
+  if (isNaN(num)) return formatValue(val);
+  return num.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 export const PAGE_SIZE = 50;

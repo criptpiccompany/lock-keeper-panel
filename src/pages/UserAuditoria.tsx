@@ -25,7 +25,12 @@ import {
   FIELD_LABELS,
   PAGE_SIZE,
   humanDescription,
+  extractHandle,
+  isAttachmentAction,
+  isFinancialField,
+  financialDirection,
   formatValue,
+  formatCurrency,
   getDisplayFields,
   getDisplayData,
 } from "@/lib/auditHelpers";
@@ -40,9 +45,41 @@ import {
   Trash2,
   Eye,
   ArrowLeft,
+  Paperclip,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 
-const ACTION_ICONS: Record<string, any> = { INSERT: Plus, UPDATE: Pencil, DELETE: Trash2 };
+function ActionIcon({ log }: { log: AuditLog }) {
+  if (isAttachmentAction(log)) return <Paperclip className="h-3.5 w-3.5" />;
+  if (log.action === "INSERT") return <Plus className="h-3.5 w-3.5" />;
+  if (log.action === "DELETE") return <Trash2 className="h-3.5 w-3.5" />;
+  return <Pencil className="h-3.5 w-3.5" />;
+}
+
+function actionLabel(log: AuditLog): string {
+  if (isAttachmentAction(log)) return "Anexo";
+  return ACTION_CONFIG[log.action]?.label || "Edição";
+}
+
+function actionClassName(log: AuditLog): string {
+  if (isAttachmentAction(log)) return "bg-blue-50 text-blue-700 border-blue-200";
+  return ACTION_CONFIG[log.action]?.className || ACTION_CONFIG.UPDATE.className;
+}
+
+function DescriptionCell({ log }: { log: AuditLog }) {
+  const desc = humanDescription(log);
+  const handle = extractHandle(log);
+  if (!handle) return <span>{desc}</span>;
+  const parts = desc.split(handle);
+  return (
+    <span>
+      {parts[0]}
+      <span className="font-semibold text-foreground">{handle}</span>
+      {parts.slice(1).join(handle)}
+    </span>
+  );
+}
 
 export default function UserAuditoria() {
   const { userId } = useParams<{ userId: string }>();
@@ -88,7 +125,7 @@ export default function UserAuditoria() {
       result = result.filter(
         (l) =>
           humanDescription(l).toLowerCase().includes(q) ||
-          (l.entity_id || "").toLowerCase().includes(q)
+          (extractHandle(l) || "").toLowerCase().includes(q)
       );
     }
     return result;
@@ -120,7 +157,7 @@ export default function UserAuditoria() {
             Auditoria — {userName}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {logs.length} eventos registrados para este usuário
+            {logs.length} ações registradas para este colaborador
           </p>
         </div>
       </div>
@@ -130,7 +167,7 @@ export default function UserAuditoria() {
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por ação..."
+              placeholder="Buscar por influenciador, ação..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 h-9 text-sm"
@@ -138,21 +175,21 @@ export default function UserAuditoria() {
           </div>
           <Select value={filterAction} onValueChange={setFilterAction}>
             <SelectTrigger className="w-[140px] h-9 text-sm">
-              <SelectValue placeholder="Ação" />
+              <SelectValue placeholder="Tipo" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Todas ações</SelectItem>
-              <SelectItem value="INSERT">Criação</SelectItem>
-              <SelectItem value="UPDATE">Edição</SelectItem>
-              <SelectItem value="DELETE">Exclusão</SelectItem>
+              <SelectItem value="ALL">Todos os tipos</SelectItem>
+              <SelectItem value="INSERT">➕ Criação</SelectItem>
+              <SelectItem value="UPDATE">✏️ Edição</SelectItem>
+              <SelectItem value="DELETE">🗑️ Remoção</SelectItem>
             </SelectContent>
           </Select>
           <Select value={filterEntity} onValueChange={setFilterEntity}>
             <SelectTrigger className="w-[180px] h-9 text-sm">
-              <SelectValue placeholder="Entidade" />
+              <SelectValue placeholder="Área" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Todas entidades</SelectItem>
+              <SelectItem value="ALL">Todas as áreas</SelectItem>
               {Object.entries(ENTITY_LABELS).map(([k, v]) => (
                 <SelectItem key={k} value={k}>{v}</SelectItem>
               ))}
@@ -165,10 +202,10 @@ export default function UserAuditoria() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border/40 bg-muted/40">
-                  <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs">Data/Hora</th>
-                  <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs">Ação</th>
+                  <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs">Quando</th>
+                  <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs w-[100px]">Tipo</th>
                   <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs">O que aconteceu</th>
-                  <th className="text-center py-2.5 px-4 font-medium text-muted-foreground text-xs w-16"></th>
+                  <th className="text-center py-2.5 px-4 font-medium text-muted-foreground text-xs w-12"></th>
                 </tr>
               </thead>
               <tbody>
@@ -180,8 +217,6 @@ export default function UserAuditoria() {
                   </tr>
                 ) : (
                   pageData.map((log, idx) => {
-                    const actionCfg = ACTION_CONFIG[log.action] || ACTION_CONFIG.UPDATE;
-                    const ActionIcon = ACTION_ICONS[log.action] || Pencil;
                     const zebraClass = idx % 2 === 1 ? "bg-muted/30" : "";
 
                     return (
@@ -194,13 +229,13 @@ export default function UserAuditoria() {
                           {formatDateTime(log.created_at)}
                         </td>
                         <td className="py-2.5 px-4">
-                          <Badge variant="outline" className={`text-[10px] gap-1 ${actionCfg.className}`}>
-                            <ActionIcon className="h-3 w-3" />
-                            {actionCfg.label}
+                          <Badge variant="outline" className={`text-[10px] gap-1 ${actionClassName(log)}`}>
+                            <ActionIcon log={log} />
+                            {actionLabel(log)}
                           </Badge>
                         </td>
-                        <td className="py-2.5 px-4 text-xs max-w-[320px] truncate">
-                          {humanDescription(log)}
+                        <td className="py-2.5 px-4 text-xs max-w-[360px] truncate">
+                          <DescriptionCell log={log} />
                         </td>
                         <td className="py-2.5 px-4 text-center">
                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); setDetailLog(log); }}>
@@ -241,9 +276,6 @@ export default function UserAuditoria() {
 }
 
 function AuditDetailDialog({ log, open, onClose }: { log: AuditLog; open: boolean; onClose: () => void }) {
-  const actionCfg = ACTION_CONFIG[log.action] || ACTION_CONFIG.UPDATE;
-  const ActionIcon = ACTION_ICONS[log.action] || Pencil;
-
   const renderChanges = () => {
     if (!log.field_changes) return <p className="text-muted-foreground text-sm">Sem dados de alteração.</p>;
 
@@ -255,7 +287,9 @@ function AuditDetailDialog({ log, open, onClose }: { log: AuditLog; open: boolea
           {Object.entries(after).map(([key, val]) => (
             <div key={key} className="flex items-start gap-2 text-xs">
               <span className="font-medium min-w-[120px] text-foreground">{FIELD_LABELS[key] || key}</span>
-              <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">{formatValue(val)}</span>
+              <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                {isFinancialField(key) ? formatCurrency(val) : formatValue(val)}
+              </span>
             </div>
           ))}
         </div>
@@ -270,7 +304,9 @@ function AuditDetailDialog({ log, open, onClose }: { log: AuditLog; open: boolea
           {Object.entries(before).map(([key, val]) => (
             <div key={key} className="flex items-start gap-2 text-xs">
               <span className="font-medium min-w-[120px] text-foreground">{FIELD_LABELS[key] || key}</span>
-              <span className="text-red-700 bg-red-50 px-2 py-0.5 rounded line-through">{formatValue(val)}</span>
+              <span className="text-red-700 bg-red-50 px-2 py-0.5 rounded line-through">
+                {isFinancialField(key) ? formatCurrency(val) : formatValue(val)}
+              </span>
             </div>
           ))}
         </div>
@@ -283,17 +319,32 @@ function AuditDetailDialog({ log, open, onClose }: { log: AuditLog; open: boolea
         <p className="text-xs font-medium text-muted-foreground mb-2">Alterações:</p>
         {Object.entries(displayFields).map(([key, change]) => {
           const c = change as { before: any; after: any };
+          const dir = financialDirection(key, c);
+          const isFin = isFinancialField(key);
+
           return (
             <div key={key} className="rounded-lg border border-border/40 p-3 bg-muted/20">
-              <p className="text-xs font-semibold mb-1.5">{FIELD_LABELS[key] || key}</p>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <p className="text-xs font-semibold">{FIELD_LABELS[key] || key}</p>
+                {dir === "up" && <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />}
+                {dir === "down" && <TrendingDown className="h-3.5 w-3.5 text-red-600" />}
+              </div>
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
                   <span className="text-muted-foreground block mb-0.5">Antes</span>
-                  <span className="bg-red-50 text-red-800 px-2 py-1 rounded inline-block break-all">{formatValue(c.before)}</span>
+                  <span className={`px-2 py-1 rounded inline-block break-all ${
+                    dir === "down" ? "bg-red-100 text-red-800 font-semibold" : "bg-red-50 text-red-800"
+                  }`}>
+                    {isFin ? formatCurrency(c.before) : formatValue(c.before)}
+                  </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground block mb-0.5">Depois</span>
-                  <span className="bg-emerald-50 text-emerald-800 px-2 py-1 rounded inline-block break-all">{formatValue(c.after)}</span>
+                  <span className={`px-2 py-1 rounded inline-block break-all ${
+                    dir === "up" ? "bg-emerald-100 text-emerald-800 font-semibold" : "bg-emerald-50 text-emerald-800"
+                  }`}>
+                    {isFin ? formatCurrency(c.after) : formatValue(c.after)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -308,23 +359,25 @@ function AuditDetailDialog({ log, open, onClose }: { log: AuditLog; open: boolea
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
-            <Badge variant="outline" className={`gap-1 ${actionCfg.className}`}>
-              <ActionIcon className="h-3 w-3" />
-              {actionCfg.label}
+            <Badge variant="outline" className={`gap-1 ${actionClassName(log)}`}>
+              <ActionIcon log={log} />
+              {actionLabel(log)}
             </Badge>
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          <p className="text-sm font-medium">{humanDescription(log)}</p>
+          <p className="text-sm font-medium">
+            <DescriptionCell log={log} />
+          </p>
 
           <div className="grid grid-cols-2 gap-3 text-xs">
             <div>
-              <span className="text-muted-foreground block">Data/Hora</span>
+              <span className="text-muted-foreground block">Quando</span>
               <span className="font-medium">{formatDateTime(log.created_at)}</span>
             </div>
             <div>
-              <span className="text-muted-foreground block">Usuário</span>
+              <span className="text-muted-foreground block">Quem fez</span>
               <span className="font-medium">{log.actor_nome || "Sistema"}</span>
               {log.actor_role && <Badge variant="outline" className="ml-1.5 text-[10px]">{log.actor_role}</Badge>}
             </div>
