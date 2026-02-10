@@ -19,6 +19,7 @@ export type Database = {
           action: string
           actor_email: string | null
           actor_nome: string | null
+          actor_role: string | null
           actor_user_id: string | null
           audit_log_id: string | null
           created_at: string
@@ -28,6 +29,7 @@ export type Database = {
           field_changes: Json | null
           id: string
           influencer_handle: string | null
+          recipient_admin_id: string | null
           review_status: Database["public"]["Enums"]["notification_review_status"]
           reviewed_at: string | null
           reviewed_by: string | null
@@ -36,6 +38,7 @@ export type Database = {
           action?: string
           actor_email?: string | null
           actor_nome?: string | null
+          actor_role?: string | null
           actor_user_id?: string | null
           audit_log_id?: string | null
           created_at?: string
@@ -45,6 +48,7 @@ export type Database = {
           field_changes?: Json | null
           id?: string
           influencer_handle?: string | null
+          recipient_admin_id?: string | null
           review_status?: Database["public"]["Enums"]["notification_review_status"]
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -53,6 +57,7 @@ export type Database = {
           action?: string
           actor_email?: string | null
           actor_nome?: string | null
+          actor_role?: string | null
           actor_user_id?: string | null
           audit_log_id?: string | null
           created_at?: string
@@ -62,6 +67,7 @@ export type Database = {
           field_changes?: Json | null
           id?: string
           influencer_handle?: string | null
+          recipient_admin_id?: string | null
           review_status?: Database["public"]["Enums"]["notification_review_status"]
           reviewed_at?: string | null
           reviewed_by?: string | null

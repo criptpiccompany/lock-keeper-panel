@@ -47,7 +47,7 @@ serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, serviceKey);
 
-    // Update the most recent audit log for this entity with the edit reason
+    // Update the most recent audit log with the edit reason
     const { data: logs } = await adminClient
       .from("audit_logs")
       .select("id")
@@ -65,18 +65,32 @@ serve(async (req) => {
         .eq("id", auditLogId);
     }
 
-    // Get user profile for notification
+    // Get actor profile and role
     const { data: profile } = await adminClient
       .from("profiles")
       .select("nome")
       .eq("id", user.id)
       .single();
 
+    const { data: roleData } = await adminClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .single();
+
+    // Lookup admin recipient: find user with email cipheraadmin@gmail.com
+    const { data: adminUser } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+    const adminAccount = adminUser?.users?.find(
+      (u) => u.email === "cipheraadmin@gmail.com"
+    );
+    const recipientAdminId = adminAccount?.id || null;
+
     // Create admin notification
     await adminClient.from("admin_notifications").insert({
       actor_user_id: user.id,
       actor_nome: profile?.nome || user.email?.split("@")[0] || "Desconhecido",
       actor_email: user.email,
+      actor_role: roleData?.role || "CLOSER",
       entity_type: entity_type || "daily_influencer_records",
       entity_id,
       influencer_handle: influencer_handle || null,
@@ -84,6 +98,7 @@ serve(async (req) => {
       field_changes: field_changes || null,
       edit_reason: edit_reason.trim(),
       audit_log_id: auditLogId,
+      recipient_admin_id: recipientAdminId,
     });
 
     return new Response(JSON.stringify({ success: true }), {
