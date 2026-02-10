@@ -105,14 +105,48 @@ export default function Auditoria() {
     fetchLogs();
   }, []);
 
-  // Build user tabs from logs
+  // Build user tabs sorted by most recent action
   const userTabs = useMemo(() => {
-    const map = new Map<string, string>();
+    const map = new Map<string, { nome: string; lastAction: string }>();
     allLogs.forEach((l) => {
-      if (l.actor_user_id && l.actor_nome) map.set(l.actor_user_id, l.actor_nome);
+      if (l.actor_user_id && l.actor_nome) {
+        const existing = map.get(l.actor_user_id);
+        if (!existing || l.created_at > existing.lastAction) {
+          map.set(l.actor_user_id, { nome: l.actor_nome, lastAction: l.created_at });
+        }
+      }
     });
-    return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+    return Array.from(map.entries())
+      .sort((a, b) => b[1].lastAction.localeCompare(a[1].lastAction))
+      .map(([id, { nome, lastAction }]) => [id, nome, lastAction] as [string, string, string]);
   }, [allLogs]);
+
+  // Track "last viewed" timestamps per user tab in localStorage
+  const STORAGE_KEY = "audit_tab_last_viewed";
+  const getLastViewed = (): Record<string, string> => {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    } catch { return {}; }
+  };
+  const [lastViewed, setLastViewed] = useState<Record<string, string>>(getLastViewed);
+
+  const markTabViewed = (userId: string) => {
+    const now = new Date().toISOString();
+    const updated = { ...lastViewed, [userId]: now };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    setLastViewed(updated);
+  };
+
+  const hasUnseenActions = (userId: string, lastAction: string): boolean => {
+    const viewed = lastViewed[userId];
+    if (!viewed) return true;
+    return lastAction > viewed;
+  };
+
+  const handleTabClick = (userId: string) => {
+    setActiveTab(userId);
+    if (userId !== "ALL") markTabViewed(userId);
+  };
 
   // Filter logs for current tab
   const tabLogs = useMemo(() => {
@@ -152,7 +186,7 @@ export default function Auditoria() {
         <div className="container">
           <nav className="flex gap-1 overflow-x-auto scrollbar-none">
             <button
-              onClick={() => setActiveTab("ALL")}
+              onClick={() => handleTabClick("ALL")}
               className={`
                 flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap
                 ${activeTab === "ALL"
@@ -167,12 +201,13 @@ export default function Auditoria() {
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-full" />
               )}
             </button>
-            {userTabs.map(([userId, nome]) => {
+            {userTabs.map(([userId, nome, lastAction]) => {
               const isActive = activeTab === userId;
+              const unseen = hasUnseenActions(userId, lastAction);
               return (
                 <button
                   key={userId}
-                  onClick={() => setActiveTab(userId)}
+                  onClick={() => handleTabClick(userId)}
                   className={`
                     flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap
                     ${isActive
@@ -183,6 +218,12 @@ export default function Auditoria() {
                 >
                   <User className="h-4 w-4" />
                   {nome}
+                  {unseen && !isActive && (
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500" />
+                    </span>
+                  )}
                   {isActive && (
                     <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-full" />
                   )}
