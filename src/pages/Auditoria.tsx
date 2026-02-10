@@ -47,7 +47,11 @@ import {
   Paperclip,
   TrendingUp,
   TrendingDown,
+  Users,
+  User,
 } from "lucide-react";
+
+// --- Shared small components ---
 
 function ActionIcon({ log }: { log: AuditLog }) {
   if (isAttachmentAction(log)) return <Paperclip className="h-3.5 w-3.5" />;
@@ -66,13 +70,10 @@ function actionClassName(log: AuditLog): string {
   return ACTION_CONFIG[log.action]?.className || ACTION_CONFIG.UPDATE.className;
 }
 
-/** Render description with handle highlighted */
 function DescriptionCell({ log }: { log: AuditLog }) {
   const desc = humanDescription(log);
   const handle = extractHandle(log);
-
   if (!handle) return <span>{desc}</span>;
-
   const parts = desc.split(handle);
   return (
     <span>
@@ -83,15 +84,12 @@ function DescriptionCell({ log }: { log: AuditLog }) {
   );
 }
 
+// --- Main page ---
+
 export default function Auditoria() {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [allLogs, setAllLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [filterAction, setFilterAction] = useState<string>("ALL");
-  const [filterEntity, setFilterEntity] = useState<string>("ALL");
-  const [filterActor, setFilterActor] = useState<string>("ALL");
-  const [page, setPage] = useState(0);
-  const [detailLog, setDetailLog] = useState<AuditLog | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("ALL");
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -101,41 +99,30 @@ export default function Auditoria() {
         .select("*")
         .order("created_at", { ascending: false })
         .limit(1000);
-      setLogs((data as any as AuditLog[]) || []);
+      setAllLogs((data as any as AuditLog[]) || []);
       setLoading(false);
     };
     fetchLogs();
   }, []);
 
-  const actors = useMemo(() => {
+  // Build user tabs from logs
+  const userTabs = useMemo(() => {
     const map = new Map<string, string>();
-    logs.forEach((l) => {
+    allLogs.forEach((l) => {
       if (l.actor_user_id && l.actor_nome) map.set(l.actor_user_id, l.actor_nome);
     });
-    return Array.from(map.entries());
-  }, [logs]);
+    return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+  }, [allLogs]);
 
-  const filtered = useMemo(() => {
-    let result = logs;
-    if (filterAction !== "ALL") result = result.filter((l) => l.action === filterAction);
-    if (filterEntity !== "ALL") result = result.filter((l) => l.entity_type === filterEntity);
-    if (filterActor !== "ALL") result = result.filter((l) => l.actor_user_id === filterActor);
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      result = result.filter(
-        (l) =>
-          (l.actor_nome || "").toLowerCase().includes(q) ||
-          humanDescription(l).toLowerCase().includes(q) ||
-          (extractHandle(l) || "").toLowerCase().includes(q)
-      );
-    }
-    return result;
-  }, [logs, filterAction, filterEntity, filterActor, search]);
+  // Filter logs for current tab
+  const tabLogs = useMemo(() => {
+    if (activeTab === "ALL") return allLogs;
+    return allLogs.filter((l) => l.actor_user_id === activeTab);
+  }, [allLogs, activeTab]);
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const pageData = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-
-  useEffect(() => { setPage(0); }, [filterAction, filterEntity, filterActor, search]);
+  const activeUserName = activeTab === "ALL"
+    ? null
+    : userTabs.find(([id]) => id === activeTab)?.[1] || "Usuário";
 
   if (loading) {
     return (
@@ -147,6 +134,7 @@ export default function Auditoria() {
 
   return (
     <div className="min-h-screen">
+      {/* Header */}
       <div className="border-b border-border/40">
         <div className="container py-8">
           <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
@@ -154,140 +142,227 @@ export default function Auditoria() {
             Auditoria
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Histórico de ações da equipe — {logs.length} eventos registrados
+            Histórico de ações da equipe — {allLogs.length} eventos registrados
           </p>
         </div>
       </div>
 
-      <div className="container py-6 space-y-4">
-        <div className="flex flex-wrap gap-3 items-end">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nome, influenciador..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-9 text-sm"
-            />
-          </div>
-          <Select value={filterAction} onValueChange={setFilterAction}>
-            <SelectTrigger className="w-[140px] h-9 text-sm">
-              <SelectValue placeholder="Tipo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Todos os tipos</SelectItem>
-              <SelectItem value="INSERT">➕ Criação</SelectItem>
-              <SelectItem value="UPDATE">✏️ Edição</SelectItem>
-              <SelectItem value="DELETE">🗑️ Remoção</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={filterEntity} onValueChange={setFilterEntity}>
-            <SelectTrigger className="w-[180px] h-9 text-sm">
-              <SelectValue placeholder="Área" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Todas as áreas</SelectItem>
-              {Object.entries(ENTITY_LABELS).map(([k, v]) => (
-                <SelectItem key={k} value={k}>{v}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterActor} onValueChange={setFilterActor}>
-            <SelectTrigger className="w-[180px] h-9 text-sm">
-              <SelectValue placeholder="Colaborador" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Todos</SelectItem>
-              {actors.map(([id, nome]) => (
-                <SelectItem key={id} value={id}>{nome}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Sub-tabs */}
+      <div className="border-b bg-card">
+        <div className="container">
+          <nav className="flex gap-1 overflow-x-auto scrollbar-none">
+            <button
+              onClick={() => setActiveTab("ALL")}
+              className={`
+                flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap
+                ${activeTab === "ALL"
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground/80"
+                }
+              `}
+            >
+              <Users className="h-4 w-4" />
+              Geral
+              {activeTab === "ALL" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-full" />
+              )}
+            </button>
+            {userTabs.map(([userId, nome]) => {
+              const isActive = activeTab === userId;
+              return (
+                <button
+                  key={userId}
+                  onClick={() => setActiveTab(userId)}
+                  className={`
+                    flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap
+                    ${isActive
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground/80"
+                    }
+                  `}
+                >
+                  <User className="h-4 w-4" />
+                  {nome}
+                  {isActive && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-full" />
+                  )}
+                </button>
+              );
+            })}
+          </nav>
         </div>
+      </div>
 
-        <div className="bg-card rounded-xl border border-border/40 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border/40 bg-muted/40">
-                  <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs">Quando</th>
-                  <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs w-[100px]">Tipo</th>
-                  <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs">O que aconteceu</th>
+      {/* Content */}
+      <AuditTable
+        logs={tabLogs}
+        showUserColumn={activeTab === "ALL"}
+        subtitle={
+          activeTab === "ALL"
+            ? `${tabLogs.length} eventos — todos os colaboradores`
+            : `${tabLogs.length} eventos — ${activeUserName}`
+        }
+      />
+    </div>
+  );
+}
+
+// --- Filterable table (shared between Geral and per-user) ---
+
+function AuditTable({
+  logs,
+  showUserColumn,
+  subtitle,
+}: {
+  logs: AuditLog[];
+  showUserColumn: boolean;
+  subtitle: string;
+}) {
+  const [search, setSearch] = useState("");
+  const [filterAction, setFilterAction] = useState<string>("ALL");
+  const [filterEntity, setFilterEntity] = useState<string>("ALL");
+  const [page, setPage] = useState(0);
+  const [detailLog, setDetailLog] = useState<AuditLog | null>(null);
+
+  const filtered = useMemo(() => {
+    let result = logs;
+    if (filterAction !== "ALL") result = result.filter((l) => l.action === filterAction);
+    if (filterEntity !== "ALL") result = result.filter((l) => l.entity_type === filterEntity);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (l) =>
+          (l.actor_nome || "").toLowerCase().includes(q) ||
+          humanDescription(l).toLowerCase().includes(q) ||
+          (extractHandle(l) || "").toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [logs, filterAction, filterEntity, search]);
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const pageData = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  // Reset page on filter change
+  useEffect(() => { setPage(0); }, [filterAction, filterEntity, search, logs]);
+
+  const colSpan = showUserColumn ? 5 : 4;
+
+  return (
+    <div className="container py-6 space-y-4">
+      <p className="text-xs text-muted-foreground">{subtitle}</p>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3 items-end">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome, influenciador..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 h-9 text-sm"
+          />
+        </div>
+        <Select value={filterAction} onValueChange={setFilterAction}>
+          <SelectTrigger className="w-[140px] h-9 text-sm">
+            <SelectValue placeholder="Tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">Todos os tipos</SelectItem>
+            <SelectItem value="INSERT">➕ Criação</SelectItem>
+            <SelectItem value="UPDATE">✏️ Edição</SelectItem>
+            <SelectItem value="DELETE">🗑️ Remoção</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={filterEntity} onValueChange={setFilterEntity}>
+          <SelectTrigger className="w-[180px] h-9 text-sm">
+            <SelectValue placeholder="Área" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">Todas as áreas</SelectItem>
+            {Object.entries(ENTITY_LABELS).map(([k, v]) => (
+              <SelectItem key={k} value={k}>{v}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Table */}
+      <div className="bg-card rounded-xl border border-border/40 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border/40 bg-muted/40">
+                <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs">Quando</th>
+                <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs w-[100px]">Tipo</th>
+                <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs">O que aconteceu</th>
+                {showUserColumn && (
                   <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs">Quem fez</th>
-                  <th className="text-center py-2.5 px-4 font-medium text-muted-foreground text-xs w-12"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {pageData.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="text-center py-12 text-muted-foreground">
-                      Nenhum evento encontrado.
-                    </td>
-                  </tr>
-                ) : (
-                  pageData.map((log, idx) => {
-                    const zebraClass = idx % 2 === 1 ? "bg-muted/30" : "";
-
-                    return (
-                      <tr
-                        key={log.id}
-                        className={`border-b border-border/20 hover:bg-muted/40 transition-colors cursor-pointer ${zebraClass}`}
-                        onClick={() => setDetailLog(log)}
-                      >
-                        <td className="py-2.5 px-4 text-muted-foreground text-xs whitespace-nowrap">
-                          {formatDateTime(log.created_at)}
-                        </td>
-                        <td className="py-2.5 px-4">
-                          <Badge variant="outline" className={`text-[10px] gap-1 ${actionClassName(log)}`}>
-                            <ActionIcon log={log} />
-                            {actionLabel(log)}
-                          </Badge>
-                        </td>
-                        <td className="py-2.5 px-4 text-xs max-w-[360px] truncate">
-                          <DescriptionCell log={log} />
-                        </td>
-                        <td className="py-2.5 px-4 text-xs">
-                          {log.actor_user_id ? (
-                            <Link
-                              to={`/auditoria/user/${log.actor_user_id}`}
-                              className="text-primary hover:underline font-medium"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {log.actor_nome || "Sistema"}
-                            </Link>
-                          ) : (
-                            <span className="text-muted-foreground">{log.actor_nome || "Sistema"}</span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-4 text-center">
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); setDetailLog(log); }}>
-                            <Eye className="h-3.5 w-3.5" />
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  })
                 )}
-              </tbody>
-            </table>
-          </div>
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-border/30">
-              <span className="text-xs text-muted-foreground">
-                {filtered.length} eventos — Página {page + 1} de {totalPages}
-              </span>
-              <div className="flex gap-1">
-                <Button variant="ghost" size="icon" className="h-7 w-7" disabled={page === 0} onClick={() => setPage(page - 1)}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
+                <th className="text-center py-2.5 px-4 font-medium text-muted-foreground text-xs w-12"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {pageData.length === 0 ? (
+                <tr>
+                  <td colSpan={colSpan} className="text-center py-12 text-muted-foreground">
+                    Nenhum evento encontrado.
+                  </td>
+                </tr>
+              ) : (
+                pageData.map((log, idx) => {
+                  const zebraClass = idx % 2 === 1 ? "bg-muted/30" : "";
+                  return (
+                    <tr
+                      key={log.id}
+                      className={`border-b border-border/20 hover:bg-muted/40 transition-colors cursor-pointer ${zebraClass}`}
+                      onClick={() => setDetailLog(log)}
+                    >
+                      <td className="py-2.5 px-4 text-muted-foreground text-xs whitespace-nowrap">
+                        {formatDateTime(log.created_at)}
+                      </td>
+                      <td className="py-2.5 px-4">
+                        <Badge variant="outline" className={`text-[10px] gap-1 ${actionClassName(log)}`}>
+                          <ActionIcon log={log} />
+                          {actionLabel(log)}
+                        </Badge>
+                      </td>
+                      <td className="py-2.5 px-4 text-xs max-w-[360px] truncate">
+                        <DescriptionCell log={log} />
+                      </td>
+                      {showUserColumn && (
+                        <td className="py-2.5 px-4 text-xs">
+                          <span className="text-muted-foreground">{log.actor_nome || "Sistema"}</span>
+                        </td>
+                      )}
+                      <td className="py-2.5 px-4 text-center">
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); setDetailLog(log); }}>
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border/30">
+            <span className="text-xs text-muted-foreground">
+              {filtered.length} eventos — Página {page + 1} de {totalPages}
+            </span>
+            <div className="flex gap-1">
+              <Button variant="ghost" size="icon" className="h-7 w-7" disabled={page === 0} onClick={() => setPage(page - 1)}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {detailLog && (
@@ -296,6 +371,8 @@ export default function Auditoria() {
     </div>
   );
 }
+
+// --- Detail Dialog ---
 
 function AuditDetailDialog({ log, open, onClose }: { log: AuditLog; open: boolean; onClose: () => void }) {
   const renderChanges = () => {
@@ -343,7 +420,6 @@ function AuditDetailDialog({ log, open, onClose }: { log: AuditLog; open: boolea
           const c = change as { before: any; after: any };
           const dir = financialDirection(key, c);
           const isFin = isFinancialField(key);
-
           return (
             <div key={key} className="rounded-lg border border-border/40 p-3 bg-muted/20">
               <div className="flex items-center gap-1.5 mb-1.5">
