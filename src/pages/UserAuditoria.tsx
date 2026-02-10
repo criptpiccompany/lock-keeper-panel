@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,13 +22,13 @@ import {
   ShieldAlert,
   Loader2,
   Search,
-  ArrowUpDown,
   ChevronLeft,
   ChevronRight,
   Plus,
   Pencil,
   Trash2,
   Eye,
+  ArrowLeft,
 } from "lucide-react";
 
 interface AuditLog {
@@ -83,62 +83,68 @@ const FIELD_LABELS: Record<string, string> = {
 
 const PAGE_SIZE = 50;
 
-export default function Auditoria() {
+function formatValue(val: any): string {
+  if (val === null || val === undefined) return "(vazio)";
+  if (typeof val === "boolean") return val ? "Sim" : "Não";
+  if (typeof val === "object") return JSON.stringify(val);
+  return String(val);
+}
+
+export default function UserAuditoria() {
+  const { userId } = useParams<{ userId: string }>();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState<string>("");
   const [search, setSearch] = useState("");
   const [filterAction, setFilterAction] = useState<string>("ALL");
   const [filterEntity, setFilterEntity] = useState<string>("ALL");
-  const [filterActor, setFilterActor] = useState<string>("ALL");
   const [page, setPage] = useState(0);
   const [detailLog, setDetailLog] = useState<AuditLog | null>(null);
 
   useEffect(() => {
-    const fetchLogs = async () => {
+    if (!userId) return;
+    const fetchData = async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from("audit_logs" as any)
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(1000);
-      setLogs((data as any as AuditLog[]) || []);
+      const [{ data: logsData }, { data: profile }] = await Promise.all([
+        supabase
+          .from("audit_logs")
+          .select("*")
+          .eq("actor_user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(1000),
+        supabase
+          .from("profiles")
+          .select("nome")
+          .eq("id", userId)
+          .single(),
+      ]);
+      setLogs((logsData as any as AuditLog[]) || []);
+      setUserName(profile?.nome || "Usuário");
       setLoading(false);
     };
-    fetchLogs();
-  }, []);
+    fetchData();
+  }, [userId]);
 
-  // Unique actors for filter
-  const actors = useMemo(() => {
-    const map = new Map<string, string>();
-    logs.forEach((l) => {
-      if (l.actor_user_id && l.actor_nome) map.set(l.actor_user_id, l.actor_nome);
-    });
-    return Array.from(map.entries());
-  }, [logs]);
-
-  // Filtered
   const filtered = useMemo(() => {
     let result = logs;
     if (filterAction !== "ALL") result = result.filter((l) => l.action === filterAction);
     if (filterEntity !== "ALL") result = result.filter((l) => l.entity_type === filterEntity);
-    if (filterActor !== "ALL") result = result.filter((l) => l.actor_user_id === filterActor);
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
         (l) =>
-          (l.actor_nome || "").toLowerCase().includes(q) ||
           (l.entity_id || "").toLowerCase().includes(q) ||
           (l.entity_type || "").toLowerCase().includes(q) ||
           JSON.stringify(l.field_changes || {}).toLowerCase().includes(q)
       );
     }
     return result;
-  }, [logs, filterAction, filterEntity, filterActor, search]);
+  }, [logs, filterAction, filterEntity, search]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const pageData = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  useEffect(() => { setPage(0); }, [filterAction, filterEntity, filterActor, search]);
+  useEffect(() => { setPage(0); }, [filterAction, filterEntity, search]);
 
   if (loading) {
     return (
@@ -150,26 +156,28 @@ export default function Auditoria() {
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
       <div className="border-b border-border/40">
         <div className="container py-8">
+          <Link to="/auditoria" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-3 transition-colors">
+            <ArrowLeft className="h-4 w-4" />
+            Voltar à Auditoria Geral
+          </Link>
           <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
             <ShieldAlert className="h-6 w-6" />
-            Auditoria
+            Auditoria — {userName}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Registro imutável de todas as ações críticas — {logs.length} eventos
+            {logs.length} eventos registrados para este usuário
           </p>
         </div>
       </div>
 
       <div className="container py-6 space-y-4">
-        {/* Filters */}
         <div className="flex flex-wrap gap-3 items-end">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome, handle, ID..."
+              placeholder="Buscar por handle, ID..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 h-9 text-sm"
@@ -197,20 +205,8 @@ export default function Auditoria() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={filterActor} onValueChange={setFilterActor}>
-            <SelectTrigger className="w-[180px] h-9 text-sm">
-              <SelectValue placeholder="Usuário" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Todos usuários</SelectItem>
-              {actors.map(([id, nome]) => (
-                <SelectItem key={id} value={id}>{nome}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
-        {/* Table */}
         <div className="bg-card rounded-xl border border-border/40 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -219,7 +215,6 @@ export default function Auditoria() {
                   <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs">Data/Hora</th>
                   <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs">Ação</th>
                   <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs">Entidade</th>
-                  <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs">Usuário</th>
                   <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs">Papel</th>
                   <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs">Campos</th>
                   <th className="text-center py-2.5 px-4 font-medium text-muted-foreground text-xs w-16"></th>
@@ -228,7 +223,7 @@ export default function Auditoria() {
               <tbody>
                 {pageData.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-12 text-muted-foreground">
+                    <td colSpan={6} className="text-center py-12 text-muted-foreground">
                       Nenhum evento encontrado.
                     </td>
                   </tr>
@@ -239,7 +234,6 @@ export default function Auditoria() {
                     const changedFields = log.field_changes
                       ? Object.keys(log.field_changes).filter((k) => k !== "before" && k !== "after")
                       : [];
-                    // For INSERT/DELETE, field_changes has {before/after} wrapper
                     const isInsertDelete = log.action === "INSERT" || log.action === "DELETE";
                     const zebraClass = idx % 2 === 1 ? "bg-muted/30" : "";
 
@@ -260,19 +254,6 @@ export default function Auditoria() {
                         </td>
                         <td className="py-2.5 px-4 font-medium text-xs">
                           {ENTITY_LABELS[log.entity_type] || log.entity_type}
-                        </td>
-                        <td className="py-2.5 px-4 text-xs">
-                          {log.actor_user_id ? (
-                            <Link
-                              to={`/auditoria/user/${log.actor_user_id}`}
-                              className="text-primary hover:underline font-medium"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {log.actor_nome || "Sistema"}
-                            </Link>
-                          ) : (
-                            <span className="text-muted-foreground">{log.actor_nome || "Sistema"}</span>
-                          )}
                         </td>
                         <td className="py-2.5 px-4">
                           {log.actor_role && (
@@ -299,7 +280,6 @@ export default function Auditoria() {
             </table>
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t border-border/30">
               <span className="text-xs text-muted-foreground">
@@ -318,7 +298,6 @@ export default function Auditoria() {
         </div>
       </div>
 
-      {/* Detail Modal */}
       {detailLog && (
         <AuditDetailDialog log={detailLog} open={!!detailLog} onClose={() => setDetailLog(null)} />
       )}
@@ -326,17 +305,13 @@ export default function Auditoria() {
   );
 }
 
-// --- Detail Dialog ---
-
 function AuditDetailDialog({ log, open, onClose }: { log: AuditLog; open: boolean; onClose: () => void }) {
   const actionCfg = ACTION_CONFIG[log.action] || ACTION_CONFIG.UPDATE;
   const ActionIcon = actionCfg.icon;
 
-  // Parse field changes
   const renderChanges = () => {
     if (!log.field_changes) return <p className="text-muted-foreground text-sm">Sem dados de alteração.</p>;
 
-    // INSERT: { after: {...} }
     if (log.action === "INSERT" && log.field_changes.after) {
       const after = log.field_changes.after as Record<string, any>;
       return (
@@ -345,16 +320,13 @@ function AuditDetailDialog({ log, open, onClose }: { log: AuditLog; open: boolea
           {Object.entries(after).map(([key, val]) => (
             <div key={key} className="flex items-start gap-2 text-xs">
               <span className="font-medium min-w-[120px] text-foreground">{FIELD_LABELS[key] || key}</span>
-              <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                {formatValue(val)}
-              </span>
+              <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">{formatValue(val)}</span>
             </div>
           ))}
         </div>
       );
     }
 
-    // DELETE: { before: {...} }
     if (log.action === "DELETE" && log.field_changes.before) {
       const before = log.field_changes.before as Record<string, any>;
       return (
@@ -363,16 +335,13 @@ function AuditDetailDialog({ log, open, onClose }: { log: AuditLog; open: boolea
           {Object.entries(before).map(([key, val]) => (
             <div key={key} className="flex items-start gap-2 text-xs">
               <span className="font-medium min-w-[120px] text-foreground">{FIELD_LABELS[key] || key}</span>
-              <span className="text-red-700 bg-red-50 px-2 py-0.5 rounded line-through">
-                {formatValue(val)}
-              </span>
+              <span className="text-red-700 bg-red-50 px-2 py-0.5 rounded line-through">{formatValue(val)}</span>
             </div>
           ))}
         </div>
       );
     }
 
-    // UPDATE: { field: { before, after } }
     return (
       <div className="space-y-2">
         <p className="text-xs font-medium text-muted-foreground mb-2">Alterações:</p>
@@ -384,15 +353,11 @@ function AuditDetailDialog({ log, open, onClose }: { log: AuditLog; open: boolea
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
                   <span className="text-muted-foreground block mb-0.5">Antes</span>
-                  <span className="bg-red-50 text-red-800 px-2 py-1 rounded inline-block break-all">
-                    {formatValue(c.before)}
-                  </span>
+                  <span className="bg-red-50 text-red-800 px-2 py-1 rounded inline-block break-all">{formatValue(c.before)}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground block mb-0.5">Depois</span>
-                  <span className="bg-emerald-50 text-emerald-800 px-2 py-1 rounded inline-block break-all">
-                    {formatValue(c.after)}
-                  </span>
+                  <span className="bg-emerald-50 text-emerald-800 px-2 py-1 rounded inline-block break-all">{formatValue(c.after)}</span>
                 </div>
               </div>
             </div>
@@ -416,7 +381,6 @@ function AuditDetailDialog({ log, open, onClose }: { log: AuditLog; open: boolea
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Meta info */}
           <div className="grid grid-cols-2 gap-3 text-xs">
             <div>
               <span className="text-muted-foreground block">Data/Hora</span>
@@ -425,9 +389,7 @@ function AuditDetailDialog({ log, open, onClose }: { log: AuditLog; open: boolea
             <div>
               <span className="text-muted-foreground block">Usuário</span>
               <span className="font-medium">{log.actor_nome || "Sistema"}</span>
-              {log.actor_role && (
-                <Badge variant="outline" className="ml-1.5 text-[10px]">{log.actor_role}</Badge>
-              )}
+              {log.actor_role && <Badge variant="outline" className="ml-1.5 text-[10px]">{log.actor_role}</Badge>}
             </div>
             <div>
               <span className="text-muted-foreground block">ID da Entidade</span>
@@ -440,27 +402,16 @@ function AuditDetailDialog({ log, open, onClose }: { log: AuditLog; open: boolea
           </div>
 
           {log.edit_reason && (
-            <>
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-                <p className="text-xs font-semibold text-amber-800 mb-1">Motivo da edição</p>
-                <p className="text-sm text-amber-900">{log.edit_reason}</p>
-              </div>
-            </>
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <p className="text-xs font-semibold text-amber-800 mb-1">Motivo da edição</p>
+              <p className="text-sm text-amber-900">{log.edit_reason}</p>
+            </div>
           )}
 
           <hr className="border-border/30" />
-
-          {/* Changes */}
           {renderChanges()}
         </div>
       </DialogContent>
     </Dialog>
   );
-}
-
-function formatValue(val: any): string {
-  if (val === null || val === undefined) return "(vazio)";
-  if (typeof val === "boolean") return val ? "Sim" : "Não";
-  if (typeof val === "object") return JSON.stringify(val);
-  return String(val);
 }
