@@ -68,10 +68,24 @@ const FINANCIAL_FIELDS = new Set([
   "casa_1_valor", "casa_2_valor", "casa_3_valor",
 ]);
 
+const SENSITIVE_FIELDS = new Set([
+  "valor_pago", "faturamento", "acumulado", "valor_total",
+  "casa_1_valor", "casa_2_valor", "casa_3_valor",
+  "commission_rate", "comprovante_url",
+]);
+
 const HIDDEN_DETAIL_FIELDS = new Set([
   "id", "closer_id", "influencer_id", "owner_id", "feito_por_id",
   "deleted_at", "deleted_by",
 ]);
+
+/** Check if an audit log represents a sensitive action (financial, deletion, commission) */
+export function isSensitiveAction(log: AuditLog): boolean {
+  if (log.action === "DELETE") return true;
+  if (!log.field_changes) return false;
+  const keys = Object.keys(log.field_changes).filter(k => k !== "before" && k !== "after");
+  return keys.some(k => SENSITIVE_FIELDS.has(k));
+}
 
 /** Extract a handle from field_changes data */
 export function extractHandle(log: AuditLog): string | null {
