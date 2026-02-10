@@ -36,7 +36,7 @@ serve(async (req) => {
       });
     }
 
-    const { entity_id, entity_type, edit_reason } = await req.json();
+    const { entity_id, entity_type, edit_reason, field_changes, influencer_handle } = await req.json();
 
     if (!entity_id || !edit_reason || edit_reason.trim().length < 8) {
       return new Response(JSON.stringify({ error: "edit_reason is required (min 8 chars)" }), {
@@ -45,9 +45,9 @@ serve(async (req) => {
       });
     }
 
-    // Use service role to update the most recent audit log for this entity
     const adminClient = createClient(supabaseUrl, serviceKey);
 
+    // Update the most recent audit log for this entity with the edit reason
     const { data: logs } = await adminClient
       .from("audit_logs")
       .select("id")
@@ -56,12 +56,35 @@ serve(async (req) => {
       .order("created_at", { ascending: false })
       .limit(1);
 
+    let auditLogId: string | null = null;
     if (logs && logs.length > 0) {
+      auditLogId = logs[0].id;
       await adminClient
         .from("audit_logs")
         .update({ edit_reason: edit_reason.trim() })
-        .eq("id", logs[0].id);
+        .eq("id", auditLogId);
     }
+
+    // Get user profile for notification
+    const { data: profile } = await adminClient
+      .from("profiles")
+      .select("nome")
+      .eq("id", user.id)
+      .single();
+
+    // Create admin notification
+    await adminClient.from("admin_notifications").insert({
+      actor_user_id: user.id,
+      actor_nome: profile?.nome || user.email?.split("@")[0] || "Desconhecido",
+      actor_email: user.email,
+      entity_type: entity_type || "daily_influencer_records",
+      entity_id,
+      influencer_handle: influencer_handle || null,
+      action: "UPDATE",
+      field_changes: field_changes || null,
+      edit_reason: edit_reason.trim(),
+      audit_log_id: auditLogId,
+    });
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -16,6 +16,7 @@ import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import ImportData from "./pages/ImportData";
 import RegistroDiario from "./pages/RegistroDiario";
+import Notificacoes from "./pages/Notificacoes";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +76,15 @@ function AppRoutes() {
           <ProtectedRoute requireAdmin>
             <Navbar />
             <Diretorio />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notificacoes"
+        element={
+          <ProtectedRoute requireAdmin>
+            <Navbar />
+            <Notificacoes />
           </ProtectedRoute>
         }
       />

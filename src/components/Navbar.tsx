@@ -18,6 +18,7 @@ import {
   Settings,
   LogOut,
   ChevronDown,
+  Bell,
 } from "lucide-react";
 
 export function Navbar() {
@@ -42,6 +43,7 @@ export function Navbar() {
     { path: "/registro", label: "Planilhamento", icon: FileText },
     { path: "/dashboard", label: "Dashboard", icon: LayoutGrid },
     { path: "/diretorio", label: "Diretório", icon: Book },
+    { path: "/notificacoes", label: "Notificações", icon: Bell },
     { path: "/auditoria", label: "Auditoria", icon: FileText },
     { path: "/admin", label: "Admin", icon: Settings },
   ];

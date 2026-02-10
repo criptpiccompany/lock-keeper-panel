@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_nome: string | null
+          actor_user_id: string | null
+          audit_log_id: string | null
+          created_at: string
+          edit_reason: string
+          entity_id: string | null
+          entity_type: string
+          field_changes: Json | null
+          id: string
+          influencer_handle: string | null
+          review_status: Database["public"]["Enums"]["notification_review_status"]
+          reviewed_at: string | null
+          reviewed_by: string | null
+        }
+        Insert: {
+          action?: string
+          actor_email?: string | null
+          actor_nome?: string | null
+          actor_user_id?: string | null
+          audit_log_id?: string | null
+          created_at?: string
+          edit_reason: string
+          entity_id?: string | null
+          entity_type: string
+          field_changes?: Json | null
+          id?: string
+          influencer_handle?: string | null
+          review_status?: Database["public"]["Enums"]["notification_review_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_nome?: string | null
+          actor_user_id?: string | null
+          audit_log_id?: string | null
+          created_at?: string
+          edit_reason?: string
+          entity_id?: string | null
+          entity_type?: string
+          field_changes?: Json | null
+          id?: string
+          influencer_handle?: string | null
+          review_status?: Database["public"]["Enums"]["notification_review_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           acao: string
@@ -335,6 +389,7 @@ export type Database = {
     }
     Enums: {
       app_role: "CLOSER" | "ADMIN"
+      notification_review_status: "PENDENTE" | "REVISADO" | "SUSPEITO"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -463,6 +518,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["CLOSER", "ADMIN"],
+      notification_review_status: ["PENDENTE", "REVISADO", "SUSPEITO"],
     },
   },
 } as const
