@@ -240,6 +240,7 @@ export type Database = {
           acumulado: number | null
           closer_id: string
           comprovante_url: string | null
+          comprovante_url_2: string | null
           created_at: string
           date: string
           deleted_at: string | null
@@ -258,6 +259,7 @@ export type Database = {
           acumulado?: number | null
           closer_id: string
           comprovante_url?: string | null
+          comprovante_url_2?: string | null
           created_at?: string
           date?: string
           deleted_at?: string | null
@@ -276,6 +278,7 @@ export type Database = {
           acumulado?: number | null
           closer_id?: string
           comprovante_url?: string | null
+          comprovante_url_2?: string | null
           created_at?: string
           date?: string
           deleted_at?: string | null
