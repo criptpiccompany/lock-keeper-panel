@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Loader2, ListChecks, DollarSign, TrendingUp, TrendingDown, Receipt, Percent, Mail } from "lucide-react";
 import { toast } from "sonner";
+import SharedPartnersPopover, { type SharedPartner } from "./SharedPartnersPopover";
 
 /* ───── types ───── */
 
@@ -74,6 +75,7 @@ export default function ListaDoMes({ closerId }: { closerId?: string }) {
   const [closers, setClosers] = useState<CloserProfile[]>([]);
   const [platforms, setPlatforms] = useState<PlatformNames>(DEFAULT_PLATFORMS);
   const [investido, setInvestido] = useState(0);
+  const [sharedInfluencerMap, setSharedInfluencerMap] = useState<Map<string, { note: string | null; partners: SharedPartner[] }[]>>(new Map());
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -137,7 +139,7 @@ export default function ListaDoMes({ closerId }: { closerId?: string }) {
       const [dailyRes, platformRes, existingRes] = await Promise.all([
         supabase
           .from("daily_influencer_records")
-          .select("influencer_id, valor_pago")
+          .select("influencer_id, valor_pago, is_shared, shared_note, id")
           .eq("closer_id", selectedCloserId)
           .gte("date", startDate)
           .lte("date", endDateStr)
@@ -156,9 +158,35 @@ export default function ListaDoMes({ closerId }: { closerId?: string }) {
       ]);
 
       // Investido = sum of valor_pago from daily records
-      const dailyRecords = dailyRes.data || [];
-      const totalInvestido = dailyRecords.reduce((sum, r) => sum + (Number(r.valor_pago) || 0), 0);
+      const dailyRecords = (dailyRes.data || []) as any[];
+      const totalInvestido = dailyRecords.reduce((sum: number, r: any) => sum + (Number(r.valor_pago) || 0), 0);
       setInvestido(totalInvestido);
+
+      // Build shared influencer map
+      const sharedRecords = dailyRecords.filter((r: any) => r.is_shared);
+      const sharedRecordIds = sharedRecords.map((r: any) => r.id);
+      let partnersData: any[] = [];
+      if (sharedRecordIds.length > 0) {
+        const { data } = await supabase
+          .from("daily_record_shared_partners")
+          .select("*")
+          .in("record_id", sharedRecordIds);
+        partnersData = data || [];
+      }
+      const partnersByRecord = new Map<string, SharedPartner[]>();
+      for (const p of partnersData) {
+        const list = partnersByRecord.get(p.record_id) || [];
+        list.push({ id: p.id, partner_user_id: p.partner_user_id, partner_nome: p.partner_nome, share_type: p.share_type, share_amount: p.share_amount ? Number(p.share_amount) : null });
+        partnersByRecord.set(p.record_id, list);
+      }
+      // Group by influencer_id
+      const infSharedMap = new Map<string, { note: string | null; partners: SharedPartner[] }[]>();
+      for (const r of sharedRecords) {
+        const list = infSharedMap.get(r.influencer_id) || [];
+        list.push({ note: r.shared_note || null, partners: partnersByRecord.get(r.id) || [] });
+        infSharedMap.set(r.influencer_id, list);
+      }
+      setSharedInfluencerMap(infSharedMap);
 
       // Platform names
       if (platformRes.data) {
@@ -404,7 +432,22 @@ export default function ListaDoMes({ closerId }: { closerId?: string }) {
                       className={`border-b border-border/20 ${idx % 2 === 1 ? "bg-muted/30" : ""}`}
                     >
                       <td className="py-2 px-4 text-xs font-medium whitespace-nowrap">
-                        {row.influencer_handle}
+                        <div className="flex items-center gap-1.5">
+                          {row.influencer_handle}
+                          {sharedInfluencerMap.has(row.influencer_id) && (() => {
+                            const entries = sharedInfluencerMap.get(row.influencer_id)!;
+                            // Combine all partners from all shared records
+                            const allPartners = entries.flatMap((e) => e.partners);
+                            const firstNote = entries.find((e) => e.note)?.note || null;
+                            return (
+                              <SharedPartnersPopover
+                                partners={allPartners}
+                                sharedNote={firstNote}
+                                compact
+                              />
+                            );
+                          })()}
+                        </div>
                       </td>
                       {/* Casa 1 */}
                       <CasaCell
