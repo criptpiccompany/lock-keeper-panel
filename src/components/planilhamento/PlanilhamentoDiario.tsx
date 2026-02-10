@@ -583,7 +583,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
         payload.date = modalDate;
         payload.influencer_id = formInfluencerId;
         payload.closer_id = user.id;
-        payload.comprovante_url = comprovanteUrl;
+        payload.comprovante_url = comprovanteUrl || null;
         const { error } = await supabase
           .from("daily_influencer_records")
           .insert(payload as any);
