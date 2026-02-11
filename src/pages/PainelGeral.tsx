@@ -1,58 +1,64 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { StatusBadge } from "@/components/StatusBadge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { enrichInfluencer, formatDate } from "@/lib/helpers";
-import { InfluencerWithStatus } from "@/types";
 import { Search, LayoutGrid, Loader2, Lock, Info } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+
+interface LockEntry {
+  id: string;
+  handle_normalized: string;
+  locked_by_user_id: string;
+  locked_by_nome: string | null;
+  locked_until: string;
+  last_activity_at: string;
+  influencer_id: string | null;
+}
+
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function daysUntil(dateStr: string): number {
+  const diff = new Date(dateStr).getTime() - Date.now();
+  return Math.max(0, Math.ceil(diff / (24 * 60 * 60 * 1000)));
+}
 
 export default function PainelGeral() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [influencers, setInfluencers] = useState<InfluencerWithStatus[]>([]);
+  const [locks, setLocks] = useState<LockEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchInfluencers = async () => {
-    // Closers can only see active, locked influencers
+  const fetchLocks = async () => {
     const { data, error } = await supabase
-      .from('influencers')
-      .select('*')
-      .eq('ativo', true);
+      .from("influencer_locks")
+      .select("*")
+      .gt("locked_until", new Date().toISOString())
+      .order("locked_until", { ascending: true });
 
     if (error) {
-      console.error('Error fetching influencers:', error);
+      console.error("Error fetching locks:", error);
+      setLoading(false);
       return;
     }
 
-    const enriched = (data || []).map(inf => enrichInfluencer({
-      id: inf.id,
-      handle: inf.handle,
-      ownerId: inf.owner_id,
-      ownerNome: inf.owner_nome,
-      lastClosedAt: inf.last_closed_at,
-      ativo: inf.ativo,
-      notas: inf.notas || undefined
-    }));
-
-    // Filter to only show TRAVADO (locked) influencers for closers
-    const lockedOnly = enriched.filter(inf => inf.status === 'TRAVADO');
-
-    // Sort alphabetically by handle
-    lockedOnly.sort((a, b) => a.handle.localeCompare(b.handle, 'pt-BR', { sensitivity: 'base' }));
-
-    setInfluencers(lockedOnly);
+    setLocks((data as LockEntry[]) || []);
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchInfluencers();
+    fetchLocks();
   }, []);
 
-  // Filter by search
-  const filteredInfluencers = influencers.filter(inf =>
-    inf.handle.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredLocks = locks.filter((l) =>
+    l.handle_normalized.includes(searchQuery.toLowerCase().replace(/^@/, ""))
   );
 
   if (loading) {
@@ -75,10 +81,10 @@ export default function PainelGeral() {
                 Painel Geral
               </h1>
               <p className="text-muted-foreground text-sm mt-1">
-                Influenciadores atualmente travados na agência
+                Influenciadores atualmente travados (atualizado automaticamente pelo Planilhamento Diário)
               </p>
             </div>
-            
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <button className="text-muted-foreground hover:text-foreground p-2">
@@ -86,7 +92,7 @@ export default function PainelGeral() {
                 </button>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
-                <p>Este painel mostra apenas influenciadores travados. Para ver influenciadores liberados, acesse Meu Painel e registre fechamentos.</p>
+                <p>Os locks são criados automaticamente ao registrar no Planilhamento Diário. Cada novo registro renova o travamento por +10 dias.</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -95,7 +101,7 @@ export default function PainelGeral() {
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por @handle..."
+              placeholder="Buscar por handle..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -106,15 +112,15 @@ export default function PainelGeral() {
 
       {/* Content */}
       <div className="container py-6">
-        {influencers.length === 0 ? (
+        {locks.length === 0 ? (
           <div className="empty-state">
             <Lock className="empty-state-icon" />
             <h3 className="empty-state-title">Nenhum influenciador travado</h3>
             <p className="empty-state-description">
-              Todos os influenciadores estão liberados no momento.
+              Registre atividade no Planilhamento Diário para travar influenciadores automaticamente.
             </p>
           </div>
-        ) : filteredInfluencers.length === 0 ? (
+        ) : filteredLocks.length === 0 ? (
           <div className="empty-state">
             <Search className="empty-state-icon" />
             <h3 className="empty-state-title">Nenhum resultado</h3>
@@ -129,33 +135,44 @@ export default function PainelGeral() {
                 <tr>
                   <th>Influenciador</th>
                   <th>Responsável</th>
-                  <th>Último Fechamento</th>
+                  <th>Última Atividade</th>
                   <th>Libera em</th>
-                  <th>Status</th>
+                  <th>Dias Restantes</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredInfluencers.map((inf) => {
-                  const isMine = inf.ownerId === user?.id;
-                  
+                {filteredLocks.map((lock) => {
+                  const isMine = lock.locked_by_user_id === user?.id;
+                  const days = daysUntil(lock.locked_until);
+                  const isExpiring = days <= 2;
+
                   return (
-                    <tr key={inf.id}>
+                    <tr key={lock.id}>
                       <td>
-                        <span className="font-medium">{inf.handle}</span>
+                        <span className="font-medium">@{lock.handle_normalized}</span>
                       </td>
                       <td>
                         <span className={isMine ? "text-primary font-medium" : "text-muted-foreground"}>
-                          {isMine ? "Você" : inf.ownerNome || "—"}
+                          {isMine ? "Você" : lock.locked_by_nome || "—"}
                         </span>
                       </td>
                       <td className="text-muted-foreground text-sm">
-                        {formatDate(inf.lastClosedAt)}
+                        {formatDate(lock.last_activity_at)}
                       </td>
                       <td className="text-muted-foreground text-sm">
-                        {inf.lockedUntil ? formatDate(inf.lockedUntil.toISOString()) : "—"}
+                        {formatDate(lock.locked_until)}
                       </td>
                       <td>
-                        <StatusBadge status={inf.status} size="sm" />
+                        <Badge
+                          variant="outline"
+                          className={
+                            isExpiring
+                              ? "bg-amber-50 text-amber-700 border-amber-200/50"
+                              : "bg-emerald-50 text-emerald-700 border-emerald-200/50"
+                          }
+                        >
+                          {days}d
+                        </Badge>
                       </td>
                     </tr>
                   );
