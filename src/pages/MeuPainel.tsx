@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { enrichInfluencer } from "@/lib/helpers";
 import { InfluencerWithStatus } from "@/types";
+import { Badge } from "@/components/ui/badge";
 import { 
   Search, 
   UserPlus, 
@@ -23,6 +24,7 @@ export default function MeuPainel() {
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [influencers, setInfluencers] = useState<InfluencerWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
+  const [locksMap, setLocksMap] = useState<Map<string, { locked_until: string }>>(new Map());
 
   const fetchMyInfluencers = async () => {
     if (!user) return;
@@ -55,6 +57,23 @@ export default function MeuPainel() {
       if (b.daysRemaining === null) return -1;
       return a.daysRemaining - b.daysRemaining;
     });
+
+    // Fetch locks for this user's influencers
+    const handles = enriched.map(inf => inf.handle.trim().toLowerCase().replace(/^@/, ""));
+    if (handles.length > 0) {
+      const { data: locksData } = await supabase
+        .from("influencer_locks")
+        .select("handle_normalized, locked_until")
+        .in("handle_normalized", handles)
+        .gt("locked_until", new Date().toISOString());
+      const map = new Map<string, { locked_until: string }>();
+      for (const l of (locksData || []) as any[]) {
+        map.set(l.handle_normalized, { locked_until: l.locked_until });
+      }
+      setLocksMap(map);
+    } else {
+      setLocksMap(new Map());
+    }
 
     setInfluencers(enriched);
     setLoading(false);
@@ -149,24 +168,50 @@ export default function MeuPainel() {
               <thead>
                 <tr>
                   <th>Influenciador</th>
+                  <th>Dias Restantes</th>
                   <th>Status</th>
                   <th>Notas</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredInfluencers.map((inf) => (
-                  <tr key={inf.id}>
-                    <td>
-                      <span className="font-medium">{inf.handle}</span>
-                    </td>
-                    <td>
-                      <StatusBadge status={inf.status} size="sm" />
-                    </td>
-                    <td className="text-muted-foreground text-sm">
-                      {inf.notas || "—"}
-                    </td>
-                  </tr>
-                ))}
+                {filteredInfluencers.map((inf) => {
+                  const handleNorm = inf.handle.trim().toLowerCase().replace(/^@/, "");
+                  const lock = locksMap.get(handleNorm);
+                  const daysLeft = lock
+                    ? Math.max(0, Math.ceil((new Date(lock.locked_until).getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
+                    : null;
+                  const isExpiring = daysLeft !== null && daysLeft <= 2;
+
+                  return (
+                    <tr key={inf.id}>
+                      <td>
+                        <span className="font-medium">{inf.handle}</span>
+                      </td>
+                      <td>
+                        {daysLeft !== null ? (
+                          <Badge
+                            variant="outline"
+                            className={
+                              isExpiring
+                                ? "bg-amber-50 text-amber-700 border-amber-200/50"
+                                : "bg-emerald-50 text-emerald-700 border-emerald-200/50"
+                            }
+                          >
+                            {daysLeft}d
+                          </Badge>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td>
+                        <StatusBadge status={inf.status} size="sm" />
+                      </td>
+                      <td className="text-muted-foreground text-sm">
+                        {inf.notas || "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
