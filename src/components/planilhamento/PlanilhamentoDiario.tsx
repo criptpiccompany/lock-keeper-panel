@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { PLATFORM_FEE_RATE, PLATFORM_FEE_LABEL } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -92,7 +93,7 @@ type StatusResultado = "VERDE" | "AMARELO" | "VERMELHO" | null;
 
 function calcTaxaPlataforma(faturamento: number | null): number {
   if (!faturamento) return 0;
-  return faturamento * 0.10;
+  return faturamento * PLATFORM_FEE_RATE;
 }
 
 function calcLucroLiquido(faturamento: number | null, valorPago: number): number {
@@ -1065,7 +1066,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
           <p className="text-base font-semibold">{formatCurrency(monthTotals.totalFaturado)}</p>
         </div>
         <div className="bg-card rounded-xl border p-3">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Taxa (10%)</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">{PLATFORM_FEE_LABEL}</p>
           <p className="text-base font-semibold text-muted-foreground">{formatCurrency(monthTotals.totalTaxa)}</p>
         </div>
         <div className={`rounded-xl border p-3 ${monthTotals.resultadoLiquido >= 0 ? "bg-emerald-50 border-emerald-200/50" : "bg-red-50 border-red-200/50"}`}>
@@ -1175,7 +1176,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
               {formValorPago && formFaturamento && (
                 <div className="bg-muted/50 rounded-lg p-3 space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Taxa (10%)</span>
+                    <span className="text-muted-foreground">{PLATFORM_FEE_LABEL}</span>
                     <span>{formatCurrency(calcTaxaPlataforma(Number(formFaturamento)))}</span>
                   </div>
                   <div className="flex justify-between">

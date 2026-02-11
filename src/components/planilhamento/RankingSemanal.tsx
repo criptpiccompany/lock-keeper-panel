@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, Trophy, TrendingUp, TrendingDown, Medal } from "lucide-react";
+import { PLATFORM_FEE_RATE, PLATFORM_FEE_LABEL } from "@/lib/constants";
 
 interface CloserProfile {
   id: string;
@@ -131,7 +132,7 @@ export default function RankingSemanal() {
     aggMap.forEach((agg, closerId) => {
       const closer = closerMap.get(closerId);
       if (!closer) return;
-      const taxa = agg.faturamento * 0.1;
+      const taxa = agg.faturamento * PLATFORM_FEE_RATE;
       const lucro = agg.faturamento - agg.investido - taxa;
       const comissao = lucro > 0 ? lucro * closer.commission_rate : 0;
       const lucroLiquido = lucro - comissao;
@@ -206,7 +207,7 @@ export default function RankingSemanal() {
                     Faturado
                   </th>
                   <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
-                    Taxa 10%
+                    {PLATFORM_FEE_LABEL}
                   </th>
                   <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
                     Lucro
