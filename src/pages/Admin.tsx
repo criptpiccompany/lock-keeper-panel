@@ -15,7 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { enrichInfluencer, formatDate } from "@/lib/helpers";
 import { InfluencerWithStatus } from "@/types";
-import { Settings, Archive, RefreshCw, AlertTriangle, Loader2, Users, Mail, Shield, ShieldCheck, Pencil, Key, Percent, UserCheck, UserX } from "lucide-react";
+import { Settings, Archive, RefreshCw, AlertTriangle, Loader2, Users, Mail, Shield, ShieldCheck, Pencil, Key, Percent, UserCheck, UserX, Download } from "lucide-react";
+import { exportMonthXlsx } from "@/lib/exportMonthXlsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OrphanUsersTab } from "@/components/admin/OrphanUsersTab";
 
@@ -55,6 +56,37 @@ export default function Admin() {
   const [editingCommission, setEditingCommission] = useState<string | null>(null);
   const [commissionInput, setCommissionInput] = useState("");
   const [savingCommission, setSavingCommission] = useState(false);
+
+  // Export
+  const [exportMonth, setExportMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await exportMonthXlsx(exportMonth, (msg) => toast.info(msg));
+      toast.success("Arquivo exportado com sucesso!");
+    } catch (err: any) {
+      toast.error("Erro ao exportar", { description: err.message });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const exportMonthOptions = (() => {
+    const opts: { value: string; label: string }[] = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+      opts.push({ value, label: label.charAt(0).toUpperCase() + label.slice(1) });
+    }
+    return opts;
+  })();
   const fetchInfluencers = async () => {
     const { data } = await supabase.from('influencers').select('*');
     const enriched = (data || []).map(inf => enrichInfluencer({
@@ -406,6 +438,32 @@ export default function Admin() {
                 </Button>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Export Month */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Download className="h-5 w-5" />Exportar Mês Completo</CardTitle>
+            <CardDescription>Gere um arquivo XLSX com todos os dados do mês selecionado</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap items-center gap-3">
+              <Select value={exportMonth} onValueChange={setExportMonth}>
+                <SelectTrigger className="w-[200px] h-9 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {exportMonthOptions.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button onClick={handleExport} disabled={exporting}>
+                {exporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                Exportar XLSX
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
