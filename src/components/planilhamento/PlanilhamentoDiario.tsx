@@ -1079,7 +1079,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
 
       {/* New/Edit Record Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editRecord ? "Editar Registro" : "Novo Registro"}</DialogTitle>
           </DialogHeader>
@@ -1204,9 +1204,9 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                   {" "}<span className="text-muted-foreground text-xs">— pode anexar depois</span>
                 </Label>
                 <label className="cursor-pointer block">
-                  <div className="flex items-center gap-2 border rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 transition-colors">
-                    <Upload className="h-4 w-4" />
-                    {formFile1 ? formFile1.name : "Selecionar arquivo (JPG, PNG, PDF)"}
+                  <div className="flex items-center gap-2 border rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 transition-colors min-w-0">
+                    <Upload className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{formFile1 ? formFile1.name : "Selecionar arquivo (JPG, PNG, PDF)"}</span>
                   </div>
                   <input
                     type="file"
@@ -1225,9 +1225,9 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                   {" "}<span className="text-muted-foreground text-xs">(opcional)</span>
                 </Label>
                 <label className="cursor-pointer block">
-                  <div className="flex items-center gap-2 border rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 transition-colors">
-                    <Upload className="h-4 w-4" />
-                    {formFile2 ? formFile2.name : "Selecionar arquivo (JPG, PNG, PDF)"}
+                  <div className="flex items-center gap-2 border rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 transition-colors min-w-0">
+                    <Upload className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{formFile2 ? formFile2.name : "Selecionar arquivo (JPG, PNG, PDF)"}</span>
                   </div>
                   <input
                     type="file"
@@ -1238,15 +1238,6 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                 </label>
               </div>
 
-              <div className="space-y-2">
-                <Label>Observação <span className="text-muted-foreground text-xs">(opcional)</span></Label>
-                <Textarea
-                  placeholder="Observações sobre o registro..."
-                  value={formObservacao}
-                  onChange={(e) => setFormObservacao(e.target.value)}
-                  rows={2}
-                />
-              </div>
 
               {/* Shared / Partners toggle */}
               <div className="space-y-3 border-t border-border/40 pt-4">
