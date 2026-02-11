@@ -15,8 +15,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { enrichInfluencer, formatDate } from "@/lib/helpers";
 import { InfluencerWithStatus } from "@/types";
-import { Settings, Archive, RefreshCw, AlertTriangle, Loader2, Users, Mail, Shield, ShieldCheck, Pencil, Key, Percent, UserCheck } from "lucide-react";
+import { Settings, Archive, RefreshCw, AlertTriangle, Loader2, Users, Mail, Shield, ShieldCheck, Pencil, Key, Percent, UserCheck, UserX } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { OrphanUsersTab } from "@/components/admin/OrphanUsersTab";
 
 interface UserWithRole {
   id: string;
@@ -264,6 +265,7 @@ export default function Admin() {
           <TabsList>
             <TabsTrigger value="gestao"><Users className="h-4 w-4 mr-1.5" />Gestão</TabsTrigger>
             <TabsTrigger value="aprovacoes"><UserCheck className="h-4 w-4 mr-1.5" />Aprovações</TabsTrigger>
+            <TabsTrigger value="orfaos"><UserX className="h-4 w-4 mr-1.5" />Órfãos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="gestao" className="space-y-6">
@@ -496,6 +498,10 @@ export default function Admin() {
 
           <TabsContent value="aprovacoes">
             <ApprovalsTab />
+          </TabsContent>
+
+          <TabsContent value="orfaos">
+            <OrphanUsersTab />
           </TabsContent>
         </Tabs>
       </div>
