@@ -1079,11 +1079,12 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
 
       {/* New/Edit Record Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-md max-h-[85vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{editRecord ? "Editar Registro" : "Novo Registro"}</DialogTitle>
           </DialogHeader>
 
+          <div className="overflow-y-auto flex-1 -mx-6 px-6">
           {/* Empty state when no influencers available */}
           {!editRecord && modalAvailableInfluencers.length === 0 ? (
             <div className="py-8 text-center space-y-2">
@@ -1362,6 +1363,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
               </div>
             </div>
           )}
+          </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
