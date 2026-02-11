@@ -685,6 +685,66 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
           throw error;
         }
         savedRecordId = insertData?.id || null;
+
+        // Auto-lock: upsert influencer_locks when creating a new daily record
+        const selectedInf = influencers.find((i) => i.id === formInfluencerId);
+        if (selectedInf) {
+          const handleNorm = selectedInf.handle.trim().toLowerCase().replace(/^@/, "");
+          const lockedUntil = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString();
+
+          // Try update first (atomic upsert pattern)
+          const { data: existingLock } = await supabase
+            .from("influencer_locks")
+            .select("id")
+            .eq("handle_normalized", handleNorm)
+            .maybeSingle();
+
+          if (existingLock) {
+            await supabase
+              .from("influencer_locks")
+              .update({
+                locked_by_user_id: user.id,
+                locked_by_nome: user.nome,
+                locked_until: lockedUntil,
+                last_activity_at: new Date().toISOString(),
+                influencer_id: formInfluencerId,
+              })
+              .eq("handle_normalized", handleNorm);
+          } else {
+            await supabase
+              .from("influencer_locks")
+              .insert({
+                handle_normalized: handleNorm,
+                locked_by_user_id: user.id,
+                locked_by_nome: user.nome,
+                locked_until: lockedUntil,
+                last_activity_at: new Date().toISOString(),
+                influencer_id: formInfluencerId,
+              });
+          }
+
+          // Also update influencers table for backward compat
+          await supabase
+            .from("influencers")
+            .update({
+              last_closed_at: new Date().toISOString(),
+              owner_id: user.id,
+              owner_nome: user.nome,
+            })
+            .eq("id", formInfluencerId);
+
+          // Audit event
+          await supabase.from("close_events").insert({
+            influencer_id: formInfluencerId,
+            influencer_handle: selectedInf.handle,
+            feito_por_id: user.id,
+            feito_por_nome: user.nome,
+            feito_em: new Date().toISOString(),
+            acao: "FECHAMENTO",
+            motivo: `Auto-lock via registro diário até ${new Date(lockedUntil).toLocaleDateString("pt-BR")}`,
+          });
+        }
+
         toast.success("Registro criado!");
       }
 

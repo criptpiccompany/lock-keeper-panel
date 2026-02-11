@@ -371,6 +371,50 @@ export type Database = {
         }
         Relationships: []
       }
+      influencer_locks: {
+        Row: {
+          created_at: string
+          handle_normalized: string
+          id: string
+          influencer_id: string | null
+          last_activity_at: string
+          locked_by_nome: string | null
+          locked_by_user_id: string
+          locked_until: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          handle_normalized: string
+          id?: string
+          influencer_id?: string | null
+          last_activity_at?: string
+          locked_by_nome?: string | null
+          locked_by_user_id: string
+          locked_until: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          handle_normalized?: string
+          id?: string
+          influencer_id?: string | null
+          last_activity_at?: string
+          locked_by_nome?: string | null
+          locked_by_user_id?: string
+          locked_until?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "influencer_locks_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "influencers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       influencers: {
         Row: {
           ativo: boolean
