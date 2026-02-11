@@ -1,4 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
 import { DAILY_FEE_RATE, DAILY_FEE_LABEL } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +53,7 @@ import {
   Pencil,
   X,
   AlertCircle,
+  CalendarDays,
 } from "lucide-react";
 import ComprovanteThumbnail from "./ComprovanteThumbnail";
 import ComprovanteLightbox from "./ComprovanteLightbox";
@@ -300,6 +304,8 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
 
   // Persistent days from DB
   const [persistedDays, setPersistedDays] = useState<string[]>([]);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [creatingAllDays, setCreatingAllDays] = useState(false);
 
   const monthKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}`;
   const monthDays = useMemo(() => getMonthDays(selectedYear, selectedMonth), [selectedYear, selectedMonth]);
@@ -477,6 +483,77 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
       console.error("Error adding day:", err);
       toast.error("Erro ao adicionar dia", { description: message });
     }
+  };
+
+  // --- Add specific day via date picker ---
+  const handleAddSpecificDay = async (date: Date | undefined) => {
+    if (!date || !user) return;
+    setDatePickerOpen(false);
+    const dateStr = format(date, "yyyy-MM-dd");
+
+    if (persistedDays.includes(dateStr)) {
+      setExpandedDays((prev) => new Set([...prev, dateStr]));
+      toast.info("Esse dia já existe");
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from("daily_sheets").insert({
+        date: dateStr,
+        month: monthKey,
+        closer_id: user.id,
+      } as any);
+
+      if (error) {
+        if (error.code === "23505") {
+          toast.info("Esse dia já existe");
+          setExpandedDays((prev) => new Set([...prev, dateStr]));
+          return;
+        }
+        toast.error("Erro ao adicionar dia", { description: error.message });
+        return;
+      }
+
+      setPersistedDays((prev) => [...prev, dateStr]);
+      setExpandedDays((prev) => new Set([...prev, dateStr]));
+      toast.success(`Dia ${date.getDate()} adicionado`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      toast.error("Erro ao adicionar dia", { description: message });
+    }
+  };
+
+  // --- Create all missing days in the month (admin/migration) ---
+  const handleCreateAllMissingDays = async () => {
+    if (!user) return;
+    setCreatingAllDays(true);
+
+    const existingSet = new Set(persistedDays);
+    const missingDays = monthDays.filter((d) => !existingSet.has(d));
+
+    if (missingDays.length === 0) {
+      toast.info("Todos os dias do mês já existem");
+      setCreatingAllDays(false);
+      return;
+    }
+
+    const toInsert = missingDays.map((d) => ({
+      date: d,
+      month: monthKey,
+      closer_id: user.id,
+    }));
+
+    const { error } = await supabase.from("daily_sheets").insert(toInsert as any);
+
+    if (error) {
+      console.error("Error creating missing days:", error);
+      toast.error("Erro ao criar dias faltantes", { description: error.message });
+    } else {
+      setPersistedDays((prev) => [...prev, ...missingDays]);
+      toast.success(`${missingDays.length} dias faltantes criados`);
+    }
+
+    setCreatingAllDays(false);
   };
 
   // --- Add row ---
@@ -1101,9 +1178,9 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
         </div>
       )}
 
-      {/* Blue + button: add new day */}
+      {/* Action buttons: add day */}
       {!viewingOther && (
-        <div className="flex justify-center">
+        <div className="flex justify-center gap-2 flex-wrap">
           <Button
             variant="outline"
             className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
@@ -1112,6 +1189,45 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
             <Plus className="mr-2 h-4 w-4" />
             Adicionar dia
           </Button>
+
+          <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline">
+                <CalendarDays className="mr-2 h-4 w-4" />
+                Adicionar dia específico
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="center">
+              <Calendar
+                mode="single"
+                selected={undefined}
+                onSelect={handleAddSpecificDay}
+                defaultMonth={new Date(selectedYear, selectedMonth)}
+                disabled={(date) => {
+                  const m = date.getMonth();
+                  const y = date.getFullYear();
+                  return m !== selectedMonth || y !== selectedYear;
+                }}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+
+          {isAdmin && (
+            <Button
+              variant="outline"
+              onClick={handleCreateAllMissingDays}
+              disabled={creatingAllDays}
+            >
+              {creatingAllDays ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <CalendarDays className="mr-2 h-4 w-4" />
+              )}
+              Criar dias faltantes do mês
+            </Button>
+          )}
         </div>
       )}
 
