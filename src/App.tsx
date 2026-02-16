@@ -19,6 +19,7 @@ import RegistroDiario from "./pages/RegistroDiario";
 import Notificacoes from "./pages/Notificacoes";
 import GestaoInfluenciadores from "./pages/GestaoInfluenciadores";
 import PendingApproval from "./pages/PendingApproval";
+import Financeiro from "./pages/Financeiro";
 
 const queryClient = new QueryClient();
 
@@ -87,6 +88,15 @@ function AppRoutes() {
           <ProtectedRoute requireAdmin>
             <Navbar />
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/financeiro"
+        element={
+          <ProtectedRoute requireAdmin>
+            <Navbar />
+            <Financeiro />
           </ProtectedRoute>
         }
       />
