@@ -22,7 +22,7 @@ export default function Financeiro() {
   const [selectedCloser, setSelectedCloser] = useState<CloserProfile | null>(null);
 
   // Period filter state
-  const [preset, setPreset] = useState<PeriodPreset>("30d");
+  const [preset, setPreset] = useState<PeriodPreset>("today");
   const [customStart, setCustomStart] = useState<Date | undefined>();
   const [customEnd, setCustomEnd] = useState<Date | undefined>();
 
