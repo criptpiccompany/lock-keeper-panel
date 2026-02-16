@@ -493,6 +493,45 @@ export type Database = {
         }
         Relationships: []
       }
+      kanban_influencers: {
+        Row: {
+          closer_id: string
+          created_at: string
+          display_name: string
+          id: string
+          instagram_url: string | null
+          instagram_username: string
+          last_moved_at: string
+          status: string
+          updated_at: string
+          valor_negociado: number | null
+        }
+        Insert: {
+          closer_id: string
+          created_at?: string
+          display_name: string
+          id?: string
+          instagram_url?: string | null
+          instagram_username: string
+          last_moved_at?: string
+          status?: string
+          updated_at?: string
+          valor_negociado?: number | null
+        }
+        Update: {
+          closer_id?: string
+          created_at?: string
+          display_name?: string
+          id?: string
+          instagram_url?: string | null
+          instagram_username?: string
+          last_moved_at?: string
+          status?: string
+          updated_at?: string
+          valor_negociado?: number | null
+        }
+        Relationships: []
+      }
       monthly_influencer_list: {
         Row: {
           casa_1_email: string | null
