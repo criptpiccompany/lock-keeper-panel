@@ -10,6 +10,7 @@ export interface KanbanCard {
   created_at: string;
   updated_at: string;
   observacao: string | null;
+  apoios: string[] | null;
 }
 
 export interface ColumnDef {

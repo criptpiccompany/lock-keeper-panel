@@ -495,6 +495,7 @@ export type Database = {
       }
       kanban_influencers: {
         Row: {
+          apoios: string[] | null
           closer_id: string
           created_at: string
           display_name: string
@@ -508,6 +509,7 @@ export type Database = {
           valor_negociado: number | null
         }
         Insert: {
+          apoios?: string[] | null
           closer_id: string
           created_at?: string
           display_name: string
@@ -521,6 +523,7 @@ export type Database = {
           valor_negociado?: number | null
         }
         Update: {
+          apoios?: string[] | null
           closer_id?: string
           created_at?: string
           display_name?: string

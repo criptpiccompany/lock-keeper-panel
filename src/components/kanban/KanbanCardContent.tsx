@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Pencil, Trash2 } from "lucide-react";
+import { ExternalLink, Pencil, Trash2, X, Plus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { COLUMNS, type KanbanCard } from "./types";
@@ -34,6 +34,15 @@ export function KanbanCardContent({
   const [editingValue, setEditingValue] = useState(false);
   const [valueInput, setValueInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const [addingApoio, setAddingApoio] = useState(false);
+  const [apoioInput, setApoioInput] = useState("");
+  const [editingApoioIdx, setEditingApoioIdx] = useState<number | null>(null);
+  const [editApoioInput, setEditApoioInput] = useState("");
+  const apoioRef = useRef<HTMLInputElement>(null);
+  const editApoioRef = useRef<HTMLInputElement>(null);
+
+  const apoios = card.apoios ?? [];
 
   const instagramLink = card.instagram_url?.startsWith("http")
     ? card.instagram_url
@@ -156,6 +165,87 @@ export function KanbanCardContent({
             )}
           </button>
         )}
+      </div>
+
+      {/* Apoios */}
+      <div className="flex flex-wrap items-center gap-1">
+        {apoios.map((name, idx) => (
+          editingApoioIdx === idx ? (
+            <input
+              key={idx}
+              ref={editApoioRef}
+              value={editApoioInput}
+              onChange={(e) => setEditApoioInput(e.target.value)}
+              onBlur={() => {
+                const trimmed = editApoioInput.trim();
+                if (trimmed && trimmed !== apoios[idx]) {
+                  const next = [...apoios];
+                  next[idx] = trimmed;
+                  onUpdate(card.id, { apoios: next });
+                }
+                setEditingApoioIdx(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                if (e.key === "Escape") setEditingApoioIdx(null);
+              }}
+              className="h-5 w-20 rounded border bg-background px-1.5 text-[10px] outline-none focus:ring-1 focus:ring-ring"
+              autoFocus
+            />
+          ) : (
+            <span
+              key={idx}
+              className="inline-flex items-center gap-0.5 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground cursor-pointer hover:bg-muted/80 transition-colors"
+              onClick={() => {
+                setEditingApoioIdx(idx);
+                setEditApoioInput(apoios[idx]);
+                setTimeout(() => editApoioRef.current?.focus(), 0);
+              }}
+            >
+              {name}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const next = apoios.filter((_, i) => i !== idx);
+                  onUpdate(card.id, { apoios: next });
+                }}
+                className="ml-0.5 rounded-full hover:text-destructive"
+              >
+                <X className="h-2.5 w-2.5" />
+              </button>
+            </span>
+          )
+        ))}
+        {addingApoio ? (
+          <input
+            ref={apoioRef}
+            value={apoioInput}
+            onChange={(e) => setApoioInput(e.target.value)}
+            onBlur={() => {
+              const trimmed = apoioInput.trim();
+              if (trimmed) {
+                onUpdate(card.id, { apoios: [...apoios, trimmed] });
+              }
+              setApoioInput("");
+              setAddingApoio(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+              if (e.key === "Escape") { setApoioInput(""); setAddingApoio(false); }
+            }}
+            className="h-5 w-20 rounded border bg-background px-1.5 text-[10px] outline-none focus:ring-1 focus:ring-ring"
+            placeholder="Nome"
+            autoFocus
+          />
+        ) : apoios.length < 3 ? (
+          <button
+            onClick={() => setAddingApoio(true)}
+            className="inline-flex items-center gap-0.5 rounded-md px-1 py-0.5 text-[10px] text-muted-foreground hover:bg-muted transition-colors"
+          >
+            <Plus className="h-2.5 w-2.5" />
+            Apoio
+          </button>
+        ) : null}
       </div>
 
       {/* Footer: Status badge + time */}
