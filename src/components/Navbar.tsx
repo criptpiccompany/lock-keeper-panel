@@ -13,6 +13,7 @@ import {
 import {
   LayoutGrid,
   User,
+  Users,
   Book,
   FileText,
   Settings,
@@ -34,12 +35,14 @@ export function Navbar() {
   // Navigation items based on role
   const closerItems = [
     { path: "/meu", label: "Minha Lista", icon: User },
+    { path: "/gestao-influenciadores", label: "Gestão de Influenciadores", icon: Users },
     { path: "/registro", label: "Planilhamento", icon: FileText },
     { path: "/painel", label: "Painel Geral", icon: LayoutGrid },
   ];
 
   const adminItems = [
     { path: "/meu", label: "Minha Lista", icon: User },
+    { path: "/gestao-influenciadores", label: "Gestão de Influenciadores", icon: Users },
     { path: "/registro", label: "Planilhamento", icon: FileText },
     { path: "/dashboard", label: "Dashboard", icon: LayoutGrid },
     { path: "/diretorio", label: "Diretório", icon: Book },

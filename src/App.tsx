@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import ImportData from "./pages/ImportData";
 import RegistroDiario from "./pages/RegistroDiario";
 import Notificacoes from "./pages/Notificacoes";
+import GestaoInfluenciadores from "./pages/GestaoInfluenciadores";
 import PendingApproval from "./pages/PendingApproval";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,16 @@ function AppRoutes() {
         }
       />
       
+      <Route
+        path="/gestao-influenciadores"
+        element={
+          <ProtectedRoute>
+            <Navbar />
+            <GestaoInfluenciadores />
+          </ProtectedRoute>
+        }
+      />
+
       {/* Painel Geral - for closers (limited view) */}
       <Route
         path="/painel"
