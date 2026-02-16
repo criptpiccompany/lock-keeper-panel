@@ -20,6 +20,7 @@ import {
   LogOut,
   ChevronDown,
   Bell,
+  DollarSign,
 } from "lucide-react";
 
 export function Navbar() {
@@ -42,6 +43,7 @@ export function Navbar() {
 
   const adminItems = [
     { path: "/dashboard", label: "Dashboard", icon: LayoutGrid },
+    { path: "/financeiro", label: "Financeiro", icon: DollarSign },
     { path: "/diretorio", label: "Diretório", icon: Book },
     { path: "/notificacoes", label: "Notificações", icon: Bell },
     { path: "/auditoria", label: "Auditoria", icon: FileText },
