@@ -502,6 +502,7 @@ export type Database = {
           instagram_url: string | null
           instagram_username: string
           last_moved_at: string
+          observacao: string | null
           status: string
           updated_at: string
           valor_negociado: number | null
@@ -514,6 +515,7 @@ export type Database = {
           instagram_url?: string | null
           instagram_username: string
           last_moved_at?: string
+          observacao?: string | null
           status?: string
           updated_at?: string
           valor_negociado?: number | null
@@ -526,6 +528,7 @@ export type Database = {
           instagram_url?: string | null
           instagram_username?: string
           last_moved_at?: string
+          observacao?: string | null
           status?: string
           updated_at?: string
           valor_negociado?: number | null
