@@ -85,6 +85,8 @@ export default function Financeiro() {
 
   const todayData = byDate.get(today) || { cost: 0, revenue: 0, count: 0 };
   const yesterdayData = byDate.get(yesterday) || { cost: 0, revenue: 0, count: 0 };
+  const dayBeforeYesterday = daysAgoStr(2);
+  const dayBeforeData = byDate.get(dayBeforeYesterday) || { cost: 0, revenue: 0, count: 0 };
 
   // Aggregate by closer for today + yesterday
   const byCloser = useMemo(() => {
@@ -142,7 +144,7 @@ export default function Financeiro() {
       {/* Content */}
       <div className="container py-6 space-y-6">
         {/* Detail Blocks */}
-        <FinanceiroDetailBlocks todayData={todayData} yesterdayData={yesterdayData} />
+        <FinanceiroDetailBlocks todayData={todayData} yesterdayData={yesterdayData} dayBeforeData={dayBeforeData} />
 
         {/* Chart */}
         <FinanceiroChart byDate={byDate} today={today} filterStart={filterStart} filterEnd={filterEnd} />

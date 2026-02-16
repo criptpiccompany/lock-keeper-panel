@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { formatBRL, fmtDate, TAX_TOTAL, type DayAggregate } from "./financeiroHelpers";
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
   filterEnd: string;
 }
 
-type SortKey = "date" | "net";
+type SortKey = "date" | "net" | "margin";
 
 export default function FinanceiroHistory({ byDate, today, yesterday, filterStart, filterEnd }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("date");
@@ -29,11 +29,17 @@ export default function FinanceiroHistory({ byDate, today, yesterday, filterStar
 
     entries.sort((a, b) => {
       if (sortKey === "date") return sortAsc ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date);
+      if (sortKey === "margin") return sortAsc ? a.margin - b.margin : b.margin - a.margin;
       return sortAsc ? a.net - b.net : b.net - a.net;
     });
 
     return entries;
   }, [byDate, today, filterStart, filterEnd, sortKey, sortAsc]);
+
+  const bestNetDate = useMemo(() => {
+    if (rows.length === 0) return null;
+    return rows.reduce((best, r) => r.net > best.net ? r : best, rows[0]).date;
+  }, [rows]);
 
   const visibleRows = rows.slice(0, limit);
 
@@ -41,6 +47,20 @@ export default function FinanceiroHistory({ byDate, today, yesterday, filterStar
     if (sortKey === key) setSortAsc(!sortAsc);
     else { setSortKey(key); setSortAsc(false); }
   };
+
+  function SortBtn({ label, k }: { label: string; k: SortKey }) {
+    const active = sortKey === k;
+    return (
+      <button onClick={() => toggleSort(k)} className="inline-flex items-center gap-1 hover:text-primary">
+        {label}
+        {active ? (
+          sortAsc ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+        ) : (
+          <ArrowUpDown className="h-3 w-3 opacity-50" />
+        )}
+      </button>
+    );
+  }
 
   return (
     <div>
@@ -51,30 +71,30 @@ export default function FinanceiroHistory({ byDate, today, yesterday, filterStar
             <thead>
               <tr className="border-b border-border/60 text-foreground" style={{ backgroundColor: "#E9E9EA" }}>
                 <th className="text-left py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
-                  <button onClick={() => toggleSort("date")} className="inline-flex items-center gap-1 hover:text-primary">
-                    Data <ArrowUpDown className="h-3 w-3" />
-                  </button>
+                  <SortBtn label="Data" k="date" />
                 </th>
                 <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Custo Op.</th>
                 <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Fat. Bruto</th>
                 <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Taxas (5%)</th>
                 <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
-                  <button onClick={() => toggleSort("net")} className="inline-flex items-center gap-1 hover:text-primary">
-                    Líquido <ArrowUpDown className="h-3 w-3" />
-                  </button>
+                  <SortBtn label="Líquido" k="net" />
                 </th>
-                <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Margem</th>
+                <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
+                  <SortBtn label="Margem" k="margin" />
+                </th>
               </tr>
             </thead>
             <tbody>
               {visibleRows.map((row, idx) => {
+                const isBest = row.date === bestNetDate && rows.length > 1;
                 const zebraClass = idx % 2 === 1 ? "bg-muted/30" : "";
                 const isYest = row.date === yesterday;
                 return (
-                  <tr key={row.date} className={`border-b border-border/20 ${zebraClass}`}>
+                  <tr key={row.date} className={`border-b border-border/20 ${isBest ? "bg-emerald-50/50 dark:bg-emerald-950/15" : zebraClass}`}>
                     <td className="py-2.5 px-4 text-xs font-medium">
                       {fmtDate(row.date)}
                       {isYest && <span className="ml-2 text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">FECHADO</span>}
+                      {isBest && <span className="ml-2 text-[10px] font-semibold text-emerald-600">★</span>}
                     </td>
                     <td className="py-2.5 px-4 text-xs text-right tabular-nums">{formatBRL(row.cost)}</td>
                     <td className="py-2.5 px-4 text-xs text-right tabular-nums">{formatBRL(row.revenue)}</td>
