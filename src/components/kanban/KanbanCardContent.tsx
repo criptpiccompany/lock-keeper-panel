@@ -243,7 +243,7 @@ export function KanbanCardContent({
             className="inline-flex items-center gap-0.5 rounded-md px-1 py-0.5 text-[10px] text-muted-foreground hover:bg-muted transition-colors"
           >
             <Plus className="h-2.5 w-2.5" />
-            Apoio
+            Agente/Indicação
           </button>
         ) : null}
       </div>
