@@ -48,7 +48,7 @@ export default function EditReasonModal({
 }: EditReasonModalProps) {
   const [reason, setReason] = useState("");
 
-  const isValid = reason.trim().length >= 8;
+  const isValid = reason.trim().length >= 15;
 
   const handleConfirm = () => {
     if (!isValid) return;
@@ -99,14 +99,14 @@ export default function EditReasonModal({
               Motivo da edição <span className="text-destructive">*</span>
             </Label>
             <Textarea
-              placeholder="Descreva o motivo da alteração (mínimo 8 caracteres)..."
+              placeholder="Descreva o motivo da alteração (mínimo 15 caracteres)..."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={3}
               className="text-sm"
             />
-            {reason.length > 0 && reason.trim().length < 8 && (
-              <p className="text-xs text-destructive">Mínimo de 8 caracteres ({reason.trim().length}/8)</p>
+            {reason.length > 0 && reason.trim().length < 15 && (
+              <p className="text-xs text-destructive">Mínimo de 15 caracteres ({reason.trim().length}/15)</p>
             )}
           </div>
         </div>
