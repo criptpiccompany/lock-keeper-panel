@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, DollarSign, X, User } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import Balanco from "@/components/planilhamento/Balanco";
+import FinanceiroEmployeeDrawerContent from "@/components/financeiro/FinanceiroEmployeeDrawerContent";
 import FinanceiroPeriodFilter from "@/components/financeiro/FinanceiroPeriodFilter";
 import FinanceiroSummaryCards from "@/components/financeiro/FinanceiroSummaryCards";
 import FinanceiroDetailBlocks from "@/components/financeiro/FinanceiroDetailBlocks";
@@ -206,7 +206,7 @@ export default function Financeiro() {
 
           {/* Drawer Content */}
           <div className="flex-1 overflow-y-auto px-5 py-4">
-            {selectedCloser && <Balanco closerId={selectedCloser.id} />}
+            {selectedCloser && <FinanceiroEmployeeDrawerContent closerId={selectedCloser.id} />}
           </div>
         </SheetContent>
       </Sheet>
