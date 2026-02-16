@@ -8,6 +8,7 @@ import FinanceiroSummaryCards from "@/components/financeiro/FinanceiroSummaryCar
 import FinanceiroDetailBlocks from "@/components/financeiro/FinanceiroDetailBlocks";
 import FinanceiroChart from "@/components/financeiro/FinanceiroChart";
 import FinanceiroEmployeeSection from "@/components/financeiro/FinanceiroEmployeeSection";
+import FinanceiroDeltaStrip from "@/components/financeiro/FinanceiroDeltaStrip";
 import FinanceiroHistory from "@/components/financeiro/FinanceiroHistory";
 import {
   todayStr, yesterdayStr, daysAgoStr, dateToStr,
@@ -143,6 +144,9 @@ export default function Financeiro() {
 
       {/* Content */}
       <div className="container py-6 space-y-6">
+        {/* Delta Strip */}
+        <FinanceiroDeltaStrip byDate={byDate} today={today} filterStart={filterStart} filterEnd={filterEnd} />
+
         {/* Detail Blocks */}
         <FinanceiroDetailBlocks todayData={todayData} yesterdayData={yesterdayData} dayBeforeData={dayBeforeData} />
 
