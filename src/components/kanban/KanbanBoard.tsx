@@ -12,6 +12,7 @@ import { KanbanColumn } from "./KanbanColumn";
 import { KanbanAddCard } from "./KanbanAddCard";
 import { KanbanCardContent } from "./KanbanCardContent";
 import { KanbanEditPanel } from "./KanbanEditPanel";
+import { KanbanArchivePanel } from "./KanbanArchivePanel";
 import { COLUMNS, CLASSIFICACAO_ORDER, type KanbanCard } from "./types";
 
 export function KanbanBoard() {
@@ -104,7 +105,57 @@ export function KanbanBoard() {
     toast.success(`@${username} adicionado`);
   };
 
-  const handleDeleteCard = async (cardId: string) => {
+  const handleArchiveCard = async (cardId: string) => {
+    const card = cards.find((c) => c.id === cardId);
+    if (!card) return;
+
+    const now = new Date().toISOString();
+    setCards((prev) =>
+      prev.map((c) =>
+        c.id === cardId
+          ? { ...c, archived: true, archived_at: now, archived_from_status: c.status }
+          : c
+      )
+    );
+
+    const { error } = await supabase
+      .from("kanban_influencers")
+      .update({ archived: true, archived_at: now, archived_from_status: card.status })
+      .eq("id", cardId);
+
+    if (error) {
+      toast.error("Erro ao arquivar card");
+      fetchCards();
+    }
+  };
+
+  const handleRestoreCard = async (cardId: string) => {
+    const card = cards.find((c) => c.id === cardId);
+    if (!card) return;
+
+    const restoredStatus = card.archived_from_status || "Fechar";
+    setCards((prev) =>
+      prev.map((c) =>
+        c.id === cardId
+          ? { ...c, archived: false, archived_at: null, archived_from_status: null, status: restoredStatus }
+          : c
+      )
+    );
+
+    const { error } = await supabase
+      .from("kanban_influencers")
+      .update({ archived: false, archived_at: null, archived_from_status: null, status: restoredStatus })
+      .eq("id", cardId);
+
+    if (error) {
+      toast.error("Erro ao restaurar card");
+      fetchCards();
+    } else {
+      toast.success("Card restaurado");
+    }
+  };
+
+  const handleDeletePermanently = async (cardId: string) => {
     setCards((prev) => prev.filter((c) => c.id !== cardId));
     const { error } = await supabase
       .from("kanban_influencers")
@@ -112,8 +163,10 @@ export function KanbanBoard() {
       .eq("id", cardId);
 
     if (error) {
-      toast.error("Erro ao remover card");
+      toast.error("Erro ao excluir card");
       fetchCards();
+    } else {
+      toast.success("Card excluído permanentemente");
     }
   };
 
@@ -149,7 +202,7 @@ export function KanbanBoard() {
   const cardsByColumn = COLUMNS.map((col) => ({
     ...col,
     cards: cards
-      .filter((c) => c.status === col.id)
+      .filter((c) => c.status === col.id && !c.archived)
       .sort((a, b) => {
         const orderA = a.classificacao ? (CLASSIFICACAO_ORDER[a.classificacao] ?? 99) : 99;
         const orderB = b.classificacao ? (CLASSIFICACAO_ORDER[b.classificacao] ?? 99) : 99;
@@ -166,9 +219,18 @@ export function KanbanBoard() {
     );
   }
 
+  const archivedCards = cards.filter((c) => c.archived);
+
   return (
     <div className="space-y-4">
-      <KanbanAddCard onAdd={handleAddCard} />
+      <div className="flex items-center justify-between">
+        <KanbanAddCard onAdd={handleAddCard} />
+        <KanbanArchivePanel
+          archivedCards={archivedCards}
+          onRestore={handleRestoreCard}
+          onDeletePermanently={handleDeletePermanently}
+        />
+      </div>
 
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex gap-4 overflow-x-auto pb-4">
@@ -198,7 +260,7 @@ export function KanbanBoard() {
                         >
                           <KanbanCardContent
                             card={card}
-                            onDelete={handleDeleteCard}
+                            onDelete={handleArchiveCard}
                             onUpdate={handleUpdateCard}
                             onOpenEdit={handleOpenEdit}
                           />
