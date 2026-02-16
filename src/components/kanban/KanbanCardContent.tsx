@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Pencil, Trash2, X, Plus, ChevronDown } from "lucide-react";
+import { ExternalLink, Pencil, Archive, X, Plus, ChevronDown } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { COLUMNS, CLASSIFICACAO_OPTIONS, type KanbanCard } from "./types";
@@ -120,25 +120,24 @@ export function KanbanCardContent({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                className="h-6 w-6 text-muted-foreground hover:text-foreground"
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Archive className="h-3.5 w-3.5" />
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Remover influenciador?</AlertDialogTitle>
+                <AlertDialogTitle>Arquivar este influenciador?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  @{card.instagram_username} será removido permanentemente do Kanban.
+                  @{card.instagram_username} será arquivado e removido do Kanban. Você pode restaurá-lo depois.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => onDelete(card.id)}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
-                  Remover
+                  Arquivar
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

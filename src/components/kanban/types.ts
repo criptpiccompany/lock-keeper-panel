@@ -12,6 +12,9 @@ export interface KanbanCard {
   observacao: string | null;
   apoios: string[] | null;
   classificacao: string | null;
+  archived: boolean;
+  archived_at: string | null;
+  archived_from_status: string | null;
 }
 
 export const CLASSIFICACAO_OPTIONS = [
