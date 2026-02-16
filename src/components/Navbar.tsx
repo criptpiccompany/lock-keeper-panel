@@ -41,14 +41,17 @@ export function Navbar() {
   ];
 
   const adminItems = [
-    { path: "/meu", label: "Minha Lista", icon: User },
-    { path: "/gestao-influenciadores", label: "Gestão de Influenciadores", icon: Users },
-    { path: "/registro", label: "Planilhamento", icon: FileText },
     { path: "/dashboard", label: "Dashboard", icon: LayoutGrid },
     { path: "/diretorio", label: "Diretório", icon: Book },
     { path: "/notificacoes", label: "Notificações", icon: Bell },
     { path: "/auditoria", label: "Auditoria", icon: FileText },
     { path: "/admin", label: "Admin", icon: Settings },
+  ];
+
+  // Admin operational items shown in profile dropdown
+  const adminOperationItems = [
+    { path: "/meu", label: "Minha Lista", icon: User },
+    { path: "/gestao-influenciadores", label: "Gestão de Influenciadores", icon: Users },
   ];
 
   const navItems = isAdmin ? adminItems : closerItems;
@@ -114,6 +117,23 @@ export function Navbar() {
                 <p className="text-xs text-muted-foreground">{user.email}</p>
               </div>
               <DropdownMenuSeparator />
+              {isAdmin && (
+                <>
+                  <div className="px-2 py-1.5">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Operação</p>
+                  </div>
+                  {adminOperationItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <DropdownMenuItem key={item.path} onClick={() => navigate(item.path)}>
+                        <Icon className="mr-2 h-4 w-4" />
+                        {item.label}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                  <DropdownMenuSeparator />
+                </>
+              )}
               <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
                 Sair
