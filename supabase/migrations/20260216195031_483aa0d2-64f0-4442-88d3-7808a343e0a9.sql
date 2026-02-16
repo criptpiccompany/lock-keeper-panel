@@ -1,0 +1,1 @@
+ALTER TABLE public.kanban_influencers ADD COLUMN classificacao TEXT DEFAULT NULL;

@@ -11,7 +11,20 @@ export interface KanbanCard {
   updated_at: string;
   observacao: string | null;
   apoios: string[] | null;
+  classificacao: string | null;
 }
+
+export const CLASSIFICACAO_OPTIONS = [
+  { value: "Forte", bg: "#DCFCE7", text: "#166534" },
+  { value: "Média", bg: "#DBEAFE", text: "#1E40AF" },
+  { value: "Fraca", bg: "#FEF9C3", text: "#854D0E" },
+] as const;
+
+export const CLASSIFICACAO_ORDER: Record<string, number> = {
+  Forte: 0,
+  Média: 1,
+  Fraca: 2,
+};
 
 export interface ColumnDef {
   id: string;

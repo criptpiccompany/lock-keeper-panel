@@ -12,7 +12,7 @@ import { KanbanColumn } from "./KanbanColumn";
 import { KanbanAddCard } from "./KanbanAddCard";
 import { KanbanCardContent } from "./KanbanCardContent";
 import { KanbanEditPanel } from "./KanbanEditPanel";
-import { COLUMNS, type KanbanCard } from "./types";
+import { COLUMNS, CLASSIFICACAO_ORDER, type KanbanCard } from "./types";
 
 export function KanbanBoard() {
   const { user } = useAuth();
@@ -148,7 +148,14 @@ export function KanbanBoard() {
 
   const cardsByColumn = COLUMNS.map((col) => ({
     ...col,
-    cards: cards.filter((c) => c.status === col.id),
+    cards: cards
+      .filter((c) => c.status === col.id)
+      .sort((a, b) => {
+        const orderA = a.classificacao ? (CLASSIFICACAO_ORDER[a.classificacao] ?? 99) : 99;
+        const orderB = b.classificacao ? (CLASSIFICACAO_ORDER[b.classificacao] ?? 99) : 99;
+        if (orderA !== orderB) return orderA - orderB;
+        return new Date(b.last_moved_at).getTime() - new Date(a.last_moved_at).getTime();
+      }),
   }));
 
   if (loading) {

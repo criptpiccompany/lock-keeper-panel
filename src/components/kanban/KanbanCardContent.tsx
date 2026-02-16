@@ -2,10 +2,17 @@ import { useState, useRef } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Pencil, Trash2, X, Plus } from "lucide-react";
+import { ExternalLink, Pencil, Trash2, X, Plus, ChevronDown } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { COLUMNS, type KanbanCard } from "./types";
+import { COLUMNS, CLASSIFICACAO_OPTIONS, type KanbanCard } from "./types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -137,6 +144,44 @@ export function KanbanCardContent({
             </AlertDialogContent>
           </AlertDialog>
         </div>
+      </div>
+
+      {/* Classificação dropdown */}
+      <div>
+        <Select
+          value={card.classificacao ?? ""}
+          onValueChange={(val) => onUpdate(card.id, { classificacao: val || null })}
+        >
+          <SelectTrigger className="h-6 w-full border-0 bg-transparent px-1 py-0 text-[11px] shadow-none hover:bg-muted focus:ring-0 focus:ring-offset-0">
+            {card.classificacao ? (
+              (() => {
+                const opt = CLASSIFICACAO_OPTIONS.find((o) => o.value === card.classificacao);
+                return (
+                  <span
+                    className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium"
+                    style={{ backgroundColor: opt?.bg, color: opt?.text }}
+                  >
+                    {card.classificacao}
+                  </span>
+                );
+              })()
+            ) : (
+              <span className="text-[10px] text-muted-foreground italic">Classificar</span>
+            )}
+          </SelectTrigger>
+          <SelectContent>
+            {CLASSIFICACAO_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                <span
+                  className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium"
+                  style={{ backgroundColor: opt.bg, color: opt.text }}
+                >
+                  {opt.value}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Inline editable value */}
