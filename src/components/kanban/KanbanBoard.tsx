@@ -170,7 +170,8 @@ export function KanbanBoard() {
               {(provided, snapshot) => (
                 <KanbanColumn
                   title={col.id}
-                  color={col.color}
+                  bg={col.bg}
+                  accent={col.accent}
                   count={col.cards.length}
                   provided={provided}
                   isDraggingOver={snapshot.isDraggingOver}

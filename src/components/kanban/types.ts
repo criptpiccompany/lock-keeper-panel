@@ -14,15 +14,16 @@ export interface KanbanCard {
 
 export interface ColumnDef {
   id: string;
-  color: string;
+  bg: string;
+  accent: string;
 }
 
 export const COLUMNS: ColumnDef[] = [
-  { id: "Fechar", color: "hsl(220 12% 15%)" },
-  { id: "Negociando", color: "hsl(35 80% 50%)" },
-  { id: "Positivo", color: "hsl(150 50% 40%)" },
-  { id: "Empatando / Negociar", color: "hsl(25 70% 50%)" },
-  { id: "Pausado", color: "hsl(220 10% 55%)" },
-  { id: "Com a equipe", color: "hsl(200 60% 45%)" },
-  { id: "Não posta mais", color: "hsl(0 65% 55%)" },
+  { id: "Fechar", bg: "#F3E8FF", accent: "#7C3AED" },
+  { id: "Negociando", bg: "#F3F4F6", accent: "#6B7280" },
+  { id: "Positivo", bg: "#E0F2FE", accent: "#0284C7" },
+  { id: "Empatando / Negociar", bg: "#FEF3C7", accent: "#D97706" },
+  { id: "Pausado", bg: "#FEE2E2", accent: "#DC2626" },
+  { id: "Com a equipe", bg: "#DCFCE7", accent: "#16A34A" },
+  { id: "Não posta mais", bg: "#E5E7EB", accent: "#4B5563" },
 ];
