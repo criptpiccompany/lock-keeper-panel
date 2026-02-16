@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 
 interface KanbanColumnProps {
   title: string;
-  color: string;
+  bg: string;
+  accent: string;
   count: number;
   provided: DroppableProvided;
   isDraggingOver: boolean;
@@ -12,7 +13,8 @@ interface KanbanColumnProps {
 
 export function KanbanColumn({
   title,
-  color,
+  bg,
+  accent,
   count,
   provided,
   isDraggingOver,
@@ -20,19 +22,22 @@ export function KanbanColumn({
 }: KanbanColumnProps) {
   return (
     <div
-      className="flex w-[280px] shrink-0 flex-col rounded-xl border bg-card"
-      style={{ minHeight: 200 }}
+      className="flex w-[280px] shrink-0 flex-col rounded-xl border"
+      style={{ backgroundColor: bg, minHeight: 200 }}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 border-b px-3 py-2.5">
+      <div className="flex items-center gap-2 border-b border-black/5 px-3 py-2.5">
         <div
           className="h-2.5 w-2.5 rounded-full shrink-0"
-          style={{ backgroundColor: color }}
+          style={{ backgroundColor: accent }}
         />
-        <h3 className="text-sm font-medium text-foreground truncate">
+        <h3 className="text-sm font-medium truncate" style={{ color: accent }}>
           {title}
         </h3>
-        <span className="ml-auto shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
+        <span
+          className="ml-auto shrink-0 rounded-md px-1.5 py-0.5 text-xs font-semibold"
+          style={{ backgroundColor: `${accent}18`, color: accent }}
+        >
           {count}
         </span>
       </div>
@@ -42,7 +47,7 @@ export function KanbanColumn({
         ref={provided.innerRef}
         {...provided.droppableProps}
         className={`flex-1 space-y-2 p-2 transition-colors ${
-          isDraggingOver ? "bg-accent/40" : ""
+          isDraggingOver ? "opacity-80" : ""
         }`}
         style={{ minHeight: 100 }}
       >

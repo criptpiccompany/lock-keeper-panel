@@ -164,8 +164,8 @@ export function KanbanCardContent({
           variant="outline"
           className="text-[10px] font-medium border-0 px-1.5 py-0"
           style={{
-            backgroundColor: columnDef ? `${columnDef.color.replace(")", " / 0.1)")}` : undefined,
-            color: columnDef?.color,
+            backgroundColor: columnDef ? `${columnDef.accent}18` : undefined,
+            color: columnDef?.accent,
           }}
         >
           {card.status}
