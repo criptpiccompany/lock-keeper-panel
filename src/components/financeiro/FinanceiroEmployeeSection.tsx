@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { formatBRL, TAX_TOTAL, type CloserProfile, type EmployeeDayData } from "./financeiroHelpers";
 
-type SortKey = "cost" | "rev" | "net" | "margin" | "count";
+type SortKey = "cost" | "rev" | "net" | "margin" | "roi" | "count";
 type SortDir = "asc" | "desc";
 
 interface Props {
@@ -27,11 +27,8 @@ function SortHeader({ label, active, dir, onClick }: { label: string; active: bo
 }
 
 export default function FinanceiroEmployeeSection({ byCloser, closers, onSelectCloser }: Props) {
-  // Today tab sort
   const [todaySortKey, setTodaySortKey] = useState<SortKey>("cost");
   const [todaySortDir, setTodaySortDir] = useState<SortDir>("desc");
-
-  // Yesterday tab sort
   const [yestSortKey, setYestSortKey] = useState<SortKey>("net");
   const [yestSortDir, setYestSortDir] = useState<SortDir>("desc");
 
@@ -64,20 +61,24 @@ export default function FinanceiroEmployeeSection({ byCloser, closers, onSelectC
         const taxes = data.revYesterday * TAX_TOTAL;
         const net = data.revYesterday - taxes;
         const margin = data.revYesterday > 0 ? (net / data.revYesterday) * 100 : 0;
-        return { id, data, taxes, net, margin };
+        const roi = data.costYesterday > 0 ? (net / data.costYesterday) : 0;
+        return { id, data, taxes, net, margin, roi };
       });
 
     rows.sort((a, b) => {
       let diff = 0;
-      if (yestSortKey === "net") {
+      const key = yestSortKey;
+      if (key === "net") {
         diff = b.net - a.net;
         if (diff === 0) diff = b.data.revYesterday - a.data.revYesterday;
         if (diff === 0) diff = a.data.costYesterday - b.data.costYesterday;
-      } else if (yestSortKey === "rev") {
+      } else if (key === "rev") {
         diff = b.data.revYesterday - a.data.revYesterday;
-      } else if (yestSortKey === "margin") {
+      } else if (key === "margin") {
         diff = b.margin - a.margin;
-      } else if (yestSortKey === "cost") {
+      } else if (key === "roi") {
+        diff = b.roi - a.roi;
+      } else if (key === "cost") {
         diff = b.data.costYesterday - a.data.costYesterday;
       }
       return yestSortDir === "asc" ? -diff : diff;
@@ -89,6 +90,8 @@ export default function FinanceiroEmployeeSection({ byCloser, closers, onSelectC
 
   const resetToday = () => { setTodaySortKey("cost"); setTodaySortDir("desc"); };
   const resetYesterday = () => { setYestSortKey("net"); setYestSortDir("desc"); };
+
+  const sortLabel = yestSortKey === "net" ? "Resultado Líquido" : yestSortKey === "rev" ? "Faturamento" : yestSortKey === "margin" ? "Margem" : yestSortKey === "roi" ? "ROI" : "Custo";
 
   return (
     <div>
@@ -144,6 +147,9 @@ export default function FinanceiroEmployeeSection({ byCloser, closers, onSelectC
 
         {/* ── YESTERDAY ── */}
         <TabsContent value="yesterday">
+          <div className="mb-2 text-[11px] text-muted-foreground">
+            Ordenado por: <span className="font-medium text-foreground">{sortLabel}</span> ({yestSortDir === "desc" ? "maior → menor" : "menor → maior"})
+          </div>
           <div className="bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -163,14 +169,18 @@ export default function FinanceiroEmployeeSection({ byCloser, closers, onSelectC
                       <SortHeader label="Margem" active={yestSortKey === "margin"} dir={yestSortDir}
                         onClick={() => toggleSort(yestSortKey, yestSortDir, "margin", setYestSortKey, setYestSortDir)} />
                     </th>
+                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
+                      <SortHeader label="ROI" active={yestSortKey === "roi"} dir={yestSortDir}
+                        onClick={() => toggleSort(yestSortKey, yestSortDir, "roi", setYestSortKey, setYestSortDir)} />
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {yesterdayRows.map(({ id, data, taxes, net, margin }, idx) => {
+                  {yesterdayRows.map(({ id, data, taxes, net, margin, roi }, idx) => {
                     const closer = closers.find((c) => c.id === id);
                     const isTop = id === topYesterdayId;
                     const zebraClass = idx % 2 === 1 ? "bg-muted/30" : "";
-                    const topClass = isTop ? "bg-emerald-50/60 dark:bg-emerald-950/20" : "";
+                    const topClass = "bg-emerald-50/60 dark:bg-emerald-950/20";
                     return (
                       <tr key={id} className={`border-b border-border/20 ${isTop ? topClass : zebraClass}`}>
                         <td className="py-2.5 px-4">
@@ -193,11 +203,14 @@ export default function FinanceiroEmployeeSection({ byCloser, closers, onSelectC
                         <td className={`py-2.5 px-4 text-xs text-right tabular-nums font-medium ${margin >= 0 ? "text-emerald-700" : "text-red-600"}`}>
                           {margin.toFixed(1)}%
                         </td>
+                        <td className={`py-2.5 px-4 text-xs text-right tabular-nums font-medium ${roi >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                          {roi.toFixed(2)}x
+                        </td>
                       </tr>
                     );
                   })}
                   {yesterdayRows.length === 0 && (
-                    <tr><td colSpan={5} className="py-8 text-center text-muted-foreground text-sm">Nenhum registro ontem.</td></tr>
+                    <tr><td colSpan={6} className="py-8 text-center text-muted-foreground text-sm">Nenhum registro ontem.</td></tr>
                   )}
                 </tbody>
               </table>

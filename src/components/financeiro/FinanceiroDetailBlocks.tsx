@@ -4,9 +4,10 @@ import { formatBRL, formatDelta, TAX_DEV, TAX_GATEWAY, TAX_TOTAL, type DayAggreg
 interface Props {
   todayData: DayAggregate;
   yesterdayData: DayAggregate;
+  dayBeforeData: DayAggregate;
 }
 
-export default function FinanceiroDetailBlocks({ todayData, yesterdayData }: Props) {
+export default function FinanceiroDetailBlocks({ todayData, yesterdayData, dayBeforeData }: Props) {
   const tHasRevenue = todayData.revenue > 0;
   const tTaxDev = todayData.revenue * TAX_DEV;
   const tTaxGw = todayData.revenue * TAX_GATEWAY;
@@ -20,9 +21,16 @@ export default function FinanceiroDetailBlocks({ todayData, yesterdayData }: Pro
   const yNet = yesterdayData.revenue - yTaxTotal;
   const yMargin = yesterdayData.revenue > 0 ? (yNet / yesterdayData.revenue) * 100 : 0;
 
+  // Day before yesterday for delta
+  const dbTaxTotal = dayBeforeData.revenue * TAX_TOTAL;
+  const dbNet = dayBeforeData.revenue - dbTaxTotal;
+
   const deltaCost = formatDelta(todayData.cost, yesterdayData.cost);
   const deltaRev = tHasRevenue ? formatDelta(todayData.revenue, yesterdayData.revenue) : null;
   const deltaNet = tHasRevenue ? formatDelta(tNet, yNet) : null;
+
+  // Delta for yesterday vs day before
+  const yDeltaNet = formatDelta(yNet, dbNet);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -51,9 +59,12 @@ export default function FinanceiroDetailBlocks({ todayData, yesterdayData }: Pro
       {/* YESTERDAY */}
       <div className="rounded-xl border border-border/40 bg-muted/30 p-5 space-y-3 shadow-sm">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 font-semibold text-sm">
-            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            Ontem
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-2 font-semibold text-sm">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              Ontem
+            </div>
+            <span className="text-[10px] text-muted-foreground ml-6">Base para decisões</span>
           </div>
           <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">FECHADO</span>
         </div>
@@ -64,7 +75,7 @@ export default function FinanceiroDetailBlocks({ todayData, yesterdayData }: Pro
           <Row label="Taxa gateway (3%)" value={formatBRL(yTaxGw)} muted />
           <Row label="Taxas totais (5%)" value={formatBRL(yTaxTotal)} muted />
           <div className="border-t border-border/30 pt-1.5">
-            <Row label="Resultado líquido" value={formatBRL(yNet)} highlight={yNet >= 0 ? "positive" : "negative"} />
+            <Row label="Resultado líquido" value={formatBRL(yNet)} highlight={yNet >= 0 ? "positive" : "negative"} delta={yDeltaNet} deltaLabel="vs dia anterior" />
             <Row label="Margem" value={`${yMargin.toFixed(1)}%`} highlight={yMargin >= 0 ? "positive" : "negative"} />
           </div>
         </div>
@@ -79,12 +90,14 @@ function Row({
   muted,
   highlight,
   delta,
+  deltaLabel,
 }: {
   label: string;
   value: string;
   muted?: boolean;
   highlight?: "positive" | "negative";
   delta?: { text: string; positive: boolean | null } | null;
+  deltaLabel?: string;
 }) {
   const valCls = highlight === "positive"
     ? "text-emerald-700 font-semibold"
@@ -101,7 +114,7 @@ function Row({
         <span className={`tabular-nums ${valCls}`}>{value}</span>
         {delta && delta.positive !== null && (
           <span className={`text-[10px] tabular-nums font-medium ${delta.positive ? "text-emerald-600" : "text-red-500"}`}>
-            {delta.text}
+            {delta.positive ? "▲" : "▼"} {delta.text}{deltaLabel ? ` ${deltaLabel}` : ""}
           </span>
         )}
       </div>
