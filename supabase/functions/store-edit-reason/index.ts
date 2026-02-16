@@ -38,8 +38,8 @@ serve(async (req) => {
 
     const { entity_id, entity_type, edit_reason, field_changes, influencer_handle } = await req.json();
 
-    if (!entity_id || !edit_reason || edit_reason.trim().length < 8) {
-      return new Response(JSON.stringify({ error: "edit_reason is required (min 8 chars)" }), {
+    if (!entity_id || !edit_reason || edit_reason.trim().length < 15) {
+      return new Response(JSON.stringify({ error: "edit_reason is required (min 15 chars)" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

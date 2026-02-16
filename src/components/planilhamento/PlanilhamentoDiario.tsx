@@ -606,26 +606,39 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
     return influencers.filter((i) => !usedIds.has(i.id));
   };
 
-  // Critical fields that require a reason for editing (only exceptions)
-  const CRITICAL_FIELDS = ["valor_pago", "faturamento", "comprovante_url"];
+  // Helper: check if a date string is a past day (before today)
+  const isPastDay = (dateStr: string): boolean => {
+    const today = new Date().toISOString().split("T")[0];
+    return dateStr < today;
+  };
 
-  const detectCriticalDiffs = (): FieldDiff[] => {
-    if (!editRecord) return [];
+  // Critical fields that require a reason for editing on PAST days
+  const detectCriticalDiffs = (targetDate?: string): FieldDiff[] => {
+    const dateToCheck = targetDate || modalDate;
+    // Current day: no justification needed for anything
+    if (!isPastDay(dateToCheck)) return [];
+
+    // Past day: check for critical financial changes
+    if (!editRecord) {
+      // Adding a new record on a past day is critical
+      return [{ field: "new_record", label: "Novo registro em dia passado", before: "(vazio)", after: `Adicionando em ${dateToCheck}` }];
+    }
+
     const diffs: FieldDiff[] = [];
     const newValorPago = Number(formValorPago);
     const newFaturamento = formFaturamento ? Number(formFaturamento) : null;
     const oldValorPago = Number(editRecord.valor_pago);
     const oldFaturamento = editRecord.faturamento != null ? Number(editRecord.faturamento) : null;
 
-    // Require reason only when REDUCING valor_pago (when there was already a value > 0)
-    if (oldValorPago > 0 && newValorPago < oldValorPago) {
+    // Any change to valor_pago on a past day is critical
+    if (newValorPago !== oldValorPago) {
       diffs.push({ field: "valor_pago", label: formatFieldLabel("valor_pago"), before: String(oldValorPago), after: String(newValorPago) });
     }
-    // Require reason only when REDUCING faturamento (when there was already a value > 0)
-    if (oldFaturamento !== null && oldFaturamento > 0 && (newFaturamento === null || newFaturamento < oldFaturamento)) {
-      diffs.push({ field: "faturamento", label: formatFieldLabel("faturamento"), before: String(oldFaturamento), after: String(newFaturamento ?? "") });
+    // Any change to faturamento on a past day is critical
+    if (String(newFaturamento ?? "") !== String(oldFaturamento ?? "")) {
+      diffs.push({ field: "faturamento", label: formatFieldLabel("faturamento"), before: String(oldFaturamento ?? ""), after: String(newFaturamento ?? "") });
     }
-    // Require reason when REPLACING existing comprovante (not when adding for the first time)
+    // Replacing existing comprovante on a past day
     if (formFile1 && editRecord.comprovante_url) {
       diffs.push({ field: "comprovante_url", label: formatFieldLabel("comprovante_url"), before: "(arquivo anterior)", after: formFile1.name });
     }
@@ -656,8 +669,8 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
     }
     // Comprovante is NOT required - record will be marked as pending
 
-    // If editing and has critical changes, require reason
-    if (editRecord && !editReason) {
+    // If critical changes detected (past day edits), require reason
+    if (!editReason) {
       const diffs = detectCriticalDiffs();
       if (diffs.length > 0) {
         setPendingDiffs(diffs);
@@ -819,6 +832,20 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
             feito_em: new Date().toISOString(),
             acao: "FECHAMENTO",
             motivo: `Auto-lock via registro diário até ${new Date(lockedUntil).toLocaleDateString("pt-BR")}`,
+          });
+        }
+
+        // Store edit reason for new records on past days
+        if (editReason && savedRecordId) {
+          const selectedInfForReason = influencers.find((i) => i.id === formInfluencerId);
+          await supabase.functions.invoke("store-edit-reason", {
+            body: {
+              entity_id: savedRecordId,
+              entity_type: "daily_influencer_records",
+              edit_reason: editReason,
+              field_changes: { new_record: { before: null, after: { date: modalDate, valor_pago: Number(formValorPago), faturamento: formFaturamento ? Number(formFaturamento) : null } } },
+              influencer_handle: selectedInfForReason?.handle || formInfluencerId,
+            },
           });
         }
 
