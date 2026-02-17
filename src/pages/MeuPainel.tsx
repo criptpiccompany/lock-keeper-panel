@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/StatusBadge";
 import { AddInfluencerModal } from "@/components/AddInfluencerModal";
 import { BulkAddModal } from "@/components/BulkAddModal";
+import { AddInfluencerByUrlModal } from "@/components/AddInfluencerByUrlModal";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -15,6 +16,7 @@ import {
   UserPlus, 
   Users, 
   Loader2,
+  Link,
 } from "lucide-react";
 
 export default function MeuPainel() {
@@ -22,6 +24,7 @@ export default function MeuPainel() {
   const [searchQuery, setSearchQuery] = useState("");
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const [urlModalOpen, setUrlModalOpen] = useState(false);
   const [influencers, setInfluencers] = useState<InfluencerWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [locksMap, setLocksMap] = useState<Map<string, { locked_until: string }>>(new Map());
@@ -110,6 +113,10 @@ export default function MeuPainel() {
             </div>
 
             <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setUrlModalOpen(true)}>
+                <Link className="mr-2 h-4 w-4" />
+                Adicionar com URL
+              </Button>
               <Button variant="outline" onClick={() => setAddModalOpen(true)}>
                 <UserPlus className="mr-2 h-4 w-4" />
                 Adicionar
@@ -226,6 +233,11 @@ export default function MeuPainel() {
       <BulkAddModal 
         open={bulkModalOpen} 
         onOpenChange={setBulkModalOpen}
+        onSuccess={fetchMyInfluencers}
+      />
+      <AddInfluencerByUrlModal
+        open={urlModalOpen}
+        onOpenChange={setUrlModalOpen}
         onSuccess={fetchMyInfluencers}
       />
     </div>
