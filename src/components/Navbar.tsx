@@ -58,6 +58,7 @@ export function Navbar() {
     { path: "/registro", label: "Planilhamento", icon: FileText },
     { path: "/painel", label: "Painel de Consulta", icon: LayoutGrid },
     { path: "/gestao-influenciadores", label: "Gestão de Influs", icon: Users },
+    { path: "/admin", label: "Admin", icon: Settings },
   ];
 
   // Admin operational items shown in profile dropdown

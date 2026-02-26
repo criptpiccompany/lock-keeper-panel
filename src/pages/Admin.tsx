@@ -9,13 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ApprovalsTab } from "@/components/admin/ApprovalsTab";
+import { InviteManagement } from "@/components/admin/InviteManagement";
 import { ReasonModal } from "@/components/ReasonModal";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { enrichInfluencer, formatDate } from "@/lib/helpers";
 import { InfluencerWithStatus } from "@/types";
-import { Settings, Archive, RefreshCw, AlertTriangle, Loader2, Users, Mail, Shield, ShieldCheck, Pencil, Key, Percent, UserCheck, UserX, Download } from "lucide-react";
+import { Settings, Archive, RefreshCw, AlertTriangle, Loader2, Users, Mail, Shield, ShieldCheck, Pencil, Key, Percent, UserCheck, UserX, Download, UserPlus } from "lucide-react";
 import { exportMonthXlsx } from "@/lib/exportMonthXlsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OrphanUsersTab } from "@/components/admin/OrphanUsersTab";
@@ -29,7 +30,7 @@ interface UserWithRole {
 }
 
 export default function Admin() {
-  const { user } = useAuth();
+  const { user, isAdmin, isSubAdmin } = useAuth();
   const [influencers, setInfluencers] = useState<InfluencerWithStatus[]>([]);
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
@@ -293,14 +294,15 @@ export default function Admin() {
           <AlertDescription className="text-amber-700">Todas as ações são registradas no log de auditoria.</AlertDescription>
         </Alert>
 
-        <Tabs defaultValue="gestao" className="space-y-6">
+        <Tabs defaultValue={isSubAdmin && !isAdmin ? "convites" : "gestao"} className="space-y-6">
           <TabsList>
-            <TabsTrigger value="gestao"><Users className="h-4 w-4 mr-1.5" />Gestão</TabsTrigger>
-            <TabsTrigger value="aprovacoes"><UserCheck className="h-4 w-4 mr-1.5" />Aprovações</TabsTrigger>
-            <TabsTrigger value="orfaos"><UserX className="h-4 w-4 mr-1.5" />Órfãos</TabsTrigger>
+            {isAdmin && <TabsTrigger value="gestao"><Users className="h-4 w-4 mr-1.5" />Gestão</TabsTrigger>}
+            <TabsTrigger value="convites"><UserPlus className="h-4 w-4 mr-1.5" />Convites</TabsTrigger>
+            {isAdmin && <TabsTrigger value="aprovacoes"><UserCheck className="h-4 w-4 mr-1.5" />Aprovações</TabsTrigger>}
+            {isAdmin && <TabsTrigger value="orfaos"><UserX className="h-4 w-4 mr-1.5" />Órfãos</TabsTrigger>}
           </TabsList>
 
-          <TabsContent value="gestao" className="space-y-6">
+          {isAdmin && <TabsContent value="gestao" className="space-y-6">
 
         {/* Users Management */}
         <Card>
@@ -552,6 +554,10 @@ export default function Admin() {
             </div>
           </CardContent>
         </Card>
+          </TabsContent>}
+
+          <TabsContent value="convites">
+            <InviteManagement />
           </TabsContent>
 
           <TabsContent value="aprovacoes">
