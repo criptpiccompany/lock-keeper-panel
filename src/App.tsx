@@ -37,7 +37,7 @@ function AppRoutes() {
   const PendingApprovalRoute = () => {
     if (loading) return null;
     if (!user) return <Navigate to="/login" replace />;
-    if (user.status === 'approved' || user.role === 'ADMIN') return <Navigate to="/home" replace />;
+    if (user.status === 'approved' || user.role === 'ADMIN' || user.role === 'SUBADMIN') return <Navigate to="/home" replace />;
     return <PendingApproval />;
   };
 

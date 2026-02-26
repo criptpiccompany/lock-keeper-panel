@@ -1,4 +1,5 @@
 import { useTeamCommission, TeamMemberCommission } from "@/hooks/useTeamCommission";
+import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
@@ -12,7 +13,8 @@ interface Props {
 }
 
 export default function TeamThermometerWidget({ month, compact = false }: Props) {
-  const { members, loading, tiers } = useTeamCommission(month);
+  const { user, isAdmin, isSubAdmin } = useAuth();
+  const { members, loading, tiers } = useTeamCommission(month, user?.id, isAdmin || isSubAdmin);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   if (loading) {
