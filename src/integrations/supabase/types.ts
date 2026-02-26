@@ -674,6 +674,7 @@ export type Database = {
           nome: string
           rejection_reason: string | null
           status: string
+          team_id: string | null
           updated_at: string
         }
         Insert: {
@@ -685,6 +686,7 @@ export type Database = {
           nome: string
           rejection_reason?: string | null
           status?: string
+          team_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -696,7 +698,34 @@ export type Database = {
           nome?: string
           rejection_reason?: string | null
           status?: string
+          team_id?: string | null
           updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }
