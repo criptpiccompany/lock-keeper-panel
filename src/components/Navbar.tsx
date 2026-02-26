@@ -55,8 +55,8 @@ export function Navbar() {
   // SUBADMIN: main bar items (visible)
   const subAdminMainItems = [
     { path: "/home", label: "Home", icon: Home },
-    { path: "/financeiro", label: "Financeiro", icon: DollarSign },
     { path: "/painel", label: "Painel de Consulta", icon: LayoutGrid },
+    { path: "/financeiro", label: "Financeiro", icon: DollarSign },
     { path: "/diretorio", label: "Diretório", icon: Book },
     { path: "/auditoria", label: "Auditoria", icon: ShieldAlert },
     { path: "/notificacoes", label: "Notificações", icon: Bell },
