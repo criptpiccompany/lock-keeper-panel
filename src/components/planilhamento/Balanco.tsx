@@ -11,6 +11,8 @@ import {
 import { Loader2, TrendingUp, TrendingDown, DollarSign, Percent, Receipt, Wallet } from "lucide-react";
 import { PLATFORM_FEE_RATE, PLATFORM_FEE_LABEL } from "@/lib/constants";
 import CommissionThermometer from "./CommissionThermometer";
+import ThermometerWidget from "@/components/home/ThermometerWidget";
+import TeamThermometerWidget from "@/components/home/TeamThermometerWidget";
 
 interface DailyRecord {
   id: string;
@@ -225,6 +227,18 @@ export default function Balanco({ closerId }: { closerId?: string }) {
         </div>
       ) : (
         <>
+          {/* Thermometers */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="card-premium p-5">
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mb-3">Meu Termômetro</p>
+              <ThermometerWidget resultado={totals.profit} compact />
+            </div>
+            <div className="card-premium p-5">
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mb-3">Termômetro do Time</p>
+              <TeamThermometerWidget month={selectedMonth} compact />
+            </div>
+          </div>
+
           {/* Summary Cards */}
           <div className={`grid grid-cols-2 md:grid-cols-3 ${isAdmin ? 'lg:grid-cols-6' : 'lg:grid-cols-5'} gap-3`}>
             <SummaryCard label="Faturamento" value={totals.revenue} icon={TrendingUp} />
@@ -246,9 +260,6 @@ export default function Balanco({ closerId }: { closerId?: string }) {
               />
             )}
           </div>
-
-          {/* Commission Thermometer - based exclusively on Resultado */}
-          <CommissionThermometer resultado={totals.profit} />
 
           {/* Daily Breakdown Table */}
           <div className="bg-card rounded-xl border border-border/40 overflow-hidden">

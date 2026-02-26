@@ -20,6 +20,7 @@ import Notificacoes from "./pages/Notificacoes";
 import GestaoInfluenciadores from "./pages/GestaoInfluenciadores";
 import PendingApproval from "./pages/PendingApproval";
 import Financeiro from "./pages/Financeiro";
+import Home from "./pages/Home";
 
 const queryClient = new QueryClient();
 
@@ -30,13 +31,13 @@ function AppRoutes() {
   const DefaultRedirect = () => {
     if (loading) return null;
     if (!user) return <Navigate to="/login" replace />;
-    return <Navigate to="/meu" replace />;
+    return <Navigate to="/home" replace />;
   };
 
   const PendingApprovalRoute = () => {
     if (loading) return null;
     if (!user) return <Navigate to="/login" replace />;
-    if (user.status === 'approved' || user.role === 'ADMIN') return <Navigate to="/meu" replace />;
+    if (user.status === 'approved' || user.role === 'ADMIN') return <Navigate to="/home" replace />;
     return <PendingApproval />;
   };
 
@@ -48,6 +49,17 @@ function AppRoutes() {
 
       {/* Default redirect */}
       <Route path="/" element={<DefaultRedirect />} />
+
+      {/* Home - first screen after login */}
+      <Route
+        path="/home"
+        element={
+          <ProtectedRoute>
+            <Navbar />
+            <Home />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Protected routes for all authenticated users */}
       <Route
