@@ -99,14 +99,33 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
                 className="absolute right-full mr-2 flex items-center gap-1"
                 style={{ bottom: `${pct}%`, transform: "translateY(50%)" }}
               >
-                <span
-                  className={`text-[10px] tabular-nums ${
-                    isCurrent ? "text-foreground font-bold" : "text-muted-foreground/40"
+                <div className="flex flex-col items-end">
+                  <span
+                    className={`tabular-nums leading-none ${
+                      isCurrent
+                        ? "text-[12px] text-foreground font-bold"
+                        : "text-[10px] text-muted-foreground/70 font-medium"
+                    }`}
+                  >
+                    {t.percentage}%
+                  </span>
+                  <span
+                    className={`tabular-nums leading-none mt-0.5 ${
+                      isCurrent
+                        ? "text-[9px] text-foreground/60"
+                        : "text-[8px] text-muted-foreground/40"
+                    }`}
+                  >
+                    {formatBRL(t.threshold_result)}
+                  </span>
+                </div>
+                <div
+                  className={`${
+                    isCurrent
+                      ? "w-4 bg-foreground/70 h-[2px] rounded-full"
+                      : "w-2.5 bg-muted-foreground/30 h-px"
                   }`}
-                >
-                  {t.percentage}%
-                </span>
-                <div className={`h-px ${isCurrent ? "w-3 bg-foreground/60" : "w-2 bg-border/60"}`} />
+                />
               </div>
             );
           })}
