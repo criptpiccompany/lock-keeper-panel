@@ -44,7 +44,6 @@ export function Navbar() {
   ];
 
   const adminItems = [
-    { path: "/dashboard", label: "Dashboard", icon: LayoutGrid },
     { path: "/financeiro", label: "Financeiro", icon: DollarSign },
     { path: "/diretorio", label: "Diretório", icon: Book },
     { path: "/notificacoes", label: "Notificações", icon: Bell },

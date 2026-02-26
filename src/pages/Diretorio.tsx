@@ -7,7 +7,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { enrichInfluencer, formatDate } from "@/lib/helpers";
 import { InfluencerWithStatus } from "@/types";
-import { Search, Book, Loader2 } from "lucide-react";
+import { Search, Book, Loader2, Lock, Unlock, Archive } from "lucide-react";
 
 export default function Diretorio() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,6 +42,13 @@ export default function Diretorio() {
     return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
   }
 
+  const stats = {
+    total: influencers.length,
+    locked: influencers.filter(i => i.status === 'TRAVADO').length,
+    released: influencers.filter(i => i.status === 'LIBERADO').length,
+    archived: influencers.filter(i => i.status === 'ARQUIVADO').length,
+  };
+
   return (
     <div className="min-h-screen">
       <div className="border-b">
@@ -49,6 +56,27 @@ export default function Diretorio() {
           <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2 mb-6">
             <Book className="h-6 w-6" />Diretório
           </h1>
+
+          {/* KPI Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-card rounded-xl border p-4">
+              <p className="text-sm text-muted-foreground">Total</p>
+              <p className="text-2xl font-semibold">{stats.total}</p>
+            </div>
+            <div className="bg-card rounded-xl border border-amber-200/50 p-4">
+              <p className="text-sm text-amber-700 flex items-center gap-1"><Lock className="h-3 w-3"/>Travados</p>
+              <p className="text-2xl font-semibold text-amber-700">{stats.locked}</p>
+            </div>
+            <div className="bg-card rounded-xl border border-emerald-200/50 p-4">
+              <p className="text-sm text-emerald-700 flex items-center gap-1"><Unlock className="h-3 w-3"/>Liberados</p>
+              <p className="text-2xl font-semibold text-emerald-700">{stats.released}</p>
+            </div>
+            <div className="bg-card rounded-xl border p-4">
+              <p className="text-sm text-muted-foreground flex items-center gap-1"><Archive className="h-3 w-3"/>Arquivados</p>
+              <p className="text-2xl font-semibold">{stats.archived}</p>
+            </div>
+          </div>
+
           <div className="flex flex-wrap gap-4 items-center">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -60,7 +88,7 @@ export default function Diretorio() {
             </div>
             <div className="flex items-center gap-2">
               <Switch id="show-deleted" checked={showDeleted} onCheckedChange={setShowDeleted} />
-              <Label htmlFor="show-deleted" className="text-sm text-red-600">Mostrar excluídos</Label>
+              <Label htmlFor="show-deleted" className="text-sm text-destructive">Mostrar excluídos</Label>
             </div>
           </div>
         </div>
