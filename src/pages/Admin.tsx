@@ -16,29 +16,45 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { enrichInfluencer, formatDate } from "@/lib/helpers";
 import { InfluencerWithStatus } from "@/types";
-import { Settings, Archive, RefreshCw, AlertTriangle, Loader2, Users, Mail, Shield, ShieldCheck, Pencil, Key, Percent, UserCheck, UserX, Download, UserPlus } from "lucide-react";
+import { Settings, Archive, RefreshCw, AlertTriangle, Loader2, Users, Mail, Shield, ShieldCheck, Pencil, Key, Percent, UserCheck, UserX, Download, UserPlus, ArrowRightLeft } from "lucide-react";
 import { exportMonthXlsx } from "@/lib/exportMonthXlsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OrphanUsersTab } from "@/components/admin/OrphanUsersTab";
+
+interface Team {
+  id: string;
+  name: string;
+}
 
 interface UserWithRole {
   id: string;
   nome: string;
   email: string;
-  role: 'CLOSER' | 'ADMIN';
+  role: 'CLOSER' | 'ADMIN' | 'SUBADMIN';
   commission_rate: number;
+  team_id: string | null;
 }
 
 export default function Admin() {
   const { user, isAdmin, isSubAdmin } = useAuth();
   const [influencers, setInfluencers] = useState<InfluencerWithStatus[]>([]);
   const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState("");
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
   const [archiveAction, setArchiveAction] = useState<"archive" | "unarchive">("archive");
   const [sendingReset, setSendingReset] = useState<string | null>(null);
   const [updatingRole, setUpdatingRole] = useState<string | null>(null);
+  
+  // Team filter for user list (ADMIN only)
+  const [teamFilter, setTeamFilter] = useState<string>("all");
+  
+  // Move user modal
+  const [moveModalOpen, setMoveModalOpen] = useState(false);
+  const [movingUser, setMovingUser] = useState<UserWithRole | null>(null);
+  const [moveTargetTeam, setMoveTargetTeam] = useState<string>("");
+  const [movingInProgress, setMovingInProgress] = useState(false);
   
   // Edit name modal
   const [editNameModalOpen, setEditNameModalOpen] = useState(false);
@@ -88,6 +104,7 @@ export default function Admin() {
     }
     return opts;
   })();
+
   const fetchInfluencers = async () => {
     const { data } = await supabase.from('influencers').select('*');
     const enriched = (data || []).map(inf => enrichInfluencer({
@@ -98,9 +115,14 @@ export default function Admin() {
   };
 
   const fetchUsers = async () => {
-    const { data: profiles } = await supabase.from('profiles').select('id, nome, commission_rate');
-    const { data: roles } = await supabase.from('user_roles').select('user_id, role');
+    const [{ data: profiles }, { data: roles }, { data: teamsData }] = await Promise.all([
+      supabase.from('profiles').select('id, nome, commission_rate, team_id'),
+      supabase.from('user_roles').select('user_id, role'),
+      supabase.from('teams').select('id, name'),
+    ]);
     
+    setTeams((teamsData || []) as Team[]);
+
     if (profiles && roles) {
       const usersWithRoles: UserWithRole[] = (profiles as any[]).map(profile => {
         const userRole = roles.find(r => r.user_id === profile.id);
@@ -108,8 +130,9 @@ export default function Admin() {
           id: profile.id,
           nome: profile.nome,
           email: '',
-          role: (userRole?.role as 'CLOSER' | 'ADMIN') || 'CLOSER',
+          role: (userRole?.role as 'CLOSER' | 'ADMIN' | 'SUBADMIN') || 'CLOSER',
           commission_rate: profile.commission_rate ?? 0.1,
+          team_id: profile.team_id,
         };
       });
       setUsers(usersWithRoles);
@@ -121,6 +144,16 @@ export default function Admin() {
   }, []);
 
   const selected = influencers.find(i => i.id === selectedId);
+
+  // Filter users by team
+  const filteredUsers = teamFilter === "all"
+    ? users
+    : users.filter(u => u.team_id === teamFilter);
+
+  const getTeamName = (teamId: string | null) => {
+    if (!teamId) return "—";
+    return teams.find(t => t.id === teamId)?.name || "—";
+  };
 
   const handleArchiveClick = (archive: boolean) => {
     setArchiveAction(archive ? "archive" : "unarchive");
@@ -146,13 +179,10 @@ export default function Admin() {
   const handleSendPasswordReset = async (userId: string, userNome: string) => {
     setSendingReset(userId);
     try {
-      // We need to use an edge function to send password reset since we need service role
       const { data, error } = await supabase.functions.invoke('send-password-reset', {
         body: { userId }
       });
-
       if (error) throw error;
-      
       toast.success(`Email de redefinição enviado para ${userNome}`);
     } catch (error: any) {
       toast.error('Erro ao enviar email', { description: error.message });
@@ -169,15 +199,12 @@ export default function Admin() {
 
   const handleSaveName = async () => {
     if (!editingUser || !newName.trim()) return;
-    
     setSavingName(true);
     try {
       const { data, error } = await supabase.functions.invoke('admin-update-user', {
         body: { userId: editingUser.id, action: 'update_name', newName: newName.trim() }
       });
-
       if (error) throw error;
-      
       toast.success(`Nome alterado para "${newName.trim()}"`);
       setEditNameModalOpen(false);
       fetchUsers();
@@ -197,25 +224,14 @@ export default function Admin() {
 
   const handleSavePassword = async () => {
     if (!passwordUser || !newPassword) return;
-    
-    if (newPassword !== confirmPassword) {
-      toast.error('As senhas não coincidem');
-      return;
-    }
-    
-    if (newPassword.length < 6) {
-      toast.error('A senha deve ter no mínimo 6 caracteres');
-      return;
-    }
-    
+    if (newPassword !== confirmPassword) { toast.error('As senhas não coincidem'); return; }
+    if (newPassword.length < 6) { toast.error('A senha deve ter no mínimo 6 caracteres'); return; }
     setSavingPassword(true);
     try {
       const { data, error } = await supabase.functions.invoke('admin-update-user', {
         body: { userId: passwordUser.id, action: 'update_password', newPassword }
       });
-
       if (error) throw error;
-      
       toast.success(`Senha alterada para ${passwordUser.nome}`);
       setPasswordModalOpen(false);
     } catch (error: any) {
@@ -225,23 +241,13 @@ export default function Admin() {
     }
   };
 
-  const handleToggleRole = async (userId: string, currentRole: 'CLOSER' | 'ADMIN') => {
-    if (userId === user?.id) {
-      toast.error('Você não pode alterar seu próprio papel');
-      return;
-    }
-
+  const handleToggleRole = async (userId: string, currentRole: string) => {
+    if (userId === user?.id) { toast.error('Você não pode alterar seu próprio papel'); return; }
     setUpdatingRole(userId);
     const newRole = currentRole === 'ADMIN' ? 'CLOSER' : 'ADMIN';
-    
     try {
-      const { error } = await supabase
-        .from('user_roles')
-        .update({ role: newRole })
-        .eq('user_id', userId);
-
+      const { error } = await supabase.from('user_roles').update({ role: newRole }).eq('user_id', userId);
       if (error) throw error;
-      
       toast.success(`Papel alterado para ${newRole}`);
       fetchUsers();
     } catch (error: any) {
@@ -259,10 +265,7 @@ export default function Admin() {
     }
     setSavingCommission(true);
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ commission_rate: rate } as any)
-        .eq("id", userId);
+      const { error } = await supabase.from("profiles").update({ commission_rate: rate } as any).eq("id", userId);
       if (error) throw error;
       toast.success(`Comissão alterada para ${(rate * 100).toFixed(0)}%`);
       setEditingCommission(null);
@@ -271,6 +274,34 @@ export default function Admin() {
       toast.error("Erro ao salvar comissão", { description: error.message });
     } finally {
       setSavingCommission(false);
+    }
+  };
+
+  // Move user between teams
+  const handleOpenMoveModal = (u: UserWithRole) => {
+    setMovingUser(u);
+    // Pre-select the OTHER team
+    const otherTeam = teams.find(t => t.id !== u.team_id);
+    setMoveTargetTeam(otherTeam?.id || "");
+    setMoveModalOpen(true);
+  };
+
+  const handleMoveUser = async () => {
+    if (!movingUser || !moveTargetTeam) return;
+    setMovingInProgress(true);
+    try {
+      const { error } = await supabase.rpc('admin_move_user_team', {
+        _target_user_id: movingUser.id,
+        _new_team_id: moveTargetTeam,
+      });
+      if (error) throw error;
+      toast.success(`${movingUser.nome} movido para ${getTeamName(moveTargetTeam)}`);
+      setMoveModalOpen(false);
+      fetchUsers();
+    } catch (error: any) {
+      toast.error('Erro ao mover usuário', { description: error.message });
+    } finally {
+      setMovingInProgress(false);
     }
   };
 
@@ -310,18 +341,43 @@ export default function Admin() {
             <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" />Gerenciar Usuários</CardTitle>
             <CardDescription>Lista de usuários, papéis e redefinição de senha</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            {/* Team filter tabs */}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={teamFilter === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTeamFilter("all")}
+              >
+                Todos ({users.length})
+              </Button>
+              {teams.map(t => {
+                const count = users.filter(u => u.team_id === t.id).length;
+                return (
+                  <Button
+                    key={t.id}
+                    variant={teamFilter === t.id ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setTeamFilter(t.id)}
+                  >
+                    {t.name} ({count})
+                  </Button>
+                );
+              })}
+            </div>
+
             <div className="rounded-lg border">
               <table className="w-full">
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="text-left p-3 font-medium">Nome</th>
+                    <th className="text-left p-3 font-medium">Equipe</th>
                     <th className="text-left p-3 font-medium">Papel</th>
                     <th className="text-right p-3 font-medium">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map(u => (
+                  {filteredUsers.map(u => (
                     <tr key={u.id} className="border-b last:border-0">
                       <td className="p-3">
                         <div className="flex items-center gap-2">
@@ -332,10 +388,17 @@ export default function Admin() {
                         </div>
                       </td>
                       <td className="p-3">
+                        <Badge variant="outline" className="text-xs">
+                          {getTeamName(u.team_id)}
+                        </Badge>
+                      </td>
+                      <td className="p-3">
                         <Badge 
                           variant="outline" 
                           className={u.role === 'ADMIN' 
                             ? "border-amber-300 text-amber-700 bg-amber-50" 
+                            : u.role === 'SUBADMIN'
+                            ? "border-blue-300 text-blue-700 bg-blue-50"
                             : "border-emerald-300 text-emerald-700 bg-emerald-50"
                           }
                         >
@@ -345,6 +408,15 @@ export default function Admin() {
                       </td>
                       <td className="p-3">
                         <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Mover de equipe"
+                            onClick={() => handleOpenMoveModal(u)}
+                            disabled={u.id === user?.id}
+                          >
+                            <ArrowRightLeft className="h-4 w-4" />
+                          </Button>
                           <Button 
                             variant="ghost" 
                             size="icon"
@@ -584,28 +656,18 @@ export default function Admin() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Nome</DialogTitle>
-            <DialogDescription>
-              Altere o nome de {editingUser?.nome}
-            </DialogDescription>
+            <DialogDescription>Altere o nome de {editingUser?.nome}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="newName">Novo nome</Label>
-              <Input
-                id="newName"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="Digite o novo nome"
-              />
+              <Input id="newName" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Digite o novo nome" />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditNameModalOpen(false)}>
-              Cancelar
-            </Button>
+            <Button variant="outline" onClick={() => setEditNameModalOpen(false)}>Cancelar</Button>
             <Button onClick={handleSaveName} disabled={savingName || !newName.trim()}>
-              {savingName && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Salvar
+              {savingName && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Salvar
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -616,42 +678,60 @@ export default function Admin() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Alterar Senha</DialogTitle>
-            <DialogDescription>
-              Defina uma nova senha para {passwordUser?.nome}
-            </DialogDescription>
+            <DialogDescription>Defina uma nova senha para {passwordUser?.nome}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="newPassword">Nova senha</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Mínimo 6 caracteres"
-              />
+              <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Mínimo 6 caracteres" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirmar senha</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Digite novamente"
-              />
+              <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Digite novamente" />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPasswordModalOpen(false)}>
-              Cancelar
+            <Button variant="outline" onClick={() => setPasswordModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSavePassword} disabled={savingPassword || !newPassword || newPassword !== confirmPassword}>
+              {savingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Alterar Senha
             </Button>
-            <Button 
-              onClick={handleSavePassword} 
-              disabled={savingPassword || !newPassword || newPassword !== confirmPassword}
-            >
-              {savingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Alterar Senha
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Move User Modal */}
+      <Dialog open={moveModalOpen} onOpenChange={setMoveModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mover Usuário de Equipe</DialogTitle>
+            <DialogDescription>
+              Mover <strong>{movingUser?.nome}</strong> para outra equipe?
+              <br />
+              <span className="text-xs text-muted-foreground">O histórico antigo permanece na equipe original. Novos registros usarão a nova equipe.</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Equipe atual</Label>
+              <p className="text-sm font-medium">{getTeamName(movingUser?.team_id || null)}</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Nova equipe</Label>
+              <Select value={moveTargetTeam} onValueChange={setMoveTargetTeam}>
+                <SelectTrigger><SelectValue placeholder="Selecionar equipe" /></SelectTrigger>
+                <SelectContent>
+                  {teams.filter(t => t.id !== movingUser?.team_id).map(t => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMoveModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleMoveUser} disabled={movingInProgress || !moveTargetTeam}>
+              {movingInProgress && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Mover para {getTeamName(moveTargetTeam)}
             </Button>
           </DialogFooter>
         </DialogContent>
