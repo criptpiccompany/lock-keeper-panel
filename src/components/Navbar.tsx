@@ -21,6 +21,7 @@ import {
   ChevronDown,
   Bell,
   DollarSign,
+  Home,
 } from "lucide-react";
 
 export function Navbar() {
@@ -35,6 +36,7 @@ export function Navbar() {
 
   // Navigation items based on role
   const closerItems = [
+    { path: "/home", label: "Home", icon: Home },
     { path: "/meu", label: "Minha Lista", icon: User },
     { path: "/gestao-influenciadores", label: "Gestão de Influenciadores", icon: Users },
     { path: "/registro", label: "Planilhamento", icon: FileText },
@@ -62,7 +64,7 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="container flex h-14 items-center justify-between">
         {/* Logo */}
-        <Link to={isAdmin ? "/" : "/meu"} className="flex items-center gap-2.5">
+        <Link to="/home" className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <span className="text-sm font-bold text-primary-foreground">IB</span>
           </div>
