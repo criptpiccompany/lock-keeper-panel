@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/select";
 import { Loader2, TrendingUp, TrendingDown, DollarSign, Percent, Receipt, Wallet } from "lucide-react";
 import { PLATFORM_FEE_RATE, PLATFORM_FEE_LABEL } from "@/lib/constants";
-import CommissionThermometer from "./CommissionThermometer";
+import { getEstimatedCommission } from "@/lib/commissionCalc";
+import { useCommissionTier } from "@/hooks/useCommissionTier";
 import UnifiedThermometerWidget from "@/components/home/UnifiedThermometerWidget";
 
 interface DailyRecord {
@@ -135,7 +136,6 @@ export default function Balanco({ closerId }: { closerId?: string }) {
   }, [selectedCloserId, selectedMonth]);
 
   const currentCloser = closers.find((c) => c.id === selectedCloserId);
-  const commissionRate = currentCloser?.commission_rate ?? 0.1;
 
   // Aggregate totals
   const totals = useMemo(() => {
@@ -147,10 +147,13 @@ export default function Balanco({ closerId }: { closerId?: string }) {
     });
     const fee = revenue * PLATFORM_FEE_RATE;
     const profit = revenue - invested - fee;
-    const commission = profit > 0 ? profit * commissionRate : 0;
-    const saldo = profit - commission;
-    return { invested, revenue, fee, profit, commission, saldo };
-  }, [records, commissionRate]);
+    return { invested, revenue, fee, profit };
+  }, [records]);
+
+  // Use tier-based percentage for commission (single source of truth)
+  const { currentPercentage, loading: tierLoading } = useCommissionTier(totals.profit);
+  const tierCommission = getEstimatedCommission(totals.profit, currentPercentage);
+  const saldo = totals.profit - tierCommission;
 
   // Daily breakdown grouped by date
   const dailySummaries = useMemo(() => {
@@ -166,12 +169,12 @@ export default function Balanco({ closerId }: { closerId?: string }) {
     map.forEach((val, date) => {
       const fee = val.revenue * PLATFORM_FEE_RATE;
       const profit = val.revenue - val.invested - fee;
-      const commission = profit > 0 ? profit * commissionRate : 0;
+      const commission = getEstimatedCommission(profit, currentPercentage);
       const saldo = profit - commission;
       summaries.push({ date, invested: val.invested, revenue: val.revenue, fee, profit, commission, saldo });
     });
     return summaries.sort((a, b) => a.date.localeCompare(b.date));
-  }, [records, commissionRate]);
+  }, [records, currentPercentage]);
 
   const formatDateLabel = (dateStr: string) => {
     const d = new Date(dateStr + "T12:00:00");
@@ -210,7 +213,7 @@ export default function Balanco({ closerId }: { closerId?: string }) {
 
         {currentCloser && (
           <span className="text-xs text-muted-foreground ml-auto">
-            Comissão: {(commissionRate * 100).toFixed(0)}%
+            Comissão: {currentPercentage}%
           </span>
         )}
       </div>
@@ -251,13 +254,13 @@ export default function Balanco({ closerId }: { closerId?: string }) {
                 />
               </div>
               {/* Row 3 */}
-              <SummaryCard label="Comissão" value={totals.commission} icon={Receipt} />
+              <SummaryCard label="Comissão" value={tierCommission} icon={Receipt} />
               {isAdmin && (
                 <SummaryCard
                   label="Saldo Final"
-                  value={totals.saldo}
+                  value={saldo}
                   icon={Wallet}
-                  variant={totals.saldo >= 0 ? "positive" : "negative"}
+                  variant={saldo >= 0 ? "positive" : "negative"}
                 />
               )}
             </div>
@@ -313,10 +316,10 @@ export default function Balanco({ closerId }: { closerId?: string }) {
                     <td className={`py-3 px-4 text-xs text-right tabular-nums ${totals.profit < 0 ? "text-red-600" : "text-emerald-700"}`}>
                       {formatBRL(totals.profit)}
                     </td>
-                    <td className="py-3 px-4 text-xs text-right tabular-nums">{formatBRL(totals.commission)}</td>
+                    <td className="py-3 px-4 text-xs text-right tabular-nums">{formatBRL(tierCommission)}</td>
                     {isAdmin && (
-                      <td className={`py-3 px-4 text-xs text-right tabular-nums ${totals.saldo < 0 ? "text-red-600" : "text-emerald-700"}`}>
-                        {formatBRL(totals.saldo)}
+                      <td className={`py-3 px-4 text-xs text-right tabular-nums ${saldo < 0 ? "text-red-600" : "text-emerald-700"}`}>
+                        {formatBRL(saldo)}
                       </td>
                     )}
                   </tr>

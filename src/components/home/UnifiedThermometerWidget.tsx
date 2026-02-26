@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getEstimatedCommission } from "@/lib/commissionCalc";
 import { useCommissionTier } from "@/hooks/useCommissionTier";
 import { useTeamCommission } from "@/hooks/useTeamCommission";
 import { useAuth } from "@/hooks/useAuth";
@@ -57,7 +58,7 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
     ? Math.min(100, Math.max(2, (resultado / maxThreshold) * 100))
     : (resultado > 0 ? 100 : 2);
 
-  const commissionValue = resultado > 0 ? resultado * (currentPercentage / 100) : 0;
+  const commissionValue = getEstimatedCommission(resultado, currentPercentage);
   const isMax = currentTierOrder === tiers[tiers.length - 1].tier_order;
   const tubeHeight = compact ? 220 : 320;
 
