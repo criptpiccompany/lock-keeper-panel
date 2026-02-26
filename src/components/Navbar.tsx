@@ -52,17 +52,22 @@ export function Navbar() {
     { path: "/admin", label: "Admin", icon: Settings },
   ];
 
-  const subAdminItems = [
+  // SUBADMIN: main bar items (visible)
+  const subAdminMainItems = [
     { path: "/home", label: "Home", icon: Home },
     { path: "/financeiro", label: "Financeiro", icon: DollarSign },
-    { path: "/meu", label: "Minha Lista", icon: User },
-    { path: "/registro", label: "Planilhamento", icon: FileText },
     { path: "/painel", label: "Painel de Consulta", icon: LayoutGrid },
-    { path: "/gestao-influenciadores", label: "Gestão de Influs", icon: Users },
     { path: "/diretorio", label: "Diretório", icon: Book },
     { path: "/auditoria", label: "Auditoria", icon: ShieldAlert },
     { path: "/notificacoes", label: "Notificações", icon: Bell },
     { path: "/admin", label: "Admin", icon: Settings },
+  ];
+
+  // SUBADMIN: items inside the dropdown next to Home
+  const subAdminDropdownItems = [
+    { path: "/meu", label: "Minha Lista", icon: User },
+    { path: "/registro", label: "Planilhamento", icon: FileText },
+    { path: "/gestao-influenciadores", label: "Gestão de Influs", icon: Users },
   ];
 
   // Admin operational items shown in profile dropdown
@@ -72,7 +77,7 @@ export function Navbar() {
     { path: "/painel", label: "Painel de Consulta", icon: LayoutGrid },
   ];
 
-  const navItems = isAdmin ? adminItems : isSubAdmin ? subAdminItems : closerItems;
+  const navItems = isAdmin ? adminItems : isSubAdmin ? subAdminMainItems : closerItems;
 
   return (
     <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -87,23 +92,60 @@ export function Navbar() {
 
         {/* Navigation Links */}
         <div className="flex items-center gap-1">
-          {navItems.map((item) => {
+          {navItems.map((item, index) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
+            const isDropdownActive = isSubAdmin && item.path === "/home" && subAdminDropdownItems.some(d => d.path === location.pathname);
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              <div key={item.path} className="flex items-center">
+                <Link
+                  to={item.path}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                    isActive || isDropdownActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="hidden sm:inline">{item.label}</span>
+                </Link>
+                {/* SUBADMIN dropdown after Home */}
+                {isSubAdmin && item.path === "/home" && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          "h-7 w-7 p-0 ml-0.5 rounded-md",
+                          isDropdownActive
+                            ? "text-primary"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-48">
+                      {subAdminDropdownItems.map((dropItem) => {
+                        const DropIcon = dropItem.icon;
+                        const isDropActive = location.pathname === dropItem.path;
+                        return (
+                          <DropdownMenuItem
+                            key={dropItem.path}
+                            onClick={() => navigate(dropItem.path)}
+                            className={cn(isDropActive && "bg-accent")}
+                          >
+                            <DropIcon className="mr-2 h-4 w-4" />
+                            {dropItem.label}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
-              >
-                <Icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{item.label}</span>
-              </Link>
+              </div>
             );
           })}
         </div>
