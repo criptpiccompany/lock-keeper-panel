@@ -43,14 +43,8 @@ export default function Login() {
         setIsSubmitting(false);
         return;
       }
-      const { error } = await signUp(email, password, nome);
-      if (!error && inviteToken) {
-        // Consume the invite after successful signup
-        const { data: { user: newUser } } = await supabase.auth.getUser();
-        if (newUser) {
-          await supabase.rpc('consume_invite_token', { _token: inviteToken, _user_id: newUser.id });
-        }
-      }
+      // Pass invite token to signUp so handle_new_user trigger can consume it
+      const { error } = await signUp(email, password, nome, inviteToken || undefined);
       if (!error) {
         setIsSignUp(false);
         setPassword('');

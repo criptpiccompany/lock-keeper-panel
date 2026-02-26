@@ -523,6 +523,8 @@ export type Database = {
           expires_at: string
           id: string
           max_uses: number
+          role_to_assign: Database["public"]["Enums"]["app_role"] | null
+          team_id: string | null
           token: string
           use_count: number
           used_at: string | null
@@ -534,6 +536,8 @@ export type Database = {
           expires_at?: string
           id?: string
           max_uses?: number
+          role_to_assign?: Database["public"]["Enums"]["app_role"] | null
+          team_id?: string | null
           token?: string
           use_count?: number
           used_at?: string | null
@@ -545,12 +549,22 @@ export type Database = {
           expires_at?: string
           id?: string
           max_uses?: number
+          role_to_assign?: Database["public"]["Enums"]["app_role"] | null
+          team_id?: string | null
           token?: string
           use_count?: number
           used_at?: string | null
           used_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "invites_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       kanban_influencers: {
         Row: {
