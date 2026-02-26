@@ -5,8 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PLATFORM_FEE_RATE } from "@/lib/constants";
 import { FileText, List, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import ThermometerWidget from "@/components/home/ThermometerWidget";
-import TeamThermometerWidget from "@/components/home/TeamThermometerWidget";
+import UnifiedThermometerWidget from "@/components/home/UnifiedThermometerWidget";
 
 function getCurrentMonth() {
   const now = new Date();
@@ -56,49 +55,37 @@ export default function Home() {
   const firstName = user.nome.split(/\s+/)[0];
 
   return (
-    <main className="container-premium py-10 space-y-10 animate-fade-in">
+    <main className="container-premium py-12 animate-fade-in">
       {/* Header */}
-      <div className="space-y-1">
+      <div className="text-center mb-10">
         <h1 className="text-2xl font-bold text-foreground">
           Bem-vindo, {firstName}
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground mt-1">
           Acompanhe sua performance do mês.
         </p>
       </div>
 
-      {/* Thermometer cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Individual */}
-        <div className="card-premium p-6 space-y-4">
-          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-            Meu Termômetro
-          </h2>
-          {!loading && <ThermometerWidget resultado={resultado} />}
-        </div>
-
-        {/* Team */}
-        <div className="card-premium p-6 space-y-4">
-          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-            Termômetro do Time
-          </h2>
-          <TeamThermometerWidget month={month} />
-        </div>
+      {/* Unified Thermometer */}
+      <div className="card-premium p-8 md:p-10 mb-8">
+        {!loading && (
+          <UnifiedThermometerWidget resultado={resultado} month={month} />
+        )}
       </div>
 
       {/* Quick links */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex justify-center gap-3">
         <Button asChild variant="outline" className="gap-2">
           <Link to="/registro">
             <FileText className="h-4 w-4" />
-            Ir para Planilhamento
+            Planilhamento
             <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
           </Link>
         </Button>
         <Button asChild variant="outline" className="gap-2">
           <Link to="/meu">
             <List className="h-4 w-4" />
-            Ir para Minha Lista
+            Minha Lista
             <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
           </Link>
         </Button>
