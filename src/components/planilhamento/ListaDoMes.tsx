@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, ListChecks, DollarSign, TrendingUp, TrendingDown, Receipt, Percent, Mail } from "lucide-react";
 import { toast } from "sonner";
 import SharedPartnersPopover, { type SharedPartner } from "./SharedPartnersPopover";
+import UnifiedThermometerWidget from "@/components/home/UnifiedThermometerWidget";
 
 /* ───── types ───── */
 
@@ -377,23 +378,38 @@ export default function ListaDoMes({ closerId }: { closerId?: string }) {
         </div>
       ) : (
         <>
-          {/* Summary Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-            <SummaryCard label="Investido" value={investido} icon={DollarSign} />
-            <SummaryCard label="Faturado (manual)" value={summary.faturado} icon={TrendingUp} />
-            <SummaryCard
-              label="Resultado"
-              value={summary.resultado}
-              icon={summary.resultado >= 0 ? TrendingUp : TrendingDown}
-              variant={summary.resultado >= 0 ? "positive" : "negative"}
-            />
-            <SummaryCard label="Comissão" value={summary.comissao} icon={Receipt} />
-            <SummaryCard
-              label="Resultado líquido"
-              value={summary.resultadoLiquido}
-              icon={Percent}
-              variant={summary.resultadoLiquido >= 0 ? "positive" : "negative"}
-            />
+          {/* Two-column layout: Thermometer + Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
+            {/* Left: Thermometer */}
+            <div className="card-premium p-4 flex items-center justify-center lg:min-h-[320px]">
+              <UnifiedThermometerWidget resultado={summary.resultado} month={selectedMonth} compact />
+            </div>
+
+            {/* Right: Financial Cards Grid */}
+            <div className="flex flex-col gap-3">
+              {/* Row 1 */}
+              <div className="grid grid-cols-2 gap-3">
+                <SummaryCard label="Investido" value={investido} icon={DollarSign} />
+                <SummaryCard label="Faturado (manual)" value={summary.faturado} icon={TrendingUp} />
+              </div>
+              {/* Row 2 */}
+              <div className="grid grid-cols-2 gap-3">
+                <SummaryCard
+                  label="Resultado"
+                  value={summary.resultado}
+                  icon={summary.resultado >= 0 ? TrendingUp : TrendingDown}
+                  variant={summary.resultado >= 0 ? "positive" : "negative"}
+                />
+                <SummaryCard label="Comissão" value={summary.comissao} icon={Receipt} />
+              </div>
+              {/* Row 3 */}
+              <SummaryCard
+                label="Resultado líquido"
+                value={summary.resultadoLiquido}
+                icon={Percent}
+                variant={summary.resultadoLiquido >= 0 ? "positive" : "negative"}
+              />
+            </div>
           </div>
 
           {/* Table */}
