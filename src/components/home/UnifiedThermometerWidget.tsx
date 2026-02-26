@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useCommissionTier } from "@/hooks/useCommissionTier";
 import { useTeamCommission } from "@/hooks/useTeamCommission";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, ChevronDown, ChevronUp, Eye, EyeOff } from "lucide-react";
+import { Loader2, ChevronDown, ChevronUp, Eye, EyeOff, Rocket } from "lucide-react";
 
 function formatBRL(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -245,20 +245,38 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
             </div>
           </div>
 
-          {!isMax && nextThreshold !== null && amountMissing !== null && (
-            <div className="bg-muted/30 rounded-lg px-3.5 py-2.5">
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Faltam <span className="text-foreground font-semibold">{formatBRL(amountMissing)}</span> para{" "}
-                <span className="text-foreground font-semibold">
-                  {tiers.find((t) => t.threshold_result === nextThreshold)?.percentage ?? "?"}%
-                </span>
-              </p>
-            </div>
-          )}
+          {!isMax && nextThreshold !== null && amountMissing !== null && (() => {
+            const pctRemaining = nextThreshold > 0 ? (amountMissing / nextThreshold) * 100 : 100;
+            const isClose = pctRemaining < 15;
+            const isAlmostThere = pctRemaining < 5;
+            return (
+              <div className={`rounded-lg px-3.5 py-2.5 flex items-center gap-2 ${isClose ? "ring-1 ring-success/30" : ""}`}
+                style={{ background: "hsl(142 71% 45% / 0.08)" }}
+              >
+                <Rocket
+                  className="h-4 w-4 flex-shrink-0"
+                  style={{ color: "hsl(142 71% 45%)", animation: "rocketPulse 2s ease-in-out infinite" }}
+                />
+                {isAlmostThere ? (
+                  <p className="text-[11px] font-semibold leading-relaxed" style={{ color: "hsl(142 71% 45%)" }}>
+                    Você está quase lá 🚀
+                  </p>
+                ) : (
+                  <p className="text-[11px] leading-relaxed" style={{ color: "hsl(142 71% 45%)" }}>
+                    Faltam{" "}
+                    <span className="font-bold">{formatBRL(amountMissing)}</span> para{" "}
+                    <span className="font-semibold">
+                      {tiers.find((t) => t.threshold_result === nextThreshold)?.percentage ?? "?"}%
+                    </span>
+                  </p>
+                )}
+              </div>
+            );
+          })()}
 
           {isMax && (
-            <div className="bg-amber-50 border border-amber-200/50 rounded-lg px-3.5 py-2.5">
-              <p className="text-[11px] font-semibold text-amber-800">🏆 Tier máximo atingido</p>
+            <div className="rounded-lg px-3.5 py-2.5" style={{ background: "hsl(45 93% 47% / 0.1)", border: "1px solid hsl(45 93% 47% / 0.2)" }}>
+              <p className="text-[11px] font-semibold" style={{ color: "hsl(45 80% 35%)" }}>🏆 Tier máximo atingido</p>
             </div>
           )}
         </div>
@@ -342,6 +360,10 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
         @keyframes bubbleFloat2 {
           0%, 100% { transform: translateX(-50%) translateY(50%); }
           50% { transform: translateX(-48%) translateY(calc(50% - 2px)); }
+        }
+        @keyframes rocketPulse {
+          0%, 100% { transform: translateY(0); opacity: 1; }
+          50% { transform: translateY(-2px); opacity: 0.8; }
         }
       `}</style>
     </div>
