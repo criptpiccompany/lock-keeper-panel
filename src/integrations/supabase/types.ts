@@ -235,6 +235,33 @@ export type Database = {
           },
         ]
       }
+      commission_tiers: {
+        Row: {
+          created_at: string
+          id: string
+          percentage: number
+          team_id: string
+          threshold_result: number
+          tier_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          percentage: number
+          team_id?: string
+          threshold_result: number
+          tier_order: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          percentage?: number
+          team_id?: string
+          threshold_result?: number
+          tier_order?: number
+        }
+        Relationships: []
+      }
       daily_influencer_records: {
         Row: {
           acumulado: number | null
