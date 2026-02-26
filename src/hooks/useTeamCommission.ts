@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PLATFORM_FEE_RATE } from "@/lib/constants";
 
@@ -6,10 +6,13 @@ export interface TeamMemberCommission {
   userId: string;
   nome: string;
   initials: string;
-  resultado: number;
+  /** Only populated for the current user or when viewer is ADMIN */
+  resultado: number | null;
   currentTierOrder: number;
   currentPercentage: number;
+  /** Only populated for ADMIN viewers */
   nextThreshold: number | null;
+  /** Only populated for ADMIN viewers */
   amountMissing: number | null;
 }
 
@@ -20,9 +23,12 @@ interface CommissionTier {
 }
 
 /**
- * Fetches all approved team members' monthly Resultado and maps to commission tiers.
+ * Fetches team members' commission tiers for the month.
+ * - ADMIN: sees full financial data for all members
+ * - CLOSER: sees only name + percentage (no financial values for others)
+ *   Backend RLS already blocks access to other closers' records.
  */
-export function useTeamCommission(month: string) {
+export function useTeamCommission(month: string, viewerId?: string, viewerIsAdmin?: boolean) {
   const [members, setMembers] = useState<TeamMemberCommission[]>([]);
   const [loading, setLoading] = useState(true);
   const [tiers, setTiers] = useState<CommissionTier[]>([]);
@@ -31,7 +37,6 @@ export function useTeamCommission(month: string) {
     const fetchAll = async () => {
       setLoading(true);
 
-      // Fetch tiers
       const { data: tierData } = await supabase
         .from("commission_tiers")
         .select("tier_order, percentage, threshold_result")
@@ -41,7 +46,6 @@ export function useTeamCommission(month: string) {
       const fetchedTiers = (tierData as any as CommissionTier[]) || [];
       setTiers(fetchedTiers);
 
-      // Fetch all approved closers
       const { data: closers } = await supabase.rpc("get_approved_closers");
       if (!closers || closers.length === 0) {
         setMembers([]);
@@ -49,13 +53,12 @@ export function useTeamCommission(month: string) {
         return;
       }
 
-      // Date range for the month
       const [year, mo] = month.split("-");
       const startDate = `${year}-${mo}-01`;
       const endDate = new Date(Number(year), Number(mo), 0);
       const endDateStr = `${year}-${mo}-${String(endDate.getDate()).padStart(2, "0")}`;
 
-      // Fetch all records for the month
+      // RLS ensures closers only get their own records
       const { data: records } = await supabase
         .from("daily_influencer_records")
         .select("closer_id, valor_pago, faturamento")
@@ -63,7 +66,6 @@ export function useTeamCommission(month: string) {
         .lte("date", endDateStr)
         .is("deleted_at", null);
 
-      // Aggregate per closer
       const closerMap = new Map<string, { invested: number; revenue: number }>();
       (records || []).forEach((r: any) => {
         const existing = closerMap.get(r.closer_id) || { invested: 0, revenue: 0 };
@@ -72,13 +74,11 @@ export function useTeamCommission(month: string) {
         closerMap.set(r.closer_id, existing);
       });
 
-      // Map to team members
       const result: TeamMemberCommission[] = closers.map((c: any) => {
         const agg = closerMap.get(c.id) || { invested: 0, revenue: 0 };
         const fee = agg.revenue * PLATFORM_FEE_RATE;
         const resultado = agg.revenue - agg.invested - fee;
 
-        // Determine tier
         let currentIdx = 0;
         for (let i = fetchedTiers.length - 1; i >= 0; i--) {
           if (resultado >= fetchedTiers[i].threshold_result) {
@@ -94,15 +94,18 @@ export function useTeamCommission(month: string) {
           ? (words[0][0] + words[words.length - 1][0]).toUpperCase()
           : (c.nome || "?").substring(0, 2).toUpperCase();
 
+        const isSelf = c.id === viewerId;
+        const canSeeFinancials = viewerIsAdmin || isSelf;
+
         return {
           userId: c.id,
           nome: c.nome,
           initials,
-          resultado,
+          resultado: canSeeFinancials ? resultado : null,
           currentTierOrder: current.tier_order,
           currentPercentage: current.percentage,
-          nextThreshold: next ? next.threshold_result : null,
-          amountMissing: next ? Math.max(0, next.threshold_result - resultado) : null,
+          nextThreshold: canSeeFinancials && next ? next.threshold_result : null,
+          amountMissing: canSeeFinancials && next ? Math.max(0, next.threshold_result - resultado) : null,
         };
       });
 
@@ -111,7 +114,7 @@ export function useTeamCommission(month: string) {
     };
 
     fetchAll();
-  }, [month]);
+  }, [month, viewerId, viewerIsAdmin]);
 
   return { members, loading, tiers };
 }

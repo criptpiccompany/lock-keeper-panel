@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useCommissionTier } from "@/hooks/useCommissionTier";
 import { useTeamCommission } from "@/hooks/useTeamCommission";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, ChevronDown, ChevronUp, Eye, EyeOff } from "lucide-react";
 
 function formatBRL(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -35,9 +35,10 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
     nextThreshold,
     amountMissing,
   } = useCommissionTier(resultado);
-  const { members, loading: teamLoading } = useTeamCommission(month);
+  const { members, loading: teamLoading } = useTeamCommission(month, user?.id, isAdmin);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [showRanking, setShowRanking] = useState(false);
+  const [showFinancials, setShowFinancials] = useState(true);
 
   const loading = tierLoading || teamLoading;
 
@@ -60,17 +61,15 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
   const isMax = currentTierOrder === tiers[tiers.length - 1].tier_order;
   const tubeHeight = compact ? 220 : 320;
 
-  // Other members (not the current user)
   const otherMembers = members.filter((m) => m.userId !== user?.id);
   const currentUserMember = members.find((m) => m.userId === user?.id);
 
   return (
     <div className="flex flex-col items-center gap-8">
-      {/* Main layout: thermometer + info */}
+      {/* Main layout */}
       <div className="flex items-stretch gap-10 w-full max-w-lg mx-auto">
         {/* Thermometer tube */}
         <div className="relative flex-shrink-0" style={{ width: 56, height: tubeHeight }}>
-          {/* Glass body */}
           <div
             className="absolute inset-0 rounded-full overflow-hidden"
             style={{
@@ -79,7 +78,6 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
               backdropFilter: "blur(8px)",
             }}
           >
-            {/* Mercury */}
             <div
               className="absolute bottom-0 left-0 right-0 rounded-b-full"
               style={{
@@ -107,14 +105,12 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
                 >
                   {t.percentage}%
                 </span>
-                <div
-                  className={`h-px ${isCurrent ? "w-3 bg-foreground/60" : "w-2 bg-border/60"}`}
-                />
+                <div className={`h-px ${isCurrent ? "w-3 bg-foreground/60" : "w-2 bg-border/60"}`} />
               </div>
             );
           })}
 
-          {/* Current user bubble (highlighted) */}
+          {/* Current user bubble */}
           {currentUserMember && (
             <div
               className="absolute left-1/2 z-20"
@@ -140,12 +136,22 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
 
           {/* Team member bubbles */}
           {otherMembers.map((m, idx) => {
-            const memberPct = maxThreshold > 0
-              ? Math.min(93, Math.max(5, (Math.max(0, m.resultado) / maxThreshold) * 100))
-              : 5;
+            // For non-admins, position by tier order (no exact financial position)
+            // For admins, use actual resultado position
+            const memberPct = (() => {
+              if (m.resultado !== null && maxThreshold > 0) {
+                return Math.min(93, Math.max(5, (Math.max(0, m.resultado) / maxThreshold) * 100));
+              }
+              // Position by tier order for non-admins
+              const tierForMember = tiers.find((t) => t.tier_order === m.currentTierOrder);
+              if (tierForMember && maxThreshold > 0) {
+                return Math.min(93, Math.max(5, (tierForMember.threshold_result / maxThreshold) * 100 + 3));
+              }
+              return 5;
+            })();
+
             const color = BUBBLE_COLORS[idx % BUBBLE_COLORS.length];
             const isHovered = hoveredId === m.userId;
-            // Offset bubbles slightly left/right to avoid overlap
             const xOffset = idx % 2 === 0 ? -6 : 6;
 
             return (
@@ -174,21 +180,26 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
                   {m.initials}
                 </div>
 
-                {/* Tooltip */}
+                {/* Tooltip - respects role permissions */}
                 {isHovered && (
-                  <div className="absolute left-full ml-3 bottom-1/2 translate-y-1/2 z-50 bg-card border border-border rounded-lg shadow-lg px-3 py-2.5 min-w-[180px] animate-fade-in pointer-events-none">
+                  <div className="absolute left-full ml-3 bottom-1/2 translate-y-1/2 z-50 bg-card border border-border rounded-lg shadow-lg px-3 py-2.5 min-w-[160px] animate-fade-in pointer-events-none">
                     <p className="text-xs font-semibold text-foreground">{m.nome}</p>
                     <div className="mt-1.5 space-y-1">
                       <p className="text-[10px] text-muted-foreground">
                         % atual: <span className="text-foreground font-medium">{m.currentPercentage}%</span>
                       </p>
-                      <p className="text-[10px] text-muted-foreground">
-                        Resultado: <span className="text-foreground font-medium">{formatBRL(m.resultado)}</span>
-                      </p>
-                      {m.amountMissing !== null && (
-                        <p className="text-[10px] text-muted-foreground">
-                          Faltam: <span className="text-foreground font-medium">{formatBRL(m.amountMissing)}</span>
-                        </p>
+                      {/* Financial data only visible to ADMIN with toggle on */}
+                      {isAdmin && showFinancials && m.resultado !== null && (
+                        <>
+                          <p className="text-[10px] text-muted-foreground">
+                            Resultado: <span className="text-foreground font-medium">{formatBRL(m.resultado)}</span>
+                          </p>
+                          {m.amountMissing !== null && (
+                            <p className="text-[10px] text-muted-foreground">
+                              Faltam: <span className="text-foreground font-medium">{formatBRL(m.amountMissing)}</span>
+                            </p>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -211,7 +222,7 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
           </div>
         </div>
 
-        {/* Info panel */}
+        {/* Info panel - own data only */}
         <div className="flex flex-col justify-center gap-5 min-w-0 py-4">
           <div>
             <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-medium">Sua % do mês</p>
@@ -253,41 +264,62 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
         </div>
       </div>
 
-      {/* Admin ranking toggle */}
+      {/* Admin controls */}
       {isAdmin && members.length > 0 && (
-        <div className="w-full max-w-lg mx-auto">
-          <button
-            onClick={() => setShowRanking(!showRanking)}
-            className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors font-medium uppercase tracking-wider"
-          >
-            {showRanking ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-            Ver detalhamento completo
-          </button>
+        <div className="w-full max-w-lg mx-auto space-y-3">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setShowRanking(!showRanking)}
+              className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors font-medium uppercase tracking-wider"
+            >
+              {showRanking ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+              Ver detalhamento completo
+            </button>
+
+            <button
+              onClick={() => setShowFinancials(!showFinancials)}
+              className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors font-medium ml-auto"
+              title={showFinancials ? "Ocultar valores financeiros" : "Mostrar valores financeiros"}
+            >
+              {showFinancials ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              <span className="uppercase tracking-wider">{showFinancials ? "Valores" : "Oculto"}</span>
+            </button>
+          </div>
 
           {showRanking && (
-            <div className="mt-4 bg-card rounded-xl border border-border/40 overflow-hidden animate-fade-in">
+            <div className="bg-card rounded-xl border border-border/40 overflow-hidden animate-fade-in">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/40">
                     <th className="text-left py-2.5 px-4 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">#</th>
                     <th className="text-left py-2.5 px-4 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Membro</th>
                     <th className="text-right py-2.5 px-4 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">%</th>
-                    <th className="text-right py-2.5 px-4 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Resultado</th>
-                    <th className="text-right py-2.5 px-4 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Falta</th>
+                    {showFinancials && (
+                      <>
+                        <th className="text-right py-2.5 px-4 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Resultado</th>
+                        <th className="text-right py-2.5 px-4 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Falta</th>
+                      </>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
                   {[...members]
-                    .sort((a, b) => b.resultado - a.resultado)
+                    .sort((a, b) => (b.resultado ?? 0) - (a.resultado ?? 0))
                     .map((m, idx) => (
                       <tr key={m.userId} className={`border-b border-border/20 ${idx % 2 === 1 ? "bg-muted/20" : ""}`}>
                         <td className="py-2 px-4 text-xs text-muted-foreground tabular-nums">{idx + 1}</td>
                         <td className="py-2 px-4 text-xs font-medium text-foreground">{m.nome}</td>
                         <td className="py-2 px-4 text-xs text-right tabular-nums font-semibold">{m.currentPercentage}%</td>
-                        <td className="py-2 px-4 text-xs text-right tabular-nums">{formatBRL(m.resultado)}</td>
-                        <td className="py-2 px-4 text-xs text-right tabular-nums text-muted-foreground">
-                          {m.amountMissing !== null ? formatBRL(m.amountMissing) : "—"}
-                        </td>
+                        {showFinancials && (
+                          <>
+                            <td className="py-2 px-4 text-xs text-right tabular-nums">
+                              {m.resultado !== null ? formatBRL(m.resultado) : "—"}
+                            </td>
+                            <td className="py-2 px-4 text-xs text-right tabular-nums text-muted-foreground">
+                              {m.amountMissing !== null ? formatBRL(m.amountMissing) : "—"}
+                            </td>
+                          </>
+                        )}
                       </tr>
                     ))}
                 </tbody>
