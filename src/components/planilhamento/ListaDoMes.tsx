@@ -378,22 +378,22 @@ export default function ListaDoMes({ closerId }: { closerId?: string }) {
         </div>
       ) : (
         <>
-          {/* Two-column layout: Thermometer + Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
+          {/* Two-column layout: Thermometer + Cards (same as Balanço) */}
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-3">
             {/* Left: Thermometer */}
-            <div className="card-premium p-4 flex items-center justify-center lg:min-h-[320px]">
-              <UnifiedThermometerWidget resultado={summary.resultado} month={selectedMonth} compact />
+            <div className="card-premium p-5 flex items-center justify-center lg:min-h-[380px]">
+              <UnifiedThermometerWidget resultado={summary.resultado} month={selectedMonth} />
             </div>
 
             {/* Right: Financial Cards Grid */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
               {/* Row 1 */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <SummaryCard label="Investido" value={investido} icon={DollarSign} />
                 <SummaryCard label="Faturado (manual)" value={summary.faturado} icon={TrendingUp} />
               </div>
               {/* Row 2 */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <SummaryCard
                   label="Resultado"
                   value={summary.resultado}
