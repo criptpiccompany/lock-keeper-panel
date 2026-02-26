@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2, TrendingUp, TrendingDown, DollarSign, Percent, Receipt, Wallet } from "lucide-react";
 import { PLATFORM_FEE_RATE, PLATFORM_FEE_LABEL } from "@/lib/constants";
+import CommissionThermometer from "./CommissionThermometer";
 
 interface DailyRecord {
   id: string;
@@ -245,6 +246,9 @@ export default function Balanco({ closerId }: { closerId?: string }) {
               />
             )}
           </div>
+
+          {/* Commission Thermometer - based exclusively on Resultado */}
+          <CommissionThermometer resultado={totals.profit} />
 
           {/* Daily Breakdown Table */}
           <div className="bg-card rounded-xl border border-border/40 overflow-hidden">
