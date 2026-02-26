@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Link2, Copy, Trash2, UserPlus } from "lucide-react";
+import { Loader2, Link2, Copy, Trash2, UserPlus, CheckCircle2, Clock, XCircle } from "lucide-react";
 
 interface Team {
   id: string;
@@ -24,8 +24,12 @@ interface Invite {
   use_count: number;
   max_uses: number;
   used_at: string | null;
+  used_by: string | null;
+  used_by_nome?: string;
   created_at: string;
 }
+
+type StatusFilter = "ALL" | "ATIVO" | "USADO" | "EXPIRADO";
 
 export function InviteManagement() {
   const { user, isAdmin, isSubAdmin } = useAuth();
@@ -35,21 +39,28 @@ export function InviteManagement() {
   const [creating, setCreating] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
   const [selectedRole, setSelectedRole] = useState<string>("CLOSER");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [teamFilterId, setTeamFilterId] = useState<string>("ALL");
 
   const fetchData = async () => {
     setLoading(true);
     
-    const [teamsRes, invitesRes] = await Promise.all([
+    const [teamsRes, invitesRes, profilesRes] = await Promise.all([
       supabase.from("teams").select("id, name"),
       supabase.from("invites").select("*").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id, nome"),
     ]);
 
     const fetchedTeams = (teamsRes.data || []) as Team[];
     setTeams(fetchedTeams);
 
+    const profiles = (profilesRes.data || []) as { id: string; nome: string }[];
+    const profileMap = new Map(profiles.map(p => [p.id, p.nome]));
+
     const fetchedInvites = ((invitesRes.data || []) as any[]).map((inv) => ({
       ...inv,
       team_name: fetchedTeams.find((t) => t.id === inv.team_id)?.name || "—",
+      used_by_nome: inv.used_by ? profileMap.get(inv.used_by) || "Desconhecido" : undefined,
     }));
     setInvites(fetchedInvites);
 
@@ -74,6 +85,23 @@ export function InviteManagement() {
     fetchData();
   }, []);
 
+  const getInviteStatus = (inv: Invite): "ATIVO" | "USADO" | "EXPIRADO" => {
+    if (inv.use_count >= inv.max_uses || inv.used_at) return "USADO";
+    if (new Date(inv.expires_at) < new Date()) return "EXPIRADO";
+    return "ATIVO";
+  };
+
+  const filteredInvites = useMemo(() => {
+    let result = invites;
+    if (statusFilter !== "ALL") {
+      result = result.filter(inv => getInviteStatus(inv) === statusFilter);
+    }
+    if (isAdmin && teamFilterId !== "ALL") {
+      result = result.filter(inv => inv.team_id === teamFilterId);
+    }
+    return result;
+  }, [invites, statusFilter, teamFilterId, isAdmin]);
+
   const handleCreate = async () => {
     if (!user || !selectedTeamId) return;
     setCreating(true);
@@ -83,6 +111,7 @@ export function InviteManagement() {
         created_by: user.id,
         team_id: selectedTeamId,
         role_to_assign: selectedRole,
+        max_uses: 1,
       } as any);
 
       if (error) throw error;
@@ -113,9 +142,6 @@ export function InviteManagement() {
     }
   };
 
-  const isExpired = (expiresAt: string) => new Date(expiresAt) < new Date();
-  const isUsed = (inv: Invite) => inv.use_count >= inv.max_uses;
-
   if (loading) {
     return (
       <Card>
@@ -126,6 +152,12 @@ export function InviteManagement() {
     );
   }
 
+  const statusCounts = {
+    ATIVO: invites.filter(i => getInviteStatus(i) === "ATIVO").length,
+    USADO: invites.filter(i => getInviteStatus(i) === "USADO").length,
+    EXPIRADO: invites.filter(i => getInviteStatus(i) === "EXPIRADO").length,
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -135,8 +167,8 @@ export function InviteManagement() {
         </CardTitle>
         <CardDescription>
           {isAdmin
-            ? "Gere convites para qualquer equipe"
-            : "Gere convites para sua equipe"}
+            ? "Gere convites para qualquer equipe — uso único por convite"
+            : "Gere convites para sua equipe — uso único por convite"}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -179,14 +211,46 @@ export function InviteManagement() {
             ) : (
               <Link2 className="mr-1.5 h-4 w-4" />
             )}
-            Gerar Convite
+            Gerar Convite (1 uso)
           </Button>
         </div>
 
+        {/* Filters */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-xs text-muted-foreground mr-1">Filtrar:</span>
+          {(["ALL", "ATIVO", "USADO", "EXPIRADO"] as StatusFilter[]).map((s) => (
+            <Button
+              key={s}
+              variant={statusFilter === s ? "default" : "outline"}
+              size="sm"
+              className="text-xs h-7"
+              onClick={() => setStatusFilter(s)}
+            >
+              {s === "ALL" ? `Todos (${invites.length})` :
+               s === "ATIVO" ? `Ativos (${statusCounts.ATIVO})` :
+               s === "USADO" ? `Usados (${statusCounts.USADO})` :
+               `Expirados (${statusCounts.EXPIRADO})`}
+            </Button>
+          ))}
+          {isAdmin && (
+            <Select value={teamFilterId} onValueChange={setTeamFilterId}>
+              <SelectTrigger className="w-[180px] h-7 text-xs ml-2">
+                <SelectValue placeholder="Equipe" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Todas equipes</SelectItem>
+                {teams.map(t => (
+                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
         {/* Invites list */}
-        {invites.length === 0 ? (
+        {filteredInvites.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">
-            Nenhum convite criado ainda.
+            Nenhum convite encontrado.
           </p>
         ) : (
           <div className="rounded-lg border">
@@ -196,14 +260,15 @@ export function InviteManagement() {
                   <th className="text-left p-3 font-medium text-xs">Equipe</th>
                   <th className="text-left p-3 font-medium text-xs">Função</th>
                   <th className="text-left p-3 font-medium text-xs">Status</th>
+                  <th className="text-left p-3 font-medium text-xs">Usado por</th>
+                  <th className="text-left p-3 font-medium text-xs">Data uso</th>
                   <th className="text-left p-3 font-medium text-xs">Criado</th>
                   <th className="text-right p-3 font-medium text-xs">Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {invites.map((inv) => {
-                  const expired = isExpired(inv.expires_at);
-                  const used = isUsed(inv);
+                {filteredInvites.map((inv) => {
+                  const status = getInviteStatus(inv);
                   return (
                     <tr key={inv.id} className="border-b last:border-0">
                       <td className="p-3 text-sm">{inv.team_name}</td>
@@ -213,22 +278,38 @@ export function InviteManagement() {
                         </Badge>
                       </td>
                       <td className="p-3">
-                        {used ? (
-                          <Badge variant="secondary" className="text-xs">Usado</Badge>
-                        ) : expired ? (
-                          <Badge variant="destructive" className="text-xs">Expirado</Badge>
+                        {status === "USADO" ? (
+                          <Badge variant="secondary" className="text-xs gap-1">
+                            <CheckCircle2 className="h-3 w-3" />Usado
+                          </Badge>
+                        ) : status === "EXPIRADO" ? (
+                          <Badge variant="destructive" className="text-xs gap-1">
+                            <XCircle className="h-3 w-3" />Expirado
+                          </Badge>
                         ) : (
-                          <Badge className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200">
-                            Ativo
+                          <Badge className="text-xs gap-1 bg-emerald-100 text-emerald-700 border-emerald-200">
+                            <Clock className="h-3 w-3" />Ativo
                           </Badge>
                         )}
+                      </td>
+                      <td className="p-3 text-sm">
+                        {inv.used_by_nome ? (
+                          <span className="font-medium">{inv.used_by_nome}</span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="p-3 text-xs text-muted-foreground">
+                        {inv.used_at
+                          ? new Date(inv.used_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })
+                          : "—"}
                       </td>
                       <td className="p-3 text-xs text-muted-foreground">
                         {new Date(inv.created_at).toLocaleDateString("pt-BR")}
                       </td>
                       <td className="p-3">
                         <div className="flex items-center justify-end gap-1">
-                          {!expired && !used && (
+                          {status === "ATIVO" && (
                             <Button
                               variant="ghost"
                               size="icon"

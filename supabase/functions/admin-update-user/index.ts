@@ -29,7 +29,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
 
-    // Verify the caller is an admin
+    // Verify the caller
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Não autorizado" }), {
@@ -48,15 +48,19 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Check if caller is admin
+    // Check caller role
     const { data: roleData } = await supabaseAdmin
       .from("user_roles")
       .select("role")
       .eq("user_id", callerUser.id)
       .single();
 
-    if (roleData?.role !== "ADMIN") {
-      return new Response(JSON.stringify({ error: "Apenas admins podem alterar dados de usuários" }), {
+    const callerRole = roleData?.role;
+    const isAdmin = callerRole === "ADMIN";
+    const isSubAdmin = callerRole === "SUBADMIN";
+
+    if (!isAdmin && !isSubAdmin) {
+      return new Response(JSON.stringify({ error: "Acesso negado" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -69,6 +73,29 @@ const handler = async (req: Request): Promise<Response> => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // SUBADMIN: only password reset allowed, and only for same team
+    if (isSubAdmin && !isAdmin) {
+      if (action !== "update_password") {
+        return new Response(JSON.stringify({ error: "SUBADMIN só pode resetar senha" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Validate same team
+      const [{ data: callerProfile }, { data: targetProfile }] = await Promise.all([
+        supabaseAdmin.from("profiles").select("team_id").eq("id", callerUser.id).single(),
+        supabaseAdmin.from("profiles").select("team_id").eq("id", userId).single(),
+      ]);
+
+      if (!callerProfile?.team_id || !targetProfile?.team_id || callerProfile.team_id !== targetProfile.team_id) {
+        return new Response(JSON.stringify({ error: "Usuário não pertence à sua equipe" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     if (action === "update_password") {
@@ -91,7 +118,7 @@ const handler = async (req: Request): Promise<Response> => {
         });
       }
 
-      console.log(`Password updated for user ${userId} by admin ${callerUser.email}`);
+      console.log(`Password updated for user ${userId} by ${callerRole} ${callerUser.email}`);
 
       return new Response(
         JSON.stringify({ success: true, message: "Senha alterada com sucesso" }),
@@ -103,6 +130,13 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (action === "update_name") {
+      if (!isAdmin) {
+        return new Response(JSON.stringify({ error: "Apenas ADMIN pode alterar nomes" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       if (!newName || newName.trim().length === 0) {
         return new Response(JSON.stringify({ error: "Nome não pode estar vazio" }), {
           status: 400,
@@ -110,7 +144,6 @@ const handler = async (req: Request): Promise<Response> => {
         });
       }
 
-      // Update profile name
       const { error: updateError } = await supabaseAdmin
         .from("profiles")
         .update({ nome: newName.trim() })

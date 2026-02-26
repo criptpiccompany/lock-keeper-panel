@@ -25,14 +25,52 @@ function monthRange(monthKey: string) {
   return { start, end, year: y, month: m };
 }
 
-export async function exportMonthXlsx(monthKey: string, onProgress?: (msg: string) => void) {
+/**
+ * Export month data as XLSX.
+ * @param monthKey e.g. "2026-02"
+ * @param onProgress callback for progress messages
+ * @param teamId optional team filter — when set, only exports data for that team
+ * @param teamName optional label for file naming
+ */
+export async function exportMonthXlsx(
+  monthKey: string,
+  onProgress?: (msg: string) => void,
+  teamId?: string,
+  teamName?: string,
+) {
   const { start, end, year, month } = monthRange(monthKey);
   const monthLabel = MONTH_NAMES_PT[month - 1];
-  const fileName = `Backup_${monthLabel}_${year}.xlsx`;
+  const suffix = teamName ? `_${teamName.replace(/[^a-zA-Z0-9]/g, "")}` : "";
+  const fileName = `Backup_${monthLabel}_${year}${suffix}.xlsx`;
 
   onProgress?.("Carregando perfis...");
 
-  // Fetch all data in parallel
+  // Build queries with optional team filter
+  let profilesQuery = supabase.from("profiles").select("id, nome, commission_rate, status").order("nome");
+  let recordsQuery = supabase
+    .from("daily_influencer_records")
+    .select("*, influencers!inner(handle)")
+    .gte("date", start)
+    .lte("date", end)
+    .is("deleted_at", null)
+    .order("date");
+  let monthlyListQuery = supabase
+    .from("monthly_influencer_list")
+    .select("*")
+    .eq("month", monthKey)
+    .order("influencer_handle");
+  let platformNamesQuery = supabase.from("monthly_platform_names").select("*").eq("month", monthKey);
+  let influencersQuery = supabase.from("influencers").select("*").is("deleted_at", null).order("handle");
+  let locksQuery = supabase.from("influencer_locks").select("*").gte("locked_until", new Date().toISOString());
+
+  if (teamId) {
+    profilesQuery = profilesQuery.eq("team_id", teamId);
+    recordsQuery = recordsQuery.eq("team_id", teamId);
+    monthlyListQuery = monthlyListQuery.eq("team_id", teamId);
+    platformNamesQuery = platformNamesQuery.eq("team_id", teamId);
+    influencersQuery = influencersQuery.eq("team_id", teamId);
+  }
+
   const [
     { data: profiles },
     { data: allRecords },
@@ -43,23 +81,16 @@ export async function exportMonthXlsx(monthKey: string, onProgress?: (msg: strin
     { data: allConflicts },
     { data: allAuditLogs },
   ] = await Promise.all([
-    supabase.from("profiles").select("id, nome, commission_rate, status").order("nome"),
-    supabase
-      .from("daily_influencer_records")
-      .select("*, influencers!inner(handle)")
-      .gte("date", start)
-      .lte("date", end)
-      .is("deleted_at", null)
-      .order("date"),
-    supabase
-      .from("monthly_influencer_list")
-      .select("*")
-      .eq("month", monthKey)
-      .order("influencer_handle"),
-    supabase.from("monthly_platform_names").select("*").eq("month", monthKey),
-    supabase.from("influencers").select("*").is("deleted_at", null).order("handle"),
-    supabase.from("influencer_locks").select("*").gte("locked_until", new Date().toISOString()),
-    supabase.from("admin_conflicts").select("*").eq("month_key", monthKey),
+    profilesQuery,
+    recordsQuery,
+    monthlyListQuery,
+    platformNamesQuery,
+    influencersQuery,
+    locksQuery,
+    // Conflicts and audit only for non-filtered (admin) or filtered
+    teamId
+      ? supabase.from("admin_conflicts").select("*").eq("month_key", monthKey)
+      : supabase.from("admin_conflicts").select("*").eq("month_key", monthKey),
     supabase
       .from("audit_logs")
       .select("*")
@@ -186,7 +217,7 @@ export async function exportMonthXlsx(monthKey: string, onProgress?: (msg: strin
 
   // ── Admin sheets ──
 
-  // Ranking Semanal (all weeks in the month)
+  // Ranking Mensal
   onProgress?.("Gerando rankings...");
   const rankingRows: any[] = [];
   const closerMap = new Map(closers.map((c) => [c.id, c]));

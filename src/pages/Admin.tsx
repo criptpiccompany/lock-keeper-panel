@@ -80,11 +80,14 @@ export default function Admin() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
   const [exporting, setExporting] = useState(false);
+  const [exportTeamId, setExportTeamId] = useState<string>("");
 
-  const handleExport = async () => {
+  const handleExport = async (teamIdOverride?: string, teamNameOverride?: string) => {
     setExporting(true);
     try {
-      await exportMonthXlsx(exportMonth, (msg) => toast.info(msg));
+      const tid = teamIdOverride || exportTeamId || undefined;
+      const tname = teamNameOverride || (tid ? teams.find(t => t.id === tid)?.name : undefined);
+      await exportMonthXlsx(exportMonth, (msg) => toast.info(msg), tid, tname);
       toast.success("Arquivo exportado com sucesso!");
     } catch (err: any) {
       toast.error("Erro ao exportar", { description: err.message });
@@ -523,12 +526,15 @@ export default function Admin() {
         </Card>
         )}
 
-        {/* Export Month - ADMIN only */}
-        {isAdmin && (
+        {/* Export Month */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Download className="h-5 w-5" />Exportar Mês Completo</CardTitle>
-            <CardDescription>Gere um arquivo XLSX com todos os dados do mês selecionado</CardDescription>
+            <CardDescription>
+              {isAdmin 
+                ? "Gere um arquivo XLSX com dados do mês — escolha a equipe" 
+                : "Gere um arquivo XLSX com dados da sua equipe"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap items-center gap-3">
@@ -542,14 +548,41 @@ export default function Admin() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button onClick={handleExport} disabled={exporting}>
+              {isAdmin && (
+                <Select value={exportTeamId} onValueChange={setExportTeamId}>
+                  <SelectTrigger className="w-[200px] h-9 text-sm">
+                    <SelectValue placeholder="Todas as equipes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as equipes</SelectItem>
+                    {teams.map(t => (
+                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <Button 
+                onClick={() => {
+                  if (isAdmin) {
+                    const tid = exportTeamId === "all" ? undefined : exportTeamId || undefined;
+                    const tname = tid ? teams.find(t => t.id === tid)?.name : undefined;
+                    handleExport(tid, tname);
+                  } else {
+                    // SUBADMIN: use their own team_id from users list
+                    const myUser = users.find(u => u.id === user?.id);
+                    const myTeamId = myUser?.team_id;
+                    const myTeamName = myTeamId ? teams.find(t => t.id === myTeamId)?.name : undefined;
+                    handleExport(myTeamId || undefined, myTeamName);
+                  }
+                }} 
+                disabled={exporting}
+              >
                 {exporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                 Exportar XLSX
               </Button>
             </div>
           </CardContent>
         </Card>
-        )}
 
         {/* Commission Settings - ADMIN only */}
         {isAdmin && (
