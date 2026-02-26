@@ -22,6 +22,7 @@ import {
   Bell,
   DollarSign,
   Home,
+  ShieldAlert,
 } from "lucide-react";
 
 export function Navbar() {
@@ -58,6 +59,9 @@ export function Navbar() {
     { path: "/registro", label: "Planilhamento", icon: FileText },
     { path: "/painel", label: "Painel de Consulta", icon: LayoutGrid },
     { path: "/gestao-influenciadores", label: "Gestão de Influs", icon: Users },
+    { path: "/diretorio", label: "Diretório", icon: Book },
+    { path: "/auditoria", label: "Auditoria", icon: ShieldAlert },
+    { path: "/notificacoes", label: "Notificações", icon: Bell },
     { path: "/admin", label: "Admin", icon: Settings },
   ];
 
