@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, LayoutGrid, Loader2, Lock, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import TeamThermometersSection from "@/components/painel/TeamThermometersSection";
 
 interface LockEntry {
   id: string;
@@ -31,7 +32,7 @@ function daysUntil(dateStr: string): number {
 }
 
 export default function PainelGeral() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [locks, setLocks] = useState<LockEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,8 +111,11 @@ export default function PainelGeral() {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="container py-6">
+      {/* Team Thermometers (Admin only) */}
+      <div className="container py-6 space-y-6">
+        {isAdmin && <TeamThermometersSection />}
+
+        {/* Locks Section */}
         {locks.length === 0 ? (
           <div className="empty-state">
             <Lock className="empty-state-icon" />
