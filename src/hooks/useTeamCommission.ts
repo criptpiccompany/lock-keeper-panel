@@ -9,7 +9,8 @@ export interface TeamMemberCommission {
   /** Only populated for the current user or when viewer is ADMIN */
   resultado: number | null;
   currentTierOrder: number;
-  currentPercentage: number;
+  /** Only populated for the current user or when viewer is ADMIN */
+  currentPercentage: number | null;
   /** Only populated for ADMIN viewers */
   nextThreshold: number | null;
   /** Only populated for ADMIN viewers */
@@ -103,7 +104,7 @@ export function useTeamCommission(month: string, viewerId?: string, viewerIsAdmi
           initials,
           resultado: canSeeFinancials ? resultado : null,
           currentTierOrder: current.tier_order,
-          currentPercentage: current.percentage,
+          currentPercentage: canSeeFinancials ? current.percentage : null,
           nextThreshold: canSeeFinancials && next ? next.threshold_result : null,
           amountMissing: canSeeFinancials && next ? Math.max(0, next.threshold_result - resultado) : null,
         };

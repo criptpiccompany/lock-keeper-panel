@@ -96,21 +96,25 @@ export default function TeamThermometerWidget({ month, compact = false }: Props)
 
               {/* Tooltip */}
               {isHovered && (
-                <div className="absolute left-full ml-3 bottom-1/2 translate-y-1/2 z-50 bg-card border border-border rounded-lg shadow-lg px-3 py-2 min-w-[180px] animate-fade-in">
+                <div className="absolute left-full ml-3 bottom-1/2 translate-y-1/2 z-50 bg-card border border-border rounded-lg shadow-lg px-3 py-2 min-w-[100px] animate-fade-in">
                   <p className="text-xs font-semibold text-foreground">{m.nome}</p>
-                  <div className="mt-1 space-y-0.5">
-                    <p className="text-[10px] text-muted-foreground">
-                      % atual: <span className="text-foreground font-medium">{m.currentPercentage}%</span>
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      Resultado: <span className="text-foreground font-medium">{formatBRL(m.resultado)}</span>
-                    </p>
-                    {m.amountMissing !== null && (
+                  {m.currentPercentage !== null && (
+                    <div className="mt-1 space-y-0.5">
                       <p className="text-[10px] text-muted-foreground">
-                        Faltam: <span className="text-foreground font-medium">{formatBRL(m.amountMissing)}</span>
+                        % atual: <span className="text-foreground font-medium">{m.currentPercentage}%</span>
                       </p>
-                    )}
-                  </div>
+                      {m.resultado !== null && (
+                        <p className="text-[10px] text-muted-foreground">
+                          Resultado: <span className="text-foreground font-medium">{formatBRL(m.resultado)}</span>
+                        </p>
+                      )}
+                      {m.amountMissing !== null && (
+                        <p className="text-[10px] text-muted-foreground">
+                          Faltam: <span className="text-foreground font-medium">{formatBRL(m.amountMissing)}</span>
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -136,7 +140,7 @@ export default function TeamThermometerWidget({ month, compact = false }: Props)
               style={{ backgroundColor: bubbleColors[idx % bubbleColors.length] }}
             />
             <span className="text-foreground font-medium truncate">{m.nome}</span>
-            <span className="text-muted-foreground tabular-nums ml-auto">{m.currentPercentage}%</span>
+            {m.currentPercentage !== null && <span className="text-muted-foreground tabular-nums ml-auto">{m.currentPercentage}%</span>}
           </div>
         ))}
       </div>
