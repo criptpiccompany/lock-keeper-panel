@@ -56,6 +56,7 @@ export function Navbar() {
   const adminOperationItems = [
     { path: "/meu", label: "Minha Lista", icon: User },
     { path: "/gestao-influenciadores", label: "Gestão de Influs", icon: Users },
+    { path: "/painel", label: "Painel de Consulta", icon: LayoutGrid },
   ];
 
   const navItems = isAdmin ? adminItems : closerItems;
