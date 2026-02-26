@@ -3,7 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-type UserRole = 'CLOSER' | 'ADMIN';
+type UserRole = 'CLOSER' | 'ADMIN' | 'SUBADMIN';
 
 type AccountStatus = 'pending' | 'approved' | 'rejected' | 'blocked';
 
@@ -24,6 +24,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, nome: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
+  isSubAdmin: boolean;
   isCloser: boolean;
 }
 
@@ -173,6 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signUp,
     signOut,
     isAdmin: user?.role === 'ADMIN',
+    isSubAdmin: user?.role === 'SUBADMIN',
     isCloser: user?.role === 'CLOSER',
   };
 

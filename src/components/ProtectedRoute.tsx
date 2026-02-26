@@ -23,11 +23,11 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (user.status !== 'approved' && user.role !== 'ADMIN') {
+  if (user.status !== 'approved' && user.role !== 'ADMIN' && user.role !== 'SUBADMIN') {
     return <Navigate to="/aguardando-aprovacao" replace />;
   }
 
-  if (requireAdmin && user.role !== 'ADMIN') {
+  if (requireAdmin && user.role !== 'ADMIN' && user.role !== 'SUBADMIN') {
     return <Navigate to="/meu" replace />;
   }
 

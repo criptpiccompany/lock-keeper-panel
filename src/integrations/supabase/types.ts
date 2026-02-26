@@ -279,6 +279,7 @@ export type Database = {
           observacao: string | null
           shared_note: string | null
           status: string | null
+          team_id: string | null
           updated_at: string
           valor_pago: number
         }
@@ -298,6 +299,7 @@ export type Database = {
           observacao?: string | null
           shared_note?: string | null
           status?: string | null
+          team_id?: string | null
           updated_at?: string
           valor_pago: number
         }
@@ -317,6 +319,7 @@ export type Database = {
           observacao?: string | null
           shared_note?: string | null
           status?: string | null
+          team_id?: string | null
           updated_at?: string
           valor_pago?: number
         }
@@ -326,6 +329,13 @@ export type Database = {
             columns: ["influencer_id"]
             isOneToOne: false
             referencedRelation: "influencers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_influencer_records_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -377,6 +387,7 @@ export type Database = {
           deleted_by: string | null
           id: string
           month: string
+          team_id: string | null
         }
         Insert: {
           closer_id: string
@@ -386,6 +397,7 @@ export type Database = {
           deleted_by?: string | null
           id?: string
           month: string
+          team_id?: string | null
         }
         Update: {
           closer_id?: string
@@ -395,8 +407,17 @@ export type Database = {
           deleted_by?: string | null
           id?: string
           month?: string
+          team_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "daily_sheets_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       influencer_locks: {
         Row: {
@@ -454,6 +475,7 @@ export type Database = {
           notas: string | null
           owner_id: string | null
           owner_nome: string | null
+          team_id: string | null
           updated_at: string
         }
         Insert: {
@@ -467,6 +489,7 @@ export type Database = {
           notas?: string | null
           owner_id?: string | null
           owner_nome?: string | null
+          team_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -480,9 +503,18 @@ export type Database = {
           notas?: string | null
           owner_id?: string | null
           owner_nome?: string | null
+          team_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "influencers_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       invites: {
         Row: {
@@ -536,6 +568,7 @@ export type Database = {
           last_moved_at: string
           observacao: string | null
           status: string
+          team_id: string | null
           updated_at: string
           valor_negociado: number | null
         }
@@ -554,6 +587,7 @@ export type Database = {
           last_moved_at?: string
           observacao?: string | null
           status?: string
+          team_id?: string | null
           updated_at?: string
           valor_negociado?: number | null
         }
@@ -572,10 +606,19 @@ export type Database = {
           last_moved_at?: string
           observacao?: string | null
           status?: string
+          team_id?: string | null
           updated_at?: string
           valor_negociado?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "kanban_influencers_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       monthly_influencer_list: {
         Row: {
@@ -592,6 +635,7 @@ export type Database = {
           influencer_id: string
           month: string
           observacoes: string | null
+          team_id: string | null
           updated_at: string
           valor_total: number | null
         }
@@ -609,6 +653,7 @@ export type Database = {
           influencer_id: string
           month: string
           observacoes?: string | null
+          team_id?: string | null
           updated_at?: string
           valor_total?: number | null
         }
@@ -626,10 +671,19 @@ export type Database = {
           influencer_id?: string
           month?: string
           observacoes?: string | null
+          team_id?: string | null
           updated_at?: string
           valor_total?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "monthly_influencer_list_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       monthly_platform_names: {
         Row: {
@@ -640,6 +694,7 @@ export type Database = {
           platform_1_name: string | null
           platform_2_name: string | null
           platform_3_name: string | null
+          team_id: string | null
           updated_at: string
         }
         Insert: {
@@ -650,6 +705,7 @@ export type Database = {
           platform_1_name?: string | null
           platform_2_name?: string | null
           platform_3_name?: string | null
+          team_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -660,9 +716,18 @@ export type Database = {
           platform_1_name?: string | null
           platform_2_name?: string | null
           platform_3_name?: string | null
+          team_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "monthly_platform_names_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

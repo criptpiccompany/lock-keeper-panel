@@ -27,7 +27,7 @@ import {
 export function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut, isAdmin } = useAuth();
+  const { user, signOut, isAdmin, isSubAdmin } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
@@ -51,6 +51,15 @@ export function Navbar() {
     { path: "/admin", label: "Admin", icon: Settings },
   ];
 
+  const subAdminItems = [
+    { path: "/home", label: "Home", icon: Home },
+    { path: "/financeiro", label: "Financeiro", icon: DollarSign },
+    { path: "/meu", label: "Minha Lista", icon: User },
+    { path: "/registro", label: "Planilhamento", icon: FileText },
+    { path: "/painel", label: "Painel de Consulta", icon: LayoutGrid },
+    { path: "/gestao-influenciadores", label: "Gestão de Influs", icon: Users },
+  ];
+
   // Admin operational items shown in profile dropdown
   const adminOperationItems = [
     { path: "/meu", label: "Minha Lista", icon: User },
@@ -58,7 +67,7 @@ export function Navbar() {
     { path: "/painel", label: "Painel de Consulta", icon: LayoutGrid },
   ];
 
-  const navItems = isAdmin ? adminItems : closerItems;
+  const navItems = isAdmin ? adminItems : isSubAdmin ? subAdminItems : closerItems;
 
   return (
     <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -107,7 +116,7 @@ export function Navbar() {
                   variant="outline" 
                   className={cn(
                     "text-xs ml-1",
-                    isAdmin ? "border-amber-300 text-amber-700 bg-amber-50" : "border-emerald-300 text-emerald-700 bg-emerald-50"
+                    isAdmin ? "border-amber-300 text-amber-700 bg-amber-50" : isSubAdmin ? "border-blue-300 text-blue-700 bg-blue-50" : "border-emerald-300 text-emerald-700 bg-emerald-50"
                   )}
                 >
                   {user.role}
