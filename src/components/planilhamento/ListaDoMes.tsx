@@ -13,6 +13,8 @@ import { Loader2, ListChecks, DollarSign, TrendingUp, TrendingDown, Receipt, Per
 import { toast } from "sonner";
 import SharedPartnersPopover, { type SharedPartner } from "./SharedPartnersPopover";
 import UnifiedThermometerWidget from "@/components/home/UnifiedThermometerWidget";
+import { useCommissionTier } from "@/hooks/useCommissionTier";
+import { getEstimatedCommission } from "@/lib/commissionCalc";
 
 /* ───── types ───── */
 
@@ -264,15 +266,22 @@ export default function ListaDoMes({ closerId }: { closerId?: string }) {
 
   /* ── computed summary ── */
   const currentCloser = closers.find((c) => c.id === selectedCloserId);
-  const commissionRate = currentCloser?.commission_rate ?? 0.1;
+
+  // Intermediate resultado for tier calculation
+  const rawFaturado = rows.reduce((sum, r) => sum + r.valor_total, 0);
+  const rawResultado = rawFaturado - investido;
+
+  // Use tier-based commission (same source of truth as thermometer)
+  const { currentPercentage, loading: tierLoading } = useCommissionTier(rawResultado);
+  const tierComissao = getEstimatedCommission(rawResultado, currentPercentage);
 
   const summary = useMemo(() => {
-    const faturado = rows.reduce((sum, r) => sum + r.valor_total, 0);
-    const resultado = faturado - investido;
-    const comissao = resultado > 0 ? resultado * commissionRate : 0;
+    const faturado = rawFaturado;
+    const resultado = rawResultado;
+    const comissao = tierComissao;
     const resultadoLiquido = resultado - comissao;
     return { faturado, resultado, comissao, resultadoLiquido };
-  }, [rows, investido, commissionRate]);
+  }, [rawFaturado, rawResultado, tierComissao]);
 
   /* ── field update ── */
   const updateField = useCallback(
@@ -362,7 +371,7 @@ export default function ListaDoMes({ closerId }: { closerId?: string }) {
 
         {currentCloser && (
           <span className="text-xs text-muted-foreground ml-auto">
-            Comissão: {(commissionRate * 100).toFixed(0)}%
+            Comissão: {currentPercentage}%
           </span>
         )}
       </div>
