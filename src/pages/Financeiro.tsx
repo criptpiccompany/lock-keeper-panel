@@ -11,6 +11,7 @@ import FinanceiroChart from "@/components/financeiro/FinanceiroChart";
 import FinanceiroEmployeeSection from "@/components/financeiro/FinanceiroEmployeeSection";
 import FinanceiroDeltaStrip from "@/components/financeiro/FinanceiroDeltaStrip";
 import FinanceiroHistory from "@/components/financeiro/FinanceiroHistory";
+import TeamThermometersSection from "@/components/painel/TeamThermometersSection";
 import {
   todayStr, yesterdayStr, daysAgoStr, dateToStr,
   type DailyRecord, type CloserProfile, type DayAggregate, type EmployeeDayData, type PeriodPreset,
@@ -159,6 +160,9 @@ export default function Financeiro() {
 
         {/* History */}
         <FinanceiroHistory byDate={byDate} today={today} yesterday={yesterday} filterStart={filterStart} filterEnd={filterEnd} />
+
+        {/* Team Thermometers */}
+        <TeamThermometersSection />
       </div>
 
       {/* Employee Detail Drawer */}

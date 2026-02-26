@@ -5,7 +5,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, LayoutGrid, Loader2, Lock, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import TeamThermometersSection from "@/components/painel/TeamThermometersSection";
 
 interface LockEntry {
   id: string;
@@ -111,9 +110,8 @@ export default function PainelGeral() {
         </div>
       </div>
 
-      {/* Team Thermometers (Admin only) */}
+      {/* Locks Section */}
       <div className="container py-6 space-y-6">
-        {isAdmin && <TeamThermometersSection />}
 
         {/* Locks Section */}
         {locks.length === 0 ? (
