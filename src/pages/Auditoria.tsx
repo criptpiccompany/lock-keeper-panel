@@ -16,7 +16,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { formatDateTime } from "@/lib/helpers";
 import {
   type AuditLog,
@@ -51,6 +53,11 @@ import {
   Users,
   User,
 } from "lucide-react";
+
+interface Team {
+  id: string;
+  name: string;
+}
 
 // --- Shared small components ---
 
@@ -88,28 +95,43 @@ function DescriptionCell({ log }: { log: AuditLog }) {
 // --- Main page ---
 
 export default function Auditoria() {
+  const { isAdmin } = useAuth();
   const [allLogs, setAllLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("ALL");
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>("");
 
   useEffect(() => {
-    const fetchLogs = async () => {
+    const fetchData = async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from("audit_logs" as any)
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(1000);
-      setAllLogs((data as any as AuditLog[]) || []);
+      const [logsRes, teamsRes] = await Promise.all([
+        supabase
+          .from("audit_logs" as any)
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(1000),
+        isAdmin ? supabase.from("teams").select("id, name") : Promise.resolve({ data: [] }),
+      ]);
+      setAllLogs((logsRes.data as any as AuditLog[]) || []);
+      const fetchedTeams = (teamsRes.data as Team[]) || [];
+      setTeams(fetchedTeams);
+      if (fetchedTeams.length > 0) setSelectedTeamId(fetchedTeams[0].id);
       setLoading(false);
     };
-    fetchLogs();
+    fetchData();
   }, []);
+
+  // Filter logs by selected team (ADMIN only)
+  const teamFilteredLogs = useMemo(() => {
+    if (!isAdmin || !selectedTeamId) return allLogs;
+    return allLogs.filter((l) => (l as any).team_id === selectedTeamId);
+  }, [allLogs, isAdmin, selectedTeamId]);
 
   // Build user tabs sorted by most recent action
   const userTabs = useMemo(() => {
     const map = new Map<string, { nome: string; lastAction: string }>();
-    allLogs.forEach((l) => {
+    teamFilteredLogs.forEach((l) => {
       if (l.actor_user_id && l.actor_nome) {
         const existing = map.get(l.actor_user_id);
         if (!existing || l.created_at > existing.lastAction) {
@@ -120,7 +142,7 @@ export default function Auditoria() {
     return Array.from(map.entries())
       .sort((a, b) => b[1].lastAction.localeCompare(a[1].lastAction))
       .map(([id, { nome, lastAction }]) => [id, nome, lastAction] as [string, string, string]);
-  }, [allLogs]);
+  }, [teamFilteredLogs]);
 
   // Track "last viewed" timestamps per user tab in localStorage
   const STORAGE_KEY = "audit_tab_last_viewed";
@@ -141,7 +163,7 @@ export default function Auditoria() {
   // Returns "sensitive" | "common" | null based on unseen actions
   const unseenLevel = (userId: string): "sensitive" | "common" | null => {
     const viewed = lastViewed[userId];
-    const userLogs = allLogs.filter((l) => l.actor_user_id === userId);
+    const userLogs = teamFilteredLogs.filter((l) => l.actor_user_id === userId);
     const unseen = viewed ? userLogs.filter((l) => l.created_at > viewed) : userLogs;
     if (unseen.length === 0) return null;
     if (unseen.some(isSensitiveAction)) return "sensitive";
@@ -153,11 +175,14 @@ export default function Auditoria() {
     if (userId !== "ALL") markTabViewed(userId);
   };
 
+  // Reset user tab when team changes
+  useEffect(() => { setActiveTab("ALL"); }, [selectedTeamId]);
+
   // Filter logs for current tab
   const tabLogs = useMemo(() => {
-    if (activeTab === "ALL") return allLogs;
-    return allLogs.filter((l) => l.actor_user_id === activeTab);
-  }, [allLogs, activeTab]);
+    if (activeTab === "ALL") return teamFilteredLogs;
+    return teamFilteredLogs.filter((l) => l.actor_user_id === activeTab);
+  }, [teamFilteredLogs, activeTab]);
 
   const activeUserName = activeTab === "ALL"
     ? null
@@ -175,14 +200,27 @@ export default function Auditoria() {
     <div className="min-h-screen">
       {/* Header */}
       <div className="border-b border-border/40">
-        <div className="container py-8">
-          <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
-            <ShieldAlert className="h-6 w-6" />
-            Auditoria
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Histórico de ações da equipe — {allLogs.length} eventos registrados
-          </p>
+        <div className="container py-8 space-y-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
+              <ShieldAlert className="h-6 w-6" />
+              Auditoria
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              Histórico de ações da equipe — {teamFilteredLogs.length} eventos registrados
+            </p>
+          </div>
+
+          {/* ADMIN: Team tabs */}
+          {isAdmin && teams.length > 1 && (
+            <Tabs value={selectedTeamId} onValueChange={setSelectedTeamId}>
+              <TabsList>
+                {teams.map(t => (
+                  <TabsTrigger key={t.id} value={t.id}>{t.name}</TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          )}
         </div>
       </div>
 

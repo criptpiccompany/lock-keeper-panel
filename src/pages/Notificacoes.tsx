@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDateTime } from "@/lib/helpers";
@@ -35,6 +36,11 @@ import {
   AlertTriangle,
   Calendar,
 } from "lucide-react";
+
+interface Team {
+  id: string;
+  name: string;
+}
 
 interface AdminNotification {
   id: string;
@@ -91,7 +97,7 @@ function formatValue(val: any): string {
 }
 
 export default function Notificacoes() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -103,30 +109,47 @@ export default function Notificacoes() {
   const [page, setPage] = useState(0);
   const [detailNotif, setDetailNotif] = useState<AdminNotification | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>("");
 
   const fetchNotifications = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("admin_notifications" as any)
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(1000);
-    setNotifications((data as any as AdminNotification[]) || []);
+    const [notifRes, teamsRes] = await Promise.all([
+      supabase
+        .from("admin_notifications" as any)
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(1000),
+      isAdmin ? supabase.from("teams").select("id, name") : Promise.resolve({ data: [] }),
+    ]);
+    setNotifications((notifRes.data as any as AdminNotification[]) || []);
+    const fetchedTeams = (teamsRes.data as Team[]) || [];
+    setTeams(fetchedTeams);
+    if (fetchedTeams.length > 0) setSelectedTeamId(fetchedTeams[0].id);
     setLoading(false);
   };
 
   useEffect(() => { fetchNotifications(); }, []);
 
+  // Filter by team (ADMIN only)
+  const teamFilteredNotifications = useMemo(() => {
+    if (!isAdmin || !selectedTeamId) return notifications;
+    return notifications.filter((n) => (n as any).team_id === selectedTeamId);
+  }, [notifications, isAdmin, selectedTeamId]);
+
+  // Reset filters when team changes
+  useEffect(() => { setFilterActor("ALL"); setPage(0); }, [selectedTeamId]);
+
   const actors = useMemo(() => {
     const map = new Map<string, string>();
-    notifications.forEach((n) => {
+    teamFilteredNotifications.forEach((n) => {
       if (n.actor_user_id && n.actor_nome) map.set(n.actor_user_id, n.actor_nome);
     });
     return Array.from(map.entries());
-  }, [notifications]);
+  }, [teamFilteredNotifications]);
 
   const filtered = useMemo(() => {
-    let result = notifications;
+    let result = teamFilteredNotifications;
     if (filterStatus !== "ALL") result = result.filter((n) => n.review_status === filterStatus);
     if (filterActor !== "ALL") result = result.filter((n) => n.actor_user_id === filterActor);
     if (filterActionType === "comprovante") {
@@ -152,14 +175,14 @@ export default function Notificacoes() {
       );
     }
     return result;
-  }, [notifications, filterStatus, filterActor, filterActionType, dateFrom, dateTo, search]);
+  }, [teamFilteredNotifications, filterStatus, filterActor, filterActionType, dateFrom, dateTo, search]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const pageData = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   useEffect(() => { setPage(0); }, [filterStatus, filterActor, filterActionType, dateFrom, dateTo, search]);
 
-  const pendingCount = notifications.filter((n) => n.review_status === "PENDENTE").length;
+  const pendingCount = teamFilteredNotifications.filter((n) => n.review_status === "PENDENTE").length;
 
   const updateStatus = async (id: string, status: "PENDENTE" | "REVISADO" | "SUSPEITO") => {
     setUpdating(true);
@@ -199,17 +222,30 @@ export default function Notificacoes() {
     <div className="min-h-screen">
       {/* Header */}
       <div className="border-b border-border/40">
-        <div className="container py-8">
-          <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
-            <Bell className="h-6 w-6" />
-            Notificações
-            {pendingCount > 0 && (
-              <Badge className="bg-amber-500 text-white text-xs ml-2">{pendingCount} pendente{pendingCount > 1 ? "s" : ""}</Badge>
-            )}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Edições com motivo obrigatório para revisão — {notifications.length} notificações
-          </p>
+        <div className="container py-8 space-y-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
+              <Bell className="h-6 w-6" />
+              Notificações
+              {pendingCount > 0 && (
+                <Badge className="bg-amber-500 text-white text-xs ml-2">{pendingCount} pendente{pendingCount > 1 ? "s" : ""}</Badge>
+              )}
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              Edições com motivo obrigatório para revisão — {teamFilteredNotifications.length} notificações
+            </p>
+          </div>
+
+          {/* ADMIN: Team tabs */}
+          {isAdmin && teams.length > 1 && (
+            <Tabs value={selectedTeamId} onValueChange={setSelectedTeamId}>
+              <TabsList>
+                {teams.map(t => (
+                  <TabsTrigger key={t.id} value={t.id}>{t.name}</TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          )}
         </div>
       </div>
 
