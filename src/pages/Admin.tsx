@@ -325,15 +325,15 @@ export default function Admin() {
           <AlertDescription className="text-amber-700">Todas as ações são registradas no log de auditoria.</AlertDescription>
         </Alert>
 
-        <Tabs defaultValue={isSubAdmin && !isAdmin ? "convites" : "gestao"} className="space-y-6">
+        <Tabs defaultValue="gestao" className="space-y-6">
           <TabsList>
-            {isAdmin && <TabsTrigger value="gestao"><Users className="h-4 w-4 mr-1.5" />Gestão</TabsTrigger>}
+            <TabsTrigger value="gestao"><Users className="h-4 w-4 mr-1.5" />Gestão</TabsTrigger>
             <TabsTrigger value="convites"><UserPlus className="h-4 w-4 mr-1.5" />Convites</TabsTrigger>
             {isAdmin && <TabsTrigger value="aprovacoes"><UserCheck className="h-4 w-4 mr-1.5" />Aprovações</TabsTrigger>}
             {isAdmin && <TabsTrigger value="orfaos"><UserX className="h-4 w-4 mr-1.5" />Órfãos</TabsTrigger>}
           </TabsList>
 
-          {isAdmin && <TabsContent value="gestao" className="space-y-6">
+          <TabsContent value="gestao" className="space-y-6">
 
         {/* Users Management */}
         <Card>
@@ -342,7 +342,8 @@ export default function Admin() {
             <CardDescription>Lista de usuários, papéis e redefinição de senha</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Team filter tabs */}
+           {/* Team filter tabs - ADMIN only */}
+            {isAdmin && (
             <div className="flex flex-wrap gap-2">
               <Button
                 variant={teamFilter === "all" ? "default" : "outline"}
@@ -365,6 +366,7 @@ export default function Admin() {
                 );
               })}
             </div>
+            )}
 
             <div className="rounded-lg border">
               <table className="w-full">
@@ -408,6 +410,7 @@ export default function Admin() {
                       </td>
                       <td className="p-3">
                         <div className="flex items-center justify-end gap-2">
+                          {isAdmin && (
                           <Button
                             variant="ghost"
                             size="icon"
@@ -417,6 +420,7 @@ export default function Admin() {
                           >
                             <ArrowRightLeft className="h-4 w-4" />
                           </Button>
+                          )}
                           <Button 
                             variant="ghost" 
                             size="icon"
@@ -433,6 +437,7 @@ export default function Admin() {
                           >
                             <Key className="h-4 w-4" />
                           </Button>
+                          {isAdmin && (
                           <Button 
                             variant="outline" 
                             size="sm"
@@ -448,6 +453,7 @@ export default function Admin() {
                               </>
                             )}
                           </Button>
+                          )}
                           <Button 
                             variant="outline" 
                             size="sm"
@@ -473,7 +479,8 @@ export default function Admin() {
           </CardContent>
         </Card>
 
-        {/* Archive Management */}
+        {/* Archive Management - ADMIN only */}
+        {isAdmin && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Archive className="h-5 w-5" />Arquivar/Desarquivar</CardTitle>
@@ -514,8 +521,10 @@ export default function Admin() {
             )}
           </CardContent>
         </Card>
+        )}
 
-        {/* Export Month */}
+        {/* Export Month - ADMIN only */}
+        {isAdmin && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Download className="h-5 w-5" />Exportar Mês Completo</CardTitle>
@@ -540,8 +549,10 @@ export default function Admin() {
             </div>
           </CardContent>
         </Card>
+        )}
 
-        {/* Commission Settings */}
+        {/* Commission Settings - ADMIN only */}
+        {isAdmin && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Percent className="h-5 w-5" />Comissão por Closer</CardTitle>
@@ -626,7 +637,8 @@ export default function Admin() {
             </div>
           </CardContent>
         </Card>
-          </TabsContent>}
+        )}
+          </TabsContent>
 
           <TabsContent value="convites">
             <InviteManagement />

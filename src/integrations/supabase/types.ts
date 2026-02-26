@@ -78,6 +78,7 @@ export type Database = {
           review_status: Database["public"]["Enums"]["notification_review_status"]
           reviewed_at: string | null
           reviewed_by: string | null
+          team_id: string | null
         }
         Insert: {
           action?: string
@@ -97,6 +98,7 @@ export type Database = {
           review_status?: Database["public"]["Enums"]["notification_review_status"]
           reviewed_at?: string | null
           reviewed_by?: string | null
+          team_id?: string | null
         }
         Update: {
           action?: string
@@ -116,6 +118,7 @@ export type Database = {
           review_status?: Database["public"]["Enums"]["notification_review_status"]
           reviewed_at?: string | null
           reviewed_by?: string | null
+          team_id?: string | null
         }
         Relationships: []
       }
@@ -162,6 +165,7 @@ export type Database = {
           entity_type: string
           field_changes: Json | null
           id: string
+          team_id: string | null
         }
         Insert: {
           action: string
@@ -175,6 +179,7 @@ export type Database = {
           entity_type: string
           field_changes?: Json | null
           id?: string
+          team_id?: string | null
         }
         Update: {
           action?: string
@@ -188,6 +193,7 @@ export type Database = {
           entity_type?: string
           field_changes?: Json | null
           id?: string
+          team_id?: string | null
         }
         Relationships: []
       }
