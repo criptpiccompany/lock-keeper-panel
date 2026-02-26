@@ -262,7 +262,7 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
         </div>
 
         {/* Info panel - own data only */}
-        <div className="flex flex-col justify-center gap-5 min-w-0 py-4 ml-20 sm:ml-24 pr-2">
+        <div className="flex flex-col justify-center gap-5 min-w-0 py-4 ml-[140px] sm:ml-[160px] pr-2">
           <div>
             <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-medium">Sua % do mês</p>
             <p className="text-4xl font-bold tabular-nums text-foreground mt-1">{currentPercentage}%</p>
