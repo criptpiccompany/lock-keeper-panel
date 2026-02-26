@@ -783,6 +783,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_user_team_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -791,6 +792,14 @@ export type Database = {
         Returns: boolean
       }
       is_approved: { Args: { _user_id: string }; Returns: boolean }
+      is_same_team: {
+        Args: { _user_id_a: string; _user_id_b: string }
+        Returns: boolean
+      }
+      is_team_admin: {
+        Args: { _admin_id: string; _target_id: string }
+        Returns: boolean
+      }
       validate_invite_token: { Args: { _token: string }; Returns: boolean }
     }
     Enums: {
