@@ -38,9 +38,9 @@ export function Navbar() {
   const closerItems = [
     { path: "/home", label: "Home", icon: Home },
     { path: "/meu", label: "Minha Lista", icon: User },
-    { path: "/gestao-influenciadores", label: "Gestão de Influenciadores", icon: Users },
     { path: "/registro", label: "Planilhamento", icon: FileText },
-    { path: "/painel", label: "Painel Geral", icon: LayoutGrid },
+    { path: "/painel", label: "Painel de Consulta", icon: LayoutGrid },
+    { path: "/gestao-influenciadores", label: "Gestão de Influs", icon: Users },
   ];
 
   const adminItems = [
@@ -55,7 +55,7 @@ export function Navbar() {
   // Admin operational items shown in profile dropdown
   const adminOperationItems = [
     { path: "/meu", label: "Minha Lista", icon: User },
-    { path: "/gestao-influenciadores", label: "Gestão de Influenciadores", icon: Users },
+    { path: "/gestao-influenciadores", label: "Gestão de Influs", icon: Users },
   ];
 
   const navItems = isAdmin ? adminItems : closerItems;
