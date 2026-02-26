@@ -834,6 +834,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_move_user_team: {
+        Args: { _new_team_id: string; _target_user_id: string }
+        Returns: undefined
+      }
       consume_invite_token: {
         Args: { _token: string; _user_id: string }
         Returns: undefined
