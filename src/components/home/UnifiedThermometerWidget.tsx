@@ -89,43 +89,62 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
             />
           </div>
 
-          {/* Tier tick marks */}
+          {/* Tier tick marks — LEFT: percentages */}
           {tiers.map((t) => {
             const pct = maxThreshold > 0 ? (t.threshold_result / maxThreshold) * 100 : 0;
             const isCurrent = t.tier_order === currentTierOrder;
             return (
               <div
-                key={t.tier_order}
-                className="absolute right-full mr-2 flex items-center gap-1"
+                key={`pct-${t.tier_order}`}
+                className="absolute right-full mr-1.5 flex items-center gap-1"
                 style={{ bottom: `${pct}%`, transform: "translateY(50%)" }}
               >
-                <div className="flex flex-col items-end">
-                  <span
-                    className={`tabular-nums leading-none ${
-                      isCurrent
-                        ? "text-[12px] text-foreground font-bold"
-                        : "text-[10px] text-muted-foreground/70 font-medium"
-                    }`}
-                  >
-                    {t.percentage}%
-                  </span>
-                  <span
-                    className={`tabular-nums leading-none mt-0.5 ${
-                      isCurrent
-                        ? "text-[9px] text-foreground/60"
-                        : "text-[8px] text-muted-foreground/40"
-                    }`}
-                  >
-                    {formatBRL(t.threshold_result)}
-                  </span>
-                </div>
+                <span
+                  className={`tabular-nums leading-none text-right min-w-[28px] ${
+                    isCurrent
+                      ? "text-[12px] text-foreground font-bold"
+                      : "text-[10px] text-muted-foreground/70 font-medium"
+                  }`}
+                >
+                  {t.percentage}%
+                </span>
                 <div
                   className={`${
                     isCurrent
-                      ? "w-4 bg-foreground/70 h-[2px] rounded-full"
-                      : "w-2.5 bg-muted-foreground/30 h-px"
+                      ? "w-3.5 bg-foreground/60 h-[2px] rounded-full"
+                      : "w-2 bg-muted-foreground/30 h-px"
                   }`}
                 />
+              </div>
+            );
+          })}
+
+          {/* Tier tick marks — RIGHT: BRL values */}
+          {tiers.map((t) => {
+            const pct = maxThreshold > 0 ? (t.threshold_result / maxThreshold) * 100 : 0;
+            const isCurrent = t.tier_order === currentTierOrder;
+            return (
+              <div
+                key={`brl-${t.tier_order}`}
+                className="absolute left-full ml-1.5 hidden sm:flex items-center gap-1"
+                style={{ bottom: `${pct}%`, transform: "translateY(50%)" }}
+              >
+                <div
+                  className={`${
+                    isCurrent
+                      ? "w-3.5 bg-foreground/60 h-[2px] rounded-full"
+                      : "w-2 bg-muted-foreground/30 h-px"
+                  }`}
+                />
+                <span
+                  className={`tabular-nums leading-none whitespace-nowrap ${
+                    isCurrent
+                      ? "text-[10px] text-foreground/60 font-semibold"
+                      : "text-[9px] text-muted-foreground/40 font-medium"
+                  }`}
+                >
+                  {formatBRL(t.threshold_result)}
+                </span>
               </div>
             );
           })}
