@@ -68,7 +68,7 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
   return (
     <div className="flex flex-col items-center gap-8">
       {/* Main layout */}
-      <div className="flex items-stretch gap-10 w-full max-w-lg mx-auto">
+      <div className="grid grid-cols-[auto_1fr] items-stretch w-full max-w-lg mx-auto">
         {/* Thermometer tube */}
         <div className="relative flex-shrink-0" style={{ width: 56, height: tubeHeight }}>
           <div
@@ -262,7 +262,7 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
         </div>
 
         {/* Info panel - own data only */}
-        <div className="flex flex-col justify-center gap-5 min-w-0 py-4 pl-12 sm:pl-16">
+        <div className="flex flex-col justify-center gap-5 min-w-0 py-4 pl-16 sm:pl-20 pr-2">
           <div>
             <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-medium">Sua % do mês</p>
             <p className="text-4xl font-bold tabular-nums text-foreground mt-1">{currentPercentage}%</p>
