@@ -794,7 +794,7 @@ export type Database = {
       validate_invite_token: { Args: { _token: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "CLOSER" | "ADMIN"
+      app_role: "CLOSER" | "ADMIN" | "SUBADMIN"
       notification_review_status: "PENDENTE" | "REVISADO" | "SUSPEITO"
     }
     CompositeTypes: {
@@ -923,7 +923,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["CLOSER", "ADMIN"],
+      app_role: ["CLOSER", "ADMIN", "SUBADMIN"],
       notification_review_status: ["PENDENTE", "REVISADO", "SUSPEITO"],
     },
   },
