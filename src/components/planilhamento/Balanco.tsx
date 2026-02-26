@@ -230,21 +230,21 @@ export default function Balanco({ closerId }: { closerId?: string }) {
       ) : (
         <>
           {/* Two-column layout: Thermometer + Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
+           <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-3">
             {/* Left: Thermometer */}
-            <div className="card-premium p-4 flex items-center justify-center lg:min-h-[320px]">
-              <UnifiedThermometerWidget resultado={totals.profit} month={selectedMonth} compact />
+            <div className="card-premium p-5 flex items-center justify-center lg:min-h-[380px]">
+              <UnifiedThermometerWidget resultado={totals.profit} month={selectedMonth} />
             </div>
 
             {/* Right: Financial Cards Grid */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
               {/* Row 1 */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <SummaryCard label="Faturamento" value={totals.revenue} icon={TrendingUp} />
                 <SummaryCard label="Investido" value={totals.invested} icon={DollarSign} />
               </div>
               {/* Row 2 */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <SummaryCard label={PLATFORM_FEE_LABEL} value={totals.fee} icon={Percent} variant="muted" />
                 <SummaryCard
                   label="Resultado"
