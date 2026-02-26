@@ -226,31 +226,41 @@ export default function Balanco({ closerId }: { closerId?: string }) {
         </div>
       ) : (
         <>
-          {/* Unified Thermometer */}
-          <div className="card-premium p-6">
-            <UnifiedThermometerWidget resultado={totals.profit} month={selectedMonth} compact />
-          </div>
+          {/* Two-column layout: Thermometer + Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
+            {/* Left: Thermometer */}
+            <div className="card-premium p-4 flex items-center justify-center lg:min-h-[320px]">
+              <UnifiedThermometerWidget resultado={totals.profit} month={selectedMonth} compact />
+            </div>
 
-          {/* Summary Cards */}
-          <div className={`grid grid-cols-2 md:grid-cols-3 ${isAdmin ? 'lg:grid-cols-6' : 'lg:grid-cols-5'} gap-3`}>
-            <SummaryCard label="Faturamento" value={totals.revenue} icon={TrendingUp} />
-            <SummaryCard label="Investido" value={totals.invested} icon={DollarSign} />
-            <SummaryCard label={PLATFORM_FEE_LABEL} value={totals.fee} icon={Percent} variant="muted" />
-            <SummaryCard
-              label="Resultado"
-              value={totals.profit}
-              icon={totals.profit >= 0 ? TrendingUp : TrendingDown}
-              variant={totals.profit > 0 ? (totals.profit / totals.invested >= 0.3 ? "positive" : "warning") : "negative"}
-            />
-            <SummaryCard label="Comissão" value={totals.commission} icon={Receipt} />
-            {isAdmin && (
-              <SummaryCard
-                label="Saldo Final"
-                value={totals.saldo}
-                icon={Wallet}
-                variant={totals.saldo >= 0 ? "positive" : "negative"}
-              />
-            )}
+            {/* Right: Financial Cards Grid */}
+            <div className="flex flex-col gap-3">
+              {/* Row 1 */}
+              <div className="grid grid-cols-2 gap-3">
+                <SummaryCard label="Faturamento" value={totals.revenue} icon={TrendingUp} />
+                <SummaryCard label="Investido" value={totals.invested} icon={DollarSign} />
+              </div>
+              {/* Row 2 */}
+              <div className="grid grid-cols-2 gap-3">
+                <SummaryCard label={PLATFORM_FEE_LABEL} value={totals.fee} icon={Percent} variant="muted" />
+                <SummaryCard
+                  label="Resultado"
+                  value={totals.profit}
+                  icon={totals.profit >= 0 ? TrendingUp : TrendingDown}
+                  variant={totals.profit > 0 ? (totals.profit / totals.invested >= 0.3 ? "positive" : "warning") : "negative"}
+                />
+              </div>
+              {/* Row 3 */}
+              <SummaryCard label="Comissão" value={totals.commission} icon={Receipt} />
+              {isAdmin && (
+                <SummaryCard
+                  label="Saldo Final"
+                  value={totals.saldo}
+                  icon={Wallet}
+                  variant={totals.saldo >= 0 ? "positive" : "negative"}
+                />
+              )}
+            </div>
           </div>
 
           {/* Daily Breakdown Table */}
