@@ -68,41 +68,76 @@ export function KanbanBoard() {
     }
   };
 
-  const handleAddCard = async (instagramUrl: string) => {
-    if (!user) return;
+  const handleAddCards = async (usernames: string[]) => {
+    if (!user || usernames.length === 0) return;
 
-    let username = instagramUrl.trim();
-    const match = username.match(
-      /(?:instagram\.com|instagr\.am)\/([a-zA-Z0-9_.]+)/
+    // Check for existing usernames to avoid duplicates
+    const existingUsernames = new Set(
+      cards.map((c) => c.instagram_username.toLowerCase())
     );
-    if (match) username = match[1];
-    username = username.replace(/^@/, "");
 
-    if (!username) {
-      toast.error("Username inválido");
+    const toInsert = usernames.filter(
+      (u) => !existingUsernames.has(u.toLowerCase())
+    );
+    const skipped = usernames.length - toInsert.length;
+
+    if (toInsert.length === 0) {
+      toast.warning(
+        skipped > 0
+          ? `${skipped} já existem no kanban`
+          : "Nenhum username válido"
+      );
       return;
     }
 
-    const { data, error } = await supabase
-      .from("kanban_influencers")
-      .insert({
-        closer_id: user.id,
-        instagram_url: instagramUrl.trim(),
-        instagram_username: username,
-        display_name: username,
-        status: "Fechar",
-      })
-      .select()
-      .single();
+    let added = 0;
+    let errors = 0;
+    const newCards: KanbanCard[] = [];
 
-    if (error) {
-      toast.error("Erro ao criar card");
-      console.error(error);
-      return;
+    for (const username of toInsert) {
+      try {
+        const { data, error } = await supabase
+          .from("kanban_influencers")
+          .insert({
+            closer_id: user.id,
+            instagram_url: `https://instagram.com/${username}`,
+            instagram_username: username,
+            display_name: username,
+            status: "Fechar",
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error(`Erro ao inserir @${username}:`, error);
+          errors++;
+        } else if (data) {
+          newCards.push(data);
+          added++;
+        }
+      } catch (err) {
+        console.error(`Erro inesperado ao inserir @${username}:`, err);
+        errors++;
+      }
     }
 
-    setCards((prev) => [...prev, data]);
-    toast.success(`@${username} adicionado`);
+    if (newCards.length > 0) {
+      setCards((prev) => [...prev, ...newCards]);
+    }
+
+    // Summary toast
+    const parts: string[] = [];
+    if (added > 0) parts.push(`${added} adicionado(s)`);
+    if (skipped > 0) parts.push(`${skipped} duplicado(s)`);
+    if (errors > 0) parts.push(`${errors} erro(s)`);
+
+    if (errors > 0 && added === 0) {
+      toast.error(parts.join(" · "));
+    } else if (errors > 0) {
+      toast.warning(parts.join(" · "));
+    } else {
+      toast.success(parts.join(" · "));
+    }
   };
 
   const handleArchiveCard = async (cardId: string) => {
@@ -224,7 +259,7 @@ export function KanbanBoard() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <KanbanAddCard onAdd={handleAddCard} />
+        <KanbanAddCard onAdd={handleAddCards} />
         <KanbanArchivePanel
           archivedCards={archivedCards}
           onRestore={handleRestoreCard}
