@@ -14,7 +14,16 @@ export default function MiniThermometer({ result, percentage, tiers }: Props) {
     ? Math.min(100, Math.max(2, (Math.max(0, result) / maxThreshold) * 100))
     : 2;
 
-  // Find current tier index for color
+  // Tier-based color mapping
+  const tierColorMap: Record<number, string> = {
+    15: "hsl(0 72% 48%)",
+    20: "hsl(25 95% 48%)",
+    25: "hsl(45 93% 42%)",
+    30: "hsl(142 71% 40%)",
+    33: "hsl(150 80% 28%)",
+    35: "hsl(45 85% 42%)",
+  };
+
   let tierIdx = 0;
   for (let i = tiers.length - 1; i >= 0; i--) {
     if (result >= tiers[i].threshold_result) {
@@ -22,8 +31,7 @@ export default function MiniThermometer({ result, percentage, tiers }: Props) {
       break;
     }
   }
-  const progress = tierIdx / Math.max(1, tiers.length - 1);
-  const hue = 10 + progress * 110; // red(10) → green(120)
+  const tierColor = tierColorMap[tiers[tierIdx]?.percentage] || "hsl(0 72% 48%)";
 
   return (
     <div className="flex items-end gap-1.5">
@@ -33,7 +41,7 @@ export default function MiniThermometer({ result, percentage, tiers }: Props) {
           className="absolute bottom-0 left-0 right-0 rounded-full transition-all duration-500"
           style={{
             height: `${fillPct}%`,
-            background: `linear-gradient(to top, hsl(${hue} 60% 50%), hsl(${hue} 60% 65%))`,
+            background: `linear-gradient(to top, ${tierColor}, ${tierColor}dd)`,
           }}
         />
         {/* Tier markers */}
