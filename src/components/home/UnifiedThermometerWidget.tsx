@@ -62,6 +62,17 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
   const isMax = currentTierOrder === tiers[tiers.length - 1].tier_order;
   const tubeHeight = compact ? 220 : 320;
 
+  // Tier-based color mapping
+  const tierColorMap: Record<number, { gradient: string; bulb: string; badge: string; label: string }> = {
+    15: { gradient: "linear-gradient(to top, hsl(0 72% 48%), hsl(0 72% 58%))", bulb: "hsl(0 72% 48%)", badge: "bg-red-500/15 text-red-500 border-red-500/30", label: "🔴" },
+    20: { gradient: "linear-gradient(to top, hsl(25 95% 48%), hsl(25 95% 58%))", bulb: "hsl(25 95% 48%)", badge: "bg-orange-500/15 text-orange-500 border-orange-500/30", label: "🟠" },
+    25: { gradient: "linear-gradient(to top, hsl(45 93% 42%), hsl(45 93% 52%))", bulb: "hsl(45 93% 42%)", badge: "bg-yellow-500/15 text-yellow-600 border-yellow-500/30", label: "🟡" },
+    30: { gradient: "linear-gradient(to top, hsl(142 71% 40%), hsl(142 71% 50%))", bulb: "hsl(142 71% 40%)", badge: "bg-green-500/15 text-green-500 border-green-500/30", label: "🟢" },
+    33: { gradient: "linear-gradient(to top, hsl(150 80% 28%), hsl(150 80% 38%))", bulb: "hsl(150 80% 28%)", badge: "bg-emerald-700/15 text-emerald-700 border-emerald-700/30", label: "💚" },
+    35: { gradient: "linear-gradient(to top, hsl(45 85% 42%), hsl(38 90% 52%))", bulb: "hsl(45 85% 42%)", badge: "bg-amber-400/15 text-amber-600 border-amber-400/30", label: "🏆" },
+  };
+  const currentColor = tierColorMap[currentPercentage] || tierColorMap[15];
+
   const otherMembers = members.filter((m) => m.userId !== user?.id);
   const currentUserMember = members.find((m) => m.userId === user?.id);
 
@@ -83,7 +94,7 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
               className="absolute bottom-0 left-0 right-0 rounded-b-full"
               style={{
                 height: `${fillPct}%`,
-                background: "linear-gradient(to top, hsl(0 72% 51%), hsl(20 90% 55%), hsl(40 90% 52%))",
+                background: currentColor.gradient,
                 transition: "height 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
               }}
             />
@@ -257,7 +268,7 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
             <div
               className="absolute inset-0 rounded-full transition-all duration-1000 ease-out"
               style={{
-                background: fillPct > 3 ? "hsl(0 72% 51%)" : "hsl(var(--muted) / 0.3)",
+                background: fillPct > 3 ? currentColor.bulb : "hsl(var(--muted) / 0.3)",
               }}
             />
           </div>
@@ -267,7 +278,12 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
         <div className="flex flex-col justify-center gap-5 min-w-0 py-4 ml-[140px] sm:ml-[160px] pr-2">
           <div>
             <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-medium">Sua % do mês</p>
-            <p className="text-4xl font-bold tabular-nums text-foreground mt-1">{currentPercentage}%</p>
+            <div className="flex items-center gap-3 mt-1">
+              <p className="text-4xl font-bold tabular-nums text-foreground">{currentPercentage}%</p>
+              <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${currentColor.badge}`}>
+                {currentColor.label} Tier {tiers.findIndex(t => t.tier_order === currentTierOrder) + 1}/{tiers.length}
+              </span>
+            </div>
           </div>
 
           <div className="space-y-3">

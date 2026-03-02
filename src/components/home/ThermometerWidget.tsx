@@ -39,6 +39,20 @@ export default function ThermometerWidget({ resultado, compact = false }: Props)
   const isMax = currentTierOrder === tiers[tiers.length - 1].tier_order;
   const height = compact ? "h-[200px]" : "h-[280px]";
 
+  // Tier-based mercury color
+  const tierGradientMap: Record<number, string> = {
+    15: "linear-gradient(to top, hsl(0 72% 48%), hsl(0 72% 58%))",
+    20: "linear-gradient(to top, hsl(25 95% 48%), hsl(25 95% 58%))",
+    25: "linear-gradient(to top, hsl(45 93% 42%), hsl(45 93% 52%))",
+    30: "linear-gradient(to top, hsl(142 71% 40%), hsl(142 71% 50%))",
+    33: "linear-gradient(to top, hsl(150 80% 28%), hsl(150 80% 38%))",
+    35: "linear-gradient(to top, hsl(45 85% 42%), hsl(38 90% 52%))",
+  };
+  const mercuryGradient = tierGradientMap[currentPercentage] || tierGradientMap[15];
+  const bulbColor = fillPct > 5
+    ? (currentPercentage === 35 ? "hsl(45 85% 42%)" : currentPercentage >= 30 ? "hsl(142 71% 40%)" : "hsl(0 72% 51%)")
+    : "hsl(var(--muted))";
+
   return (
     <div className="flex gap-6 items-stretch">
       {/* Thermometer */}
@@ -50,7 +64,7 @@ export default function ThermometerWidget({ resultado, compact = false }: Props)
             className="absolute bottom-0 left-0 right-0 rounded-full transition-all duration-1000 ease-out"
             style={{
               height: `${fillPct}%`,
-              background: `linear-gradient(to top, hsl(0 72% 51%), hsl(25 95% 53%), hsl(45 93% 47%))`,
+              background: mercuryGradient,
             }}
           />
         </div>
@@ -79,12 +93,12 @@ export default function ThermometerWidget({ resultado, compact = false }: Props)
 
         {/* Bulb at bottom */}
         <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full border border-border/60 bg-gradient-to-b from-muted/30 to-muted/10 overflow-hidden">
-          <div
-            className="absolute inset-0 rounded-full transition-all duration-1000 ease-out"
-            style={{
-              background: fillPct > 5 ? "hsl(0 72% 51%)" : "hsl(var(--muted))",
-            }}
-          />
+            <div
+              className="absolute inset-0 rounded-full transition-all duration-1000 ease-out"
+              style={{
+                background: bulbColor,
+              }}
+            />
         </div>
       </div>
 
