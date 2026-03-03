@@ -272,6 +272,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
   const [records, setRecords] = useState<DailyRecord[]>([]);
   const [influencers, setInfluencers] = useState<InfluencerOption[]>([]);
   const [loading, setLoading] = useState(true);
+  const hasFetchedOnce = useRef(false);
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
 
   // Edit reason modal state
@@ -314,7 +315,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
 
   const fetchData = useCallback(async () => {
     if (!user) return;
-    setLoading(true);
+    if (!hasFetchedOnce.current) setLoading(true);
 
     const startDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`;
     const endDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-${new Date(selectedYear, selectedMonth + 1, 0).getDate()}`;
@@ -376,15 +377,18 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
       setSharedPartnersMap(new Map());
     }
 
+    const isFirstFetch = !hasFetchedOnce.current;
     setLoading(false);
+    hasFetchedOnce.current = true;
 
     const today = new Date().toISOString().split("T")[0];
-    if (today >= startDate && today <= endDate) {
+    if (isFirstFetch && today >= startDate && today <= endDate) {
       setExpandedDays(new Set([today]));
     }
   }, [user, isAdmin, closerId, selectedYear, selectedMonth, monthKey]);
 
   useEffect(() => {
+    hasFetchedOnce.current = false;
     fetchData();
   }, [fetchData]);
 
