@@ -2,9 +2,10 @@
 export const LOCK_DURATION_DAYS = 10;
 export const LOCK_DURATION_MS = LOCK_DURATION_DAYS * 24 * 60 * 60 * 1000;
 
-// Platform fee rate (applied on revenue)
+// Platform fee rate — DEFAULT fallback (used when team rate is unavailable)
 export const PLATFORM_FEE_RATE = 0.06;
-export const PLATFORM_FEE_LABEL = "Taxa 6%";
+// DEPRECATED: Use getFeeLabel(rate) from useTeamFeeRate instead
+export const PLATFORM_FEE_LABEL = "Taxa (6%)";
 
 // Daily spreadsheet uses 10% for internal calculation
 export const DAILY_FEE_RATE = 0.10;

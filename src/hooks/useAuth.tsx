@@ -14,6 +14,7 @@ interface AuthUser {
   role: UserRole;
   status: AccountStatus;
   rejectionReason: string | null;
+  teamId: string | null;
 }
 
 interface AuthContextType {
@@ -40,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Fetch profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('nome, status, rejection_reason')
+        .select('nome, status, rejection_reason, team_id')
         .eq('id', userId)
         .single();
 
@@ -70,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: roleData.role as UserRole,
         status: (profile as any).status as AccountStatus || 'pending',
         rejectionReason: (profile as any).rejection_reason || null,
+        teamId: (profile as any).team_id || null,
       };
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);

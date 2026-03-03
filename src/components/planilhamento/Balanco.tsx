@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, TrendingUp, TrendingDown, DollarSign, Percent, Receipt, Wallet } from "lucide-react";
-import { PLATFORM_FEE_RATE, PLATFORM_FEE_LABEL } from "@/lib/constants";
+import { useTeamFeeRate } from "@/hooks/useTeamFeeRate";
 import { getEstimatedCommission } from "@/lib/commissionCalc";
 import { useCommissionTier } from "@/hooks/useCommissionTier";
 import UnifiedThermometerWidget from "@/components/home/UnifiedThermometerWidget";
@@ -58,6 +58,7 @@ interface DaySummary {
 
 export default function Balanco({ closerId }: { closerId?: string }) {
   const { user, isAdmin } = useAuth();
+  const { feeRate, feeLabel } = useTeamFeeRate(user?.teamId);
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState<DailyRecord[]>([]);
   const [closers, setClosers] = useState<CloserProfile[]>([]);
@@ -145,10 +146,10 @@ export default function Balanco({ closerId }: { closerId?: string }) {
       invested += Number(r.valor_pago) || 0;
       revenue += Number(r.faturamento) || 0;
     });
-    const fee = revenue * PLATFORM_FEE_RATE;
+    const fee = revenue * feeRate;
     const profit = revenue - invested - fee;
     return { invested, revenue, fee, profit };
-  }, [records]);
+  }, [records, feeRate]);
 
   // Use tier-based percentage for commission (single source of truth)
   const { currentPercentage, loading: tierLoading } = useCommissionTier(totals.profit);
@@ -167,7 +168,7 @@ export default function Balanco({ closerId }: { closerId?: string }) {
 
     const summaries: DaySummary[] = [];
     map.forEach((val, date) => {
-      const fee = val.revenue * PLATFORM_FEE_RATE;
+      const fee = val.revenue * feeRate;
       const profit = val.revenue - val.invested - fee;
       const commission = getEstimatedCommission(profit, currentPercentage);
       const saldo = profit - commission;
@@ -245,7 +246,7 @@ export default function Balanco({ closerId }: { closerId?: string }) {
               </div>
               {/* Row 2 */}
               <div className="grid grid-cols-2 gap-2">
-                <SummaryCard label={PLATFORM_FEE_LABEL} value={totals.fee} icon={Percent} variant="muted" />
+                <SummaryCard label={feeLabel} value={totals.fee} icon={Percent} variant="muted" />
                 <SummaryCard
                   label="Resultado"
                   value={totals.profit}
@@ -275,7 +276,7 @@ export default function Balanco({ closerId }: { closerId?: string }) {
                     <th className="text-left py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Data</th>
                     <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Investido</th>
                     <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Faturado</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">{PLATFORM_FEE_LABEL}</th>
+                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">{feeLabel}</th>
                     <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Resultado</th>
                     <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Comissão</th>
                     {isAdmin && <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Saldo</th>}

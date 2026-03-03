@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import UnifiedThermometerWidget from "@/components/home/UnifiedThermometerWidget";
 import ListaDoMes from "@/components/planilhamento/ListaDoMes";
-import { PLATFORM_FEE_RATE, PLATFORM_FEE_LABEL } from "@/lib/constants";
+import { useTeamFeeRate } from "@/hooks/useTeamFeeRate";
 import { useCommissionTier } from "@/hooks/useCommissionTier";
 import { getEstimatedCommission } from "@/lib/commissionCalc";
 
@@ -40,8 +40,10 @@ export default function ThermometerDrawerContent({ closerId, initialMonth }: Pro
   const [loading, setLoading] = useState(true);
   const [invested, setInvested] = useState(0);
   const [revenue, setRevenue] = useState(0);
+  const [closerTeamId, setCloserTeamId] = useState<string | null>(null);
 
   const monthOptions = useMemo(() => getMonthOptions(), []);
+  const { feeRate, feeLabel } = useTeamFeeRate(closerTeamId);
 
   useEffect(() => {
     setLoading(true);
@@ -49,26 +51,29 @@ export default function ThermometerDrawerContent({ closerId, initialMonth }: Pro
     const startDate = `${year}-${mo}-01`;
     const endDate = `${year}-${mo}-${String(new Date(Number(year), Number(mo), 0).getDate()).padStart(2, "0")}`;
 
-    supabase
-      .from("daily_influencer_records")
-      .select("valor_pago, faturamento")
-      .eq("closer_id", closerId)
-      .gte("date", startDate)
-      .lte("date", endDate)
-      .is("deleted_at", null)
-      .then(({ data }) => {
-        let inv = 0, rev = 0;
-        (data || []).forEach((r: any) => {
-          inv += Number(r.valor_pago) || 0;
-          rev += Number(r.faturamento) || 0;
-        });
-        setInvested(inv);
-        setRevenue(rev);
-        setLoading(false);
+    Promise.all([
+      supabase
+        .from("daily_influencer_records")
+        .select("valor_pago, faturamento")
+        .eq("closer_id", closerId)
+        .gte("date", startDate)
+        .lte("date", endDate)
+        .is("deleted_at", null),
+      supabase.from("profiles").select("team_id").eq("id", closerId).single(),
+    ]).then(([{ data }, { data: profile }]) => {
+      let inv = 0, rev = 0;
+      (data || []).forEach((r: any) => {
+        inv += Number(r.valor_pago) || 0;
+        rev += Number(r.faturamento) || 0;
       });
+      setInvested(inv);
+      setRevenue(rev);
+      if (profile) setCloserTeamId((profile as any).team_id);
+      setLoading(false);
+    });
   }, [closerId, month]);
 
-  const fee = revenue * PLATFORM_FEE_RATE;
+  const fee = revenue * feeRate;
   const result = revenue - invested - fee;
 
   const { currentPercentage, loading: tierLoading } = useCommissionTier(result);
@@ -109,7 +114,7 @@ export default function ThermometerDrawerContent({ closerId, initialMonth }: Pro
           <SummaryCard label="Investido" value={invested} icon={DollarSign} />
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <SummaryCard label={PLATFORM_FEE_LABEL} value={fee} icon={Percent} variant="muted" />
+          <SummaryCard label={feeLabel} value={fee} icon={Percent} variant="muted" />
           <SummaryCard
             label="Resultado"
             value={result}

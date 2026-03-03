@@ -6,14 +6,10 @@ export interface TeamMemberCommission {
   userId: string;
   nome: string;
   initials: string;
-  /** Only populated for the current user or when viewer is ADMIN */
   resultado: number | null;
   currentTierOrder: number;
-  /** Only populated for the current user or when viewer is ADMIN */
   currentPercentage: number | null;
-  /** Only populated for ADMIN viewers */
   nextThreshold: number | null;
-  /** Only populated for ADMIN viewers */
   amountMissing: number | null;
 }
 
@@ -25,9 +21,7 @@ interface CommissionTier {
 
 /**
  * Fetches team members' commission tiers for the month.
- * - ADMIN: sees full financial data for all members
- * - CLOSER: sees only name + percentage (no financial values for others)
- *   Backend RLS already blocks access to other closers' records.
+ * Now uses per-team fee rates.
  */
 export function useTeamCommission(month: string, viewerId?: string, viewerIsAdmin?: boolean) {
   const [members, setMembers] = useState<TeamMemberCommission[]>([]);
@@ -38,28 +32,39 @@ export function useTeamCommission(month: string, viewerId?: string, viewerIsAdmi
     const fetchAll = async () => {
       setLoading(true);
 
-      const { data: tierData } = await supabase
-        .from("commission_tiers")
-        .select("tier_order, percentage, threshold_result")
-        .eq("team_id", "default")
-        .order("tier_order", { ascending: true });
+      const [tierRes, closersRes, profilesRes, teamsRes] = await Promise.all([
+        supabase
+          .from("commission_tiers")
+          .select("tier_order, percentage, threshold_result")
+          .eq("team_id", "default")
+          .order("tier_order", { ascending: true }),
+        supabase.rpc("get_approved_closers"),
+        supabase.from("profiles").select("id, team_id"),
+        supabase.from("teams").select("id, taxa_operacional"),
+      ]);
 
-      const fetchedTiers = (tierData as any as CommissionTier[]) || [];
+      const fetchedTiers = (tierRes.data as any as CommissionTier[]) || [];
       setTiers(fetchedTiers);
 
-      const { data: closers } = await supabase.rpc("get_approved_closers");
-      if (!closers || closers.length === 0) {
+      const closers = closersRes.data || [];
+      if (closers.length === 0) {
         setMembers([]);
         setLoading(false);
         return;
       }
+
+      // Build maps
+      const userTeamMap = new Map<string, string>();
+      (profilesRes.data || []).forEach((p: any) => { if (p.team_id) userTeamMap.set(p.id, p.team_id); });
+      
+      const teamFeeMap = new Map<string, number>();
+      (teamsRes.data || []).forEach((t: any) => teamFeeMap.set(t.id, Number(t.taxa_operacional) ?? PLATFORM_FEE_RATE));
 
       const [year, mo] = month.split("-");
       const startDate = `${year}-${mo}-01`;
       const endDate = new Date(Number(year), Number(mo), 0);
       const endDateStr = `${year}-${mo}-${String(endDate.getDate()).padStart(2, "0")}`;
 
-      // RLS ensures closers only get their own records
       const { data: records } = await supabase
         .from("daily_influencer_records")
         .select("closer_id, valor_pago, faturamento")
@@ -77,7 +82,9 @@ export function useTeamCommission(month: string, viewerId?: string, viewerIsAdmi
 
       const result: TeamMemberCommission[] = closers.map((c: any) => {
         const agg = closerMap.get(c.id) || { invested: 0, revenue: 0 };
-        const fee = agg.revenue * PLATFORM_FEE_RATE;
+        const teamId = userTeamMap.get(c.id);
+        const rate = teamId ? teamFeeMap.get(teamId) ?? PLATFORM_FEE_RATE : PLATFORM_FEE_RATE;
+        const fee = agg.revenue * rate;
         const resultado = agg.revenue - agg.invested - fee;
 
         let currentIdx = 0;

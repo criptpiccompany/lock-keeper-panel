@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Loader2, ListChecks, DollarSign, TrendingUp, TrendingDown, Receipt, Percent, Mail } from "lucide-react";
-import { PLATFORM_FEE_RATE, PLATFORM_FEE_LABEL } from "@/lib/constants";
+import { useTeamFeeRate } from "@/hooks/useTeamFeeRate";
 import { toast } from "sonner";
 import SharedPartnersPopover, { type SharedPartner } from "./SharedPartnersPopover";
 import UnifiedThermometerWidget from "@/components/home/UnifiedThermometerWidget";
@@ -74,6 +74,7 @@ const DEFAULT_PLATFORMS: PlatformNames = {
 
 export default function ListaDoMes({ closerId, hideThermometer = false }: { closerId?: string; hideThermometer?: boolean }) {
   const { user, isAdmin } = useAuth();
+  const { feeRate, feeLabel } = useTeamFeeRate(user?.teamId);
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<ListRow[]>([]);
   const [closers, setClosers] = useState<CloserProfile[]>([]);
@@ -270,7 +271,7 @@ export default function ListaDoMes({ closerId, hideThermometer = false }: { clos
 
   // Intermediate resultado for tier calculation
   const rawFaturado = rows.reduce((sum, r) => sum + r.valor_total, 0);
-  const rawFee = rawFaturado * PLATFORM_FEE_RATE;
+  const rawFee = rawFaturado * feeRate;
   const rawResultado = rawFaturado - investido - rawFee;
 
   // Use tier-based commission (same source of truth as thermometer)
@@ -404,7 +405,7 @@ export default function ListaDoMes({ closerId, hideThermometer = false }: { clos
                 <SummaryCard label="Investido" value={investido} icon={DollarSign} />
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <SummaryCard label={PLATFORM_FEE_LABEL} value={summary.fee} icon={Percent} variant="muted" />
+                <SummaryCard label={feeLabel} value={summary.fee} icon={Percent} variant="muted" />
                 <SummaryCard
                   label="Resultado"
                   value={summary.resultado}
