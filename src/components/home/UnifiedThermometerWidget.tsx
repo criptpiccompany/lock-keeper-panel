@@ -278,9 +278,9 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
         <div className="flex flex-col justify-center gap-4 sm:gap-5 min-w-0 py-4 ml-[100px] sm:ml-[140px] md:ml-[160px] pr-2">
           <div>
             <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-medium">Sua % do mês</p>
-            <div className="flex items-center gap-3 mt-1">
+            <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 mt-1">
               <p className="text-3xl sm:text-4xl font-bold tabular-nums text-foreground">{currentPercentage}%</p>
-              <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${currentColor.badge}`}>
+              <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] md:text-[10px] md:px-2 font-semibold whitespace-nowrap w-fit ${currentColor.badge}`}>
                 {currentColor.label} Tier {tiers.findIndex(t => t.tier_order === currentTierOrder) + 1}/{tiers.length}
               </span>
             </div>
