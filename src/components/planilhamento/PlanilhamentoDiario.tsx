@@ -1202,8 +1202,8 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                               <div key={record.id} className="px-4 py-3 space-y-2">
                                 {/* Header: handle + badges */}
                                 <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-1.5 font-medium text-sm">
-                                    {getInfluencerHandle(record.influencer_id)}
+                                  <div className="flex items-center gap-1.5 font-medium text-sm min-w-0">
+                                    <span className="truncate">{getInfluencerHandle(record.influencer_id)}</span>
                                     {record.is_shared && (
                                       <SharedPartnersPopover
                                         partners={sharedPartnersMap.get(record.id) || []}
@@ -1212,7 +1212,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                                       />
                                     )}
                                   </div>
-                                  <div className="flex items-center gap-1">
+                                  <div className="flex items-center gap-1.5 shrink-0">
                                     {record.comprovante_url ? (
                                       <ComprovanteThumbnail
                                         url={record.comprovante_url}
@@ -1229,6 +1229,15 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                                         url={record.comprovante_url_2}
                                         onClick={() => handleViewComprovante(record.comprovante_url_2!)}
                                       />
+                                    )}
+                                    {!viewingOther && (
+                                      <button
+                                        className="inline-flex items-center justify-center h-8 w-8 min-h-[40px] min-w-[40px] rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                                        onClick={() => openEditRecord(record)}
+                                        title="Editar registro"
+                                      >
+                                        <Pencil className="h-3.5 w-3.5" />
+                                      </button>
                                     )}
                                   </div>
                                 </div>
@@ -1261,31 +1270,6 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                                   )}
                                 </div>
 
-                                {/* Action buttons — always visible */}
-                                {!viewingOther && (
-                                  <div className="flex gap-2 pt-1">
-                                    <Button
-                                      size="sm"
-                                      variant="default"
-                                      className="h-8 text-xs flex-1"
-                                      onClick={() => openEditRecord(record)}
-                                    >
-                                      <Pencil className="mr-1 h-3.5 w-3.5" />
-                                      Editar
-                                    </Button>
-                                    {!record.comprovante_url && (
-                                      <Button
-                                        size="sm"
-                                        variant="secondary"
-                                        className="h-8 text-xs flex-1"
-                                        onClick={() => openEditRecord(record)}
-                                      >
-                                        <Upload className="mr-1 h-3.5 w-3.5" />
-                                        Anexar
-                                      </Button>
-                                    )}
-                                  </div>
-                                )}
                               </div>
                             );
                           })}
