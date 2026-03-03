@@ -1066,39 +1066,143 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                   </div>
                 </button>
 
-                {/* Expanded table */}
+                {/* Expanded content */}
                 {isExpanded && (
                   <div className="border-t">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="bg-muted/60">
-                          <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Nome</th>
-                          <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Valor Pago</th>
-                          <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Faturamento</th>
-                          <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Resultado</th>
-                          <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Acumulado</th>
-                          <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Status</th>
-                          <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-center">📎</th>
-                          {!viewingOther && <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-right">Ações</th>}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {dayRecords.length === 0 ? (
-                          <tr>
-                            <td colSpan={8} className="py-6 text-center text-sm text-muted-foreground">
-                              Nenhum registro. Clique no + para adicionar.
-                            </td>
+                    {/* Desktop table (hidden on mobile) */}
+                    <div className="hidden md:block">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="bg-muted/60">
+                            <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Nome</th>
+                            <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Valor Pago</th>
+                            <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Faturamento</th>
+                            <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Resultado</th>
+                            <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Acumulado</th>
+                            <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Status</th>
+                            <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-center">📎</th>
+                            {!viewingOther && <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-right">Ações</th>}
                           </tr>
-                        ) : (
-                          dayRecords.map((record, idx) => {
+                        </thead>
+                        <tbody>
+                          {dayRecords.length === 0 ? (
+                            <tr>
+                              <td colSpan={8} className="py-6 text-center text-sm text-muted-foreground">
+                                Nenhum registro. Clique no + para adicionar.
+                              </td>
+                            </tr>
+                          ) : (
+                            dayRecords.map((record, idx) => {
+                              const lucro = calcLucroLiquido(record.faturamento, record.valor_pago);
+                              const resultado = getStatusResultado(record.faturamento, record.valor_pago);
+                              const zebraClass = idx % 2 === 1 ? "bg-muted/50" : "bg-background";
+
+                              return (
+                                <tr key={record.id} className={`border-t border-border/30 hover:bg-muted/60 transition-colors ${zebraClass}`}>
+                                  <td className="py-2.5 px-4 text-sm font-medium">
+                                    <div className="flex items-center gap-1.5">
+                                      {getInfluencerHandle(record.influencer_id)}
+                                      {record.is_shared && (
+                                        <SharedPartnersPopover
+                                          partners={sharedPartnersMap.get(record.id) || []}
+                                          sharedNote={record.shared_note}
+                                          compact
+                                        />
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td className="py-2.5 px-4 text-sm">{formatCurrency(record.valor_pago)}</td>
+                                  <td className="py-2.5 px-4 text-sm">
+                                    {record.faturamento !== null ? (
+                                      formatCurrency(record.faturamento)
+                                    ) : (
+                                      <span className="text-muted-foreground italic text-xs">pendente</span>
+                                    )}
+                                  </td>
+                                  <td className="py-2.5 px-4">
+                                    <div className="flex items-center gap-2">
+                                      <span className={`text-sm font-medium ${resultadoColor(resultado)}`}>
+                                        {record.faturamento !== null ? formatCurrency(lucro) : "—"}
+                                      </span>
+                                      {resultado && <ResultadoChip status={resultado} />}
+                                    </div>
+                                  </td>
+                                  <td className="py-2.5 px-4">
+                                    {viewingOther ? (
+                                      <span className={`text-sm ${record.acumulado !== null && record.acumulado < 0 ? "text-red-600 font-medium" : record.acumulado !== null && record.acumulado > 0 ? "text-emerald-700 font-medium" : ""}`}>
+                                        {record.acumulado !== null ? formatCurrency(record.acumulado) : "—"}
+                                      </span>
+                                    ) : (
+                                      <InlineAcumulado
+                                        value={record.acumulado ?? null}
+                                        onSave={(val) => handleAcumuladoSave(record.id, val)}
+                                      />
+                                    )}
+                                  </td>
+                                  <td className="py-2.5 px-4">
+                                    {viewingOther ? (
+                                      <span className="text-xs text-muted-foreground">{record.status || "—"}</span>
+                                    ) : (
+                                      <WorkflowStatusDropdown
+                                        value={record.status}
+                                        onChange={(val) => handleStatusChange(record.id, val)}
+                                      />
+                                    )}
+                                  </td>
+                                  <td className="py-2.5 px-4 text-center">
+                                    <div className="flex items-center justify-center gap-1">
+                                      {record.comprovante_url ? (
+                                        <ComprovanteThumbnail
+                                          url={record.comprovante_url}
+                                          onClick={() => handleViewComprovante(record.comprovante_url)}
+                                        />
+                                      ) : null}
+                                      {record.comprovante_url_2 ? (
+                                        <ComprovanteThumbnail
+                                          url={record.comprovante_url_2}
+                                          onClick={() => handleViewComprovante(record.comprovante_url_2!)}
+                                        />
+                                      ) : null}
+                                      {!record.comprovante_url && (
+                                        <div className="flex flex-col items-center gap-1">
+                                          <AlertCircle className="h-4 w-4 text-destructive" />
+                                          <span className="text-[10px] text-destructive font-medium leading-tight">Pendente</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </td>
+                                  {!viewingOther && (
+                                    <td className="py-2.5 px-4 text-right">
+                                      <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => openEditRecord(record)}>
+                                        Editar
+                                      </Button>
+                                    </td>
+                                  )}
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile card view (visible only on mobile) */}
+                    <div className="md:hidden">
+                      {dayRecords.length === 0 ? (
+                        <div className="py-6 text-center text-sm text-muted-foreground">
+                          Nenhum registro. Clique no + para adicionar.
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-border/30">
+                          {dayRecords.map((record) => {
                             const lucro = calcLucroLiquido(record.faturamento, record.valor_pago);
                             const resultado = getStatusResultado(record.faturamento, record.valor_pago);
-                            const zebraClass = idx % 2 === 1 ? "bg-muted/50" : "bg-background";
 
                             return (
-                              <tr key={record.id} className={`border-t border-border/30 hover:bg-muted/60 transition-colors ${zebraClass}`}>
-                                <td className="py-2.5 px-4 text-sm font-medium">
-                                  <div className="flex items-center gap-1.5">
+                              <div key={record.id} className="px-4 py-3 space-y-2">
+                                {/* Header: handle + badges */}
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-1.5 font-medium text-sm">
                                     {getInfluencerHandle(record.influencer_id)}
                                     {record.is_shared && (
                                       <SharedPartnersPopover
@@ -1108,80 +1212,86 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                                       />
                                     )}
                                   </div>
-                                </td>
-                                <td className="py-2.5 px-4 text-sm">{formatCurrency(record.valor_pago)}</td>
-                                <td className="py-2.5 px-4 text-sm">
-                                  {record.faturamento !== null ? (
-                                    formatCurrency(record.faturamento)
-                                  ) : (
-                                    <span className="text-muted-foreground italic text-xs">pendente</span>
-                                  )}
-                                </td>
-                                <td className="py-2.5 px-4">
-                                  <div className="flex items-center gap-2">
-                                    <span className={`text-sm font-medium ${resultadoColor(resultado)}`}>
-                                      {record.faturamento !== null ? formatCurrency(lucro) : "—"}
-                                    </span>
-                                    {resultado && <ResultadoChip status={resultado} />}
-                                  </div>
-                                </td>
-                                <td className="py-2.5 px-4">
-                                  {viewingOther ? (
-                                    <span className={`text-sm ${record.acumulado !== null && record.acumulado < 0 ? "text-red-600 font-medium" : record.acumulado !== null && record.acumulado > 0 ? "text-emerald-700 font-medium" : ""}`}>
-                                      {record.acumulado !== null ? formatCurrency(record.acumulado) : "—"}
-                                    </span>
-                                  ) : (
-                                    <InlineAcumulado
-                                      value={record.acumulado ?? null}
-                                      onSave={(val) => handleAcumuladoSave(record.id, val)}
-                                    />
-                                  )}
-                                </td>
-                                <td className="py-2.5 px-4">
-                                  {viewingOther ? (
-                                    <span className="text-xs text-muted-foreground">{record.status || "—"}</span>
-                                  ) : (
-                                    <WorkflowStatusDropdown
-                                      value={record.status}
-                                      onChange={(val) => handleStatusChange(record.id, val)}
-                                    />
-                                  )}
-                                </td>
-                                <td className="py-2.5 px-4 text-center">
-                                  <div className="flex items-center justify-center gap-1">
+                                  <div className="flex items-center gap-1">
                                     {record.comprovante_url ? (
                                       <ComprovanteThumbnail
                                         url={record.comprovante_url}
                                         onClick={() => handleViewComprovante(record.comprovante_url)}
                                       />
-                                    ) : null}
-                                    {record.comprovante_url_2 ? (
+                                    ) : (
+                                      <Badge variant="destructive" className="text-[10px] gap-0.5 px-1.5 py-0.5">
+                                        <AlertCircle className="h-3 w-3" />
+                                        Pendente
+                                      </Badge>
+                                    )}
+                                    {record.comprovante_url_2 && (
                                       <ComprovanteThumbnail
                                         url={record.comprovante_url_2}
                                         onClick={() => handleViewComprovante(record.comprovante_url_2!)}
                                       />
-                                    ) : null}
-                                    {!record.comprovante_url && (
-                                      <div className="flex flex-col items-center gap-1">
-                                        <AlertCircle className="h-4 w-4 text-destructive" />
-                                        <span className="text-[10px] text-destructive font-medium leading-tight">Pendente</span>
-                                      </div>
                                     )}
                                   </div>
-                                </td>
+                                </div>
+
+                                {/* Values grid */}
+                                <div className="grid grid-cols-3 gap-2 text-xs">
+                                  <div>
+                                    <span className="text-muted-foreground block">Pago</span>
+                                    <span className="font-medium">{formatCurrency(record.valor_pago)}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-muted-foreground block">Faturamento</span>
+                                    <span className="font-medium">
+                                      {record.faturamento !== null ? formatCurrency(record.faturamento) : <span className="italic text-muted-foreground">pendente</span>}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="text-muted-foreground block">Resultado</span>
+                                    <span className={`font-medium ${resultadoColor(resultado)}`}>
+                                      {record.faturamento !== null ? formatCurrency(lucro) : "—"}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Status + resultado badge row */}
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {resultado && <ResultadoChip status={resultado} />}
+                                  {record.status && (
+                                    <Badge variant="secondary" className="text-[10px]">{record.status}</Badge>
+                                  )}
+                                </div>
+
+                                {/* Action buttons — always visible */}
                                 {!viewingOther && (
-                                  <td className="py-2.5 px-4 text-right">
-                                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => openEditRecord(record)}>
+                                  <div className="flex gap-2 pt-1">
+                                    <Button
+                                      size="sm"
+                                      variant="default"
+                                      className="h-8 text-xs flex-1"
+                                      onClick={() => openEditRecord(record)}
+                                    >
+                                      <Pencil className="mr-1 h-3.5 w-3.5" />
                                       Editar
                                     </Button>
-                                  </td>
+                                    {!record.comprovante_url && (
+                                      <Button
+                                        size="sm"
+                                        variant="secondary"
+                                        className="h-8 text-xs flex-1"
+                                        onClick={() => openEditRecord(record)}
+                                      >
+                                        <Upload className="mr-1 h-3.5 w-3.5" />
+                                        Anexar
+                                      </Button>
+                                    )}
+                                  </div>
                                 )}
-                              </tr>
+                              </div>
                             );
-                          })
-                        )}
-                      </tbody>
-                    </table>
+                          })}
+                        </div>
+                      )}
+                    </div>
 
                     {/* Blue + button: add influencer to this day */}
                     {!viewingOther && (
