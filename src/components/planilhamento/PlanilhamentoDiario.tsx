@@ -54,6 +54,8 @@ import {
   X,
   AlertCircle,
   CalendarDays,
+  ArrowDown,
+  ArrowUp,
 } from "lucide-react";
 import ComprovanteThumbnail from "./ComprovanteThumbnail";
 import ComprovanteLightbox from "./ComprovanteLightbox";
@@ -1060,9 +1062,9 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                       </Badge>
                     )}
                   </div>
-                  <div className="hidden sm:flex items-center gap-4 text-xs text-muted-foreground whitespace-nowrap shrink-0">
-                    <span>Pago: {formatCurrency(dayTotal)}</span>
-                    <span>Fat: {formatCurrency(dayFat)}</span>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                    <span className="inline-flex items-center gap-0.5"><ArrowDown className="h-3 w-3" />{formatCurrency(dayTotal)}</span>
+                    <span className="inline-flex items-center gap-0.5"><ArrowUp className="h-3 w-3" />{formatCurrency(dayFat)}</span>
                   </div>
                 </button>
 
