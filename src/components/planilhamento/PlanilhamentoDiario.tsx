@@ -1041,26 +1041,26 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                 {/* Day header */}
                 <button
                   onClick={() => toggleDay(day)}
-                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+                  className="w-full flex items-center justify-between px-3 sm:px-4 py-3 hover:bg-muted/30 transition-colors gap-2 min-w-0"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                     {isExpanded ? (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
                     ) : (
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                     )}
-                    <span className="font-semibold text-sm text-foreground capitalize">{formatDayLabel(day)}</span>
-                    <Badge variant="secondary" className="text-xs">
+                    <span className="font-semibold text-sm text-foreground capitalize whitespace-nowrap">{formatDayLabel(day)}</span>
+                    <Badge variant="secondary" className="text-xs whitespace-nowrap shrink-0">
                       {dayRecords.length} {dayRecords.length === 1 ? "registro" : "registros"}
                     </Badge>
                     {pendingCount > 0 && (
-                      <Badge variant="destructive" className="text-xs gap-1">
+                      <Badge variant="destructive" className="text-xs gap-1 whitespace-nowrap shrink-0 hidden sm:inline-flex">
                         <AlertCircle className="h-3 w-3" />
                         {pendingCount} sem comprovante
                       </Badge>
                     )}
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <div className="hidden sm:flex items-center gap-4 text-xs text-muted-foreground whitespace-nowrap shrink-0">
                     <span>Pago: {formatCurrency(dayTotal)}</span>
                     <span>Fat: {formatCurrency(dayFat)}</span>
                   </div>
