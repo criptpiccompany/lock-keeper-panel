@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Upload, X, FileText, ImageIcon } from "lucide-react";
+import { Upload, X, FileText, ImageIcon, Camera, FolderOpen, ClipboardPaste } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -16,7 +16,6 @@ interface Props {
   value: File | null;
   existingUrl?: string;
   onChange: (file: File | null) => void;
-  /** true while parent is submitting */
   disabled?: boolean;
 }
 
@@ -94,11 +93,27 @@ async function processFile(raw: File): Promise<File | null> {
   return file;
 }
 
+function supportsClipboardRead(): boolean {
+  try {
+    return typeof navigator !== "undefined" && !!navigator.clipboard && typeof navigator.clipboard.read === "function";
+  } catch {
+    return false;
+  }
+}
+
 export default function ProofUploader({ label, sublabel, value, existingUrl, onChange, disabled }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const dropzoneRef = useRef<HTMLDivElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [canPaste, setCanPaste] = useState(false);
+
+  // Check clipboard support once
+  useEffect(() => {
+    setCanPaste(supportsClipboardRead());
+  }, []);
 
   // Generate preview for current file
   useEffect(() => {
@@ -127,8 +142,8 @@ export default function ProofUploader({ label, sublabel, value, existingUrl, onC
     handleFile(list[0]);
   }, [handleFile]);
 
-  // File input change
-  const onInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  // Generic input change handler
+  const onAnyInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       const files = e.target.files;
       if (files && files.length > 0) handleFiles(files);
@@ -136,7 +151,7 @@ export default function ProofUploader({ label, sublabel, value, existingUrl, onC
       console.error("[ProofUploader] input change error:", err);
     }
     // Reset so same file can be re-selected
-    if (inputRef.current) inputRef.current.value = "";
+    e.target.value = "";
   }, [handleFiles]);
 
   // Drag & drop
@@ -164,11 +179,10 @@ export default function ProofUploader({ label, sublabel, value, existingUrl, onC
     }
   }, [handleFiles]);
 
-  // Paste handler (attached to document when component is mounted)
+  // Paste via keyboard (Ctrl+V)
   useEffect(() => {
     const handler = (e: ClipboardEvent) => {
       try {
-        // Only handle if the dropzone or its parent modal is visible
         if (!dropzoneRef.current) return;
         const rect = dropzoneRef.current.getBoundingClientRect();
         if (rect.width === 0 && rect.height === 0) return;
@@ -196,6 +210,30 @@ export default function ProofUploader({ label, sublabel, value, existingUrl, onC
     return () => document.removeEventListener("paste", handler);
   }, [handleFile]);
 
+  // Paste via button (clipboard read API)
+  const handleClipboardPaste = useCallback(async () => {
+    try {
+      const clipboardItems = await navigator.clipboard.read();
+      for (const item of clipboardItems) {
+        for (const type of item.types) {
+          if (type.startsWith("image/") || type === "application/pdf") {
+            const blob = await item.getType(type);
+            const ext = type.split("/")[1] || "png";
+            const file = new File([blob], `colado.${ext}`, { type, lastModified: Date.now() });
+            handleFile(file);
+            return;
+          }
+        }
+      }
+      toast.info("Nenhuma imagem encontrada na área de transferência");
+    } catch (err) {
+      console.error("[ProofUploader] clipboard read error:", err);
+      toast.error("Não foi possível colar", {
+        description: "Seu navegador não permite colar aqui. Use Tirar foto ou Galeria.",
+      });
+    }
+  }, [handleFile]);
+
   const isPdf = value?.type === "application/pdf" || value?.name?.toLowerCase().endsWith(".pdf");
   const hasExisting = !value && !!existingUrl;
 
@@ -209,7 +247,6 @@ export default function ProofUploader({ label, sublabel, value, existingUrl, onC
       {/* File selected — show preview */}
       {value ? (
         <div className="flex items-center gap-3 border rounded-lg px-3 py-2.5 bg-muted/30">
-          {/* Thumbnail */}
           <div className="w-10 h-10 rounded-md overflow-hidden bg-muted/60 flex items-center justify-center shrink-0 border border-border/30">
             {preview ? (
               <img src={preview} alt="Preview" className="w-full h-full object-cover" />
@@ -219,12 +256,10 @@ export default function ProofUploader({ label, sublabel, value, existingUrl, onC
               <ImageIcon className="h-5 w-5 text-muted-foreground" />
             )}
           </div>
-          {/* Info */}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{value.name}</p>
             <p className="text-xs text-muted-foreground">{formatFileSize(value.size)}</p>
           </div>
-          {/* Remove */}
           <Button
             type="button"
             variant="ghost"
@@ -239,35 +274,99 @@ export default function ProofUploader({ label, sublabel, value, existingUrl, onC
         </div>
       ) : (
         /* Dropzone */
-        <div
-          ref={dropzoneRef}
-          onClick={() => !disabled && inputRef.current?.click()}
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
-          className={`
-            cursor-pointer border-2 border-dashed rounded-lg px-4 py-5 text-center transition-colors
-            ${dragOver ? "border-primary bg-primary/5" : "border-border/50 hover:border-primary/40 hover:bg-muted/30"}
-            ${disabled ? "opacity-50 pointer-events-none" : ""}
-          `}
-        >
-          <Upload className="h-5 w-5 mx-auto text-muted-foreground mb-1.5" />
-          <p className="text-xs text-muted-foreground">
-            Clique para selecionar, cole <span className="hidden sm:inline">(Ctrl+V)</span> ou arraste
-          </p>
-          <p className="text-[10px] text-muted-foreground/70 mt-0.5">JPG, PNG, WEBP, PDF • Máx 10 MB</p>
-          {hasExisting && (
-            <p className="text-[10px] text-primary mt-1">Já possui comprovante anexado</p>
-          )}
+        <div className="space-y-2">
+          <div
+            ref={dropzoneRef}
+            onClick={() => !disabled && inputRef.current?.click()}
+            onDragOver={onDragOver}
+            onDragLeave={onDragLeave}
+            onDrop={onDrop}
+            className={`
+              cursor-pointer border-2 border-dashed rounded-lg px-4 py-4 text-center transition-colors
+              ${dragOver ? "border-primary bg-primary/5" : "border-border/50 hover:border-primary/40 hover:bg-muted/30"}
+              ${disabled ? "opacity-50 pointer-events-none" : ""}
+            `}
+          >
+            <Upload className="h-5 w-5 mx-auto text-muted-foreground mb-1.5" />
+            {/* Desktop text */}
+            <p className="text-xs text-muted-foreground hidden sm:block">
+              Clique para selecionar, cole (Ctrl+V) ou arraste
+            </p>
+            {/* Mobile text */}
+            <p className="text-xs text-muted-foreground sm:hidden">
+              Toque para selecionar ou use os botões abaixo
+            </p>
+            <p className="text-[10px] text-muted-foreground/70 mt-0.5">JPG, PNG, WEBP, PDF • Máx 10 MB</p>
+            {hasExisting && (
+              <p className="text-[10px] text-primary mt-1">Já possui comprovante anexado</p>
+            )}
+          </div>
+
+          {/* Action buttons row */}
+          <div className="flex flex-wrap gap-1.5">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="h-8 text-xs gap-1.5 flex-1 min-w-0"
+              onClick={(e) => { e.stopPropagation(); cameraInputRef.current?.click(); }}
+              disabled={disabled}
+            >
+              <Camera className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Tirar foto</span>
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="h-8 text-xs gap-1.5 flex-1 min-w-0"
+              onClick={(e) => { e.stopPropagation(); galleryInputRef.current?.click(); }}
+              disabled={disabled}
+            >
+              <FolderOpen className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Galeria</span>
+            </Button>
+            {canPaste && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5"
+                onClick={(e) => { e.stopPropagation(); handleClipboardPaste(); }}
+                disabled={disabled}
+              >
+                <ClipboardPaste className="h-3.5 w-3.5 shrink-0" />
+                Colar
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
+      {/* Hidden inputs */}
       <input
         ref={inputRef}
         type="file"
         accept=".jpg,.jpeg,.png,.webp,.pdf"
         className="hidden"
-        onChange={onInputChange}
+        onChange={onAnyInputChange}
+      />
+      {/* Camera input — capture attribute opens camera on mobile */}
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={onAnyInputChange}
+      />
+      {/* Gallery/files input — no capture, opens file picker */}
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/*,application/pdf"
+        className="hidden"
+        onChange={onAnyInputChange}
       />
     </div>
   );
