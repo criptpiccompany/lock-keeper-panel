@@ -59,6 +59,7 @@ import {
 } from "lucide-react";
 import ComprovanteThumbnail from "./ComprovanteThumbnail";
 import ComprovanteLightbox from "./ComprovanteLightbox";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import EditReasonModal, { formatFieldLabel, type FieldDiff } from "./EditReasonModal";
 import SharedPartnersPopover, { type SharedPartner } from "./SharedPartnersPopover";
 
@@ -314,9 +315,12 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
   const monthKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}`;
   const monthDays = useMemo(() => getMonthDays(selectedYear, selectedMonth), [selectedYear, selectedMonth]);
 
+  const prevFetchKey = useRef("");
+
   const fetchData = useCallback(async () => {
     if (!user) return;
-    if (!hasFetchedOnce.current) setLoading(true);
+    const isInitial = !hasFetchedOnce.current;
+    if (isInitial) setLoading(true);
     else setIsSyncing(true);
 
     const startDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`;
@@ -379,19 +383,23 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
       setSharedPartnersMap(new Map());
     }
 
-    const isFirstFetch = !hasFetchedOnce.current;
     setLoading(false);
     setIsSyncing(false);
-    hasFetchedOnce.current = true;
 
     const today = new Date().toISOString().split("T")[0];
-    if (isFirstFetch && today >= startDate && today <= endDate) {
+    if (isInitial && today >= startDate && today <= endDate) {
       setExpandedDays(new Set([today]));
     }
+    hasFetchedOnce.current = true;
   }, [user, isAdmin, closerId, selectedYear, selectedMonth, monthKey]);
 
+  // Only reset hasFetchedOnce when the actual data key changes (month/year/closer)
   useEffect(() => {
-    hasFetchedOnce.current = false;
+    const newKey = `${selectedYear}-${selectedMonth}-${closerId || "self"}`;
+    if (newKey !== prevFetchKey.current) {
+      hasFetchedOnce.current = false;
+      prevFetchKey.current = newKey;
+    }
     fetchData();
   }, [fetchData]);
 
@@ -1526,7 +1534,14 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                     type="file"
                     accept=".jpg,.jpeg,.png,.pdf"
                     className="hidden"
-                    onChange={(e) => setFormFile1(e.target.files?.[0] || null)}
+                    onChange={(e) => {
+                      try {
+                        const file = e.target.files?.[0] || null;
+                        setFormFile1(file);
+                      } catch (err) {
+                        console.error("[Upload] Error selecting file 1:", err);
+                      }
+                    }}
                   />
                 </label>
               </div>
@@ -1547,7 +1562,14 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                     type="file"
                     accept=".jpg,.jpeg,.png,.pdf"
                     className="hidden"
-                    onChange={(e) => setFormFile2(e.target.files?.[0] || null)}
+                    onChange={(e) => {
+                      try {
+                        const file = e.target.files?.[0] || null;
+                        setFormFile2(file);
+                      } catch (err) {
+                        console.error("[Upload] Error selecting file 2:", err);
+                      }
+                    }}
                   />
                 </label>
               </div>
