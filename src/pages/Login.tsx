@@ -12,7 +12,7 @@ export default function Login() {
   const { user, loading, signIn, signUp } = useAuth();
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get('invite');
-  const [isSignUp, setIsSignUp] = useState(!!inviteToken);
+  const isSignUp = !!inviteToken;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nome, setNome] = useState('');
@@ -46,7 +46,6 @@ export default function Login() {
       // Pass invite token to signUp so handle_new_user trigger can consume it
       const { error } = await signUp(email, password, nome, inviteToken || undefined);
       if (!error) {
-        setIsSignUp(false);
         setPassword('');
       }
     } else {
@@ -73,9 +72,6 @@ export default function Login() {
             <span className="text-lg font-bold text-primary-foreground">IB</span>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">InfluBoard</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Gestão de influenciadores
-          </p>
         </div>
 
         {/* Form Card */}
@@ -84,19 +80,10 @@ export default function Login() {
             {isSignUp ? 'Criar conta' : 'Entrar'}
           </h2>
 
-          {isSignUp && !inviteToken && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 mb-4">
-              <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-              <p className="text-xs text-amber-700">
-                Cadastro requer um link de convite. Solicite ao administrador.
-              </p>
-            </div>
-          )}
-
-          {inviteToken && inviteValid === false && (
+          {isSignUp && inviteToken && inviteValid === false && (
             <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 mb-4">
               <AlertCircle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
-              <p className="text-xs text-destructive">Convite inválido ou expirado.</p>
+              <p className="text-xs text-destructive">Convite inválido ou expirado. Peça um novo convite ao administrador.</p>
             </div>
           )}
 
@@ -153,22 +140,7 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              disabled={isSubmitting}
-            >
-              {isSignUp ? 'Já tem conta? Entrar' : 'Não tem conta? Criar'}
-            </button>
-          </div>
         </div>
-
-        <p className="text-xs text-center text-muted-foreground mt-6">
-          Cadastro requer convite de um administrador.<br />
-          Após criar conta, aguarde aprovação.
-        </p>
       </div>
     </div>
   );
