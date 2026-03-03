@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import UnifiedThermometerWidget from "@/components/home/UnifiedThermometerWidget";
 import ListaDoMes from "@/components/planilhamento/ListaDoMes";
-import { PLATFORM_FEE_RATE } from "@/lib/constants";
+import { PLATFORM_FEE_RATE, PLATFORM_FEE_LABEL } from "@/lib/constants";
 import { useCommissionTier } from "@/hooks/useCommissionTier";
 import { getEstimatedCommission } from "@/lib/commissionCalc";
 
@@ -73,7 +73,7 @@ export default function ThermometerDrawerContent({ closerId, initialMonth }: Pro
 
   const { currentPercentage, loading: tierLoading } = useCommissionTier(result);
   const commission = getEstimatedCommission(result, currentPercentage);
-  const resultadoLiquido = result - commission;
+  
 
   if (loading || tierLoading) {
     return (
@@ -102,27 +102,22 @@ export default function ThermometerDrawerContent({ closerId, initialMonth }: Pro
         </span>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary Cards — same pattern as Balanço */}
       <div className="flex flex-col gap-2 min-w-0">
         <div className="grid grid-cols-2 gap-2">
+          <SummaryCard label="Faturamento" value={revenue} icon={TrendingUp} />
           <SummaryCard label="Investido" value={invested} icon={DollarSign} />
-          <SummaryCard label="Faturado" value={revenue} icon={TrendingUp} />
         </div>
         <div className="grid grid-cols-2 gap-2">
+          <SummaryCard label={PLATFORM_FEE_LABEL} value={fee} icon={Percent} variant="muted" />
           <SummaryCard
             label="Resultado"
             value={result}
             icon={result >= 0 ? TrendingUp : TrendingDown}
             variant={result >= 0 ? "positive" : "negative"}
           />
-          <SummaryCard label="Comissão" value={commission} icon={Receipt} />
         </div>
-        <SummaryCard
-          label="Resultado líquido"
-          value={resultadoLiquido}
-          icon={Percent}
-          variant={resultadoLiquido >= 0 ? "positive" : "negative"}
-        />
+        <SummaryCard label="Comissão" value={commission} icon={Receipt} />
       </div>
 
       {/* Compact Thermometer */}
@@ -152,11 +147,12 @@ function SummaryCard({
   label: string;
   value: number;
   icon: any;
-  variant?: "default" | "positive" | "negative";
+  variant?: "default" | "positive" | "negative" | "muted";
 }) {
   const colorClass =
     variant === "positive" ? "text-emerald-700" :
     variant === "negative" ? "text-destructive" :
+    variant === "muted" ? "text-muted-foreground" :
     "text-foreground";
 
   return (

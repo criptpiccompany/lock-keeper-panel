@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Loader2, ListChecks, DollarSign, TrendingUp, TrendingDown, Receipt, Percent, Mail } from "lucide-react";
+import { PLATFORM_FEE_RATE, PLATFORM_FEE_LABEL } from "@/lib/constants";
 import { toast } from "sonner";
 import SharedPartnersPopover, { type SharedPartner } from "./SharedPartnersPopover";
 import UnifiedThermometerWidget from "@/components/home/UnifiedThermometerWidget";
@@ -269,7 +270,8 @@ export default function ListaDoMes({ closerId, hideThermometer = false }: { clos
 
   // Intermediate resultado for tier calculation
   const rawFaturado = rows.reduce((sum, r) => sum + r.valor_total, 0);
-  const rawResultado = rawFaturado - investido;
+  const rawFee = rawFaturado * PLATFORM_FEE_RATE;
+  const rawResultado = rawFaturado - investido - rawFee;
 
   // Use tier-based commission (same source of truth as thermometer)
   const { currentPercentage, loading: tierLoading } = useCommissionTier(rawResultado);
@@ -277,11 +279,11 @@ export default function ListaDoMes({ closerId, hideThermometer = false }: { clos
 
   const summary = useMemo(() => {
     const faturado = rawFaturado;
+    const fee = rawFee;
     const resultado = rawResultado;
     const comissao = tierComissao;
-    const resultadoLiquido = resultado - comissao;
-    return { faturado, resultado, comissao, resultadoLiquido };
-  }, [rawFaturado, rawResultado, tierComissao]);
+    return { faturado, fee, resultado, comissao };
+  }, [rawFaturado, rawFee, rawResultado, tierComissao]);
 
   /* ── field update ── */
   const updateField = useCallback(
@@ -398,24 +400,19 @@ export default function ListaDoMes({ closerId, hideThermometer = false }: { clos
             {/* Right: Financial Cards Grid */}
             <div className="flex flex-col gap-2">
               <div className="grid grid-cols-2 gap-2">
+                <SummaryCard label="Faturamento" value={summary.faturado} icon={TrendingUp} />
                 <SummaryCard label="Investido" value={investido} icon={DollarSign} />
-                <SummaryCard label="Faturado (manual)" value={summary.faturado} icon={TrendingUp} />
               </div>
               <div className="grid grid-cols-2 gap-2">
+                <SummaryCard label={PLATFORM_FEE_LABEL} value={summary.fee} icon={Percent} variant="muted" />
                 <SummaryCard
                   label="Resultado"
                   value={summary.resultado}
                   icon={summary.resultado >= 0 ? TrendingUp : TrendingDown}
                   variant={summary.resultado >= 0 ? "positive" : "negative"}
                 />
-                <SummaryCard label="Comissão" value={summary.comissao} icon={Receipt} />
               </div>
-              <SummaryCard
-                label="Resultado líquido"
-                value={summary.resultadoLiquido}
-                icon={Percent}
-                variant={summary.resultadoLiquido >= 0 ? "positive" : "negative"}
-              />
+              <SummaryCard label="Comissão" value={summary.comissao} icon={Receipt} />
             </div>
           </div>
           )}
@@ -538,12 +535,13 @@ function SummaryCard({
   label: string;
   value: number;
   icon: any;
-  variant?: "default" | "positive" | "negative";
+  variant?: "default" | "positive" | "negative" | "muted";
 }) {
   const colorMap = {
     default: "",
     positive: "text-emerald-700",
     negative: "text-red-600",
+    muted: "text-muted-foreground",
   };
 
   return (
