@@ -220,9 +220,9 @@ export default function TeamThermometersSection() {
 
       {/* Detail Drawer */}
       <Sheet open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
-        <SheetContent className="w-full sm:max-w-[600px] p-0 flex flex-col overflow-hidden">
-          {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b bg-card">
+        <SheetContent className="w-full sm:max-w-[520px] p-0 flex flex-col overflow-hidden">
+          {/* Sticky Header */}
+          <div className="flex items-center justify-between px-5 py-4 border-b bg-card shrink-0">
             <div className="flex items-center gap-3 min-w-0">
               <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                 <User className="h-4 w-4 text-primary" />
@@ -240,17 +240,48 @@ export default function TeamThermometersSection() {
             </Button>
           </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto">
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto min-w-0">
             {selectedUser && (
-              <div className="space-y-6 p-5">
-                {/* Thermometer */}
-                <div className="card-premium p-5 flex items-center justify-center min-h-[320px]">
-                  <UnifiedThermometerWidget resultado={selectedUser.result} month={month} />
+              <div className="space-y-5 p-5 min-w-0">
+                {/* Summary Cards */}
+                <div className="grid grid-cols-2 gap-2.5 min-w-0">
+                  <DrawerStatCard
+                    label="Investido"
+                    value={selectedUser.invested}
+                  />
+                  <DrawerStatCard
+                    label="Faturado"
+                    value={selectedUser.revenue}
+                  />
+                  <DrawerStatCard
+                    label="Resultado"
+                    value={selectedUser.result}
+                    variant={selectedUser.result >= 0 ? "positive" : "negative"}
+                  />
+                  <DrawerStatCard
+                    label="Comissão"
+                    value={selectedUser.estimatedCommission}
+                  />
+                  <div className="col-span-2">
+                    <DrawerStatCard
+                      label="Resultado líquido"
+                      value={selectedUser.result - selectedUser.estimatedCommission}
+                      variant={(selectedUser.result - selectedUser.estimatedCommission) >= 0 ? "positive" : "negative"}
+                      highlight
+                    />
+                  </div>
+                </div>
+
+                {/* Thermometer - constrained */}
+                <div className="rounded-xl border border-border/40 bg-card p-4 min-w-0 overflow-hidden">
+                  <div className="max-w-[380px] mx-auto overflow-visible">
+                    <UnifiedThermometerWidget resultado={selectedUser.result} month={month} compact />
+                  </div>
                 </div>
 
                 {/* Lista do Mês */}
-                <div>
+                <div className="min-w-0">
                   <h3 className="text-sm font-semibold mb-3">Lista do Mês</h3>
                   <ListaDoMes closerId={selectedUser.userId} />
                 </div>
@@ -259,6 +290,40 @@ export default function TeamThermometersSection() {
           </div>
         </SheetContent>
       </Sheet>
+    </div>
+  );
+}
+
+function DrawerStatCard({
+  label,
+  value,
+  variant = "default",
+  highlight = false,
+}: {
+  label: string;
+  value: number;
+  variant?: "default" | "positive" | "negative";
+  highlight?: boolean;
+}) {
+  const colorClass =
+    variant === "positive"
+      ? "text-emerald-700"
+      : variant === "negative"
+      ? "text-destructive"
+      : "text-foreground";
+
+  return (
+    <div
+      className={`rounded-lg border border-border/40 px-3 py-2.5 min-w-0 ${
+        highlight ? "bg-muted/50" : "bg-card"
+      }`}
+    >
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium truncate">
+        {label}
+      </p>
+      <p className={`text-sm font-semibold tabular-nums mt-0.5 break-all ${colorClass}`}>
+        {formatBRL(value)}
+      </p>
     </div>
   );
 }

@@ -79,9 +79,9 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
   return (
     <div className="flex flex-col items-center gap-6 sm:gap-8 w-full overflow-visible">
       {/* Main layout */}
-      <div className="grid grid-cols-[auto_1fr] items-stretch w-full max-w-lg mx-auto pl-12 sm:pl-16 md:pl-20 overflow-visible">
+      <div className={`grid grid-cols-[auto_1fr] items-stretch w-full max-w-lg mx-auto overflow-visible ${compact ? "pl-10 sm:pl-12" : "pl-12 sm:pl-16 md:pl-20"}`}>
         {/* Thermometer tube — responsive height, no clip */}
-        <div className="relative flex-shrink-0 h-[280px] sm:h-[340px] lg:h-[320px] mb-6" style={{ width: 56 }}>
+        <div className={`relative flex-shrink-0 mb-6 ${compact ? "h-[220px] sm:h-[260px]" : "h-[280px] sm:h-[340px] lg:h-[320px]"}`} style={{ width: compact ? 44 : 56 }}>
           <div
             className="absolute inset-0 rounded-full overflow-hidden"
             style={{
@@ -275,7 +275,7 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
         </div>
 
         {/* Info panel - own data only */}
-        <div className="flex flex-col justify-center gap-4 sm:gap-5 min-w-0 py-4 ml-[100px] sm:ml-[140px] md:ml-[160px] pr-2">
+        <div className={`flex flex-col justify-center gap-4 sm:gap-5 min-w-0 py-4 pr-2 ${compact ? "ml-[60px] sm:ml-[80px]" : "ml-[100px] sm:ml-[140px] md:ml-[160px]"}`}>
           <div>
             <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-medium">Sua % do mês</p>
             <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 mt-1">
