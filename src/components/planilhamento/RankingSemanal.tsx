@@ -8,7 +8,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, Trophy, TrendingUp, TrendingDown, Medal } from "lucide-react";
-import { PLATFORM_FEE_RATE, PLATFORM_FEE_LABEL } from "@/lib/constants";
+import { PLATFORM_FEE_RATE } from "@/lib/constants";
+import { getFeeLabel } from "@/hooks/useTeamFeeRate";
 
 interface CloserProfile {
   id: string;
@@ -206,8 +207,8 @@ export default function RankingSemanal() {
                   <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
                     Faturado
                   </th>
-                  <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
-                    {PLATFORM_FEE_LABEL}
+                   <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
+                    {getFeeLabel(PLATFORM_FEE_RATE)}
                   </th>
                   <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
                     Lucro

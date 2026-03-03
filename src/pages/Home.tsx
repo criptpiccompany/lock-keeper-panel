@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { PLATFORM_FEE_RATE } from "@/lib/constants";
+import { useTeamFeeRate } from "@/hooks/useTeamFeeRate";
 import { FileText, List, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UnifiedThermometerWidget from "@/components/home/UnifiedThermometerWidget";
@@ -17,6 +17,7 @@ export default function Home() {
   const [resultado, setResultado] = useState(0);
   const [loading, setLoading] = useState(true);
   const month = useMemo(() => getCurrentMonth(), []);
+  const { feeRate } = useTeamFeeRate(user?.teamId);
 
   useEffect(() => {
     const fetchResultado = async () => {
@@ -42,13 +43,13 @@ export default function Home() {
         invested += Number(r.valor_pago) || 0;
         revenue += Number(r.faturamento) || 0;
       });
-      const fee = revenue * PLATFORM_FEE_RATE;
+      const fee = revenue * feeRate;
       setResultado(revenue - invested - fee);
       setLoading(false);
     };
 
     fetchResultado();
-  }, [user, month]);
+  }, [user, month, feeRate]);
 
   if (!user) return null;
 

@@ -122,7 +122,7 @@ export default function CommissionThermometer({ resultado }: Props) {
 
       {/* Base disclaimer */}
       <p className="text-[10px] text-muted-foreground/60 leading-tight">
-        Base: Resultado líquido (Faturamento − Investido − Taxa 6%). Resetado automaticamente a cada novo mês.
+        Base: Resultado líquido (Faturamento − Investido − Taxa operacional). Resetado automaticamente a cada novo mês.
       </p>
     </div>
   );

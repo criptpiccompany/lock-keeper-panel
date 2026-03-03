@@ -1,6 +1,7 @@
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import { PLATFORM_FEE_RATE } from "@/lib/constants";
+import { getFeeLabel } from "@/hooks/useTeamFeeRate";
 
 interface CloserProfile {
   id: string;
@@ -46,7 +47,7 @@ export async function exportMonthXlsx(
   onProgress?.("Carregando perfis...");
 
   // Build queries with optional team filter
-  let profilesQuery = supabase.from("profiles").select("id, nome, commission_rate, status").order("nome");
+  let profilesQuery = supabase.from("profiles").select("id, nome, commission_rate, status, team_id").order("nome");
   let recordsQuery = supabase
     .from("daily_influencer_records")
     .select("*, influencers!inner(handle)")
@@ -80,6 +81,7 @@ export async function exportMonthXlsx(
     { data: allLocks },
     { data: allConflicts },
     { data: allAuditLogs },
+    { data: allTeams },
   ] = await Promise.all([
     profilesQuery,
     recordsQuery,
@@ -87,7 +89,6 @@ export async function exportMonthXlsx(
     platformNamesQuery,
     influencersQuery,
     locksQuery,
-    // Conflicts and audit only for non-filtered (admin) or filtered
     teamId
       ? supabase.from("admin_conflicts").select("*").eq("month_key", monthKey)
       : supabase.from("admin_conflicts").select("*").eq("month_key", monthKey),
@@ -97,9 +98,14 @@ export async function exportMonthXlsx(
       .gte("created_at", `${start}T00:00:00`)
       .lte("created_at", `${end}T23:59:59`)
       .order("created_at", { ascending: false }),
+    supabase.from("teams").select("id, taxa_operacional"),
   ]);
 
-  const closers = ((profiles as any[]) || []).filter((p) => p.status === "approved") as CloserProfile[];
+  // Build team fee rate map
+  const teamFeeMap = new Map<string, number>();
+  (allTeams || []).forEach((t: any) => teamFeeMap.set(t.id, Number(t.taxa_operacional) ?? PLATFORM_FEE_RATE));
+
+  const closers = ((profiles as any[]) || []).filter((p) => p.status === "approved") as (CloserProfile & { team_id?: string })[];
   const records = (allRecords as any[]) || [];
   const monthlyList = (allMonthlyList as any[]) || [];
   const platformNames = (allPlatformNames as any[]) || [];
@@ -114,6 +120,8 @@ export async function exportMonthXlsx(
 
   // ── Per-user sheets ──
   for (const closer of closers) {
+    const closerFeeRate = closer.team_id ? teamFeeMap.get(closer.team_id) ?? PLATFORM_FEE_RATE : PLATFORM_FEE_RATE;
+    const closerFeeLabel = getFeeLabel(closerFeeRate);
     const userRecords = records.filter((r: any) => r.closer_id === closer.id);
     const userMonthly = monthlyList.filter((m: any) => m.closer_id === closer.id);
     const userPlatform = platformNames.find((p: any) => p.closer_id === closer.id);
@@ -149,7 +157,7 @@ export async function exportMonthXlsx(
     const balancoRows: any[] = [];
     let totInv = 0, totRev = 0, totFee = 0, totProfit = 0, totComm = 0, totSaldo = 0;
     dayMap.forEach((v, date) => {
-      const fee = v.revenue * PLATFORM_FEE_RATE;
+      const fee = v.revenue * closerFeeRate;
       const profit = v.revenue - v.invested - fee;
       const comm = profit > 0 ? profit * commRate : 0;
       const saldo = profit - comm;
@@ -159,7 +167,7 @@ export async function exportMonthXlsx(
         Data: date,
         Investido: formatBRL(v.invested),
         Faturado: formatBRL(v.revenue),
-        "Taxa 6%": formatBRL(fee),
+        [closerFeeLabel]: formatBRL(fee),
         Resultado: formatBRL(profit),
         Comissão: formatBRL(comm),
         "Saldo Final": formatBRL(saldo),
@@ -169,7 +177,7 @@ export async function exportMonthXlsx(
       Data: "TOTAL",
       Investido: formatBRL(totInv),
       Faturado: formatBRL(totRev),
-      "Taxa 6%": formatBRL(totFee),
+      [closerFeeLabel]: formatBRL(totFee),
       Resultado: formatBRL(totProfit),
       Comissão: formatBRL(totComm),
       "Saldo Final": formatBRL(totSaldo),
@@ -231,14 +239,15 @@ export async function exportMonthXlsx(
   aggMap.forEach((agg, closerId) => {
     const c = closerMap.get(closerId);
     if (!c) return;
-    const taxa = agg.faturamento * PLATFORM_FEE_RATE;
+    const cRate = c.team_id ? teamFeeMap.get(c.team_id) ?? PLATFORM_FEE_RATE : PLATFORM_FEE_RATE;
+    const taxa = agg.faturamento * cRate;
     const lucro = agg.faturamento - agg.investido - taxa;
     const comissao = lucro > 0 ? lucro * c.commission_rate : 0;
     rankingRows.push({
       Closer: c.nome,
       Investido: formatBRL(agg.investido),
       Faturado: formatBRL(agg.faturamento),
-      "Taxa 6%": formatBRL(taxa),
+      [getFeeLabel(cRate)]: formatBRL(taxa),
       Lucro: formatBRL(lucro),
       Comissão: formatBRL(comissao),
       "Lucro Líquido": formatBRL(lucro - comissao),

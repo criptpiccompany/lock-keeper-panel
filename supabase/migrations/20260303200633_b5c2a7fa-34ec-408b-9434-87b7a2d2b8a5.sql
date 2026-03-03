@@ -1,0 +1,1 @@
+ALTER TABLE public.teams ADD COLUMN taxa_operacional numeric NOT NULL DEFAULT 0.06;
