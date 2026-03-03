@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Navbar } from "@/components/Navbar";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -169,19 +170,23 @@ function AppRoutes() {
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner position="top-right" />
-      <BrowserRouter>
-        <AuthProvider>
-          <div className="min-h-screen bg-background overflow-x-hidden">
-            <AppRoutes />
-          </div>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner position="top-right" />
+        <BrowserRouter>
+          <AuthProvider>
+            <div className="min-h-screen bg-background overflow-x-hidden">
+              <ErrorBoundary fallbackTitle="Erro na página">
+                <AppRoutes />
+              </ErrorBoundary>
+            </div>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
