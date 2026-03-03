@@ -71,7 +71,7 @@ const DEFAULT_PLATFORMS: PlatformNames = {
 
 /* ───── main component ───── */
 
-export default function ListaDoMes({ closerId }: { closerId?: string }) {
+export default function ListaDoMes({ closerId, hideThermometer = false }: { closerId?: string; hideThermometer?: boolean }) {
   const { user, isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<ListRow[]>([]);
@@ -388,6 +388,7 @@ export default function ListaDoMes({ closerId }: { closerId?: string }) {
       ) : (
         <>
           {/* Two-column layout: Thermometer + Cards (same as Balanço) */}
+          {!hideThermometer && (
           <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-3">
             {/* Left: Thermometer */}
             <div className="card-premium p-5 flex items-center justify-center lg:min-h-[380px]">
@@ -420,6 +421,7 @@ export default function ListaDoMes({ closerId }: { closerId?: string }) {
               />
             </div>
           </div>
+          )}
 
           {/* Table */}
           <div className="bg-card rounded-xl border border-border/40 overflow-hidden">

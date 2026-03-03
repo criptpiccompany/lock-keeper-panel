@@ -283,7 +283,7 @@ export default function TeamThermometersSection() {
                 {/* Lista do Mês */}
                 <div className="min-w-0">
                   <h3 className="text-sm font-semibold mb-3">Lista do Mês</h3>
-                  <ListaDoMes closerId={selectedUser.userId} />
+                  <ListaDoMes closerId={selectedUser.userId} hideThermometer />
                 </div>
               </div>
             )}
