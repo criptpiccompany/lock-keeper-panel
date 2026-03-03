@@ -52,68 +52,72 @@ export default function Diretorio() {
   return (
     <div className="min-h-screen">
       <div className="border-b">
-        <div className="container py-8">
-          <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2 mb-6">
-            <Book className="h-6 w-6" />Diretório
+        <div className="container px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight flex items-center gap-2 mb-6">
+            <Book className="h-5 w-5 sm:h-6 sm:w-6" />Diretório
           </h1>
 
           {/* KPI Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-card rounded-xl border p-4">
-              <p className="text-sm text-muted-foreground">Total</p>
-              <p className="text-2xl font-semibold">{stats.total}</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            <div className="bg-card rounded-xl border p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-muted-foreground">Total</p>
+              <p className="text-xl sm:text-2xl font-semibold">{stats.total}</p>
             </div>
-            <div className="bg-card rounded-xl border border-amber-200/50 p-4">
-              <p className="text-sm text-amber-700 flex items-center gap-1"><Lock className="h-3 w-3"/>Travados</p>
-              <p className="text-2xl font-semibold text-amber-700">{stats.locked}</p>
+            <div className="bg-card rounded-xl border border-amber-200/50 p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-amber-700 flex items-center gap-1"><Lock className="h-3 w-3"/>Travados</p>
+              <p className="text-xl sm:text-2xl font-semibold text-amber-700">{stats.locked}</p>
             </div>
-            <div className="bg-card rounded-xl border border-emerald-200/50 p-4">
-              <p className="text-sm text-emerald-700 flex items-center gap-1"><Unlock className="h-3 w-3"/>Liberados</p>
-              <p className="text-2xl font-semibold text-emerald-700">{stats.released}</p>
+            <div className="bg-card rounded-xl border border-emerald-200/50 p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-emerald-700 flex items-center gap-1"><Unlock className="h-3 w-3"/>Liberados</p>
+              <p className="text-xl sm:text-2xl font-semibold text-emerald-700">{stats.released}</p>
             </div>
-            <div className="bg-card rounded-xl border p-4">
-              <p className="text-sm text-muted-foreground flex items-center gap-1"><Archive className="h-3 w-3"/>Arquivados</p>
-              <p className="text-2xl font-semibold">{stats.archived}</p>
+            <div className="bg-card rounded-xl border p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1"><Archive className="h-3 w-3"/>Arquivados</p>
+              <p className="text-xl sm:text-2xl font-semibold">{stats.archived}</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-4 items-center">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 sm:items-center">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Buscar..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
             </div>
-            <div className="flex items-center gap-2">
-              <Switch id="show-archived" checked={showArchived} onCheckedChange={setShowArchived} />
-              <Label htmlFor="show-archived" className="text-sm">Mostrar arquivados</Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch id="show-deleted" checked={showDeleted} onCheckedChange={setShowDeleted} />
-              <Label htmlFor="show-deleted" className="text-sm text-destructive">Mostrar excluídos</Label>
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Switch id="show-archived" checked={showArchived} onCheckedChange={setShowArchived} />
+                <Label htmlFor="show-archived" className="text-sm">Mostrar arquivados</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch id="show-deleted" checked={showDeleted} onCheckedChange={setShowDeleted} />
+                <Label htmlFor="show-deleted" className="text-sm text-destructive">Mostrar excluídos</Label>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <div className="container py-6">
-        <div className="bg-card rounded-xl border">
-          <table className="table-minimal">
-            <thead><tr><th>Handle</th><th>Responsável</th><th>Último Fechamento</th><th>Status</th></tr></thead>
-            <tbody>
-              {filtered.map(inf => {
-                const isDeleted = !!(inf as any).deleted_at;
-                return (
-                <tr key={inf.id} className={isDeleted ? "opacity-50" : ""}>
-                  <td className="font-medium">
-                    {inf.handle}
-                    {isDeleted && <Badge variant="outline" className="ml-2 text-[10px] text-destructive border-destructive/30">Excluído</Badge>}
-                  </td>
-                  <td className="text-muted-foreground">{inf.ownerNome || "—"}</td>
-                  <td className="text-muted-foreground text-sm">{formatDate(inf.lastClosedAt)}</td>
-                  <td><StatusBadge status={inf.status} size="sm" /></td>
-                </tr>
-                );
-              })}
-            </tbody>
-          </table>
+      <div className="container px-4 sm:px-6 lg:px-8 py-6">
+        <div className="bg-card rounded-xl border overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="table-minimal">
+              <thead><tr><th>Handle</th><th>Responsável</th><th>Último Fechamento</th><th>Status</th></tr></thead>
+              <tbody>
+                {filtered.map(inf => {
+                  const isDeleted = !!(inf as any).deleted_at;
+                  return (
+                    <tr key={inf.id} className={isDeleted ? "opacity-50" : ""}>
+                      <td className="font-medium">
+                        {inf.handle}
+                        {isDeleted && <Badge variant="outline" className="ml-2 text-[10px] text-destructive border-destructive/30">Excluído</Badge>}
+                      </td>
+                      <td className="text-muted-foreground">{inf.ownerNome || "—"}</td>
+                      <td className="text-muted-foreground text-sm">{formatDate(inf.lastClosedAt)}</td>
+                      <td><StatusBadge status={inf.status} size="sm" /></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

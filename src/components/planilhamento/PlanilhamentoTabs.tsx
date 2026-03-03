@@ -110,8 +110,8 @@ export default function PlanilhamentoTabs() {
     return (
       <div className="min-h-screen">
         <div className="border-b">
-          <div className="container py-8">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Planilhamento</h1>
+          <div className="container px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">Planilhamento</h1>
             <p className="text-muted-foreground text-sm mt-1">
               Gestão financeira diária dos influenciadores
             </p>
@@ -119,8 +119,8 @@ export default function PlanilhamentoTabs() {
         </div>
 
         <div className="border-b bg-card">
-          <div className="container">
-            <nav className="flex gap-1">
+          <div className="container px-4 sm:px-6 lg:px-8">
+            <nav className="flex gap-1 overflow-x-auto scrollbar-none">
               {subTabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = closerTab === tab.id;
@@ -128,12 +128,13 @@ export default function PlanilhamentoTabs() {
                   <button
                     key={tab.id}
                     onClick={() => setCloserTab(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative ${
+                    className={`flex items-center gap-2 px-3 sm:px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
                       isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
-                    {tab.label}
+                    <span className="hidden sm:inline">{tab.label}</span>
+                    <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
                     {isActive && (
                       <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-full" />
                     )}
@@ -144,7 +145,7 @@ export default function PlanilhamentoTabs() {
           </div>
         </div>
 
-        <div className="container py-6">
+        <div className="container px-4 sm:px-6 lg:px-8 py-6">
           {closerTab === "diario" && <PlanilhamentoDiario />}
           {closerTab === "balanco" && <Balanco />}
           {closerTab === "lista-mes" && <ListaDoMes />}
@@ -154,11 +155,11 @@ export default function PlanilhamentoTabs() {
   }
 
   // ── ADMIN view ──
-  return (
+    return (
     <div className="min-h-screen">
       <div className="border-b">
-        <div className="container py-8">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Planilhamento</h1>
+        <div className="container px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">Planilhamento</h1>
           <p className="text-muted-foreground text-sm mt-1">
             Gestão financeira da equipe
           </p>
@@ -167,23 +168,24 @@ export default function PlanilhamentoTabs() {
 
       {/* Level 1 tabs */}
       <div className="border-b bg-card">
-        <div className="container">
+        <div className="container px-4 sm:px-6 lg:px-8">
           <nav className="flex gap-1 overflow-x-auto scrollbar-none">
             <button
               onClick={() => handleAdminTabClick("ranking")}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
+              className={`flex items-center gap-2 px-3 sm:px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
                 adminTab === "ranking" ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"
               }`}
             >
               <Trophy className="h-4 w-4" />
-              Ranking Semanal
+              <span className="hidden sm:inline">Ranking Semanal</span>
+              <span className="sm:hidden">Ranking</span>
               {adminTab === "ranking" && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-full" />
               )}
             </button>
             <button
               onClick={() => handleAdminTabClick("conflitos")}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
+              className={`flex items-center gap-2 px-3 sm:px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
                 adminTab === "conflitos" ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"
               }`}
             >
@@ -200,7 +202,7 @@ export default function PlanilhamentoTabs() {
                 <button
                   key={closer.id}
                   onClick={() => handleAdminTabClick(closer.id)}
-                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
+                  className={`flex items-center gap-2 px-3 sm:px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
                     isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"
                   }`}
                 >
@@ -222,12 +224,12 @@ export default function PlanilhamentoTabs() {
         </div>
       </div>
 
-      {/* Level 2 sub-tabs (when user selected, not for ranking/conflitos) */}
+      {/* Level 2 sub-tabs */}
       {adminTab !== "ranking" && adminTab !== "conflitos" && (
         <div className="border-b bg-muted/20">
-          <div className="container">
-            <div className="flex items-center gap-4">
-              <span className="text-xs text-muted-foreground font-medium py-2">
+          <div className="container px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-4 overflow-x-auto scrollbar-none">
+              <span className="text-xs text-muted-foreground font-medium py-2 whitespace-nowrap">
                 {selectedCloserName}:
               </span>
               <nav className="flex gap-1">
@@ -238,12 +240,13 @@ export default function PlanilhamentoTabs() {
                     <button
                       key={tab.id}
                       onClick={() => setSubTab(tab.id)}
-                      className={`flex items-center gap-2 px-3 py-2.5 text-sm font-medium transition-colors relative ${
+                      className={`flex items-center gap-2 px-3 py-2.5 text-sm font-medium transition-colors relative whitespace-nowrap ${
                         isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"
                       }`}
                     >
                       <Icon className="h-3.5 w-3.5" />
-                      {tab.label}
+                      <span className="hidden sm:inline">{tab.label}</span>
+                      <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
                       {isActive && (
                         <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-full" />
                       )}
@@ -257,7 +260,7 @@ export default function PlanilhamentoTabs() {
       )}
 
       {/* Content */}
-      <div className="container py-6">
+      <div className="container px-4 sm:px-6 lg:px-8 py-6">
         {adminTab === "ranking" && <RankingSemanal />}
         {adminTab === "conflitos" && <ConflictRadar />}
         {adminTab !== "ranking" && adminTab !== "conflitos" && subTab === "diario" && (

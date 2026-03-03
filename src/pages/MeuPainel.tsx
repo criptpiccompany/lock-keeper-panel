@@ -103,27 +103,27 @@ export default function MeuPainel() {
     <div className="min-h-screen">
       {/* Header */}
       <div className="border-b">
-        <div className="container py-8">
-          <div className="flex items-center justify-between mb-6">
+        <div className="container px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Minha Lista</h1>
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Minha Lista</h1>
               <p className="text-muted-foreground text-sm mt-1">
                 Gerencie seus influenciadores
               </p>
             </div>
 
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setUrlModalOpen(true)}>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={() => setUrlModalOpen(true)}>
                 <Link className="mr-2 h-4 w-4" />
-                Adicionar com URL
+                URL
               </Button>
-              <Button variant="outline" onClick={() => setAddModalOpen(true)}>
+              <Button variant="outline" size="sm" onClick={() => setAddModalOpen(true)}>
                 <UserPlus className="mr-2 h-4 w-4" />
                 Adicionar
               </Button>
-              <Button onClick={() => setBulkModalOpen(true)}>
+              <Button size="sm" onClick={() => setBulkModalOpen(true)}>
                 <Users className="mr-2 h-4 w-4" />
-                Adicionar Vários
+                Vários
               </Button>
             </div>
           </div>
@@ -142,7 +142,7 @@ export default function MeuPainel() {
       </div>
 
       {/* Content */}
-      <div className="container py-6">
+      <div className="container px-4 sm:px-6 lg:px-8 py-6">
         {influencers.length === 0 ? (
           <div className="empty-state">
             <Users className="empty-state-icon" />
@@ -170,57 +170,59 @@ export default function MeuPainel() {
             </p>
           </div>
         ) : (
-          <div className="bg-card rounded-xl border">
-            <table className="table-minimal">
-              <thead>
-                <tr>
-                  <th>Influenciador</th>
-                  <th>Dias Restantes</th>
-                  <th>Status</th>
-                  <th>Notas</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredInfluencers.map((inf) => {
-                  const handleNorm = inf.handle.trim().toLowerCase().replace(/^@/, "");
-                  const lock = locksMap.get(handleNorm);
-                  const daysLeft = lock
-                    ? Math.max(0, Math.ceil((new Date(lock.locked_until).getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
-                    : null;
-                  const isExpiring = daysLeft !== null && daysLeft <= 2;
+          <div className="bg-card rounded-xl border overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="table-minimal">
+                <thead>
+                  <tr>
+                    <th>Influenciador</th>
+                    <th>Dias Restantes</th>
+                    <th>Status</th>
+                    <th>Notas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredInfluencers.map((inf) => {
+                    const handleNorm = inf.handle.trim().toLowerCase().replace(/^@/, "");
+                    const lock = locksMap.get(handleNorm);
+                    const daysLeft = lock
+                      ? Math.max(0, Math.ceil((new Date(lock.locked_until).getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
+                      : null;
+                    const isExpiring = daysLeft !== null && daysLeft <= 2;
 
-                  return (
-                    <tr key={inf.id}>
-                      <td>
-                        <span className="font-medium">{inf.handle}</span>
-                      </td>
-                      <td>
-                        {daysLeft !== null ? (
-                          <Badge
-                            variant="outline"
-                            className={
-                              isExpiring
-                                ? "bg-amber-50 text-amber-700 border-amber-200/50"
-                                : "bg-emerald-50 text-emerald-700 border-emerald-200/50"
-                            }
-                          >
-                            {daysLeft}d
-                          </Badge>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">—</span>
-                        )}
-                      </td>
-                      <td>
-                        <StatusBadge status={inf.status} size="sm" />
-                      </td>
-                      <td className="text-muted-foreground text-sm">
-                        {inf.notas || "—"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                    return (
+                      <tr key={inf.id}>
+                        <td>
+                          <span className="font-medium">{inf.handle}</span>
+                        </td>
+                        <td>
+                          {daysLeft !== null ? (
+                            <Badge
+                              variant="outline"
+                              className={
+                                isExpiring
+                                  ? "bg-amber-50 text-amber-700 border-amber-200/50"
+                                  : "bg-emerald-50 text-emerald-700 border-emerald-200/50"
+                              }
+                            >
+                              {daysLeft}d
+                            </Badge>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">—</span>
+                          )}
+                        </td>
+                        <td>
+                          <StatusBadge status={inf.status} size="sm" />
+                        </td>
+                        <td className="text-muted-foreground text-sm">
+                          {inf.notas || "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

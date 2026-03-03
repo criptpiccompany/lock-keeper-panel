@@ -22,7 +22,7 @@ export function KanbanColumn({
 }: KanbanColumnProps) {
   return (
     <div
-      className="flex w-[280px] shrink-0 flex-col rounded-xl border"
+      className="flex w-[260px] sm:w-[280px] shrink-0 flex-col rounded-xl border"
       style={{ backgroundColor: bg, minHeight: 200 }}
     >
       {/* Header */}

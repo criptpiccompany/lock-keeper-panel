@@ -55,10 +55,10 @@ export default function Home() {
   const firstName = user.nome.split(/\s+/)[0];
 
   return (
-    <main className="container-premium py-12 animate-fade-in">
+    <main className="container-premium py-8 sm:py-12 animate-fade-in">
       {/* Header */}
-      <div className="text-center mb-10">
-        <h1 className="text-2xl font-bold text-foreground">
+      <div className="text-center mb-8 sm:mb-10">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">
           Bem-vindo, {firstName}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -67,14 +67,14 @@ export default function Home() {
       </div>
 
       {/* Unified Thermometer */}
-      <div className="card-premium p-8 md:p-10 mb-8">
+      <div className="card-premium p-4 sm:p-8 md:p-10 mb-8 overflow-hidden">
         {!loading && (
           <UnifiedThermometerWidget resultado={resultado} month={month} />
         )}
       </div>
 
       {/* Quick links */}
-      <div className="flex justify-center gap-3">
+      <div className="flex flex-col sm:flex-row justify-center gap-3">
         <Button asChild variant="outline" className="gap-2">
           <Link to="/registro">
             <FileText className="h-4 w-4" />

@@ -73,15 +73,15 @@ export default function PainelGeral() {
     <div className="min-h-screen">
       {/* Header */}
       <div className="border-b">
-        <div className="container py-8">
+        <div className="container px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
-                <LayoutGrid className="h-6 w-6" />
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight flex items-center gap-2">
+                <LayoutGrid className="h-5 w-5 sm:h-6 sm:w-6" />
                 Painel Geral
               </h1>
               <p className="text-muted-foreground text-sm mt-1">
-                Influenciadores atualmente travados (atualizado automaticamente pelo Planilhamento Diário)
+                Influenciadores atualmente travados
               </p>
             </div>
 
@@ -111,9 +111,8 @@ export default function PainelGeral() {
       </div>
 
       {/* Locks Section */}
-      <div className="container py-6 space-y-6">
+      <div className="container px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-        {/* Locks Section */}
         {locks.length === 0 ? (
           <div className="empty-state">
             <Lock className="empty-state-icon" />
@@ -131,8 +130,9 @@ export default function PainelGeral() {
             </p>
           </div>
         ) : (
-          <div className="bg-card rounded-xl border">
-            <table className="table-minimal">
+          <div className="bg-card rounded-xl border overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="table-minimal">
               <thead>
                 <tr>
                   <th>Influenciador</th>
@@ -180,7 +180,8 @@ export default function PainelGeral() {
                   );
                 })}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
         )}
       </div>

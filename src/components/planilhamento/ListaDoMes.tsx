@@ -344,9 +344,9 @@ export default function ListaDoMes({ closerId }: { closerId?: string }) {
   return (
     <div className="space-y-6">
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3">
         <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-          <SelectTrigger className="w-[200px] h-9 text-sm">
+          <SelectTrigger className="w-full sm:w-[200px] h-9 text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -358,7 +358,7 @@ export default function ListaDoMes({ closerId }: { closerId?: string }) {
 
         {!closerId && isAdmin && closers.length > 1 && (
           <Select value={selectedCloserId} onValueChange={setSelectedCloserId}>
-            <SelectTrigger className="w-[180px] h-9 text-sm">
+            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm">
               <SelectValue placeholder="Selecionar closer" />
             </SelectTrigger>
             <SelectContent>

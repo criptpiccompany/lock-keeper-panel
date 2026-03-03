@@ -77,9 +77,9 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
   const currentUserMember = members.find((m) => m.userId === user?.id);
 
   return (
-    <div className="flex flex-col items-center gap-8">
+    <div className="flex flex-col items-center gap-6 sm:gap-8 w-full overflow-hidden">
       {/* Main layout */}
-      <div className="grid grid-cols-[auto_1fr] items-stretch w-full max-w-lg mx-auto pl-16 sm:pl-20">
+      <div className="grid grid-cols-[auto_1fr] items-stretch w-full max-w-lg mx-auto pl-12 sm:pl-16 md:pl-20">
         {/* Thermometer tube */}
         <div className="relative flex-shrink-0" style={{ width: 56, height: tubeHeight }}>
           <div
@@ -275,11 +275,11 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
         </div>
 
         {/* Info panel - own data only */}
-        <div className="flex flex-col justify-center gap-5 min-w-0 py-4 ml-[140px] sm:ml-[160px] pr-2">
+        <div className="flex flex-col justify-center gap-4 sm:gap-5 min-w-0 py-4 ml-[100px] sm:ml-[140px] md:ml-[160px] pr-2">
           <div>
             <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-medium">Sua % do mês</p>
             <div className="flex items-center gap-3 mt-1">
-              <p className="text-4xl font-bold tabular-nums text-foreground">{currentPercentage}%</p>
+              <p className="text-3xl sm:text-4xl font-bold tabular-nums text-foreground">{currentPercentage}%</p>
               <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${currentColor.badge}`}>
                 {currentColor.label} Tier {tiers.findIndex(t => t.tier_order === currentTierOrder) + 1}/{tiers.length}
               </span>
