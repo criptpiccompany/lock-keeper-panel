@@ -59,6 +59,7 @@ import {
 } from "lucide-react";
 import ComprovanteThumbnail from "./ComprovanteThumbnail";
 import ComprovanteLightbox from "./ComprovanteLightbox";
+import ProofUploader from "./ProofUploader";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import EditReasonModal, { formatFieldLabel, type FieldDiff } from "./EditReasonModal";
 import SharedPartnersPopover, { type SharedPartner } from "./SharedPartnersPopover";
@@ -1518,61 +1519,23 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label>
-                  {editRecord
-                    ? (editRecord.comprovante_url ? "Substituir Comprovante 1" : "Anexar Comprovante 1")
-                    : "Comprovante 1"}
-                  {" "}<span className="text-muted-foreground text-xs">— pode anexar depois</span>
-                </Label>
-                <label className="cursor-pointer block">
-                  <div className="flex items-center gap-2 border rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 transition-colors min-w-0">
-                    <Upload className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{formFile1 ? formFile1.name : "Selecionar arquivo (JPG, PNG, PDF)"}</span>
-                  </div>
-                  <input
-                    type="file"
-                    accept=".jpg,.jpeg,.png,.pdf"
-                    className="hidden"
-                    onChange={(e) => {
-                      try {
-                        const file = e.target.files?.[0] || null;
-                        setFormFile1(file);
-                      } catch (err) {
-                        console.error("[Upload] Error selecting file 1:", err);
-                      }
-                    }}
-                  />
-                </label>
-              </div>
+              <ProofUploader
+                label={editRecord ? (editRecord.comprovante_url ? "Substituir Comprovante 1" : "Anexar Comprovante 1") : "Comprovante 1"}
+                sublabel="— pode anexar depois"
+                value={formFile1}
+                existingUrl={editRecord?.comprovante_url || undefined}
+                onChange={setFormFile1}
+                disabled={submitting}
+              />
 
-              <div className="space-y-2">
-                <Label>
-                  {editRecord
-                    ? (editRecord.comprovante_url_2 ? "Substituir Comprovante 2" : "Anexar Comprovante 2")
-                    : "Comprovante 2"}
-                  {" "}<span className="text-muted-foreground text-xs">(opcional)</span>
-                </Label>
-                <label className="cursor-pointer block">
-                  <div className="flex items-center gap-2 border rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 transition-colors min-w-0">
-                    <Upload className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{formFile2 ? formFile2.name : "Selecionar arquivo (JPG, PNG, PDF)"}</span>
-                  </div>
-                  <input
-                    type="file"
-                    accept=".jpg,.jpeg,.png,.pdf"
-                    className="hidden"
-                    onChange={(e) => {
-                      try {
-                        const file = e.target.files?.[0] || null;
-                        setFormFile2(file);
-                      } catch (err) {
-                        console.error("[Upload] Error selecting file 2:", err);
-                      }
-                    }}
-                  />
-                </label>
-              </div>
+              <ProofUploader
+                label={editRecord ? (editRecord.comprovante_url_2 ? "Substituir Comprovante 2" : "Anexar Comprovante 2") : "Comprovante 2"}
+                sublabel="(opcional)"
+                value={formFile2}
+                existingUrl={editRecord?.comprovante_url_2 || undefined}
+                onChange={setFormFile2}
+                disabled={submitting}
+              />
 
 
               {/* Shared / Partners toggle */}
