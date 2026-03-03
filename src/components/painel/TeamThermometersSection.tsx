@@ -14,8 +14,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { X, User } from "lucide-react";
 import MiniThermometer from "./MiniThermometer";
-// UnifiedThermometerWidget now rendered inside ListaDoMes
-import ListaDoMes from "@/components/planilhamento/ListaDoMes";
+import ThermometerDrawerContent from "./ThermometerDrawerContent";
 import type { CommissionTier } from "@/hooks/useCommissionTier";
 import { getTeamThermometerSnapshots, type ThermometerSnapshot } from "@/lib/thermometerSnapshot";
 
@@ -244,7 +243,7 @@ export default function TeamThermometersSection() {
           <div className="flex-1 overflow-y-auto min-w-0">
             {selectedUser && (
               <div className="p-5 min-w-0">
-                <ListaDoMes closerId={selectedUser.userId} drawerMode />
+                <ThermometerDrawerContent closerId={selectedUser.userId} initialMonth={month} />
               </div>
             )}
           </div>

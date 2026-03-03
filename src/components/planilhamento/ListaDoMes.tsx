@@ -71,7 +71,7 @@ const DEFAULT_PLATFORMS: PlatformNames = {
 
 /* ───── main component ───── */
 
-export default function ListaDoMes({ closerId, hideThermometer = false, drawerMode = false }: { closerId?: string; hideThermometer?: boolean; drawerMode?: boolean }) {
+export default function ListaDoMes({ closerId, hideThermometer = false }: { closerId?: string; hideThermometer?: boolean }) {
   const { user, isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<ListRow[]>([]);
@@ -389,63 +389,34 @@ export default function ListaDoMes({ closerId, hideThermometer = false, drawerMo
         <>
           {/* Two-column layout: Thermometer + Cards (same as Balanço) */}
           {!hideThermometer && (
-          <div className={`gap-3 ${drawerMode ? "flex flex-col" : "grid grid-cols-1 lg:grid-cols-[2fr_3fr]"}`}>
-            {/* Financial Cards Grid - show first in drawer mode */}
-            {drawerMode && (
-              <div className="flex flex-col gap-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <SummaryCard label="Investido" value={investido} icon={DollarSign} />
-                  <SummaryCard label="Faturado (manual)" value={summary.faturado} icon={TrendingUp} />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <SummaryCard
-                    label="Resultado"
-                    value={summary.resultado}
-                    icon={summary.resultado >= 0 ? TrendingUp : TrendingDown}
-                    variant={summary.resultado >= 0 ? "positive" : "negative"}
-                  />
-                  <SummaryCard label="Comissão" value={summary.comissao} icon={Receipt} />
-                </div>
-                <SummaryCard
-                  label="Resultado líquido"
-                  value={summary.resultadoLiquido}
-                  icon={Percent}
-                  variant={summary.resultadoLiquido >= 0 ? "positive" : "negative"}
-                />
-              </div>
-            )}
-
-            {/* Thermometer */}
-            <div className={`card-premium p-5 flex items-center justify-center ${drawerMode ? "overflow-hidden" : "lg:min-h-[380px]"}`}>
-              <div className={drawerMode ? "max-w-[380px] mx-auto overflow-visible" : ""}>
-                <UnifiedThermometerWidget resultado={summary.resultado} month={selectedMonth} compact={drawerMode} />
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-3">
+            {/* Left: Thermometer */}
+            <div className="card-premium p-5 flex items-center justify-center lg:min-h-[380px]">
+              <UnifiedThermometerWidget resultado={summary.resultado} month={selectedMonth} />
             </div>
 
-            {/* Financial Cards Grid - normal layout (not drawer) */}
-            {!drawerMode && (
-              <div className="flex flex-col gap-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <SummaryCard label="Investido" value={investido} icon={DollarSign} />
-                  <SummaryCard label="Faturado (manual)" value={summary.faturado} icon={TrendingUp} />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <SummaryCard
-                    label="Resultado"
-                    value={summary.resultado}
-                    icon={summary.resultado >= 0 ? TrendingUp : TrendingDown}
-                    variant={summary.resultado >= 0 ? "positive" : "negative"}
-                  />
-                  <SummaryCard label="Comissão" value={summary.comissao} icon={Receipt} />
-                </div>
-                <SummaryCard
-                  label="Resultado líquido"
-                  value={summary.resultadoLiquido}
-                  icon={Percent}
-                  variant={summary.resultadoLiquido >= 0 ? "positive" : "negative"}
-                />
+            {/* Right: Financial Cards Grid */}
+            <div className="flex flex-col gap-2">
+              <div className="grid grid-cols-2 gap-2">
+                <SummaryCard label="Investido" value={investido} icon={DollarSign} />
+                <SummaryCard label="Faturado (manual)" value={summary.faturado} icon={TrendingUp} />
               </div>
-            )}
+              <div className="grid grid-cols-2 gap-2">
+                <SummaryCard
+                  label="Resultado"
+                  value={summary.resultado}
+                  icon={summary.resultado >= 0 ? TrendingUp : TrendingDown}
+                  variant={summary.resultado >= 0 ? "positive" : "negative"}
+                />
+                <SummaryCard label="Comissão" value={summary.comissao} icon={Receipt} />
+              </div>
+              <SummaryCard
+                label="Resultado líquido"
+                value={summary.resultadoLiquido}
+                icon={Percent}
+                variant={summary.resultadoLiquido >= 0 ? "positive" : "negative"}
+              />
+            </div>
           </div>
           )}
 
