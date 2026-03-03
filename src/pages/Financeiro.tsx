@@ -175,10 +175,10 @@ export default function Financeiro() {
     <div className="min-h-screen bg-muted/20">
       {/* Header */}
       <div className="border-b bg-card">
-        <div className="container py-6 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
-              <DollarSign className="h-6 w-6" />
+        <div className="container px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight flex items-center gap-2">
+              <DollarSign className="h-5 w-5 sm:h-6 sm:w-6" />
               Financeiro
             </h1>
             <FinanceiroPeriodFilter
@@ -193,7 +193,7 @@ export default function Financeiro() {
           {/* ADMIN: Team tabs */}
           {isAdmin && teams.length > 1 && (
             <Tabs value={selectedTeamId} onValueChange={setSelectedTeamId}>
-              <TabsList>
+              <TabsList className="w-full sm:w-auto overflow-x-auto">
                 {teams.map(t => (
                   <TabsTrigger key={t.id} value={t.id}>{t.name}</TabsTrigger>
                 ))}
@@ -204,7 +204,7 @@ export default function Financeiro() {
       </div>
 
       {/* Content */}
-      <div className="container py-6">
+      <div className="container px-4 sm:px-6 lg:px-8 py-6">
         {financeiroContent}
       </div>
 

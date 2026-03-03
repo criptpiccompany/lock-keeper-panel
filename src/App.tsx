@@ -175,7 +175,7 @@ const App = () => (
       <Sonner position="top-right" />
       <BrowserRouter>
         <AuthProvider>
-          <div className="min-h-screen bg-background">
+          <div className="min-h-screen bg-background overflow-x-hidden">
             <AppRoutes />
           </div>
         </AuthProvider>
