@@ -67,7 +67,7 @@ export default function Home() {
       </div>
 
       {/* Unified Thermometer */}
-      <div className="card-premium p-4 sm:p-8 md:p-10 mb-8 overflow-hidden">
+      <div className="card-premium p-4 sm:p-8 md:p-10 mb-8 overflow-visible">
         {!loading && (
           <UnifiedThermometerWidget resultado={resultado} month={month} />
         )}

@@ -60,7 +60,7 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
 
   const commissionValue = getEstimatedCommission(resultado, currentPercentage);
   const isMax = currentTierOrder === tiers[tiers.length - 1].tier_order;
-  const tubeHeight = compact ? 220 : 320;
+  // No fixed tubeHeight — handled by responsive CSS classes below
 
   // Tier-based color mapping
   const tierColorMap: Record<number, { gradient: string; bulb: string; badge: string; label: string }> = {
@@ -77,11 +77,11 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
   const currentUserMember = members.find((m) => m.userId === user?.id);
 
   return (
-    <div className="flex flex-col items-center gap-6 sm:gap-8 w-full overflow-hidden">
+    <div className="flex flex-col items-center gap-6 sm:gap-8 w-full overflow-visible">
       {/* Main layout */}
-      <div className="grid grid-cols-[auto_1fr] items-stretch w-full max-w-lg mx-auto pl-12 sm:pl-16 md:pl-20">
-        {/* Thermometer tube */}
-        <div className="relative flex-shrink-0" style={{ width: 56, height: tubeHeight }}>
+      <div className="grid grid-cols-[auto_1fr] items-stretch w-full max-w-lg mx-auto pl-12 sm:pl-16 md:pl-20 overflow-visible">
+        {/* Thermometer tube — responsive height, no clip */}
+        <div className="relative flex-shrink-0 h-[280px] sm:h-[340px] lg:h-[320px] mb-6" style={{ width: 56 }}>
           <div
             className="absolute inset-0 rounded-full overflow-hidden"
             style={{
