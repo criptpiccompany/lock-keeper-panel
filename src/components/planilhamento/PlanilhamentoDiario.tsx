@@ -272,6 +272,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
   const [records, setRecords] = useState<DailyRecord[]>([]);
   const [influencers, setInfluencers] = useState<InfluencerOption[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const hasFetchedOnce = useRef(false);
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
 
@@ -316,6 +317,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
   const fetchData = useCallback(async () => {
     if (!user) return;
     if (!hasFetchedOnce.current) setLoading(true);
+    else setIsSyncing(true);
 
     const startDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`;
     const endDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-${new Date(selectedYear, selectedMonth + 1, 0).getDate()}`;
@@ -379,6 +381,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
 
     const isFirstFetch = !hasFetchedOnce.current;
     setLoading(false);
+    setIsSyncing(false);
     hasFetchedOnce.current = true;
 
     const today = new Date().toISOString().split("T")[0];
@@ -986,7 +989,14 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Background sync indicator */}
+      {isSyncing && (
+        <div className="sticky top-0 z-30 flex items-center justify-center gap-2 py-1.5 bg-muted/80 backdrop-blur-sm rounded-md text-xs text-muted-foreground animate-in fade-in duration-200">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          Sincronizando…
+        </div>
+      )}
       {/* Month selector */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -1673,7 +1683,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
             {(editRecord || modalAvailableInfluencers.length > 0) && (
               <Button onClick={() => handleSubmit()} disabled={submitting}>
                 {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {editRecord ? "Salvar" : "Registrar"}
+                {submitting ? "Salvando…" : editRecord ? "Salvar" : "Registrar"}
               </Button>
             )}
           </DialogFooter>
