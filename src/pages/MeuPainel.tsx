@@ -8,7 +8,7 @@ import { AddInfluencerByUrlModal } from "@/components/AddInfluencerByUrlModal";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { enrichInfluencer } from "@/lib/helpers";
+import { enrichInfluencer, LockInfo } from "@/lib/helpers";
 import { InfluencerWithStatus } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -44,6 +44,25 @@ export default function MeuPainel() {
       return;
     }
 
+    // Fetch locks for this user's influencers by influencer_id
+    const ids = (data || []).map(inf => inf.id);
+    let locksMap = new Map<string, LockInfo>();
+    if (ids.length > 0) {
+      const { data: locksData } = await supabase
+        .from("influencer_locks")
+        .select("influencer_id, handle_normalized, locked_until")
+        .gt("locked_until", new Date().toISOString());
+      
+      const handleMap = new Map<string, { locked_until: string }>();
+      for (const l of (locksData || []) as any[]) {
+        if (l.influencer_id) locksMap.set(l.influencer_id, { locked_until: l.locked_until });
+        handleMap.set(l.handle_normalized, { locked_until: l.locked_until });
+      }
+      setLocksMap(handleMap);
+    } else {
+      setLocksMap(new Map());
+    }
+
     const enriched = (data || []).map(inf => enrichInfluencer({
       id: inf.id,
       handle: inf.handle,
@@ -52,7 +71,7 @@ export default function MeuPainel() {
       lastClosedAt: inf.last_closed_at,
       ativo: inf.ativo,
       notas: inf.notas || undefined
-    }));
+    }, locksMap.get(inf.id) || null));
 
     // Sort by days remaining (soonest first)
     enriched.sort((a, b) => {
@@ -60,23 +79,6 @@ export default function MeuPainel() {
       if (b.daysRemaining === null) return -1;
       return a.daysRemaining - b.daysRemaining;
     });
-
-    // Fetch locks for this user's influencers
-    const handles = enriched.map(inf => inf.handle.trim().toLowerCase().replace(/^@/, ""));
-    if (handles.length > 0) {
-      const { data: locksData } = await supabase
-        .from("influencer_locks")
-        .select("handle_normalized, locked_until")
-        .in("handle_normalized", handles)
-        .gt("locked_until", new Date().toISOString());
-      const map = new Map<string, { locked_until: string }>();
-      for (const l of (locksData || []) as any[]) {
-        map.set(l.handle_normalized, { locked_until: l.locked_until });
-      }
-      setLocksMap(map);
-    } else {
-      setLocksMap(new Map());
-    }
 
     setInfluencers(enriched);
     setLoading(false);

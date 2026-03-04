@@ -1,21 +1,28 @@
 import { Influencer, InfluencerStatus, InfluencerWithStatus, User } from "@/types";
 import { LOCK_DURATION_MS } from "./constants";
 
-// Calculate influencer status based on business rules
-export function calculateInfluencerStatus(influencer: Influencer): InfluencerStatus {
+// Lock info from influencer_locks table
+export interface LockInfo {
+  locked_until: string;
+}
+
+// Calculate influencer status based on actual lock data
+// TRAVADO only if a valid lock exists in influencer_locks with locked_until > now()
+export function calculateInfluencerStatus(influencer: Influencer, lock?: LockInfo | null): InfluencerStatus {
   if (!influencer.ativo) return "ARQUIVADO";
-  if (!influencer.lastClosedAt) return "LIBERADO";
+  if (!lock) return "LIBERADO";
   
-  const lockedUntil = new Date(new Date(influencer.lastClosedAt).getTime() + LOCK_DURATION_MS);
+  const lockedUntil = new Date(lock.locked_until);
   const now = new Date();
   
   return now < lockedUntil ? "TRAVADO" : "LIBERADO";
 }
 
-// Calculate locked until date
-export function calculateLockedUntil(lastClosedAt: string | null): Date | null {
-  if (!lastClosedAt) return null;
-  return new Date(new Date(lastClosedAt).getTime() + LOCK_DURATION_MS);
+// Calculate locked until date from lock data
+export function calculateLockedUntil(lock?: LockInfo | null): Date | null {
+  if (!lock) return null;
+  const d = new Date(lock.locked_until);
+  return d.getTime() > Date.now() ? d : null;
 }
 
 // Calculate time remaining in milliseconds
@@ -31,10 +38,10 @@ export function msToDays(ms: number | null): number | null {
   return Math.ceil(ms / (24 * 60 * 60 * 1000));
 }
 
-// Enrich influencer with computed fields
-export function enrichInfluencer(influencer: Influencer): InfluencerWithStatus {
-  const status = calculateInfluencerStatus(influencer);
-  const lockedUntil = calculateLockedUntil(influencer.lastClosedAt);
+// Enrich influencer with computed fields using actual lock data
+export function enrichInfluencer(influencer: Influencer, lock?: LockInfo | null): InfluencerWithStatus {
+  const status = calculateInfluencerStatus(influencer, lock);
+  const lockedUntil = calculateLockedUntil(lock);
   const timeRemaining = status === "TRAVADO" ? calculateTimeRemaining(lockedUntil) : null;
   const daysRemaining = msToDays(timeRemaining);
   
