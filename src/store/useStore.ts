@@ -31,9 +31,9 @@ export const useStore = create<AppState>((set, get) => ({
   closeEvents: mockCloseEvents,
   currentUser: currentUser,
   
-  // Computed getters
+  // Computed getters (no lock data in store — all return LIBERADO by default)
   getEnrichedInfluencers: () => {
-    return get().influencers.map(enrichInfluencer);
+    return get().influencers.map(i => enrichInfluencer(i));
   },
   
   getInfluencerById: (id: string) => {
@@ -51,7 +51,7 @@ export const useStore = create<AppState>((set, get) => ({
     const user = get().currentUser;
     return get().influencers
       .filter((i) => i.ownerId === user.id && i.ativo)
-      .map(enrichInfluencer);
+      .map(i => enrichInfluencer(i));
   },
   
   // Actions

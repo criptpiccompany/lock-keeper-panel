@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/StatusBadge";
 import { supabase } from "@/integrations/supabase/client";
-import { enrichInfluencer, formatDate } from "@/lib/helpers";
+import { enrichInfluencer, formatDate, LockInfo } from "@/lib/helpers";
 import { InfluencerWithStatus } from "@/types";
 import { Search, LayoutGrid, Loader2, TrendingUp, Lock, Unlock, Archive } from "lucide-react";
 
@@ -13,11 +13,21 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchInfluencers = async () => {
-      const { data } = await supabase.from('influencers').select('*');
+      // Fetch influencers and locks in parallel
+      const [{ data }, { data: locksData }] = await Promise.all([
+        supabase.from('influencers').select('*'),
+        supabase.from('influencer_locks').select('influencer_id, locked_until').gt('locked_until', new Date().toISOString()),
+      ]);
+
+      const locksMap = new Map<string, LockInfo>();
+      for (const l of (locksData || []) as any[]) {
+        if (l.influencer_id) locksMap.set(l.influencer_id, { locked_until: l.locked_until });
+      }
+
       const enriched = (data || []).map(inf => enrichInfluencer({
         id: inf.id, handle: inf.handle, ownerId: inf.owner_id, ownerNome: inf.owner_nome,
         lastClosedAt: inf.last_closed_at, ativo: inf.ativo, notas: inf.notas || undefined
-      }));
+      }, locksMap.get(inf.id) || null));
       setInfluencers(enriched);
       setLoading(false);
     };
