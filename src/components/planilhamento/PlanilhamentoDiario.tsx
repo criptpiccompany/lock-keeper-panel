@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
@@ -1103,7 +1104,18 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                             <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Valor Pago</th>
                             <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Faturamento</th>
                             <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Resultado</th>
-                            <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Acumulado</th>
+                            <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="cursor-help border-b border-dashed border-foreground/30">Total do link</span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-[260px] text-xs font-normal normal-case tracking-normal">
+                                    Valor total acumulado no link do influenciador. Não corresponde ao faturamento do dia.
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </th>
                             <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Status</th>
                             <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-center">📎</th>
                             {!viewingOther && <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-right">Ações</th>}
@@ -1153,16 +1165,18 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                                     </div>
                                   </td>
                                   <td className="py-2.5 px-4">
-                                    {viewingOther ? (
-                                      <span className={`text-sm ${record.acumulado !== null && record.acumulado < 0 ? "text-red-600 font-medium" : record.acumulado !== null && record.acumulado > 0 ? "text-emerald-700 font-medium" : ""}`}>
-                                        {record.acumulado !== null ? formatCurrency(record.acumulado) : "—"}
-                                      </span>
-                                    ) : (
-                                      <InlineAcumulado
-                                        value={record.acumulado ?? null}
-                                        onSave={(val) => handleAcumuladoSave(record.id, val)}
-                                      />
-                                    )}
+                                    <div className="inline-block rounded-md bg-[#F3F4F6] px-2.5 py-1.5">
+                                      {viewingOther ? (
+                                        <span className={`text-sm ${record.acumulado !== null && record.acumulado < 0 ? "text-red-600 font-medium" : record.acumulado !== null && record.acumulado > 0 ? "text-emerald-700 font-medium" : ""}`}>
+                                          {record.acumulado !== null ? formatCurrency(record.acumulado) : "—"}
+                                        </span>
+                                      ) : (
+                                        <InlineAcumulado
+                                          value={record.acumulado ?? null}
+                                          onSave={(val) => handleAcumuladoSave(record.id, val)}
+                                        />
+                                      )}
+                                    </div>
                                   </td>
                                   <td className="py-2.5 px-4">
                                     {viewingOther ? (
