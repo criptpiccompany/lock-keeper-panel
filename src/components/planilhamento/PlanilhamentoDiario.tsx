@@ -1572,7 +1572,8 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                 />
               </div>
 
-
+              <div className="space-y-2">
+                <Label>Faturamento (R$) <span className="text-muted-foreground text-xs">— pode preencher depois</span></Label>
                 <Input
                   type="number"
                   step="0.01"
