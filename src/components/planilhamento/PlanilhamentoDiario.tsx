@@ -1105,16 +1105,19 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                             <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Faturamento</th>
                             <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Resultado</th>
                             <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span className="cursor-help border-b border-dashed border-foreground/30">Total no link</span>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top" className="max-w-[260px] text-xs font-normal normal-case tracking-normal">
-                                    Valor total acumulado no link do influenciador. Não corresponde ao faturamento do dia.
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                              <span className="inline-flex items-center gap-1">
+                                Total no link
+                                <TooltipProvider delayDuration={0}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Info className="h-3.5 w-3.5 text-muted-foreground/60 cursor-help shrink-0" />
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="max-w-[280px] text-xs font-normal normal-case tracking-normal leading-relaxed">
+                                      Digite o valor total que está no link do influenciador. Amanhã você compara com o novo valor para saber quanto entrou no dia.
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </span>
                             </th>
                             <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Status</th>
                             <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-center">📎</th>
