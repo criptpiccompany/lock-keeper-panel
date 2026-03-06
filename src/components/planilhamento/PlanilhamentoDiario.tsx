@@ -1106,7 +1106,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                             <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Faturamento</th>
                             <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Resultado</th>
                             <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">
-                              <span className="inline-flex items-center gap-1">
+                              <span className="inline-flex items-center gap-1 group/tip">
                                 Total no link
                                 <TooltipProvider delayDuration={0}>
                                   <Tooltip>
@@ -1118,6 +1118,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
+                                <span className="text-[11px] font-normal normal-case tracking-normal text-muted-foreground/50 opacity-0 group-hover/tip:opacity-100 transition-opacity">(toque no ícone)</span>
                               </span>
                             </th>
                             <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Status</th>
@@ -1303,6 +1304,34 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                                       {record.faturamento !== null ? formatCurrency(lucro) : "—"}
                                     </span>
                                   </div>
+                                </div>
+
+                                {/* Total no link */}
+                                <div className="rounded-md bg-[#F3F4F6] px-2.5 py-1.5">
+                                  <div className="flex items-center gap-1 mb-1">
+                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Total no link</span>
+                                    <TooltipProvider delayDuration={0}>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Info className="h-3 w-3 text-muted-foreground/50 cursor-help shrink-0" />
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="max-w-[260px] text-xs font-normal normal-case tracking-normal leading-relaxed">
+                                          Digite o valor total que está no link do influenciador. Amanhã você compara com o novo valor para saber quanto entrou no dia.
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                    <span className="text-[10px] font-normal text-muted-foreground/40">(toque no ℹ)</span>
+                                  </div>
+                                  {viewingOther ? (
+                                    <span className={`text-sm font-medium ${record.acumulado !== null && record.acumulado < 0 ? "text-red-600" : record.acumulado !== null && record.acumulado > 0 ? "text-emerald-700" : ""}`}>
+                                      {record.acumulado !== null ? formatCurrency(record.acumulado) : "—"}
+                                    </span>
+                                  ) : (
+                                    <InlineAcumulado
+                                      value={record.acumulado ?? null}
+                                      onSave={(val) => handleAcumuladoSave(record.id, val)}
+                                    />
+                                  )}
                                 </div>
 
                                 {/* Status + resultado badge row */}
