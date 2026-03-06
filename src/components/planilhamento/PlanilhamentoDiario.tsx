@@ -187,9 +187,11 @@ function WorkflowStatusDropdown({
 function InlineAcumulado({
   value,
   onSave,
+  neutral = false,
 }: {
   value: number | null;
   onSave: (val: number | null) => void;
+  neutral?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value !== null ? String(value) : "");
@@ -226,13 +228,21 @@ function InlineAcumulado({
     );
   }
 
+  const colorClass = neutral
+    ? "text-foreground font-medium"
+    : value !== null && value < 0
+      ? "text-red-600 font-medium"
+      : value !== null && value > 0
+        ? "text-emerald-700 font-medium"
+        : "";
+
   return (
     <button
       onClick={() => setEditing(true)}
       className="inline-flex items-center gap-1.5 group text-sm"
       title="Editar acumulado"
     >
-      <span className={value !== null && value < 0 ? "text-red-600 font-medium" : value !== null && value > 0 ? "text-emerald-700 font-medium" : ""}>
+      <span className={colorClass}>
         {value !== null ? formatCurrency(value) : "—"}
       </span>
       <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
