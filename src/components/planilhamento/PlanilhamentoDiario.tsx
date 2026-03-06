@@ -187,9 +187,11 @@ function WorkflowStatusDropdown({
 function InlineAcumulado({
   value,
   onSave,
+  neutral = false,
 }: {
   value: number | null;
   onSave: (val: number | null) => void;
+  neutral?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value !== null ? String(value) : "");
@@ -226,13 +228,21 @@ function InlineAcumulado({
     );
   }
 
+  const colorClass = neutral
+    ? "text-foreground font-medium"
+    : value !== null && value < 0
+      ? "text-red-600 font-medium"
+      : value !== null && value > 0
+        ? "text-emerald-700 font-medium"
+        : "";
+
   return (
     <button
       onClick={() => setEditing(true)}
       className="inline-flex items-center gap-1.5 group text-sm"
       title="Editar acumulado"
     >
-      <span className={value !== null && value < 0 ? "text-red-600 font-medium" : value !== null && value > 0 ? "text-emerald-700 font-medium" : ""}>
+      <span className={colorClass}>
         {value !== null ? formatCurrency(value) : "—"}
       </span>
       <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -1307,7 +1317,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                                 </div>
 
                                 {/* Total no link */}
-                                <div className="rounded-md bg-[#F3F4F6] px-2.5 py-1.5">
+                                <div className="inline-block rounded-md bg-[#F3F4F6] px-3 py-1.5 max-w-[200px] w-fit">
                                   <div className="flex items-center gap-1 mb-1">
                                     <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Total no link</span>
                                     <TooltipProvider delayDuration={0}>
@@ -1323,13 +1333,14 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                                     <span className="text-[10px] font-normal text-muted-foreground/40">(toque no ℹ)</span>
                                   </div>
                                   {viewingOther ? (
-                                    <span className={`text-sm font-medium ${record.acumulado !== null && record.acumulado < 0 ? "text-red-600" : record.acumulado !== null && record.acumulado > 0 ? "text-emerald-700" : ""}`}>
+                                    <span className="text-sm font-medium text-foreground">
                                       {record.acumulado !== null ? formatCurrency(record.acumulado) : "—"}
                                     </span>
                                   ) : (
                                     <InlineAcumulado
                                       value={record.acumulado ?? null}
                                       onSave={(val) => handleAcumuladoSave(record.id, val)}
+                                      neutral
                                     />
                                   )}
                                 </div>
