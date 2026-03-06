@@ -57,6 +57,7 @@ import {
   CalendarDays,
   ArrowDown,
   ArrowUp,
+  Info,
 } from "lucide-react";
 import ComprovanteThumbnail from "./ComprovanteThumbnail";
 import ComprovanteLightbox from "./ComprovanteLightbox";
