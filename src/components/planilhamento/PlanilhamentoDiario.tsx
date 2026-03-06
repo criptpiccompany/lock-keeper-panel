@@ -301,6 +301,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
   const [formInfluencerId, setFormInfluencerId] = useState("");
   const [formValorPago, setFormValorPago] = useState("");
   const [formFaturamento, setFormFaturamento] = useState("");
+  const [formAcumulado, setFormAcumulado] = useState("");
   const [formObservacao, setFormObservacao] = useState("");
   const [formFile1, setFormFile1] = useState<File | null>(null);
   const [formFile2, setFormFile2] = useState<File | null>(null);
@@ -593,6 +594,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
     setFormInfluencerId("");
     setFormValorPago("");
     setFormFaturamento("");
+    setFormAcumulado("");
     setFormObservacao("");
     setFormFile1(null);
     setFormFile2(null);
@@ -611,6 +613,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
     setFormInfluencerId(record.influencer_id);
     setFormValorPago(String(record.valor_pago));
     setFormFaturamento(record.faturamento !== null ? String(record.faturamento) : "");
+    setFormAcumulado(record.acumulado !== null ? String(record.acumulado) : "");
     setFormObservacao(record.observacao || "");
     setFormFile1(null);
     setFormFile2(null);
@@ -751,6 +754,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
       const payload: Record<string, unknown> = {
         valor_pago: Number(formValorPago),
         faturamento: formFaturamento ? Number(formFaturamento) : null,
+        acumulado: formAcumulado ? Number(formAcumulado) : null,
         observacao: formObservacao || null,
         is_shared: formIsShared,
         shared_note: formIsShared ? (formSharedNote || null) : null,
@@ -1542,8 +1546,33 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                 />
               </div>
 
+              {/* Total no link field */}
               <div className="space-y-2">
-                <Label>Faturamento (R$) <span className="text-muted-foreground text-xs">— pode preencher depois</span></Label>
+                <div className="flex items-center gap-1">
+                  <Label className="text-foreground/70">Total no link</Label>
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-3.5 w-3.5 text-muted-foreground/50 cursor-help shrink-0" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[260px] text-xs font-normal leading-relaxed">
+                        Digite o valor total que está no link do influenciador. Amanhã você compara com o novo valor para saber quanto entrou no dia.
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0,00"
+                  value={formAcumulado}
+                  onChange={(e) => setFormAcumulado(e.target.value)}
+                  className="bg-[#F3F4F6] border-[#E5E7EB] text-foreground"
+                />
+              </div>
+
+
                 <Input
                   type="number"
                   step="0.01"
