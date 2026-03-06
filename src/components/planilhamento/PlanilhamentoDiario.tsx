@@ -1108,7 +1108,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <span className="cursor-help border-b border-dashed border-foreground/30">Total do link</span>
+                                    <span className="cursor-help border-b border-dashed border-foreground/30">Total no link</span>
                                   </TooltipTrigger>
                                   <TooltipContent side="top" className="max-w-[260px] text-xs font-normal normal-case tracking-normal">
                                     Valor total acumulado no link do influenciador. Não corresponde ao faturamento do dia.
