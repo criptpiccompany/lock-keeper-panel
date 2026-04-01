@@ -11,10 +11,16 @@ import { Loader2, Trophy, TrendingUp, TrendingDown, Medal } from "lucide-react";
 import { PLATFORM_FEE_RATE } from "@/lib/constants";
 import { getFeeLabel } from "@/hooks/useTeamFeeRate";
 
+interface Team {
+  id: string;
+  name: string;
+}
+
 interface CloserProfile {
   id: string;
   nome: string;
   commission_rate: number;
+  team_id: string | null;
 }
 
 interface DailyRecord {
@@ -22,6 +28,7 @@ interface DailyRecord {
   valor_pago: number;
   faturamento: number | null;
   date: string;
+  team_id: string | null;
 }
 
 interface RankingEntry {
