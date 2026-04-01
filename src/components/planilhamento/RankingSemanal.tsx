@@ -216,6 +216,17 @@ export default function RankingSemanal() {
             ))}
           </SelectContent>
         </Select>
+
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-9 gap-1.5"
+          disabled={!canGenerateRanking}
+          onClick={() => setShowWhatsApp(true)}
+        >
+          <MessageSquare className="h-3.5 w-3.5" />
+          Gerar ranking da semana
+        </Button>
       </div>
 
       {loading ? (
