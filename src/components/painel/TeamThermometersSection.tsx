@@ -112,7 +112,7 @@ export default function TeamThermometersSection() {
     });
 
     return list;
-  }, [snapshots, search, sortMode]);
+  }, [snapshots, search, sortMode, teamFilter]);
 
   return (
     <div className="space-y-4">
@@ -131,6 +131,18 @@ export default function TeamThermometersSection() {
           <SelectContent>
             {monthOptions.map((o) => (
               <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={teamFilter} onValueChange={handleTeamFilterChange}>
+          <SelectTrigger className="w-[200px] h-9 text-sm">
+            <SelectValue placeholder="Todas as equipes" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as equipes</SelectItem>
+            {teams.map((t) => (
+              <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
