@@ -401,7 +401,7 @@ export default function PlanilhamentoDiario({ closerId }: { closerId?: string })
     setIsSyncing(false);
 
     const today = new Date().toISOString().split("T")[0];
-    if (isInitial && today >= startDate && today <= endDate) {
+    if (isInitial && !viewingOther && today >= startDate && today <= endDate) {
       setExpandedDays(new Set([today]));
     }
     hasFetchedOnce.current = true;
