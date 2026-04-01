@@ -253,14 +253,6 @@ export default function RankingSemanal() {
                       >
                         {formatBRL(entry.lucro)}
                       </td>
-                      <td className="py-2.5 px-4 text-xs text-right tabular-nums">
-                        {formatBRL(entry.comissao)}
-                      </td>
-                      <td
-                        className={`py-2.5 px-4 text-xs text-right tabular-nums font-semibold ${profitColor}`}
-                      >
-                        {formatBRL(entry.lucroLiquido)}
-                      </td>
                     </tr>
                   );
                 })}
