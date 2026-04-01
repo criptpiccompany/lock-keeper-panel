@@ -26,13 +26,15 @@ interface CloserInfo {
 const STORAGE_KEY = "planilhamento_tab_last_viewed";
 
 export default function PlanilhamentoTabs() {
+  const [searchParams] = useSearchParams();
   const { user, isAdmin } = useAuth();
 
   // CLOSER view
   const [closerTab, setCloserTab] = useState<SubTabId>("diario");
 
-  // ADMIN view
-  const [adminTab, setAdminTab] = useState<string>("ranking");
+  // ADMIN view — default to "ranking" if ?tab=ranking
+  const initialAdminTab = searchParams.get("tab") === "ranking" ? "ranking" : "ranking";
+  const [adminTab, setAdminTab] = useState<string>(initialAdminTab);
   const [subTab, setSubTab] = useState<SubTabId>("diario");
   const [closers, setClosers] = useState<CloserInfo[]>([]);
   const [lastViewed, setLastViewed] = useState<Record<string, string>>(() => {
