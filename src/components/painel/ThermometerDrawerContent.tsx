@@ -180,7 +180,7 @@ function SummaryCard({
         <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium truncate">{label}</span>
       </div>
-      <p className={`text-base font-semibold tabular-nums ${colorClass}`}>
+      <p className={`text-base font-semibold tabular-nums whitespace-nowrap ${colorClass}`}>
         {formatBRL(value)}
       </p>
     </div>
