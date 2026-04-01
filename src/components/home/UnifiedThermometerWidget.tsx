@@ -137,7 +137,7 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
             return (
               <div
                 key={`brl-${t.tier_order}`}
-                className="absolute left-full ml-1.5 hidden sm:flex items-center gap-1"
+                className="absolute left-full ml-2.5 hidden sm:flex items-center gap-1.5"
                 style={{ bottom: `${pct}%`, transform: "translateY(50%)" }}
               >
                 <div
@@ -150,8 +150,8 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
                 <span
                   className={`tabular-nums leading-none whitespace-nowrap ${
                     isCurrent
-                      ? "text-[10px] text-foreground/60 font-semibold"
-                      : "text-[9px] text-muted-foreground/40 font-medium"
+                      ? "text-[10px] text-muted-foreground/80 font-semibold"
+                      : "text-[9px] text-muted-foreground/30 font-medium"
                   }`}
                 >
                   {formatBRL(t.threshold_result)}
@@ -275,7 +275,7 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
         </div>
 
         {/* Info panel - own data only */}
-        <div className={`flex flex-col justify-center gap-4 sm:gap-5 min-w-0 py-4 pr-2 ${compact ? "ml-[60px] sm:ml-[80px]" : "ml-[100px] sm:ml-[140px] md:ml-[160px]"}`}>
+        <div className={`flex flex-col justify-center gap-4 sm:gap-5 min-w-0 py-4 pr-2 ${compact ? "ml-[100px] sm:ml-[120px]" : "ml-[100px] sm:ml-[140px] md:ml-[160px]"}`}>
           <div>
             <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-medium">Sua % do mês</p>
             <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 mt-1">
