@@ -134,11 +134,25 @@ export default function ThermometerDrawerContent({ closerId, initialMonth }: Pro
         </div>
       </div>
 
-      {/* Lista do Mês (table only) */}
-      <div className="min-w-0">
-        <h3 className="text-sm font-semibold mb-3">Lista do Mês</h3>
-        <ListaDoMes closerId={closerId} hideThermometer />
-      </div>
+      {/* Lista do Mês + Planilhamento Diário in accordion */}
+      <Accordion type="multiple" defaultValue={["lista-mes"]} className="min-w-0">
+        <AccordionItem value="lista-mes" className="border-b-0">
+          <AccordionTrigger className="text-sm font-semibold py-2 hover:no-underline">
+            Lista do Mês
+          </AccordionTrigger>
+          <AccordionContent className="pb-2">
+            <ListaDoMes closerId={closerId} hideThermometer />
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="planilhamento" className="border-b-0">
+          <AccordionTrigger className="text-sm font-semibold py-2 hover:no-underline">
+            Planilhamento Diário
+          </AccordionTrigger>
+          <AccordionContent className="pb-2">
+            <PlanilhamentoDiario closerId={closerId} />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
 }
