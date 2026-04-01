@@ -7,7 +7,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Trophy, TrendingUp, TrendingDown, Medal } from "lucide-react";
+import { Loader2, Trophy, TrendingUp, TrendingDown, Medal, MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import RankingWhatsAppModal from "./RankingWhatsAppModal";
 import { PLATFORM_FEE_RATE } from "@/lib/constants";
 import { getFeeLabel } from "@/hooks/useTeamFeeRate";
 
