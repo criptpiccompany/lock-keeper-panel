@@ -8,10 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UnifiedThermometerWidget from "@/components/home/UnifiedThermometerWidget";
 import ListaDoMes from "@/components/planilhamento/ListaDoMes";
 import PlanilhamentoDiario from "@/components/planilhamento/PlanilhamentoDiario";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useTeamFeeRate } from "@/hooks/useTeamFeeRate";
 import { useCommissionTier } from "@/hooks/useCommissionTier";
 import { getEstimatedCommission } from "@/lib/commissionCalc";
@@ -80,7 +80,6 @@ export default function ThermometerDrawerContent({ closerId, initialMonth }: Pro
 
   const { currentPercentage, loading: tierLoading } = useCommissionTier(result);
   const commission = getEstimatedCommission(result, currentPercentage);
-  
 
   if (loading || tierLoading) {
     return (
@@ -91,9 +90,9 @@ export default function ThermometerDrawerContent({ closerId, initialMonth }: Pro
   }
 
   return (
-    <div className="space-y-5 min-w-0">
-      {/* Month selector + commission label */}
-      <div className="flex items-center gap-3">
+    <div className="min-w-0">
+      {/* Month selector — shared across all tabs */}
+      <div className="flex items-center gap-3 mb-4">
         <Select value={month} onValueChange={setMonth}>
           <SelectTrigger className="w-full sm:w-[200px] h-9 text-sm">
             <SelectValue />
@@ -109,50 +108,49 @@ export default function ThermometerDrawerContent({ closerId, initialMonth }: Pro
         </span>
       </div>
 
-      {/* Summary Cards — same pattern as Balanço */}
-      <div className="flex flex-col gap-2 min-w-0">
-        <div className="grid grid-cols-2 gap-2">
-          <SummaryCard label="Faturamento" value={revenue} icon={TrendingUp} />
-          <SummaryCard label="Investido" value={invested} icon={DollarSign} />
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <SummaryCard label={feeLabel} value={fee} icon={Percent} variant="muted" />
-          <SummaryCard
-            label="Resultado"
-            value={result}
-            icon={result >= 0 ? TrendingUp : TrendingDown}
-            variant={result >= 0 ? "positive" : "negative"}
-          />
-        </div>
-        <SummaryCard label="Comissão" value={commission} icon={Receipt} />
-      </div>
+      <Tabs defaultValue="overview" className="min-w-0">
+        <TabsList className="w-full grid grid-cols-3 mb-4">
+          <TabsTrigger value="overview" className="text-xs">Visão Geral</TabsTrigger>
+          <TabsTrigger value="lista" className="text-xs">Lista do Mês</TabsTrigger>
+          <TabsTrigger value="planilhamento" className="text-xs">Planilhamento</TabsTrigger>
+        </TabsList>
 
-      {/* Compact Thermometer */}
-      <div className="rounded-xl border border-border/40 bg-card p-4 min-w-0 overflow-hidden">
-        <div className="max-w-[380px] mx-auto overflow-visible">
-          <UnifiedThermometerWidget resultado={result} month={month} compact />
-        </div>
-      </div>
+        {/* Tab 1: Visão Geral */}
+        <TabsContent value="overview" className="space-y-5 mt-0">
+          <div className="flex flex-col gap-2 min-w-0">
+            <div className="grid grid-cols-2 gap-2">
+              <SummaryCard label="Faturamento" value={revenue} icon={TrendingUp} />
+              <SummaryCard label="Investido" value={invested} icon={DollarSign} />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <SummaryCard label={feeLabel} value={fee} icon={Percent} variant="muted" />
+              <SummaryCard
+                label="Resultado"
+                value={result}
+                icon={result >= 0 ? TrendingUp : TrendingDown}
+                variant={result >= 0 ? "positive" : "negative"}
+              />
+            </div>
+            <SummaryCard label="Comissão" value={commission} icon={Receipt} />
+          </div>
 
-      {/* Lista do Mês + Planilhamento Diário in accordion */}
-      <Accordion type="multiple" defaultValue={["lista-mes"]} className="min-w-0">
-        <AccordionItem value="lista-mes" className="border-b-0">
-          <AccordionTrigger className="text-sm font-semibold py-2 hover:no-underline">
-            Lista do Mês
-          </AccordionTrigger>
-          <AccordionContent className="pb-2">
-            <ListaDoMes closerId={closerId} hideThermometer />
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="planilhamento" className="border-b-0">
-          <AccordionTrigger className="text-sm font-semibold py-2 hover:no-underline">
-            Planilhamento Diário
-          </AccordionTrigger>
-          <AccordionContent className="pb-2">
-            <PlanilhamentoDiario closerId={closerId} />
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+          <div className="rounded-xl border border-border/40 bg-card p-4 min-w-0 overflow-hidden">
+            <div className="max-w-[380px] mx-auto overflow-visible">
+              <UnifiedThermometerWidget resultado={result} month={month} compact />
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Tab 2: Lista do Mês */}
+        <TabsContent value="lista" className="mt-0">
+          <ListaDoMes closerId={closerId} hideThermometer />
+        </TabsContent>
+
+        {/* Tab 3: Planilhamento Diário */}
+        <TabsContent value="planilhamento" className="mt-0">
+          <PlanilhamentoDiario closerId={closerId} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
