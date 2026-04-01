@@ -27,6 +27,7 @@ interface Team {
 
 export default function Financeiro() {
   const { isAdmin } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState<(DailyRecord & { team_id?: string | null })[]>([]);
   const [closers, setClosers] = useState<(CloserProfile & { team_id?: string | null })[]>([]);
