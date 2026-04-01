@@ -137,7 +137,7 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
             return (
               <div
                 key={`brl-${t.tier_order}`}
-                className="absolute left-full ml-1.5 hidden sm:flex items-center gap-1"
+                className="absolute left-full ml-2.5 hidden sm:flex items-center gap-1.5"
                 style={{ bottom: `${pct}%`, transform: "translateY(50%)" }}
               >
                 <div
