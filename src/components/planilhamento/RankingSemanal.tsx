@@ -183,7 +183,7 @@ export default function RankingSemanal() {
 
   return (
     <div className="space-y-6">
-      {/* Week selector */}
+      {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <Select value={selectedWeek} onValueChange={setSelectedWeek}>
           <SelectTrigger className="w-[280px] h-9 text-sm">
@@ -193,6 +193,20 @@ export default function RankingSemanal() {
             {weekOptions.map((o) => (
               <SelectItem key={o.value} value={o.value}>
                 {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={selectedTeamId} onValueChange={setSelectedTeamId}>
+          <SelectTrigger className="w-[220px] h-9 text-sm">
+            <SelectValue placeholder="Equipe" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as equipes</SelectItem>
+            {teams.map((t) => (
+              <SelectItem key={t.id} value={t.id}>
+                {t.name}
               </SelectItem>
             ))}
           </SelectContent>
