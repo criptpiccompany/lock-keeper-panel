@@ -86,6 +86,11 @@ export default function TeamThermometersSection() {
   const filtered = useMemo(() => {
     let list = snapshots;
 
+    // Team filter
+    if (teamFilter !== "all") {
+      list = list.filter((s) => s.teamId === teamFilter);
+    }
+
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter((s) => s.nome.toLowerCase().includes(q));
