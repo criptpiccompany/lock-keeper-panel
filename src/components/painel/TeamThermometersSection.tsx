@@ -248,7 +248,7 @@ export default function TeamThermometersSection() {
 
       {/* Detail Drawer */}
       <Sheet open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
-        <SheetContent className="w-full sm:max-w-[520px] p-0 flex flex-col overflow-hidden">
+        <SheetContent className="w-full sm:max-w-[50vw] sm:min-w-[720px] sm:[max-width:980px] p-0 flex flex-col overflow-hidden">
           {/* Sticky Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b bg-card shrink-0">
             <div className="flex items-center gap-3 min-w-0">
