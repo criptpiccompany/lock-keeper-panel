@@ -15,6 +15,7 @@ export interface ThermometerSnapshot {
   invested: number;
   revenue: number;
   fee: number;
+  teamId: string | null;
 }
 
 /**
