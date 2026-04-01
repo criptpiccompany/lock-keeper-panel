@@ -183,6 +183,9 @@ export default function RankingSemanal() {
     return "text-muted-foreground/30";
   };
 
+  const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const canGenerateRanking = selectedTeamId !== "all" && ranking.length >= 1;
+
   return (
     <div className="space-y-6">
       {/* Filters */}
