@@ -149,7 +149,7 @@ export default function RankingSemanal() {
       });
     });
 
-    return entries.sort((a, b) => b.lucroLiquido - a.lucroLiquido);
+    return entries.sort((a, b) => b.lucro - a.lucro);
   }, [records, closers]);
 
   const medalColor = (idx: number) => {
