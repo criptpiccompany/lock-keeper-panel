@@ -90,21 +90,25 @@ export default function RankingSemanal() {
   const [closers, setClosers] = useState<CloserProfile[]>([]);
   const [records, setRecords] = useState<DailyRecord[]>([]);
 
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>("all");
+
   const weekOptions = useMemo(() => getWeekOptions(), []);
   const [selectedWeek, setSelectedWeek] = useState(weekOptions[0]?.value || "");
 
   const currentWeekOption = weekOptions.find((w) => w.value === selectedWeek);
 
-  // Fetch closers
+  // Fetch closers + teams
   useEffect(() => {
-    const fetch = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, nome, commission_rate")
-        .order("nome");
-      setClosers((data as any as CloserProfile[]) || []);
+    const fetchAll = async () => {
+      const [profilesRes, teamsRes] = await Promise.all([
+        supabase.from("profiles").select("id, nome, commission_rate, team_id").order("nome"),
+        supabase.from("teams").select("id, name"),
+      ]);
+      setClosers((profilesRes.data as any as CloserProfile[]) || []);
+      setTeams((teamsRes.data as Team[]) || []);
     };
-    fetch();
+    fetchAll();
   }, []);
 
   // Fetch records for selected week
