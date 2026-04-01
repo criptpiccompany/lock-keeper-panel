@@ -28,21 +28,32 @@ function formatBRL(value: number): string {
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 const LABELS = ["1º LUGAR", "2º LUGAR", "3º LUGAR"];
+const PRIZES = ["R$ 1.000 no Pix 💸", "R$ 500 no Pix 💸", "R$ 250 no Pix 💸"];
 
-function buildWhatsAppText(ranking: RankingEntry[]): string {
-  const top3 = ranking.slice(0, 3);
+function capitalizeName(name: string): string {
+  if (!name) return "";
+  // If it looks like an email, take the part before @
+  const clean = name.includes("@") ? name.split("@")[0] : name;
+  return clean
+    .split(/[\s_.-]+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
 
-  let text = "🏆 RESULTADO DO RANKING DA SEMANA 🏆\n";
+function buildWhatsAppText(ranking: RankingEntry[], weekLabel: string): string {
+  const top = ranking.slice(0, 3);
 
-  top3.forEach((entry, idx) => {
+  let text = `🏆 RESULTADO DO RANKING DA SEMANA (${weekLabel}) 🏆\n`;
+
+  top.forEach((entry, idx) => {
     text += `\n${MEDALS[idx]} ${LABELS[idx]}\n`;
-    text += `${entry.nome} — ${formatBRL(entry.lucro)}\n`;
+    text += `${capitalizeName(entry.nome)} — ${formatBRL(entry.lucro)}\n`;
   });
 
   text += `\n🎁 Premiação:\n`;
-  text += `• 1º lugar → R$ 1.000 no Pix 💸\n`;
-  text += `• 2º lugar → R$ 500 no Pix 💸\n`;
-  text += `• 3º lugar → R$ 250 no Pix 💸\n`;
+  top.forEach((_, idx) => {
+    text += `• ${idx + 1}º lugar → ${PRIZES[idx]}\n`;
+  });
   text += `\n📌 Obs: Enviar a chave Pix no privado.`;
 
   return text;
@@ -50,7 +61,7 @@ function buildWhatsAppText(ranking: RankingEntry[]): string {
 
 export default function RankingWhatsAppModal({ open, onClose, ranking, weekLabel }: Props) {
   const [copied, setCopied] = useState(false);
-  const text = buildWhatsAppText(ranking);
+  const text = buildWhatsAppText(ranking, weekLabel);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(text);
