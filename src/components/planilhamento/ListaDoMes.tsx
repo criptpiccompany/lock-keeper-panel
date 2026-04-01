@@ -72,7 +72,7 @@ const DEFAULT_PLATFORMS: PlatformNames = {
 
 /* ───── main component ───── */
 
-export default function ListaDoMes({ closerId, hideThermometer = false }: { closerId?: string; hideThermometer?: boolean }) {
+export default function ListaDoMes({ closerId, hideThermometer = false, externalMonth }: { closerId?: string; hideThermometer?: boolean; externalMonth?: string }) {
   const { user, isAdmin } = useAuth();
   const { feeRate, feeLabel } = useTeamFeeRate(user?.teamId);
   const [loading, setLoading] = useState(true);
@@ -81,10 +81,12 @@ export default function ListaDoMes({ closerId, hideThermometer = false }: { clos
   const [platforms, setPlatforms] = useState<PlatformNames>(DEFAULT_PLATFORMS);
   const [investido, setInvestido] = useState(0);
   const [sharedInfluencerMap, setSharedInfluencerMap] = useState<Map<string, { note: string | null; partners: SharedPartner[] }[]>>(new Map());
-  const [selectedMonth, setSelectedMonth] = useState(() => {
+  const [internalMonth, setInternalMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
+  const selectedMonth = externalMonth || internalMonth;
+  const setSelectedMonth = setInternalMonth;
   const [selectedCloserId, setSelectedCloserId] = useState<string>(closerId || "");
 
   const monthOptions = useMemo(() => getMonthOptions(), []);
@@ -348,16 +350,18 @@ export default function ListaDoMes({ closerId, hideThermometer = false }: { clos
     <div className="space-y-6">
       {/* Filters */}
       <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3">
-        <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-          <SelectTrigger className="w-full sm:w-[200px] h-9 text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {monthOptions.map((o) => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {!externalMonth && (
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-full sm:w-[200px] h-9 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {monthOptions.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
 
         {!closerId && isAdmin && closers.length > 1 && (
           <Select value={selectedCloserId} onValueChange={setSelectedCloserId}>

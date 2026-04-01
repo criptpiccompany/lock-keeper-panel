@@ -94,7 +94,7 @@ export default function ThermometerDrawerContent({ closerId, initialMonth }: Pro
       {/* Month selector — shared across all tabs */}
       <div className="flex items-center gap-3 mb-4">
         <Select value={month} onValueChange={setMonth}>
-          <SelectTrigger className="w-full sm:w-[200px] h-9 text-sm">
+          <SelectTrigger className="w-[200px] h-9 text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -110,32 +110,28 @@ export default function ThermometerDrawerContent({ closerId, initialMonth }: Pro
 
       <Tabs defaultValue="overview" className="min-w-0">
         <TabsList className="w-full grid grid-cols-3 mb-4">
-          <TabsTrigger value="overview" className="text-xs">Visão Geral</TabsTrigger>
-          <TabsTrigger value="lista" className="text-xs">Lista do Mês</TabsTrigger>
-          <TabsTrigger value="planilhamento" className="text-xs">Planilhamento</TabsTrigger>
+          <TabsTrigger value="overview" className="text-xs sm:text-sm">Visão Geral</TabsTrigger>
+          <TabsTrigger value="lista" className="text-xs sm:text-sm">Lista do Mês</TabsTrigger>
+          <TabsTrigger value="planilhamento" className="text-xs sm:text-sm">Planilhamento</TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Visão Geral */}
         <TabsContent value="overview" className="space-y-5 mt-0">
-          <div className="flex flex-col gap-2 min-w-0">
-            <div className="grid grid-cols-2 gap-2">
-              <SummaryCard label="Faturamento" value={revenue} icon={TrendingUp} />
-              <SummaryCard label="Investido" value={invested} icon={DollarSign} />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <SummaryCard label={feeLabel} value={fee} icon={Percent} variant="muted" />
-              <SummaryCard
-                label="Resultado"
-                value={result}
-                icon={result >= 0 ? TrendingUp : TrendingDown}
-                variant={result >= 0 ? "positive" : "negative"}
-              />
-            </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 min-w-0">
+            <SummaryCard label="Faturamento" value={revenue} icon={TrendingUp} />
+            <SummaryCard label="Investido" value={invested} icon={DollarSign} />
+            <SummaryCard label={feeLabel} value={fee} icon={Percent} variant="muted" />
+            <SummaryCard
+              label="Resultado"
+              value={result}
+              icon={result >= 0 ? TrendingUp : TrendingDown}
+              variant={result >= 0 ? "positive" : "negative"}
+            />
             <SummaryCard label="Comissão" value={commission} icon={Receipt} />
           </div>
 
           <div className="rounded-xl border border-border/40 bg-card p-4 min-w-0 overflow-hidden">
-            <div className="max-w-[380px] mx-auto overflow-visible">
+            <div className="max-w-[420px] mx-auto overflow-visible">
               <UnifiedThermometerWidget resultado={result} month={month} compact />
             </div>
           </div>
@@ -143,12 +139,12 @@ export default function ThermometerDrawerContent({ closerId, initialMonth }: Pro
 
         {/* Tab 2: Lista do Mês */}
         <TabsContent value="lista" className="mt-0">
-          <ListaDoMes closerId={closerId} hideThermometer />
+          <ListaDoMes closerId={closerId} hideThermometer externalMonth={month} />
         </TabsContent>
 
         {/* Tab 3: Planilhamento Diário */}
         <TabsContent value="planilhamento" className="mt-0">
-          <PlanilhamentoDiario closerId={closerId} />
+          <PlanilhamentoDiario closerId={closerId} externalMonth={month} />
         </TabsContent>
       </Tabs>
     </div>
