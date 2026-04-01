@@ -150,8 +150,8 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
                 <span
                   className={`tabular-nums leading-none whitespace-nowrap ${
                     isCurrent
-                      ? "text-[10px] text-foreground/60 font-semibold"
-                      : "text-[9px] text-muted-foreground/40 font-medium"
+                      ? "text-[10px] text-muted-foreground/80 font-semibold"
+                      : "text-[9px] text-muted-foreground/30 font-medium"
                   }`}
                 >
                   {formatBRL(t.threshold_result)}
