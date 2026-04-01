@@ -213,12 +213,6 @@ export default function RankingSemanal() {
                   <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
                     Lucro
                   </th>
-                  <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
-                    Comissão
-                  </th>
-                  <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
-                    Lucro Líquido
-                  </th>
                 </tr>
               </thead>
               <tbody>
