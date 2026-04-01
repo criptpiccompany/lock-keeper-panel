@@ -282,18 +282,6 @@ export default function RankingSemanal() {
                   >
                     {formatBRL(ranking.reduce((s, e) => s + e.lucro, 0))}
                   </td>
-                  <td className="py-3 px-4 text-xs text-right tabular-nums">
-                    {formatBRL(ranking.reduce((s, e) => s + e.comissao, 0))}
-                  </td>
-                  <td
-                    className={`py-3 px-4 text-xs text-right tabular-nums font-semibold ${
-                      ranking.reduce((s, e) => s + e.lucroLiquido, 0) >= 0
-                        ? "text-emerald-700"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {formatBRL(ranking.reduce((s, e) => s + e.lucroLiquido, 0))}
-                  </td>
                 </tr>
               </tfoot>
             </table>
