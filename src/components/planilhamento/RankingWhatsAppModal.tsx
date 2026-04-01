@@ -40,10 +40,17 @@ function capitalizeName(name: string): string {
     .join(" ");
 }
 
+function extractDateRange(weekLabel: string): string {
+  // Extract date range like "23/03 — 29/03" from label
+  const match = weekLabel.match(/(\d{2}\/\d{2})\s*[—–-]\s*(\d{2}\/\d{2})/);
+  return match ? `${match[1]} - ${match[2]}` : weekLabel;
+}
+
 function buildWhatsAppText(ranking: RankingEntry[], weekLabel: string): string {
   const top = ranking.slice(0, 3);
+  const period = extractDateRange(weekLabel);
 
-  let text = `🏆 RESULTADO DO RANKING DA SEMANA (${weekLabel}) 🏆\n`;
+  let text = `🏆 Ranking Oficial da Semana (${period}) 🏆\n`;
 
   top.forEach((entry, idx) => {
     text += `\n${MEDALS[idx]} ${LABELS[idx]}\n`;
