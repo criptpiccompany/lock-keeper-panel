@@ -104,6 +104,7 @@ export async function getTeamThermometerSnapshots(
       invested: agg.invested,
       revenue: agg.revenue,
       fee,
+      teamId: userTeamMap.get(c.id) ?? null,
     };
   });
 }

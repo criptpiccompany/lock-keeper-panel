@@ -47,6 +47,10 @@ export default function TeamThermometersSection() {
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("result");
   const [selectedUser, setSelectedUser] = useState<ThermometerSnapshot | null>(null);
+  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
+  const [teamFilter, setTeamFilter] = useState<string>(() => {
+    return localStorage.getItem("thermo_team_filter") || "all";
+  });
 
   const monthOptions = useMemo(() => getMonthOptions(), []);
 
