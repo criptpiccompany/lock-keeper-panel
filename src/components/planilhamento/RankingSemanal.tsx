@@ -118,7 +118,7 @@ export default function RankingSemanal() {
       setLoading(true);
       const { data } = await supabase
         .from("daily_influencer_records")
-        .select("closer_id, valor_pago, faturamento, date")
+        .select("closer_id, valor_pago, faturamento, date, team_id")
         .gte("date", currentWeekOption.start)
         .lte("date", currentWeekOption.end)
         .is("deleted_at", null);
