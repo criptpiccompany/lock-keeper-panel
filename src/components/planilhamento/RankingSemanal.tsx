@@ -213,12 +213,6 @@ export default function RankingSemanal() {
                   <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
                     Lucro
                   </th>
-                  <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
-                    Comissão
-                  </th>
-                  <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
-                    Lucro Líquido
-                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -259,14 +253,6 @@ export default function RankingSemanal() {
                       >
                         {formatBRL(entry.lucro)}
                       </td>
-                      <td className="py-2.5 px-4 text-xs text-right tabular-nums">
-                        {formatBRL(entry.comissao)}
-                      </td>
-                      <td
-                        className={`py-2.5 px-4 text-xs text-right tabular-nums font-semibold ${profitColor}`}
-                      >
-                        {formatBRL(entry.lucroLiquido)}
-                      </td>
                     </tr>
                   );
                 })}
@@ -295,18 +281,6 @@ export default function RankingSemanal() {
                     }`}
                   >
                     {formatBRL(ranking.reduce((s, e) => s + e.lucro, 0))}
-                  </td>
-                  <td className="py-3 px-4 text-xs text-right tabular-nums">
-                    {formatBRL(ranking.reduce((s, e) => s + e.comissao, 0))}
-                  </td>
-                  <td
-                    className={`py-3 px-4 text-xs text-right tabular-nums font-semibold ${
-                      ranking.reduce((s, e) => s + e.lucroLiquido, 0) >= 0
-                        ? "text-emerald-700"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {formatBRL(ranking.reduce((s, e) => s + e.lucroLiquido, 0))}
                   </td>
                 </tr>
               </tfoot>
