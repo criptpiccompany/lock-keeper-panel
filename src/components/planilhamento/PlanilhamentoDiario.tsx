@@ -277,12 +277,19 @@ const MONTHS = [
 
 // --- Main Component ---
 
-export default function PlanilhamentoDiario({ closerId }: { closerId?: string }) {
+export default function PlanilhamentoDiario({ closerId, externalMonth }: { closerId?: string; externalMonth?: string }) {
   const { user, isAdmin } = useAuth();
   const viewingOther = !!closerId && closerId !== user?.id;
   const now = new Date();
-  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
+  const [internalYear, setInternalYear] = useState(now.getFullYear());
+  const [internalMonth, setInternalMonth] = useState(now.getMonth());
+
+  // When externalMonth is provided, derive year/month from it and hide internal selector
+  const hasExternalMonth = !!externalMonth;
+  const selectedYear = hasExternalMonth ? Number(externalMonth.split("-")[0]) : internalYear;
+  const selectedMonth = hasExternalMonth ? Number(externalMonth.split("-")[1]) - 1 : internalMonth;
+  const setSelectedYear = setInternalYear;
+  const setSelectedMonth = setInternalMonth;
   const [records, setRecords] = useState<DailyRecord[]>([]);
   const [influencers, setInfluencers] = useState<InfluencerOption[]>([]);
   const [loading, setLoading] = useState(true);

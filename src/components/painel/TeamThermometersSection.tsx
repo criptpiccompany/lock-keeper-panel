@@ -248,7 +248,7 @@ export default function TeamThermometersSection() {
 
       {/* Detail Drawer */}
       <Sheet open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
-        <SheetContent className="w-full sm:max-w-[50vw] sm:min-w-[720px] sm:[max-width:980px] p-0 flex flex-col overflow-hidden">
+        <SheetContent className="w-full sm:max-w-[50vw] sm:min-w-[720px] sm:[max-width:980px] p-0 flex flex-col overflow-hidden [&>button.absolute]:hidden">
           {/* Sticky Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b bg-card shrink-0">
             <div className="flex items-center gap-3 min-w-0">
@@ -257,9 +257,7 @@ export default function TeamThermometersSection() {
               </div>
               <div className="min-w-0">
                 <h2 className="text-base font-semibold truncate">{selectedUser?.nome}</h2>
-                <p className="text-xs text-muted-foreground">
-                  Termômetro e Lista do Mês — {monthOptions.find((o) => o.value === month)?.label}
-                </p>
+                <p className="text-xs text-muted-foreground">Detalhamento do closer</p>
               </div>
             </div>
             <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setSelectedUser(null)}>

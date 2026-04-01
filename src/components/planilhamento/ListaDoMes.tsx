@@ -350,16 +350,18 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
     <div className="space-y-6">
       {/* Filters */}
       <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3">
-        <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-          <SelectTrigger className="w-full sm:w-[200px] h-9 text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {monthOptions.map((o) => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {!externalMonth && (
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-full sm:w-[200px] h-9 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {monthOptions.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
 
         {!closerId && isAdmin && closers.length > 1 && (
           <Select value={selectedCloserId} onValueChange={setSelectedCloserId}>
