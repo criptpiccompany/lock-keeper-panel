@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/select";
 import UnifiedThermometerWidget from "@/components/home/UnifiedThermometerWidget";
 import ListaDoMes from "@/components/planilhamento/ListaDoMes";
+import PlanilhamentoDiario from "@/components/planilhamento/PlanilhamentoDiario";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useTeamFeeRate } from "@/hooks/useTeamFeeRate";
 import { useCommissionTier } from "@/hooks/useCommissionTier";
 import { getEstimatedCommission } from "@/lib/commissionCalc";
