@@ -11,10 +11,16 @@ import { Loader2, Trophy, TrendingUp, TrendingDown, Medal } from "lucide-react";
 import { PLATFORM_FEE_RATE } from "@/lib/constants";
 import { getFeeLabel } from "@/hooks/useTeamFeeRate";
 
+interface Team {
+  id: string;
+  name: string;
+}
+
 interface CloserProfile {
   id: string;
   nome: string;
   commission_rate: number;
+  team_id: string | null;
 }
 
 interface DailyRecord {
@@ -22,6 +28,7 @@ interface DailyRecord {
   valor_pago: number;
   faturamento: number | null;
   date: string;
+  team_id: string | null;
 }
 
 interface RankingEntry {
@@ -83,21 +90,25 @@ export default function RankingSemanal() {
   const [closers, setClosers] = useState<CloserProfile[]>([]);
   const [records, setRecords] = useState<DailyRecord[]>([]);
 
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>("all");
+
   const weekOptions = useMemo(() => getWeekOptions(), []);
   const [selectedWeek, setSelectedWeek] = useState(weekOptions[0]?.value || "");
 
   const currentWeekOption = weekOptions.find((w) => w.value === selectedWeek);
 
-  // Fetch closers
+  // Fetch closers + teams
   useEffect(() => {
-    const fetch = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, nome, commission_rate")
-        .order("nome");
-      setClosers((data as any as CloserProfile[]) || []);
+    const fetchAll = async () => {
+      const [profilesRes, teamsRes] = await Promise.all([
+        supabase.from("profiles").select("id, nome, commission_rate, team_id").order("nome"),
+        supabase.from("teams").select("id, name"),
+      ]);
+      setClosers((profilesRes.data as any as CloserProfile[]) || []);
+      setTeams((teamsRes.data as Team[]) || []);
     };
-    fetch();
+    fetchAll();
   }, []);
 
   // Fetch records for selected week
@@ -107,7 +118,7 @@ export default function RankingSemanal() {
       setLoading(true);
       const { data } = await supabase
         .from("daily_influencer_records")
-        .select("closer_id, valor_pago, faturamento, date")
+        .select("closer_id, valor_pago, faturamento, date, team_id")
         .gte("date", currentWeekOption.start)
         .lte("date", currentWeekOption.end)
         .is("deleted_at", null);
@@ -117,12 +128,23 @@ export default function RankingSemanal() {
     fetch();
   }, [currentWeekOption?.start, currentWeekOption?.end]);
 
+  // Filter records & closers by team
+  const filteredRecords = useMemo(() => {
+    if (selectedTeamId === "all") return records;
+    return records.filter((r) => r.team_id === selectedTeamId);
+  }, [records, selectedTeamId]);
+
+  const filteredClosers = useMemo(() => {
+    if (selectedTeamId === "all") return closers;
+    return closers.filter((c) => c.team_id === selectedTeamId);
+  }, [closers, selectedTeamId]);
+
   // Build ranking
   const ranking = useMemo(() => {
-    const closerMap = new Map(closers.map((c) => [c.id, c]));
+    const closerMap = new Map(filteredClosers.map((c) => [c.id, c]));
     const aggMap = new Map<string, { investido: number; faturamento: number }>();
 
-    records.forEach((r) => {
+    filteredRecords.forEach((r) => {
       const existing = aggMap.get(r.closer_id) || { investido: 0, faturamento: 0 };
       existing.investido += Number(r.valor_pago) || 0;
       existing.faturamento += Number(r.faturamento) || 0;
@@ -150,7 +172,7 @@ export default function RankingSemanal() {
     });
 
     return entries.sort((a, b) => b.lucro - a.lucro);
-  }, [records, closers]);
+  }, [filteredRecords, filteredClosers]);
 
   const medalColor = (idx: number) => {
     if (idx === 0) return "text-amber-500";
@@ -161,7 +183,7 @@ export default function RankingSemanal() {
 
   return (
     <div className="space-y-6">
-      {/* Week selector */}
+      {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <Select value={selectedWeek} onValueChange={setSelectedWeek}>
           <SelectTrigger className="w-[280px] h-9 text-sm">
@@ -171,6 +193,20 @@ export default function RankingSemanal() {
             {weekOptions.map((o) => (
               <SelectItem key={o.value} value={o.value}>
                 {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={selectedTeamId} onValueChange={setSelectedTeamId}>
+          <SelectTrigger className="w-[220px] h-9 text-sm">
+            <SelectValue placeholder="Equipe" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as equipes</SelectItem>
+            {teams.map((t) => (
+              <SelectItem key={t.id} value={t.id}>
+                {t.name}
               </SelectItem>
             ))}
           </SelectContent>
