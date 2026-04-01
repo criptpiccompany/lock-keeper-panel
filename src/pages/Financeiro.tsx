@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, DollarSign, X, User } from "lucide-react";
+import { Loader2, DollarSign, X, User, Trophy } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,6 +27,7 @@ interface Team {
 
 export default function Financeiro() {
   const { isAdmin } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState<(DailyRecord & { team_id?: string | null })[]>([]);
   const [closers, setClosers] = useState<(CloserProfile & { team_id?: string | null })[]>([]);
@@ -190,15 +192,26 @@ export default function Financeiro() {
             />
           </div>
 
-          {/* ADMIN: Team tabs */}
+          {/* ADMIN: Team tabs + Ranking button */}
           {isAdmin && teams.length > 1 && (
-            <Tabs value={selectedTeamId} onValueChange={setSelectedTeamId}>
-              <TabsList className="w-full sm:w-auto overflow-x-auto">
-                {teams.map(t => (
-                  <TabsTrigger key={t.id} value={t.id}>{t.name}</TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
+            <div className="flex flex-wrap items-center gap-3">
+              <Tabs value={selectedTeamId} onValueChange={setSelectedTeamId}>
+                <TabsList className="w-full sm:w-auto overflow-x-auto">
+                  {teams.map(t => (
+                    <TabsTrigger key={t.id} value={t.id}>{t.name}</TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+
+              <Button
+                size="sm"
+                className="h-9 gap-1.5 rounded-full font-semibold bg-amber-500 hover:bg-amber-600 text-white shadow-sm"
+                onClick={() => navigate("/registro?tab=ranking")}
+              >
+                <Trophy className="h-4 w-4" />
+                Ranking
+              </Button>
+            </div>
           )}
         </div>
       </div>
