@@ -15,6 +15,7 @@ export interface ThermometerSnapshot {
   invested: number;
   revenue: number;
   fee: number;
+  teamId: string | null;
 }
 
 /**
@@ -103,6 +104,7 @@ export async function getTeamThermometerSnapshots(
       invested: agg.invested,
       revenue: agg.revenue,
       fee,
+      teamId: userTeamMap.get(c.id) ?? null,
     };
   });
 }

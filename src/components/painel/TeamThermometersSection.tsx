@@ -47,6 +47,10 @@ export default function TeamThermometersSection() {
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("result");
   const [selectedUser, setSelectedUser] = useState<ThermometerSnapshot | null>(null);
+  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
+  const [teamFilter, setTeamFilter] = useState<string>(() => {
+    return localStorage.getItem("thermo_team_filter") || "all";
+  });
 
   const monthOptions = useMemo(() => getMonthOptions(), []);
 
@@ -54,15 +58,18 @@ export default function TeamThermometersSection() {
     const fetchData = async () => {
       setLoading(true);
 
-      // Fetch tiers
-      const { data: tierData } = await supabase
-        .from("commission_tiers")
-        .select("tier_order, percentage, threshold_result")
-        .eq("team_id", "default")
-        .order("tier_order", { ascending: true });
+      const [tierRes, teamsRes] = await Promise.all([
+        supabase
+          .from("commission_tiers")
+          .select("tier_order, percentage, threshold_result")
+          .eq("team_id", "default")
+          .order("tier_order", { ascending: true }),
+        supabase.from("teams").select("id, name").order("name"),
+      ]);
 
-      const fetchedTiers = (tierData as any as CommissionTier[]) || [];
+      const fetchedTiers = (tierRes.data as any as CommissionTier[]) || [];
       setTiers(fetchedTiers);
+      setTeams((teamsRes.data as any[]) || []);
 
       const snaps = await getTeamThermometerSnapshots(month, fetchedTiers);
       setSnapshots(snaps);
@@ -71,8 +78,18 @@ export default function TeamThermometersSection() {
     fetchData();
   }, [month]);
 
+  const handleTeamFilterChange = (value: string) => {
+    setTeamFilter(value);
+    localStorage.setItem("thermo_team_filter", value);
+  };
+
   const filtered = useMemo(() => {
     let list = snapshots;
+
+    // Team filter
+    if (teamFilter !== "all") {
+      list = list.filter((s) => s.teamId === teamFilter);
+    }
 
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -95,7 +112,7 @@ export default function TeamThermometersSection() {
     });
 
     return list;
-  }, [snapshots, search, sortMode]);
+  }, [snapshots, search, sortMode, teamFilter]);
 
   return (
     <div className="space-y-4">
@@ -114,6 +131,18 @@ export default function TeamThermometersSection() {
           <SelectContent>
             {monthOptions.map((o) => (
               <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={teamFilter} onValueChange={handleTeamFilterChange}>
+          <SelectTrigger className="w-[200px] h-9 text-sm">
+            <SelectValue placeholder="Todas as equipes" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as equipes</SelectItem>
+            {teams.map((t) => (
+              <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
