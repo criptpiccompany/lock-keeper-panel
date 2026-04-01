@@ -128,12 +128,23 @@ export default function RankingSemanal() {
     fetch();
   }, [currentWeekOption?.start, currentWeekOption?.end]);
 
+  // Filter records & closers by team
+  const filteredRecords = useMemo(() => {
+    if (selectedTeamId === "all") return records;
+    return records.filter((r) => r.team_id === selectedTeamId);
+  }, [records, selectedTeamId]);
+
+  const filteredClosers = useMemo(() => {
+    if (selectedTeamId === "all") return closers;
+    return closers.filter((c) => c.team_id === selectedTeamId);
+  }, [closers, selectedTeamId]);
+
   // Build ranking
   const ranking = useMemo(() => {
-    const closerMap = new Map(closers.map((c) => [c.id, c]));
+    const closerMap = new Map(filteredClosers.map((c) => [c.id, c]));
     const aggMap = new Map<string, { investido: number; faturamento: number }>();
 
-    records.forEach((r) => {
+    filteredRecords.forEach((r) => {
       const existing = aggMap.get(r.closer_id) || { investido: 0, faturamento: 0 };
       existing.investido += Number(r.valor_pago) || 0;
       existing.faturamento += Number(r.faturamento) || 0;
@@ -161,7 +172,7 @@ export default function RankingSemanal() {
     });
 
     return entries.sort((a, b) => b.lucro - a.lucro);
-  }, [records, closers]);
+  }, [filteredRecords, filteredClosers]);
 
   const medalColor = (idx: number) => {
     if (idx === 0) return "text-amber-500";
