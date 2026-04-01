@@ -340,6 +340,13 @@ export default function RankingSemanal() {
           </div>
         </div>
       )}
+
+      <RankingWhatsAppModal
+        open={showWhatsApp}
+        onClose={() => setShowWhatsApp(false)}
+        ranking={ranking}
+        weekLabel={currentWeekOption?.label || ""}
+      />
     </div>
   );
 }
