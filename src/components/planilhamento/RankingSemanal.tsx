@@ -7,7 +7,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Trophy, TrendingUp, TrendingDown, Medal } from "lucide-react";
+import { Loader2, Trophy, TrendingUp, TrendingDown, Medal, MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import RankingWhatsAppModal from "./RankingWhatsAppModal";
 import { PLATFORM_FEE_RATE } from "@/lib/constants";
 import { getFeeLabel } from "@/hooks/useTeamFeeRate";
 
@@ -181,6 +183,9 @@ export default function RankingSemanal() {
     return "text-muted-foreground/30";
   };
 
+  const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const canGenerateRanking = selectedTeamId !== "all" && ranking.length >= 1;
+
   return (
     <div className="space-y-6">
       {/* Filters */}
@@ -211,6 +216,17 @@ export default function RankingSemanal() {
             ))}
           </SelectContent>
         </Select>
+
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-9 gap-1.5"
+          disabled={!canGenerateRanking}
+          onClick={() => setShowWhatsApp(true)}
+        >
+          <MessageSquare className="h-3.5 w-3.5" />
+          Gerar ranking da semana
+        </Button>
       </div>
 
       {loading ? (
@@ -324,6 +340,13 @@ export default function RankingSemanal() {
           </div>
         </div>
       )}
+
+      <RankingWhatsAppModal
+        open={showWhatsApp}
+        onClose={() => setShowWhatsApp(false)}
+        ranking={ranking}
+        weekLabel={currentWeekOption?.label || ""}
+      />
     </div>
   );
 }
