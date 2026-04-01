@@ -191,15 +191,26 @@ export default function Financeiro() {
             />
           </div>
 
-          {/* ADMIN: Team tabs */}
+          {/* ADMIN: Team tabs + Ranking button */}
           {isAdmin && teams.length > 1 && (
-            <Tabs value={selectedTeamId} onValueChange={setSelectedTeamId}>
-              <TabsList className="w-full sm:w-auto overflow-x-auto">
-                {teams.map(t => (
-                  <TabsTrigger key={t.id} value={t.id}>{t.name}</TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
+            <div className="flex flex-wrap items-center gap-3">
+              <Tabs value={selectedTeamId} onValueChange={setSelectedTeamId}>
+                <TabsList className="w-full sm:w-auto overflow-x-auto">
+                  {teams.map(t => (
+                    <TabsTrigger key={t.id} value={t.id}>{t.name}</TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+
+              <Button
+                size="sm"
+                className="h-9 gap-1.5 rounded-full font-semibold bg-amber-500 hover:bg-amber-600 text-white shadow-sm"
+                onClick={() => navigate("/registro?tab=ranking")}
+              >
+                <Trophy className="h-4 w-4" />
+                Ranking
+              </Button>
+            </div>
           )}
         </div>
       </div>
