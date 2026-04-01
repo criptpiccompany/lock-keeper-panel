@@ -1029,22 +1029,48 @@ export default function PlanilhamentoDiario({ closerId, externalMonth }: { close
           Sincronizando…
         </div>
       )}
-      {/* Month selector */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={prevMonth} className="h-8 w-8">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-base font-bold text-foreground min-w-[180px] text-center">
-            {MONTHS[selectedMonth]} {selectedYear}
-          </span>
-          <Button variant="ghost" size="icon" onClick={nextMonth} className="h-8 w-8">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+      {/* Month selector — hidden when controlled externally */}
+      {!hasExternalMonth && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={prevMonth} className="h-8 w-8">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-base font-bold text-foreground min-w-[180px] text-center">
+              {MONTHS[selectedMonth]} {selectedYear}
+            </span>
+            <Button variant="ghost" size="icon" onClick={nextMonth} className="h-8 w-8">
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
 
-        {/* Month totals */}
-        <div className="hidden md:flex items-center gap-6 text-sm">
+          {/* Month totals */}
+          <div className="hidden md:flex items-center gap-6 text-sm">
+            <div>
+              <span className="text-muted-foreground">Investido: </span>
+              <span className="font-medium">{formatCurrency(monthTotals.totalInvestido)}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Faturado: </span>
+              <span className="font-medium">{formatCurrency(monthTotals.totalFaturado)}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Resultado: </span>
+              <span className={`font-semibold ${monthTotals.resultadoLiquido >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                {formatCurrency(monthTotals.resultadoLiquido)}
+              </span>
+            </div>
+            {monthTotals.totalPending > 0 && (
+              <Badge variant="destructive" className="text-xs gap-1">
+                <AlertCircle className="h-3 w-3" />
+                {monthTotals.totalPending} pendência{monthTotals.totalPending > 1 ? "s" : ""}
+              </Badge>
+            )}
+          </div>
+        </div>
+      )}
+      {hasExternalMonth && (
+        <div className="flex items-center gap-6 text-sm flex-wrap">
           <div>
             <span className="text-muted-foreground">Investido: </span>
             <span className="font-medium">{formatCurrency(monthTotals.totalInvestido)}</span>
@@ -1066,7 +1092,7 @@ export default function PlanilhamentoDiario({ closerId, externalMonth }: { close
             </Badge>
           )}
         </div>
-      </div>
+      )}
 
       {/* Day sections */}
       {activeDays.length === 0 ? (
