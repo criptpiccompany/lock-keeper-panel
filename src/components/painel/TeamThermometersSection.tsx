@@ -58,15 +58,18 @@ export default function TeamThermometersSection() {
     const fetchData = async () => {
       setLoading(true);
 
-      // Fetch tiers
-      const { data: tierData } = await supabase
-        .from("commission_tiers")
-        .select("tier_order, percentage, threshold_result")
-        .eq("team_id", "default")
-        .order("tier_order", { ascending: true });
+      const [tierRes, teamsRes] = await Promise.all([
+        supabase
+          .from("commission_tiers")
+          .select("tier_order, percentage, threshold_result")
+          .eq("team_id", "default")
+          .order("tier_order", { ascending: true }),
+        supabase.from("teams").select("id, name").order("name"),
+      ]);
 
-      const fetchedTiers = (tierData as any as CommissionTier[]) || [];
+      const fetchedTiers = (tierRes.data as any as CommissionTier[]) || [];
       setTiers(fetchedTiers);
+      setTeams((teamsRes.data as any[]) || []);
 
       const snaps = await getTeamThermometerSnapshots(month, fetchedTiers);
       setSnapshots(snaps);
@@ -74,6 +77,11 @@ export default function TeamThermometersSection() {
     };
     fetchData();
   }, [month]);
+
+  const handleTeamFilterChange = (value: string) => {
+    setTeamFilter(value);
+    localStorage.setItem("thermo_team_filter", value);
+  };
 
   const filtered = useMemo(() => {
     let list = snapshots;
