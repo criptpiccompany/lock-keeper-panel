@@ -7,7 +7,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
-import { Navbar } from "@/components/Navbar";
+import { AppShell } from "@/components/AppShell";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import MeuPainel from "./pages/MeuPainel";
@@ -23,13 +23,25 @@ import GestaoInfluenciadores from "./pages/GestaoInfluenciadores";
 import PendingApproval from "./pages/PendingApproval";
 import Financeiro from "./pages/Financeiro";
 import Home from "./pages/Home";
+import Influenciadores from "./pages/Influenciadores";
 
 const queryClient = new QueryClient();
+
+const Shelled = ({ children }: { children: React.ReactNode }) => (
+  <ProtectedRoute>
+    <AppShell>{children}</AppShell>
+  </ProtectedRoute>
+);
+
+const ShelledAdmin = ({ children }: { children: React.ReactNode }) => (
+  <ProtectedRoute requireAdmin>
+    <AppShell>{children}</AppShell>
+  </ProtectedRoute>
+);
 
 function AppRoutes() {
   const { user, loading } = useAuth();
 
-  // Default redirect based on role
   const DefaultRedirect = () => {
     if (loading) return null;
     if (!user) return <Navigate to="/login" replace />;
@@ -39,133 +51,32 @@ function AppRoutes() {
   const PendingApprovalRoute = () => {
     if (loading) return null;
     if (!user) return <Navigate to="/login" replace />;
-    if (user.status === 'approved' || user.role === 'ADMIN' || user.role === 'SUBADMIN') return <Navigate to="/home" replace />;
+    if (user.status === "approved" || user.role === "ADMIN" || user.role === "SUBADMIN") return <Navigate to="/home" replace />;
     return <PendingApproval />;
   };
 
   return (
     <Routes>
-      {/* Public routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/aguardando-aprovacao" element={<PendingApprovalRoute />} />
-
-      {/* Default redirect */}
       <Route path="/" element={<DefaultRedirect />} />
 
-      {/* Home - first screen after login */}
-      <Route
-        path="/home"
-        element={
-          <ProtectedRoute>
-            <Navbar />
-            <Home />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/home" element={<Shelled><Home /></Shelled>} />
+      <Route path="/meu" element={<Shelled><MeuPainel /></Shelled>} />
+      <Route path="/gestao-influenciadores" element={<Shelled><GestaoInfluenciadores /></Shelled>} />
+      <Route path="/painel" element={<Shelled><PainelGeral /></Shelled>} />
+      <Route path="/registro" element={<Shelled><RegistroDiario /></Shelled>} />
 
-      {/* Protected routes for all authenticated users */}
-      <Route
-        path="/meu"
-        element={
-          <ProtectedRoute>
-            <Navbar />
-            <MeuPainel />
-          </ProtectedRoute>
-        }
-      />
-      
-      <Route
-        path="/gestao-influenciadores"
-        element={
-          <ProtectedRoute>
-            <Navbar />
-            <GestaoInfluenciadores />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/dashboard" element={<ShelledAdmin><Dashboard /></ShelledAdmin>} />
+      <Route path="/financeiro" element={<ShelledAdmin><Financeiro /></ShelledAdmin>} />
+      <Route path="/diretorio" element={<ShelledAdmin><Diretorio /></ShelledAdmin>} />
+      <Route path="/influenciadores" element={<ShelledAdmin><Influenciadores /></ShelledAdmin>} />
+      <Route path="/notificacoes" element={<ShelledAdmin><Notificacoes /></ShelledAdmin>} />
+      <Route path="/auditoria" element={<ShelledAdmin><Auditoria /></ShelledAdmin>} />
+      <Route path="/admin" element={<ShelledAdmin><Admin /></ShelledAdmin>} />
 
-      {/* Painel Geral - for closers (limited view) */}
-      <Route
-        path="/painel"
-        element={
-          <ProtectedRoute>
-            <Navbar />
-            <PainelGeral />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Admin only routes */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute requireAdmin>
-            <Navbar />
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/financeiro"
-        element={
-          <ProtectedRoute requireAdmin>
-            <Navbar />
-            <Financeiro />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/diretorio"
-        element={
-          <ProtectedRoute requireAdmin>
-            <Navbar />
-            <Diretorio />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/notificacoes"
-        element={
-          <ProtectedRoute requireAdmin>
-            <Navbar />
-            <Notificacoes />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/auditoria"
-        element={
-          <ProtectedRoute requireAdmin>
-            <Navbar />
-            <Auditoria />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute requireAdmin>
-            <Navbar />
-            <Admin />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Registro Diário - all authenticated users */}
-      <Route
-        path="/registro"
-        element={
-          <ProtectedRoute>
-            <Navbar />
-            <RegistroDiario />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route path="*" element={<NotFound />} />
-      
-      {/* Temporary import route */}
       <Route path="/import" element={<ImportData />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

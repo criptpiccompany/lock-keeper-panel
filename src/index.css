@@ -4,71 +4,73 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Apple/Notion Light Design System - Premium Minimalist Theme */
+/* ==========================================================
+   Finexy Design Tokens — lime + deep green premium theme
+   Ported from Gaming Dashboard Revamp
+   ========================================================== */
 
 @layer base {
   :root {
-    /* Clean light background */
-    --background: 0 0% 100%;
-    --foreground: 220 15% 15%;
+    /* Finexy palette (HSL) */
+    --page: 60 11% 95%;
+    --card-surface: 0 0% 100%;
+    --card-soft: 60 14% 98%;
+    --text: 0 0% 12%;
+    --text-soft: 0 0% 40%;
+    --text-muted: 0 0% 60%;
+    --finexy-border: 60 4% 92%;
+    --black-soft: 0 0% 19%;
+    --lime: 79 89% 62%;
+    --lime-deep: 87 57% 47%;
+    --green-deep: 168 75% 21%;
+    --good: 145 46% 50%;
+    --danger: 0 70% 63%;
+    --warn: 47 78% 62%;
 
-    /* Cards with subtle elevation */
-    --card: 0 0% 100%;
-    --card-foreground: 220 15% 15%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 15%;
-
-    /* Primary - subtle blue */
-    --primary: 220 12% 15%;
-    --primary-foreground: 0 0% 100%;
-
-    /* Secondary - very light gray */
-    --secondary: 220 10% 96%;
-    --secondary-foreground: 220 15% 25%;
-
-    /* Muted - subtle backgrounds */
-    --muted: 220 10% 96%;
-    --muted-foreground: 220 10% 45%;
-
-    /* Accent - subtle highlight */
-    --accent: 220 10% 94%;
-    --accent-foreground: 220 15% 15%;
-
-    /* Destructive - soft red */
-    --destructive: 0 65% 55%;
+    /* shadcn semantic mapping */
+    --background: var(--page);
+    --foreground: var(--text);
+    --card: var(--card-surface);
+    --card-foreground: var(--text);
+    --popover: var(--card-surface);
+    --popover-foreground: var(--text);
+    --primary: var(--text);
+    --primary-foreground: var(--card-surface);
+    --secondary: var(--card-soft);
+    --secondary-foreground: var(--text);
+    --muted: var(--card-soft);
+    --muted-foreground: var(--text-muted);
+    --accent: var(--lime);
+    --accent-foreground: var(--text);
+    --destructive: var(--danger);
     --destructive-foreground: 0 0% 100%;
+    --border: var(--finexy-border);
+    --input: var(--finexy-border);
+    --ring: var(--lime-deep);
 
-    /* Borders and inputs - very subtle */
-    --border: 220 10% 90%;
-    --input: 220 10% 94%;
-    --ring: 220 12% 50%;
+    --radius: 1.125rem; /* 18px */
 
-    --radius: 0.75rem;
-
-    /* Status colors - muted and professional */
-    --status-locked: 35 80% 50%;
-    --status-locked-bg: 35 80% 96%;
-    --status-released: 150 50% 40%;
-    --status-released-bg: 150 50% 96%;
-    --status-archived: 220 10% 55%;
-    --status-archived-bg: 220 10% 96%;
-    
-    /* Warning/Success - muted */
-    --warning: 35 80% 50%;
+    /* Status */
+    --status-locked: 47 78% 50%;
+    --status-locked-bg: 47 78% 96%;
+    --status-released: var(--good);
+    --status-released-bg: 145 46% 96%;
+    --status-archived: 0 0% 55%;
+    --status-archived-bg: 0 0% 96%;
+    --warning: 47 78% 50%;
     --warning-foreground: 0 0% 100%;
-    --success: 150 50% 40%;
+    --success: var(--good);
     --success-foreground: 0 0% 100%;
 
     /* Sidebar */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 220 15% 25%;
-    --sidebar-primary: 220 12% 15%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 10% 94%;
-    --sidebar-accent-foreground: 220 15% 15%;
-    --sidebar-border: 220 10% 92%;
-    --sidebar-ring: 220 12% 50%;
+    --sidebar-background: var(--card-surface);
+    --sidebar-foreground: var(--text);
+    --sidebar-primary: var(--text);
+    --sidebar-primary-foreground: var(--card-surface);
+    --sidebar-accent: var(--card-soft);
+    --sidebar-accent-foreground: var(--text);
+    --sidebar-border: var(--finexy-border);
+    --sidebar-ring: var(--lime-deep);
   }
 }
 
@@ -85,120 +87,77 @@
     overflow-x: hidden;
   }
 
-  /* Premium typography */
   h1, h2, h3, h4, h5, h6 {
-    @apply tracking-tight font-semibold;
-    letter-spacing: -0.02em;
+    @apply tracking-tight font-medium;
+    letter-spacing: -0.04em;
   }
 
-  /* Subtle selection color */
   ::selection {
-    background: hsl(220 12% 15% / 0.1);
+    background: hsl(var(--lime) / 0.4);
   }
 }
 
 @layer components {
-  /* Premium container */
   .container-premium {
     @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 
-  /* Subtle card styling */
-  .card-premium {
-    @apply bg-card rounded-xl border border-border/50;
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.03);
+  .surface-card {
+    background: hsl(var(--card));
+    border-radius: var(--radius);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
   }
 
-  /* Minimal table styling */
-  .table-minimal {
-    @apply w-full;
+  .surface-soft {
+    background: hsl(var(--card-soft));
+    border-radius: var(--radius);
   }
 
+  .pill { border-radius: 999px; }
+
+  .nav-pill-active {
+    background: hsl(var(--black-soft));
+    color: #fff;
+  }
+
+  .text-soft { color: hsl(var(--text-soft)); }
+  .text-muted { color: hsl(var(--text-muted)); }
+
+  .tight-title {
+    letter-spacing: -0.05em;
+    font-weight: 500;
+  }
+
+  /* Legacy table compat */
+  .table-minimal { @apply w-full; }
   .table-minimal th {
-    @apply text-xs font-medium text-muted-foreground uppercase tracking-wider py-3 px-4 text-left border-b;
+    @apply text-xs font-medium uppercase tracking-wider py-3 px-4 text-left border-b;
+    color: hsl(var(--text-muted));
   }
-
   .table-minimal td {
-    @apply py-3 px-4 text-sm border-b border-border/50;
+    @apply py-3 px-4 text-sm border-b;
+    border-color: hsl(var(--border) / 0.5);
   }
+  .table-minimal tr:last-child td { @apply border-b-0; }
+  .table-minimal tbody tr { @apply transition-colors duration-150; }
+  .table-minimal tbody tr:hover { background: hsl(var(--card-soft)); }
 
-  .table-minimal tr:last-child td {
-    @apply border-b-0;
-  }
+  .badge-status { @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium; }
+  .badge-locked { @apply bg-amber-50 text-amber-700 border border-amber-200/50; }
+  .badge-released { @apply bg-emerald-50 text-emerald-700 border border-emerald-200/50; }
+  .badge-archived { @apply bg-slate-100 text-slate-500 border border-slate-200/50; }
 
-  .table-minimal tbody tr {
-    @apply transition-colors duration-150;
-  }
+  .countdown-subtle { @apply text-sm text-muted-foreground font-medium tabular-nums; }
+  .transition-subtle { @apply transition-all duration-150 ease-out; }
+  .focus-ring { @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2; }
 
-  .table-minimal tbody tr:hover {
-    @apply bg-muted/30;
-  }
-
-  /* Status badges - minimal */
-  .badge-status {
-    @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium;
-  }
-
-  .badge-locked {
-    @apply bg-amber-50 text-amber-700 border border-amber-200/50;
-  }
-
-  .badge-released {
-    @apply bg-emerald-50 text-emerald-700 border border-emerald-200/50;
-  }
-
-  .badge-archived {
-    @apply bg-slate-100 text-slate-500 border border-slate-200/50;
-  }
-
-  /* Countdown - subtle */
-  .countdown-subtle {
-    @apply text-sm text-muted-foreground font-medium tabular-nums;
-  }
-
-  /* Smooth transitions */
-  .transition-subtle {
-    @apply transition-all duration-150 ease-out;
-  }
-
-  /* Focus states */
-  .focus-ring {
-    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
-  }
-
-  /* Empty state styling */
-  .empty-state {
-    @apply flex flex-col items-center justify-center py-16 text-center;
-  }
-
-  .empty-state-icon {
-    @apply h-12 w-12 text-muted-foreground/30 mb-4;
-  }
-
-  .empty-state-title {
-    @apply text-sm font-medium text-foreground mb-1;
-  }
-
-  .empty-state-description {
-    @apply text-sm text-muted-foreground;
-  }
+  .empty-state { @apply flex flex-col items-center justify-center py-16 text-center; }
+  .empty-state-icon { @apply h-12 w-12 text-muted-foreground/30 mb-4; }
+  .empty-state-title { @apply text-sm font-medium text-foreground mb-1; }
+  .empty-state-description { @apply text-sm text-muted-foreground; }
 }
 
-/* Custom scrollbar - minimal */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: hsl(220 10% 85%);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(220 10% 75%);
-}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--text-muted) / 0.5); }
