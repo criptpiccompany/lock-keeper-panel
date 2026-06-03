@@ -232,7 +232,7 @@ export function Navbar() {
                   <ShieldAlert className="mr-2 h-4 w-4" />
                   {realRole} <span className="ml-1 text-xs text-muted-foreground">(meu papel)</span>
                 </DropdownMenuItem>
-                {realRole !== 'CLOSER' && (
+                {(realRole === 'ADMIN' || realRole === 'SUBADMIN') && (
                   <DropdownMenuItem
                     onClick={() => setViewAsRole('CLOSER')}
                     className={cn(viewAsRole === 'CLOSER' && "bg-accent")}
