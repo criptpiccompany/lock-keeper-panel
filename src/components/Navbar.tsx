@@ -32,7 +32,8 @@ import { useState } from "react";
 export function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut, isAdmin, isSubAdmin } = useAuth();
+  const { user, signOut, isAdmin, isSubAdmin, realRole, viewAsRole, setViewAsRole, isImpersonating } = useAuth();
+  const canImpersonate = realRole === 'ADMIN' || realRole === 'SUBADMIN';
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
 
