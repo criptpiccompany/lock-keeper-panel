@@ -27,6 +27,10 @@ interface AuthContextType {
   isAdmin: boolean;
   isSubAdmin: boolean;
   isCloser: boolean;
+  realRole: UserRole | null;
+  viewAsRole: UserRole | null;
+  setViewAsRole: (role: UserRole | null) => void;
+  isImpersonating: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
