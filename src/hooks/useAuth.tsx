@@ -191,6 +191,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     toast.success('Logout realizado');
   };
 
+  const realRole = user?.role ?? null;
+  // Only admins/subadmins may impersonate; closers cannot escalate.
+  const canImpersonate = realRole === 'ADMIN' || realRole === 'SUBADMIN';
+  const effectiveRole: UserRole | null = canImpersonate && viewAsRole ? viewAsRole : realRole;
+  const isImpersonating = !!(canImpersonate && viewAsRole && viewAsRole !== realRole);
+
   const value: AuthContextType = {
     user,
     session,
@@ -198,9 +204,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signUp,
     signOut,
-    isAdmin: user?.role === 'ADMIN',
-    isSubAdmin: user?.role === 'SUBADMIN',
-    isCloser: user?.role === 'CLOSER',
+    isAdmin: effectiveRole === 'ADMIN',
+    isSubAdmin: effectiveRole === 'SUBADMIN',
+    isCloser: effectiveRole === 'CLOSER',
+    realRole,
+    viewAsRole: canImpersonate ? viewAsRole : null,
+    setViewAsRole,
+    isImpersonating,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
