@@ -201,6 +201,67 @@ export function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-2">
+          {/* View-as toggle (admins/subadmins only) */}
+          {canImpersonate && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant={isImpersonating ? "default" : "outline"}
+                  size="sm"
+                  className={cn(
+                    "gap-1.5 h-8",
+                    isImpersonating && "bg-amber-500 hover:bg-amber-600 text-white border-amber-500"
+                  )}
+                  title="Visualizar como"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  <span className="hidden md:inline text-xs font-medium">
+                    {isImpersonating ? `Vendo como ${viewAsRole}` : "Ver como"}
+                  </span>
+                  <ChevronDown className="h-3 w-3 opacity-70" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <div className="px-2 py-1.5">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Visualizar como</p>
+                </div>
+                <DropdownMenuItem
+                  onClick={() => setViewAsRole(null)}
+                  className={cn(!viewAsRole && "bg-accent")}
+                >
+                  <ShieldAlert className="mr-2 h-4 w-4" />
+                  {realRole} <span className="ml-1 text-xs text-muted-foreground">(meu papel)</span>
+                </DropdownMenuItem>
+                {realRole !== 'CLOSER' && (
+                  <DropdownMenuItem
+                    onClick={() => setViewAsRole('CLOSER')}
+                    className={cn(viewAsRole === 'CLOSER' && "bg-accent")}
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    CLOSER
+                  </DropdownMenuItem>
+                )}
+                {realRole === 'ADMIN' && (
+                  <DropdownMenuItem
+                    onClick={() => setViewAsRole('SUBADMIN')}
+                    className={cn(viewAsRole === 'SUBADMIN' && "bg-accent")}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    SUBADMIN
+                  </DropdownMenuItem>
+                )}
+                {isImpersonating && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setViewAsRole(null)}>
+                      Sair da visualização
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
           {/* User badge (desktop) */}
           {user && !isMobile && (
             <DropdownMenu>
