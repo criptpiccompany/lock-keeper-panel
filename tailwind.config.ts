@@ -77,6 +77,13 @@ export default {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
         },
+        // Finexy palette
+        lime: "hsl(var(--lime))",
+        "lime-deep": "hsl(var(--lime-deep))",
+        "green-deep": "hsl(var(--green-deep))",
+        "black-soft": "hsl(var(--black-soft))",
+        page: "hsl(var(--page))",
+        "card-soft": "hsl(var(--card-soft))",
       },
       borderRadius: {
         lg: "var(--radius)",
