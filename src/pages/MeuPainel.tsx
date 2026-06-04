@@ -174,13 +174,9 @@ export default function MeuPainel() {
               Adicione influenciadores ou registre fechamentos para começar.
             </p>
             <div className="flex justify-center gap-2">
-              <Button variant="outline" className="h-11 rounded-full border-[#ececeb] bg-white px-4" onClick={() => setAddModalOpen(true)}>
+              <Button className="h-11 rounded-full bg-[#1f1f1f] px-5 text-white hover:bg-[#111111]" onClick={() => setAddModalOpen(true)}>
                 <UserPlus className="mr-2 h-4 w-4" />
-                Adicionar
-              </Button>
-              <Button className="h-11 rounded-full bg-[#1f1f1f] px-4 text-white hover:bg-[#111111]" onClick={() => setBulkModalOpen(true)}>
-                <Users className="mr-2 h-4 w-4" />
-                Adicionar Vários
+                Adicionar influenciador
               </Button>
             </div>
           </div>
