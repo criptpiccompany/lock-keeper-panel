@@ -2,9 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/StatusBadge";
-import { AddInfluencerModal } from "@/components/AddInfluencerModal";
-import { BulkAddModal } from "@/components/BulkAddModal";
-import { AddInfluencerByUrlModal } from "@/components/AddInfluencerByUrlModal";
+import { AddInfluencerUnifiedModal } from "@/components/AddInfluencerUnifiedModal";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -23,8 +21,6 @@ export default function MeuPainel() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [addModalOpen, setAddModalOpen] = useState(false);
-  const [bulkModalOpen, setBulkModalOpen] = useState(false);
-  const [urlModalOpen, setUrlModalOpen] = useState(false);
   const [influencers, setInfluencers] = useState<InfluencerWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [locksMap, setLocksMap] = useState<Map<string, { locked_until: string }>>(new Map());
@@ -139,27 +135,11 @@ export default function MeuPainel() {
 
             <div className="flex flex-wrap gap-2">
               <Button
-                variant="outline"
-                className="h-11 rounded-full border-[#ececeb] bg-white px-4 text-[13px] font-medium shadow-none"
-                onClick={() => setUrlModalOpen(true)}
-              >
-                <Link className="mr-2 h-4 w-4" />
-                URL
-              </Button>
-              <Button
-                variant="outline"
-                className="h-11 rounded-full border-[#ececeb] bg-white px-4 text-[13px] font-medium shadow-none"
+                className="h-11 rounded-full bg-[#1f1f1f] px-5 text-[13px] font-medium text-white hover:bg-[#111111]"
                 onClick={() => setAddModalOpen(true)}
               >
                 <UserPlus className="mr-2 h-4 w-4" />
-                Adicionar
-              </Button>
-              <Button
-                className="h-11 rounded-full bg-[#1f1f1f] px-4 text-[13px] font-medium text-white hover:bg-[#111111]"
-                onClick={() => setBulkModalOpen(true)}
-              >
-                <Users className="mr-2 h-4 w-4" />
-                Vários
+                Adicionar influenciador
               </Button>
             </div>
           </div>
@@ -194,13 +174,9 @@ export default function MeuPainel() {
               Adicione influenciadores ou registre fechamentos para começar.
             </p>
             <div className="flex justify-center gap-2">
-              <Button variant="outline" className="h-11 rounded-full border-[#ececeb] bg-white px-4" onClick={() => setAddModalOpen(true)}>
+              <Button className="h-11 rounded-full bg-[#1f1f1f] px-5 text-white hover:bg-[#111111]" onClick={() => setAddModalOpen(true)}>
                 <UserPlus className="mr-2 h-4 w-4" />
-                Adicionar
-              </Button>
-              <Button className="h-11 rounded-full bg-[#1f1f1f] px-4 text-white hover:bg-[#111111]" onClick={() => setBulkModalOpen(true)}>
-                <Users className="mr-2 h-4 w-4" />
-                Adicionar Vários
+                Adicionar influenciador
               </Button>
             </div>
           </div>
@@ -284,19 +260,9 @@ export default function MeuPainel() {
         )}
       </div>
 
-      <AddInfluencerModal 
-        open={addModalOpen} 
+      <AddInfluencerUnifiedModal
+        open={addModalOpen}
         onOpenChange={setAddModalOpen}
-        onSuccess={fetchMyInfluencers}
-      />
-      <BulkAddModal 
-        open={bulkModalOpen} 
-        onOpenChange={setBulkModalOpen}
-        onSuccess={fetchMyInfluencers}
-      />
-      <AddInfluencerByUrlModal
-        open={urlModalOpen}
-        onOpenChange={setUrlModalOpen}
         onSuccess={fetchMyInfluencers}
       />
     </div>
