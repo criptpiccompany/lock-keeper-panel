@@ -1,9 +1,10 @@
-import { type ComponentType } from "react";
+import { useState, type ComponentType } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Bell,
   BookOpen,
   CalendarDays,
+  ChevronRight,
   DollarSign,
   FileText,
   Home as HomeIcon,
