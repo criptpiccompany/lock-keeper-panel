@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Sparkles, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import criptpicLogo from '@/assets/criptpic-logo.png.asset.json';
 
@@ -65,36 +65,47 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F6F4F0' }}>
-      <div className="w-full max-w-sm mx-4">
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#F6F4F0' }}>
+      <div className="w-full max-w-md">
         {/* Logo CRIPTPIC com fade-in transparente → sólido */}
-        <div className="flex justify-center mb-8 h-32">
+        <div className="flex justify-center mb-10 h-36">
           <img
             src={criptpicLogo.url}
             alt="CRIPTPIC"
-            className="h-32 w-auto object-contain animate-[fadeInSolid_1.2s_ease-out_forwards] opacity-0"
+            className="h-36 w-auto object-contain animate-[fadeInSolid_1.2s_ease-out_forwards] opacity-0"
           />
         </div>
 
+        {/* Form Card — premium brand language */}
+        <div className="bg-white rounded-3xl border border-border/60 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] p-8 sm:p-10 animate-[fadeInSolid_0.8s_ease-out_0.4s_both] opacity-0">
+          {/* Eyebrow */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted mb-5">
+            <Sparkles className="h-3 w-3 text-muted-foreground" />
+            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              {isSignUp ? 'Novo acesso' : 'Acesso seguro'}
+            </span>
+          </div>
 
-
-        {/* Form Card */}
-        <div className="bg-card rounded-xl border shadow-subtle p-6">
-          <h2 className="text-lg font-medium mb-6">
-            {isSignUp ? 'Criar conta' : 'Entrar'}
-          </h2>
+          <h1 className="text-4xl font-semibold tracking-tight mb-2">
+            {isSignUp ? 'Criar conta' : 'Bem-vindo'}
+          </h1>
+          <p className="text-sm text-muted-foreground mb-8">
+            {isSignUp
+              ? 'Complete seu cadastro para acessar a plataforma.'
+              : 'Entre com suas credenciais para continuar.'}
+          </p>
 
           {isSignUp && inviteToken && inviteValid === false && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 mb-4">
+            <div className="flex items-start gap-2 p-3 rounded-2xl bg-destructive/10 border border-destructive/20 mb-5">
               <AlertCircle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
               <p className="text-xs text-destructive">Convite inválido ou expirado. Peça um novo convite ao administrador.</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {isSignUp && (
               <div className="space-y-2">
-                <Label htmlFor="nome">Nome</Label>
+                <Label htmlFor="nome" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Nome</Label>
                 <Input
                   id="nome"
                   type="text"
@@ -103,12 +114,13 @@ export default function Login() {
                   onChange={(e) => setNome(e.target.value)}
                   required={isSignUp}
                   disabled={isSubmitting}
+                  className="h-12 rounded-full px-5 bg-muted/40 border-border/60 focus-visible:bg-white transition-colors"
                 />
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="email" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">E-mail</Label>
               <Input
                 id="email"
                 type="email"
@@ -117,11 +129,12 @@ export default function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isSubmitting}
+                className="h-12 rounded-full px-5 bg-muted/40 border-border/60 focus-visible:bg-white transition-colors"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Senha</Label>
               <Input
                 id="password"
                 type="password"
@@ -131,21 +144,32 @@ export default function Login() {
                 required
                 minLength={6}
                 disabled={isSubmitting}
+                className="h-12 rounded-full px-5 bg-muted/40 border-border/60 focus-visible:bg-white transition-colors"
               />
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full" 
+            <Button
+              type="submit"
+              className="w-full h-12 rounded-full text-base font-medium mt-2 transition-transform hover:scale-[1.01] active:scale-[0.99] group"
               disabled={isSubmitting || (isSignUp && (!inviteToken || !inviteValid))}
             >
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isSignUp ? 'Criar conta' : 'Entrar'}
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  {isSignUp ? 'Criar conta' : 'Entrar'}
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </>
+              )}
             </Button>
           </form>
-
         </div>
+
+        <p className="text-center text-xs text-muted-foreground mt-6">
+          Acesso exclusivo · criptpic · online money
+        </p>
       </div>
     </div>
   );
 }
+
