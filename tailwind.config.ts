@@ -14,8 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Manrope", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
-        display: ["Fraunces", "Georgia", "serif"],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -51,12 +50,6 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        panel: {
-          DEFAULT: "hsl(var(--panel))",
-          foreground: "hsl(var(--panel-foreground))",
-          muted: "hsl(var(--panel-muted))",
-          elevated: "hsl(var(--panel-elevated))",
-        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -84,13 +77,6 @@ export default {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
         },
-        page: "hsl(var(--page))",
-        "page-band": "hsl(var(--page-band))",
-        "card-soft": "hsl(var(--card-soft))",
-        brand: {
-          start: "hsl(var(--brand-start))",
-          end: "hsl(var(--brand-end))",
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -117,8 +103,8 @@ export default {
         "fade-in": "fade-in 0.15s ease-out",
       },
       boxShadow: {
-        subtle: "0 1px 2px 0 hsl(var(--foreground) / 0.04)",
-        card: "0 24px 54px -38px hsl(var(--foreground) / 0.24)",
+        "subtle": "0 1px 2px 0 rgb(0 0 0 / 0.03)",
+        "card": "0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)",
       },
     },
   },
