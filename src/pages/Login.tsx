@@ -67,14 +67,20 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#F6F4F0' }}>
       <div className="w-full max-w-md">
-        {/* Logo CRIPTPIC com fade-in transparente → sólido */}
+        {/* Logo CRIPTPIC com fade-in + shimmer sweep + drop-shadow sutil */}
         <div className="flex justify-center mb-10 h-36">
-          <img
-            src={criptpicLogo.url}
-            alt="CRIPTPIC"
-            className="h-36 w-auto object-contain animate-[fadeInSolid_1.2s_ease-out_forwards] opacity-0"
-          />
+          <div
+            className="logo-premium h-36 animate-[fadeInSolid_1.2s_ease-out_forwards] opacity-0"
+            style={{ ['--logo-mask' as any]: `url(${criptpicLogo.url})` }}
+          >
+            <img
+              src={criptpicLogo.url}
+              alt="CRIPTPIC"
+              className="h-36 w-auto object-contain"
+            />
+          </div>
         </div>
+
 
         {/* Form Card — premium brand language */}
         <div className="bg-white rounded-3xl border border-border/60 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] p-8 sm:p-10 animate-[fadeInSolid_0.8s_ease-out_0.4s_both] opacity-0">
