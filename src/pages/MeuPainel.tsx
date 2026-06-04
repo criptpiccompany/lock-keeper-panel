@@ -21,8 +21,6 @@ export default function MeuPainel() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [addModalOpen, setAddModalOpen] = useState(false);
-  const [bulkModalOpen, setBulkModalOpen] = useState(false);
-  const [urlModalOpen, setUrlModalOpen] = useState(false);
   const [influencers, setInfluencers] = useState<InfluencerWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [locksMap, setLocksMap] = useState<Map<string, { locked_until: string }>>(new Map());
