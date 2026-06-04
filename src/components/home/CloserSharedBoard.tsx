@@ -689,8 +689,8 @@ export function CloserSharedBoard() {
       .filter(Boolean);
     const cleanedValue = newValue.replace(/[^\d.,]/g, "").replace(",", ".");
     const parsedValue = Number.parseFloat(cleanedValue);
-    const { error } = await supabase.from("kanban_influencers").insert({
-      closer_id: user.id,
+    const { error } = await supabase.from("team_shared_board").insert({
+      created_by: user.id,
       instagram_username: username,
       display_name: username,
       instagram_url: `https://instagram.com/${username}`,
