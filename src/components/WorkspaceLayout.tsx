@@ -216,8 +216,41 @@ export function WorkspaceLayout() {
       </div>
 
       <div className="grid min-h-[calc(100vh-98px)] lg:grid-cols-[56px_minmax(0,1fr)] lg:gap-6 lg:px-6">
-        <aside className="border-b border-black/[0.04] bg-transparent px-5 pb-4 pt-4 lg:sticky lg:top-[92px] lg:h-[calc(100vh-120px)] lg:border-b-0 lg:px-0 lg:pt-[18px]">
-          <div className="flex items-center gap-3 lg:flex-col lg:items-center lg:gap-3">
+        <aside className="relative border-b border-black/[0.04] bg-transparent px-5 pb-4 pt-4 lg:sticky lg:top-[92px] lg:h-[calc(100vh-120px)] lg:border-b-0 lg:px-0 lg:pt-[18px]">
+          {/* Glow branco com efeito de pena que se expande para a direita */}
+          <div
+            aria-hidden
+            className={cn(
+              "pointer-events-none absolute hidden transition-opacity duration-300 ease-out lg:block",
+              sidebarExpanded ? "opacity-100" : "opacity-0"
+            )}
+            style={{
+              left: "0",
+              top: "-60px",
+              height: "calc(100% + 120px)",
+              width: "560px",
+              zIndex: 0,
+              background:
+                "linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.98) 20%, rgba(255,255,255,0.85) 38%, rgba(255,255,255,0.6) 55%, rgba(255,255,255,0.3) 75%, rgba(255,255,255,0.08) 90%, rgba(255,255,255,0) 100%)",
+              filter: "blur(18px)",
+            }}
+          />
+
+          <div className="relative z-10 flex items-center gap-3 lg:flex-col lg:items-center lg:gap-3">
+            <button
+              type="button"
+              onClick={() => setSidebarExpanded((v) => !v)}
+              aria-label={sidebarExpanded ? "Recolher menu" : "Expandir menu"}
+              aria-expanded={sidebarExpanded}
+              className="hidden h-7 w-11 place-items-center rounded-full text-slate-400 transition-colors hover:text-slate-900 lg:grid"
+            >
+              <ChevronRight
+                className={cn(
+                  "h-3 w-3 transition-transform duration-200",
+                  sidebarExpanded && "rotate-180"
+                )}
+              />
+            </button>
             <button type="button" className="grid h-[44px] w-[44px] place-items-center rounded-[18px] bg-white text-[#676767] shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
               <CalendarDays className="h-4 w-4" />
             </button>
@@ -226,17 +259,17 @@ export function WorkspaceLayout() {
             </button>
           </div>
 
-          <div className="mt-6 space-y-3 lg:space-y-0">
+          <div className="relative z-10 mt-6 space-y-3 lg:space-y-0">
             <div className="flex flex-wrap gap-3 lg:flex-col lg:items-center">
               {primaryNav.map((item) => (
-                <SidebarLink key={item.path} item={item} active={location.pathname === item.path} />
+                <SidebarLink key={item.path} item={item} active={location.pathname === item.path} expanded={sidebarExpanded} />
               ))}
             </div>
 
             {isManagementView ? (
               <div className="flex flex-wrap gap-3 lg:mt-3 lg:flex-col lg:items-center">
                 {operationsNav.map((item) => (
-                  <SidebarLink key={item.path} item={item} active={location.pathname === item.path} />
+                  <SidebarLink key={item.path} item={item} active={location.pathname === item.path} expanded={sidebarExpanded} />
                 ))}
               </div>
             ) : null}
