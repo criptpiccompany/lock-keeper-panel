@@ -84,13 +84,15 @@ export default function Login() {
 
         {/* Form Card — premium brand language */}
         <div className="bg-white rounded-3xl border border-border/60 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] p-8 sm:p-10 animate-[fadeInSolid_0.8s_ease-out_0.4s_both] opacity-0">
-          {/* Eyebrow */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted mb-5">
-            <Sparkles className="h-3 w-3 text-muted-foreground" />
-            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              {isSignUp ? 'Novo acesso' : 'Acesso seguro'}
-            </span>
-          </div>
+          {isSignUp && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted mb-5">
+              <Sparkles className="h-3 w-3 text-muted-foreground" />
+              <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                Novo acesso
+              </span>
+            </div>
+          )}
+
 
           <h1 className="text-4xl font-semibold tracking-tight mb-2">
             {isSignUp ? 'Criar conta' : 'Bem-vindo'}
