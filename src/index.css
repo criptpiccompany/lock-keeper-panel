@@ -208,13 +208,7 @@
   to { opacity: 1; }
 }
 
-/* Premium logo treatment: subtle drop-shadow + gentle breathing glow */
+/* Subtle premium drop-shadow for the brand logo */
 .logo-premium {
   filter: drop-shadow(0 8px 24px rgba(180, 30, 40, 0.18));
-  animation: logoBreath 4s ease-in-out infinite;
-}
-
-@keyframes logoBreath {
-  0%, 100% { filter: drop-shadow(0 8px 24px rgba(180, 30, 40, 0.18)); }
-  50% { filter: drop-shadow(0 10px 32px rgba(180, 30, 40, 0.28)); }
 }
