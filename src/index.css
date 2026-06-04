@@ -208,41 +208,13 @@
   to { opacity: 1; }
 }
 
-/* Premium logo treatment: subtle constant drop-shadow + periodic shimmer sweep */
+/* Premium logo treatment: subtle drop-shadow + gentle breathing glow */
 .logo-premium {
-  position: relative;
-  display: inline-block;
-  filter: drop-shadow(0 6px 18px rgba(180, 30, 40, 0.18));
+  filter: drop-shadow(0 8px 24px rgba(180, 30, 40, 0.18));
+  animation: logoBreath 4s ease-in-out infinite;
 }
 
-.logo-premium::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    115deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.55) 48%,
-    rgba(255, 255, 255, 0.85) 50%,
-    rgba(255, 255, 255, 0.55) 52%,
-    transparent 70%
-  );
-  mix-blend-mode: overlay;
-  transform: translateX(-120%);
-  animation: logoShimmer 5s ease-in-out 2s infinite;
-  pointer-events: none;
-  -webkit-mask-image: var(--logo-mask);
-  mask-image: var(--logo-mask);
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-}
-
-@keyframes logoShimmer {
-  0% { transform: translateX(-120%); }
-  18% { transform: translateX(120%); }
-  100% { transform: translateX(120%); }
+@keyframes logoBreath {
+  0%, 100% { filter: drop-shadow(0 8px 24px rgba(180, 30, 40, 0.18)); }
+  50% { filter: drop-shadow(0 10px 32px rgba(180, 30, 40, 0.28)); }
 }
