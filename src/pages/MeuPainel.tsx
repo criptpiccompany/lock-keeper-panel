@@ -1,23 +1,23 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { StatusBadge } from "@/components/StatusBadge";
+import { useEffect, useState } from "react";
+import { Link as LinkIcon, Loader2, Search, UserPlus, Users } from "lucide-react";
+
+import { AddInfluencerByUrlModal } from "@/components/AddInfluencerByUrlModal";
 import { AddInfluencerModal } from "@/components/AddInfluencerModal";
 import { BulkAddModal } from "@/components/BulkAddModal";
-import { AddInfluencerByUrlModal } from "@/components/AddInfluencerByUrlModal";
+import { EmptyPanel } from "@/components/design/EmptyPanel";
+import { MetricCard } from "@/components/design/MetricCard";
+import { PageHeader } from "@/components/design/PageHeader";
+import { PanelCard } from "@/components/design/PanelCard";
+import { StatusBadge } from "@/components/StatusBadge";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { enrichInfluencer, type LockInfo } from "@/lib/helpers";
+import { cn } from "@/lib/utils";
+import { type InfluencerWithStatus } from "@/types";
 import { toast } from "sonner";
-import { enrichInfluencer, LockInfo } from "@/lib/helpers";
-import { InfluencerWithStatus } from "@/types";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Search, 
-  UserPlus, 
-  Users, 
-  Loader2,
-  Link,
-} from "lucide-react";
 
 export default function MeuPainel() {
   const { user } = useAuth();
@@ -33,51 +33,62 @@ export default function MeuPainel() {
     if (!user) return;
 
     const { data, error } = await supabase
-      .from('influencers')
-      .select('*')
-      .eq('owner_id', user.id)
-      .eq('ativo', true);
+      .from("influencers")
+      .select("*")
+      .eq("owner_id", user.id)
+      .eq("ativo", true);
 
     if (error) {
-      console.error('Error fetching influencers:', error);
-      toast.error('Erro ao carregar influenciadores');
+      toast.error("Erro ao carregar influenciadores");
       return;
     }
 
-    // Fetch locks for this user's influencers by influencer_id
-    const ids = (data || []).map(inf => inf.id);
-    let locksMap = new Map<string, LockInfo>();
+    const ids = (data ?? []).map((influencer) => influencer.id);
+    const nextLocksMap = new Map<string, LockInfo>();
+
     if (ids.length > 0) {
       const { data: locksData } = await supabase
         .from("influencer_locks")
         .select("influencer_id, handle_normalized, locked_until")
         .gt("locked_until", new Date().toISOString());
-      
+
       const handleMap = new Map<string, { locked_until: string }>();
-      for (const l of (locksData || []) as any[]) {
-        if (l.influencer_id) locksMap.set(l.influencer_id, { locked_until: l.locked_until });
-        handleMap.set(l.handle_normalized, { locked_until: l.locked_until });
+
+      for (const lock of (locksData ?? []) as Array<{
+        influencer_id: string | null;
+        handle_normalized: string;
+        locked_until: string;
+      }>) {
+        if (lock.influencer_id) {
+          nextLocksMap.set(lock.influencer_id, { locked_until: lock.locked_until });
+        }
+        handleMap.set(lock.handle_normalized, { locked_until: lock.locked_until });
       }
+
       setLocksMap(handleMap);
     } else {
       setLocksMap(new Map());
     }
 
-    const enriched = (data || []).map(inf => enrichInfluencer({
-      id: inf.id,
-      handle: inf.handle,
-      ownerId: inf.owner_id,
-      ownerNome: inf.owner_nome,
-      lastClosedAt: inf.last_closed_at,
-      ativo: inf.ativo,
-      notas: inf.notas || undefined
-    }, locksMap.get(inf.id) || null));
+    const enriched = (data ?? []).map((influencer) =>
+      enrichInfluencer(
+        {
+          id: influencer.id,
+          handle: influencer.handle,
+          ownerId: influencer.owner_id,
+          ownerNome: influencer.owner_nome,
+          lastClosedAt: influencer.last_closed_at,
+          ativo: influencer.ativo,
+          notas: influencer.notas || undefined,
+        },
+        nextLocksMap.get(influencer.id) ?? null,
+      ),
+    );
 
-    // Sort by days remaining (soonest first)
-    enriched.sort((a, b) => {
-      if (a.daysRemaining === null) return 1;
-      if (b.daysRemaining === null) return -1;
-      return a.daysRemaining - b.daysRemaining;
+    enriched.sort((first, second) => {
+      if (first.daysRemaining === null) return 1;
+      if (second.daysRemaining === null) return -1;
+      return first.daysRemaining - second.daysRemaining;
     });
 
     setInfluencers(enriched);
@@ -85,128 +96,127 @@ export default function MeuPainel() {
   };
 
   useEffect(() => {
-    fetchMyInfluencers();
+    void fetchMyInfluencers();
   }, [user]);
 
-  // Filter by search
-  const filteredInfluencers = influencers.filter(inf =>
-    inf.handle.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredInfluencers = influencers.filter((influencer) =>
+    influencer.handle.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+  const expiringSoon = influencers.filter((influencer) => influencer.daysRemaining !== null && influencer.daysRemaining <= 2).length;
+  const lockedCount = influencers.filter((influencer) => influencer.status === "TRAVADO").length;
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="page-shell">
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <div className="border-b">
-        <div className="container px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Minha Lista</h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                Gerencie seus influenciadores
-              </p>
-            </div>
+    <div className="page-shell">
+      <PageHeader
+        eyebrow="Operação closer"
+        title="Minha Lista"
+        description="Gerencie seus influenciadores, acompanhe expirações e mantenha a fila de trabalho sempre limpa."
+        actions={
+          <>
+            <Button variant="outline" className="rounded-full" onClick={() => setUrlModalOpen(true)}>
+              <LinkIcon className="mr-2 h-4 w-4" />
+              URL
+            </Button>
+            <Button variant="outline" className="rounded-full" onClick={() => setAddModalOpen(true)}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Adicionar
+            </Button>
+            <Button className="rounded-full" onClick={() => setBulkModalOpen(true)}>
+              <Users className="mr-2 h-4 w-4" />
+              Vários
+            </Button>
+          </>
+        }
+      />
 
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => setUrlModalOpen(true)}>
-                <Link className="mr-2 h-4 w-4" />
-                URL
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setAddModalOpen(true)}>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Adicionar
-              </Button>
-              <Button size="sm" onClick={() => setBulkModalOpen(true)}>
-                <Users className="mr-2 h-4 w-4" />
-                Vários
-              </Button>
-            </div>
-          </div>
-
-          {/* Search */}
-          <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por @handle..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
+      <div className="metric-grid">
+        <MetricCard label="Influenciadores" value={String(influencers.length)} hint="Base ativa atribuída a você." />
+        <MetricCard label="Travados" value={String(lockedCount)} hint="Contatos protegidos no momento." />
+        <MetricCard label="Expirando" value={String(expiringSoon)} hint="Locks com até 2 dias restantes." />
+        <MetricCard label="Busca ativa" value={String(filteredInfluencers.length)} hint="Itens exibidos após o filtro atual." />
       </div>
 
-      {/* Content */}
-      <div className="container px-4 sm:px-6 lg:px-8 py-6">
+      <PanelCard
+        title="Carteira ativa"
+        description="Use a busca para localizar handles e agir rápido nos vencimentos."
+      >
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por @handle..."
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="rounded-full pl-10"
+          />
+        </div>
+
         {influencers.length === 0 ? (
-          <div className="empty-state">
-            <Users className="empty-state-icon" />
-            <h3 className="empty-state-title">Nenhum influenciador ainda</h3>
-            <p className="empty-state-description mb-4">
-              Adicione influenciadores ou registre fechamentos para começar.
-            </p>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setAddModalOpen(true)}>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Adicionar
-              </Button>
-              <Button onClick={() => setBulkModalOpen(true)}>
-                <Users className="mr-2 h-4 w-4" />
-                Adicionar Vários
-              </Button>
-            </div>
-          </div>
+          <EmptyPanel
+            icon={<Users className="h-5 w-5" />}
+            title="Nenhum influenciador ainda"
+            description="Adicione influenciadores ou registre fechamentos para começar sua carteira."
+            action={
+              <>
+                <Button variant="outline" className="rounded-full" onClick={() => setAddModalOpen(true)}>
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Adicionar
+                </Button>
+                <Button className="rounded-full" onClick={() => setBulkModalOpen(true)}>
+                  <Users className="mr-2 h-4 w-4" />
+                  Adicionar vários
+                </Button>
+              </>
+            }
+          />
         ) : filteredInfluencers.length === 0 ? (
-          <div className="empty-state">
-            <Search className="empty-state-icon" />
-            <h3 className="empty-state-title">Nenhum resultado</h3>
-            <p className="empty-state-description">
-              Nenhum influenciador encontrado com "{searchQuery}"
-            </p>
-          </div>
+          <EmptyPanel
+            icon={<Search className="h-5 w-5" />}
+            title="Nenhum resultado"
+            description={`Nenhum influenciador encontrado com "${searchQuery}".`}
+          />
         ) : (
-          <div className="bg-card rounded-xl border overflow-hidden">
+          <div className="surface-card overflow-hidden">
             <div className="overflow-x-auto">
               <table className="table-minimal">
                 <thead>
                   <tr>
                     <th>Influenciador</th>
-                    <th>Dias Restantes</th>
+                    <th>Dias restantes</th>
                     <th>Status</th>
                     <th>Notas</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredInfluencers.map((inf) => {
-                    const handleNorm = inf.handle.trim().toLowerCase().replace(/^@/, "");
-                    const lock = locksMap.get(handleNorm);
+                  {filteredInfluencers.map((influencer) => {
+                    const handleNormalized = influencer.handle.trim().toLowerCase().replace(/^@/, "");
+                    const lock = locksMap.get(handleNormalized);
                     const daysLeft = lock
-                      ? Math.max(0, Math.ceil((new Date(lock.locked_until).getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
+                      ? Math.max(
+                          0,
+                          Math.ceil(
+                            (new Date(lock.locked_until).getTime() - Date.now()) /
+                              (24 * 60 * 60 * 1000),
+                          ),
+                        )
                       : null;
-                    const isExpiring = daysLeft !== null && daysLeft <= 2;
+                    const toneClass = daysLeft !== null && daysLeft <= 2 ? "tone-warning" : "tone-success";
 
                     return (
-                      <tr key={inf.id}>
-                        <td>
-                          <span className="font-medium">{inf.handle}</span>
-                        </td>
+                      <tr key={influencer.id}>
+                        <td className="font-medium">{influencer.handle}</td>
                         <td>
                           {daysLeft !== null ? (
-                            <Badge
-                              variant="outline"
-                              className={
-                                isExpiring
-                                  ? "bg-amber-50 text-amber-700 border-amber-200/50"
-                                  : "bg-emerald-50 text-emerald-700 border-emerald-200/50"
-                              }
-                            >
+                            <Badge variant="outline" className={cn("border", toneClass)}>
                               {daysLeft}d
                             </Badge>
                           ) : (
@@ -214,10 +224,10 @@ export default function MeuPainel() {
                           )}
                         </td>
                         <td>
-                          <StatusBadge status={inf.status} size="sm" />
+                          <StatusBadge status={influencer.status} size="sm" />
                         </td>
-                        <td className="text-muted-foreground text-sm">
-                          {inf.notas || "—"}
+                        <td className="text-sm text-muted-foreground">
+                          {influencer.notas || "—"}
                         </td>
                       </tr>
                     );
@@ -227,23 +237,11 @@ export default function MeuPainel() {
             </div>
           </div>
         )}
-      </div>
+      </PanelCard>
 
-      <AddInfluencerModal 
-        open={addModalOpen} 
-        onOpenChange={setAddModalOpen}
-        onSuccess={fetchMyInfluencers}
-      />
-      <BulkAddModal 
-        open={bulkModalOpen} 
-        onOpenChange={setBulkModalOpen}
-        onSuccess={fetchMyInfluencers}
-      />
-      <AddInfluencerByUrlModal
-        open={urlModalOpen}
-        onOpenChange={setUrlModalOpen}
-        onSuccess={fetchMyInfluencers}
-      />
+      <AddInfluencerModal open={addModalOpen} onOpenChange={setAddModalOpen} onSuccess={fetchMyInfluencers} />
+      <BulkAddModal open={bulkModalOpen} onOpenChange={setBulkModalOpen} onSuccess={fetchMyInfluencers} />
+      <AddInfluencerByUrlModal open={urlModalOpen} onOpenChange={setUrlModalOpen} onSuccess={fetchMyInfluencers} />
     </div>
   );
 }

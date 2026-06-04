@@ -1,10 +1,16 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Info, LayoutGrid, Loader2, Lock, Search } from "lucide-react";
+
+import { EmptyPanel } from "@/components/design/EmptyPanel";
+import { MetricCard } from "@/components/design/MetricCard";
+import { PageHeader } from "@/components/design/PageHeader";
+import { PanelCard } from "@/components/design/PanelCard";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, LayoutGrid, Loader2, Lock, Info } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface LockEntry {
   id: string;
@@ -31,160 +37,143 @@ function daysUntil(dateStr: string): number {
 }
 
 export default function PainelGeral() {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [locks, setLocks] = useState<LockEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchLocks = async () => {
-    const { data, error } = await supabase
-      .from("influencer_locks")
-      .select("*")
-      .gt("locked_until", new Date().toISOString())
-      .order("locked_until", { ascending: true });
-
-    if (error) {
-      console.error("Error fetching locks:", error);
-      setLoading(false);
-      return;
-    }
-
-    setLocks((data as LockEntry[]) || []);
-    setLoading(false);
-  };
-
   useEffect(() => {
-    fetchLocks();
+    const fetchLocks = async () => {
+      const { data, error } = await supabase
+        .from("influencer_locks")
+        .select("*")
+        .gt("locked_until", new Date().toISOString())
+        .order("locked_until", { ascending: true });
+
+      if (error) {
+        setLoading(false);
+        return;
+      }
+
+      setLocks((data as LockEntry[]) ?? []);
+      setLoading(false);
+    };
+
+    void fetchLocks();
   }, []);
 
-  const filteredLocks = locks.filter((l) =>
-    l.handle_normalized.includes(searchQuery.toLowerCase().replace(/^@/, ""))
+  const filteredLocks = locks.filter((lock) =>
+    lock.handle_normalized.includes(searchQuery.toLowerCase().replace(/^@/, "")),
   );
+  const mineCount = locks.filter((lock) => lock.locked_by_user_id === user?.id).length;
+  const expiringSoon = locks.filter((lock) => daysUntil(lock.locked_until) <= 2).length;
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="page-shell">
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <div className="border-b">
-        <div className="container px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight flex items-center gap-2">
-                <LayoutGrid className="h-5 w-5 sm:h-6 sm:w-6" />
-                Painel Geral
-              </h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                Influenciadores atualmente travados
-              </p>
-            </div>
+    <div className="page-shell">
+      <PageHeader
+        eyebrow="Consulta compartilhada"
+        title="Painel de Consulta"
+        description="Visão viva dos influenciadores atualmente protegidos e dos locks prestes a expirar."
+        actions={
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className="icon-badge" type="button" aria-label="Mais informações">
+                <Info className="h-4 w-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              Os locks são renovados automaticamente a partir da atividade registrada no Planilhamento.
+            </TooltipContent>
+          </Tooltip>
+        }
+      />
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button className="text-muted-foreground hover:text-foreground p-2">
-                  <Info className="h-4 w-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
-                <p>Os locks são criados automaticamente ao registrar no Planilhamento Diário. Cada novo registro renova o travamento por +10 dias.</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-
-          {/* Search */}
-          <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por handle..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
+      <div className="metric-grid">
+        <MetricCard label="Locks ativos" value={String(locks.length)} hint="Influenciadores em proteção neste momento." />
+        <MetricCard label="Responsabilidade sua" value={String(mineCount)} hint="Itens atribuídos ao seu usuário." />
+        <MetricCard label="Expirando" value={String(expiringSoon)} hint="Locks com até 2 dias restantes." />
+        <MetricCard label="Resultado da busca" value={String(filteredLocks.length)} hint="Itens exibidos com o filtro atual." />
       </div>
 
-      {/* Locks Section */}
-      <div className="container px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <PanelCard
+        title="Mapa de travas"
+        description="Busque por handle para localizar rapidamente quem está com cada lock."
+      >
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por handle..."
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="rounded-full pl-10"
+          />
+        </div>
 
         {locks.length === 0 ? (
-          <div className="empty-state">
-            <Lock className="empty-state-icon" />
-            <h3 className="empty-state-title">Nenhum influenciador travado</h3>
-            <p className="empty-state-description">
-              Registre atividade no Planilhamento Diário para travar influenciadores automaticamente.
-            </p>
-          </div>
+          <EmptyPanel
+            icon={<Lock className="h-5 w-5" />}
+            title="Nenhum influenciador travado"
+            description="Registre atividade no Planilhamento para criar travas automaticamente."
+          />
         ) : filteredLocks.length === 0 ? (
-          <div className="empty-state">
-            <Search className="empty-state-icon" />
-            <h3 className="empty-state-title">Nenhum resultado</h3>
-            <p className="empty-state-description">
-              Nenhum influenciador encontrado com "{searchQuery}"
-            </p>
-          </div>
+          <EmptyPanel
+            icon={<Search className="h-5 w-5" />}
+            title="Nenhum resultado"
+            description={`Nenhum influenciador encontrado com "${searchQuery}".`}
+          />
         ) : (
-          <div className="bg-card rounded-xl border overflow-hidden">
+          <div className="surface-card overflow-hidden">
             <div className="overflow-x-auto">
               <table className="table-minimal">
-              <thead>
-                <tr>
-                  <th>Influenciador</th>
-                  <th>Responsável</th>
-                  <th>Última Atividade</th>
-                  <th>Libera em</th>
-                  <th>Dias Restantes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredLocks.map((lock) => {
-                  const isMine = lock.locked_by_user_id === user?.id;
-                  const days = daysUntil(lock.locked_until);
-                  const isExpiring = days <= 2;
+                <thead>
+                  <tr>
+                    <th>Influenciador</th>
+                    <th>Responsável</th>
+                    <th>Última atividade</th>
+                    <th>Libera em</th>
+                    <th>Dias restantes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredLocks.map((lock) => {
+                    const isMine = lock.locked_by_user_id === user?.id;
+                    const days = daysUntil(lock.locked_until);
+                    const toneClass = days <= 2 ? "tone-warning" : "tone-success";
 
-                  return (
-                    <tr key={lock.id}>
-                      <td>
-                        <span className="font-medium">@{lock.handle_normalized}</span>
-                      </td>
-                      <td>
-                        <span className={isMine ? "text-primary font-medium" : "text-muted-foreground"}>
-                          {isMine ? "Você" : lock.locked_by_nome || "—"}
-                        </span>
-                      </td>
-                      <td className="text-muted-foreground text-sm">
-                        {formatDate(lock.last_activity_at)}
-                      </td>
-                      <td className="text-muted-foreground text-sm">
-                        {formatDate(lock.locked_until)}
-                      </td>
-                      <td>
-                        <Badge
-                          variant="outline"
-                          className={
-                            isExpiring
-                              ? "bg-amber-50 text-amber-700 border-amber-200/50"
-                              : "bg-emerald-50 text-emerald-700 border-emerald-200/50"
-                          }
-                        >
-                          {days}d
-                        </Badge>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
+                    return (
+                      <tr key={lock.id}>
+                        <td className="font-medium">@{lock.handle_normalized}</td>
+                        <td>
+                          <span className={cn("text-sm", isMine ? "font-semibold text-foreground" : "text-muted-foreground")}>
+                            {isMine ? "Você" : lock.locked_by_nome || "—"}
+                          </span>
+                        </td>
+                        <td className="text-sm text-muted-foreground">{formatDate(lock.last_activity_at)}</td>
+                        <td className="text-sm text-muted-foreground">{formatDate(lock.locked_until)}</td>
+                        <td>
+                          <Badge variant="outline" className={cn("border", toneClass)}>
+                            {days}d
+                          </Badge>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
               </table>
             </div>
           </div>
         )}
-      </div>
+      </PanelCard>
     </div>
   );
 }
