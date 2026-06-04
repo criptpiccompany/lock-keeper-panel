@@ -9,13 +9,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Loader2, ListChecks, DollarSign, TrendingUp, TrendingDown, Receipt, Percent, Mail } from "lucide-react";
+import { Loader2, ListChecks, DollarSign, TrendingUp, TrendingDown, Receipt, Percent, Mail, Wallet } from "lucide-react";
 import { useTeamFeeRate } from "@/hooks/useTeamFeeRate";
 import { toast } from "sonner";
 import SharedPartnersPopover, { type SharedPartner } from "./SharedPartnersPopover";
 import UnifiedThermometerWidget from "@/components/home/UnifiedThermometerWidget";
 import { useCommissionTier } from "@/hooks/useCommissionTier";
 import { getEstimatedCommission } from "@/lib/commissionCalc";
+import { cn } from "@/lib/utils";
 
 /* ───── types ───── */
 
@@ -285,7 +286,8 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
     const fee = rawFee;
     const resultado = rawResultado;
     const comissao = tierComissao;
-    return { faturado, fee, resultado, comissao };
+    const saldo = resultado - comissao;
+    return { faturado, fee, resultado, comissao, saldo };
   }, [rawFaturado, rawFee, rawResultado, tierComissao]);
 
   /* ── field update ── */
@@ -348,87 +350,123 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3">
-        {!externalMonth && (
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-full sm:w-[200px] h-9 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {monthOptions.map((o) => (
-                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+      <section className="rounded-[30px] bg-[linear-gradient(180deg,#ffffff_0%,#fafaf8_100%)] p-5 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03] lg:p-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#f3f3ef] px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-[#676767]">
+              <ListChecks className="h-3.5 w-3.5" />
+              Monthly List
+            </div>
+            <div>
+              <h2 className="text-[34px] font-medium tracking-[-0.06em] text-foreground sm:text-[42px]">
+                {monthOptions.find((o) => o.value === selectedMonth)?.label || "Lista do mês"}
+              </h2>
+              <p className="mt-2 text-[14px] text-[#6e6e73]">
+                Leitura consolidada por influenciador com plataformas, faturamento, taxa e comissão.
+              </p>
+            </div>
+          </div>
 
-        {!closerId && isAdmin && closers.length > 1 && (
-          <Select value={selectedCloserId} onValueChange={setSelectedCloserId}>
-            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm">
-              <SelectValue placeholder="Selecionar closer" />
-            </SelectTrigger>
-            <SelectContent>
-              {closers.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+          <div className="flex flex-col gap-3 lg:items-end">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center">
+              {!externalMonth && (
+                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                  <SelectTrigger className="h-11 w-full rounded-full border-[#ececeb] bg-white px-4 text-sm shadow-none md:w-[220px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {monthOptions.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
 
-        {currentCloser && (
-          <span className="text-xs text-muted-foreground ml-auto">
-            Comissão: {currentPercentage}%
-          </span>
-        )}
-      </div>
+              {currentCloser && (
+                <div className="inline-flex items-center rounded-full bg-white px-4 py-2 text-[12px] font-medium text-[#6e6e73] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
+                  Comissão atual: <span className="ml-1 text-[#1f1f1f]">{currentPercentage}%</span>
+                </div>
+              )}
+
+              {!closerId && isAdmin && closers.length > 1 && (
+                <Select value={selectedCloserId} onValueChange={setSelectedCloserId}>
+                  <SelectTrigger className="h-11 w-full rounded-full border-[#ececeb] bg-white px-4 text-sm shadow-none md:w-[210px]">
+                    <SelectValue placeholder="Selecionar closer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {closers.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20">
+        <div className="flex items-center justify-center rounded-[28px] bg-white py-20 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : rows.length === 0 ? (
-        <div className="text-center py-20 text-muted-foreground">
+        <div className="rounded-[28px] bg-white py-20 text-center text-muted-foreground shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
           <ListChecks className="h-10 w-10 mx-auto mb-3 opacity-30" />
           <p className="text-sm">Nenhum influenciador registrado neste mês.</p>
         </div>
       ) : (
         <>
-          {/* Two-column layout: Thermometer + Cards (same as Balanço) */}
           {!hideThermometer && (
-          <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-3">
-            {/* Left: Thermometer */}
-            <div className="card-premium p-5 flex items-center justify-center lg:min-h-[380px]">
-              <UnifiedThermometerWidget resultado={summary.resultado} month={selectedMonth} />
-            </div>
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.3fr_1fr]">
+              <div className="rounded-[28px] bg-white p-6 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <div className="text-[12px] uppercase tracking-[0.18em] text-[#999999]">Termômetro</div>
+                    <div className="mt-1 text-[28px] font-medium tracking-[-0.04em] text-[#1f1f1f]">Performance do mês</div>
+                  </div>
+                  <div className="rounded-full bg-[#f3f3ef] px-3 py-2 text-[12px] font-medium text-[#676767]">
+                    {rows.length} influenciadores
+                  </div>
+                </div>
+                <UnifiedThermometerWidget resultado={summary.resultado} month={selectedMonth} />
+              </div>
 
-            {/* Right: Financial Cards Grid */}
-            <div className="flex flex-col gap-2">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <SummaryCard label="Faturamento" value={summary.faturado} icon={TrendingUp} />
                 <SummaryCard label="Investido" value={investido} icon={DollarSign} />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
                 <SummaryCard label={feeLabel} value={summary.fee} icon={Percent} variant="muted" />
                 <SummaryCard
                   label="Resultado"
                   value={summary.resultado}
                   icon={summary.resultado >= 0 ? TrendingUp : TrendingDown}
-                  variant={summary.resultado >= 0 ? "positive" : "negative"}
+                  variant={summary.resultado > 0 ? (investido > 0 && summary.resultado / investido >= 0.3 ? "positive" : "warning") : "negative"}
+                />
+                <SummaryCard label="Comissão" value={summary.comissao} icon={Receipt} />
+                <SummaryCard
+                  label="Saldo Final"
+                  value={summary.saldo}
+                  icon={Wallet}
+                  variant={summary.saldo >= 0 ? "positive" : "negative"}
                 />
               </div>
-              <SummaryCard label="Comissão" value={summary.comissao} icon={Receipt} />
             </div>
-          </div>
           )}
 
-          {/* Table */}
-          <div className="bg-card rounded-xl border border-border/40 overflow-hidden">
+          <div className="overflow-hidden rounded-[28px] bg-white p-3 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
+            <div className="mb-3 flex items-center justify-between px-2 pt-2">
+              <div>
+                <div className="text-[12px] uppercase tracking-[0.18em] text-[#999999]">Distribuição mensal</div>
+                <div className="mt-1 text-[24px] font-medium tracking-[-0.04em] text-[#1f1f1f]">Influenciadores do mês</div>
+              </div>
+              <div className="rounded-full bg-[#f3f3ef] px-3 py-2 text-[12px] font-medium text-[#676767]">
+                {rows.length} linhas
+              </div>
+            </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full min-w-[1160px] text-sm">
                 <thead>
-                  <tr className="border-b border-border/60 text-foreground" style={{ backgroundColor: '#E9E9EA' }}>
-                    <th className="text-left py-2.5 px-4 font-semibold text-xs tracking-wide uppercase whitespace-nowrap">
+                  <tr>
+                    <th className="px-5 py-5 text-left text-[12px] font-medium text-[#6e6e6e] whitespace-nowrap">
                       Influenciador
                     </th>
                     {[
@@ -436,33 +474,37 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
                       { field: "platform_2_name", val: platforms.platform_2_name },
                       { field: "platform_3_name", val: platforms.platform_3_name },
                     ].map((p) => (
-                      <th key={p.field} className="text-center py-1.5 px-2 font-semibold text-xs tracking-wide uppercase min-w-[160px]">
+                      <th key={p.field} className="px-3 py-5 text-center text-[12px] font-medium text-[#6e6e6e] min-w-[180px]">
                         <EditableHeader
                           value={p.val}
                           onChange={(v) => updatePlatformName(p.field, v)}
                         />
                       </th>
                     ))}
-                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase whitespace-nowrap">
+                    <th className="px-4 py-5 text-right text-[12px] font-medium text-[#6e6e6e] whitespace-nowrap">
                       Valor total
                     </th>
-                    <th className="text-left py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
+                    <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">
                       Obs
                     </th>
+                  </tr>
+                  <tr>
+                    <td colSpan={6} className="px-5">
+                      <div className="border-b border-dashed border-[#e6ddb0]" />
+                    </td>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((row, idx) => (
                     <tr
                       key={row.id}
-                      className={`border-b border-border/20 ${idx % 2 === 1 ? "bg-muted/30" : ""}`}
+                      className={idx % 2 === 1 ? "bg-[#fbfbf8]" : "bg-white"}
                     >
-                      <td className="py-2 px-4 text-xs font-medium whitespace-nowrap">
-                        <div className="flex items-center gap-1.5">
+                      <td className="px-5 py-4 text-[13px] font-medium text-[#1f1f1f] whitespace-nowrap">
+                        <div className="flex items-center gap-2">
                           {row.influencer_handle}
                           {sharedInfluencerMap.has(row.influencer_id) && (() => {
                             const entries = sharedInfluencerMap.get(row.influencer_id)!;
-                            // Combine all partners from all shared records
                             const allPartners = entries.flatMap((e) => e.partners);
                             const firstNote = entries.find((e) => e.note)?.note || null;
                             return (
@@ -475,32 +517,27 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
                           })()}
                         </div>
                       </td>
-                      {/* Casa 1 */}
                       <CasaCell
                         valor={row.casa_1_valor}
                         email={row.casa_1_email}
                         onValorChange={(v) => updateField(row.id, "casa_1_valor", v)}
                         onEmailChange={(v) => updateField(row.id, "casa_1_email", v)}
                       />
-                      {/* Casa 2 */}
                       <CasaCell
                         valor={row.casa_2_valor}
                         email={row.casa_2_email}
                         onValorChange={(v) => updateField(row.id, "casa_2_valor", v)}
                         onEmailChange={(v) => updateField(row.id, "casa_2_email", v)}
                       />
-                      {/* Casa 3 */}
                       <CasaCell
                         valor={row.casa_3_valor}
                         email={row.casa_3_email}
                         onValorChange={(v) => updateField(row.id, "casa_3_valor", v)}
                         onEmailChange={(v) => updateField(row.id, "casa_3_email", v)}
                       />
-                      {/* Valor total (auto-calc, read-only) */}
-                      <td className="py-2 px-4 text-xs text-right tabular-nums font-semibold whitespace-nowrap">
+                      <td className="px-4 py-4 text-right text-[13px] tabular-nums font-medium text-[#1f1f1f] whitespace-nowrap">
                         {formatBRL(row.valor_total)}
                       </td>
-                      {/* Obs */}
                       <EditableTextCell
                         value={row.observacoes}
                         onChange={(v) => updateField(row.id, "observacoes", v)}
@@ -510,11 +547,11 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr className="border-t border-border/60 font-semibold text-foreground" style={{ backgroundColor: "#E9E9EA" }}>
-                    <td className="py-3 px-4 text-xs" colSpan={4}>
+                  <tr className="border-t border-[#ececeb] bg-[#f5f5f2] font-semibold text-foreground">
+                    <td className="px-5 py-4 text-[13px]" colSpan={4}>
                       Total do mês
                     </td>
-                    <td className="py-3 px-4 text-xs text-right tabular-nums">
+                    <td className="px-4 py-4 text-right text-[13px] tabular-nums">
                       {formatBRL(summary.faturado)}
                     </td>
                     <td />
@@ -540,22 +577,25 @@ function SummaryCard({
   label: string;
   value: number;
   icon: any;
-  variant?: "default" | "positive" | "negative" | "muted";
+  variant?: "default" | "positive" | "negative" | "warning" | "muted";
 }) {
   const colorMap = {
-    default: "",
+    default: "text-[#1f1f1f]",
     positive: "text-emerald-700",
     negative: "text-red-600",
-    muted: "text-muted-foreground",
+    warning: "text-amber-700",
+    muted: "text-[#7b7b78]",
   };
 
   return (
-    <div className="rounded-xl border border-border/40 bg-card p-4 space-y-1">
-      <div className="flex items-center gap-1.5">
-        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="text-xs text-muted-foreground font-medium">{label}</span>
+    <div className="rounded-[24px] bg-white p-5 shadow-[0_8px_24px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.03]">
+      <div className="flex items-center gap-2">
+        <div className="grid h-8 w-8 place-items-center rounded-full bg-[#f3f3ef] text-[#6e6e73]">
+          <Icon className="h-4 w-4" />
+        </div>
+        <span className="text-[13px] font-medium text-[#7b7b78]">{label}</span>
       </div>
-      <p className={`text-lg font-semibold tabular-nums ${colorMap[variant]}`}>
+      <p className={cn("mt-4 text-[20px] font-semibold tracking-[-0.04em] tabular-nums", colorMap[variant])}>
         {formatBRL(value)}
       </p>
     </div>
@@ -568,7 +608,7 @@ function EditableHeader({ value, onChange }: { value: string; onChange: (v: stri
 
   return (
     <input
-      className="w-full text-center text-xs font-semibold uppercase tracking-wide bg-transparent border-none outline-none focus:bg-white/60 focus:ring-1 focus:ring-border rounded px-1 py-0.5 transition-colors"
+      className="w-full rounded-full border border-transparent bg-transparent px-2 py-1 text-center text-[11px] font-medium uppercase tracking-[0.16em] text-[#6e6e6e] outline-none transition-colors focus:border-[#e5e5e1] focus:bg-white"
       value={local}
       onChange={(e) => setLocal(e.target.value)}
       onBlur={() => { if (local !== value) onChange(local); }}
@@ -616,7 +656,7 @@ function CurrencyInput({
 
   return (
     <Input
-      className="h-7 text-xs text-right tabular-nums w-full"
+      className="h-10 w-full rounded-[16px] border-[#ececeb] bg-white px-3 text-right text-[13px] tabular-nums shadow-none"
       inputMode="numeric"
       value={display}
       placeholder="R$ 0,00"
@@ -641,13 +681,13 @@ function CasaCell({
   useEffect(() => { setLocalEmail(email); }, [email]);
 
   return (
-    <td className="py-1.5 px-2">
-      <div className="flex flex-col gap-1.5">
+    <td className="px-3 py-4 align-top">
+      <div className="flex flex-col gap-2">
         <CurrencyInput value={valor} onChange={onValorChange} />
-        <div className="flex items-center gap-1 rounded-md bg-muted/60 px-1.5 py-0.5">
-          <Mail className="h-3 w-3 text-muted-foreground/70 shrink-0" />
+        <div className="flex items-center gap-2 rounded-[14px] border border-[#efefeb] bg-[#fbfbf8] px-2.5 py-2">
+          <Mail className="h-3.5 w-3.5 text-[#9a9a96] shrink-0" />
           <input
-            className="h-5 text-[11px] text-foreground/70 w-full bg-transparent outline-none focus:text-foreground transition-colors placeholder:text-muted-foreground/50"
+            className="h-5 w-full bg-transparent text-[11px] text-[#6f6f6b] outline-none transition-colors placeholder:text-[#b5b5af] focus:text-[#1f1f1f]"
             value={localEmail}
             placeholder="email afiliado"
             onChange={(e) => setLocalEmail(e.target.value)}
@@ -672,9 +712,9 @@ function EditableTextCell({
   useEffect(() => { setLocal(value); }, [value]);
 
   return (
-    <td className="py-1.5 px-2">
+    <td className="px-4 py-4 align-top">
       <Input
-        className="h-7 text-xs w-full min-w-[100px]"
+        className="h-10 min-w-[140px] rounded-[16px] border-[#ececeb] bg-white px-3 text-[13px] shadow-none"
         value={local}
         placeholder={placeholder}
         onChange={(e) => setLocal(e.target.value)}

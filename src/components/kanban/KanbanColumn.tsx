@@ -22,32 +22,30 @@ export function KanbanColumn({
 }: KanbanColumnProps) {
   return (
     <div
-      className="flex w-[260px] sm:w-[280px] shrink-0 flex-col rounded-xl border"
-      style={{ backgroundColor: bg, minHeight: 200 }}
+      className="flex w-[220px] sm:w-[230px] xl:w-auto shrink-0 flex-col rounded-[24px] border border-black/[0.03] bg-[linear-gradient(180deg,#ffffff_0%,#fafaf8_100%)] shadow-[0_18px_44px_-38px_rgba(15,23,42,0.12)]"
+      style={{ minHeight: 220 }}
     >
-      {/* Header */}
-      <div className="flex items-center gap-2 border-b border-black/5 px-3 py-2.5">
+      <div className="flex items-center gap-2 border-b border-black/[0.04] px-4 py-3.5">
         <div
-          className="h-2.5 w-2.5 rounded-full shrink-0"
+          className="h-2.5 w-2.5 shrink-0 rounded-full"
           style={{ backgroundColor: accent }}
         />
-        <h3 className="text-sm font-medium truncate" style={{ color: accent }}>
+        <h3 className="truncate text-[13px] font-medium text-[#1f1f1f]">
           {title}
         </h3>
         <span
-          className="ml-auto shrink-0 rounded-md px-1.5 py-0.5 text-xs font-semibold"
-          style={{ backgroundColor: `${accent}18`, color: accent }}
+          className="ml-auto shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium"
+          style={{ backgroundColor: `${accent}14`, color: accent }}
         >
           {count}
         </span>
       </div>
 
-      {/* Cards area */}
       <div
         ref={provided.innerRef}
         {...provided.droppableProps}
-        className={`flex-1 space-y-2 p-2 transition-colors ${
-          isDraggingOver ? "opacity-80" : ""
+        className={`flex-1 space-y-3 p-3 transition-colors ${
+          isDraggingOver ? "bg-black/[0.015]" : ""
         }`}
         style={{ minHeight: 100 }}
       >

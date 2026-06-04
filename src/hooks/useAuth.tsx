@@ -24,17 +24,23 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, nome: string, inviteToken?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  actualRole: UserRole | null;
+  effectiveRole: UserRole | null;
+  previewRole: UserRole | null;
+  setPreviewRole: (role: UserRole | null) => void;
   isAdmin: boolean;
   isSubAdmin: boolean;
   isCloser: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const PREVIEW_ROLE_KEY = 'creators-preview-role';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [previewRole, setPreviewRoleState] = useState<UserRole | null>(null);
 
   const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
     try {
@@ -80,6 +86,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    const storedRole = window.localStorage.getItem(PREVIEW_ROLE_KEY) as UserRole | null;
+    if (storedRole === 'CLOSER' || storedRole === 'ADMIN' || storedRole === 'SUBADMIN') {
+      setPreviewRoleState(storedRole);
+    }
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
@@ -168,9 +179,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    window.localStorage.removeItem(PREVIEW_ROLE_KEY);
+    setPreviewRoleState(null);
     setUser(null);
     setSession(null);
     toast.success('Logout realizado');
+  };
+
+  const actualRole = user?.role ?? null;
+  const canPreview = actualRole === 'ADMIN' || actualRole === 'SUBADMIN';
+  const effectiveRole = canPreview && previewRole ? previewRole : actualRole;
+
+  const setPreviewRole = (role: UserRole | null) => {
+    if (!canPreview) return;
+
+    if (!role || role === actualRole) {
+      window.localStorage.removeItem(PREVIEW_ROLE_KEY);
+      setPreviewRoleState(null);
+      return;
+    }
+
+    window.localStorage.setItem(PREVIEW_ROLE_KEY, role);
+    setPreviewRoleState(role);
   };
 
   const value: AuthContextType = {
@@ -180,9 +210,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signUp,
     signOut,
-    isAdmin: user?.role === 'ADMIN',
-    isSubAdmin: user?.role === 'SUBADMIN',
-    isCloser: user?.role === 'CLOSER',
+    actualRole,
+    effectiveRole,
+    previewRole,
+    setPreviewRole,
+    isAdmin: effectiveRole === 'ADMIN',
+    isSubAdmin: effectiveRole === 'SUBADMIN',
+    isCloser: effectiveRole === 'CLOSER',
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

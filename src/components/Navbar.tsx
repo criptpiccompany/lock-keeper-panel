@@ -35,6 +35,7 @@ export function Navbar() {
   const { user, signOut, isAdmin, isSubAdmin } = useAuth();
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isHome = location.pathname === "/home";
 
   const handleSignOut = async () => {
     await signOut();
@@ -126,8 +127,13 @@ export function Navbar() {
   );
 
   return (
-    <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="container flex h-14 items-center justify-between px-4 sm:px-6 lg:px-8">
+    <nav
+      className={cn(
+        "sticky top-0 z-50 border-b backdrop-blur supports-[backdrop-filter]:bg-background/80",
+        isHome ? "border-black/5 bg-[#fcfcfb]/95" : "bg-background/95"
+      )}
+    >
+      <div className="mx-auto flex h-[66px] w-full max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link to="/home" className="flex items-center gap-2 shrink-0">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
@@ -148,10 +154,10 @@ export function Navbar() {
                   <Link
                     to={item.path}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                      "flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-colors",
                       isActive || isDropdownActive
                         ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                     )}
                   >
                     <Icon className="h-4 w-4" />

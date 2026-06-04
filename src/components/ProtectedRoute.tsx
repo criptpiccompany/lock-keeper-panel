@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+  const { user, loading, effectiveRole } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -27,7 +27,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     return <Navigate to="/aguardando-aprovacao" replace />;
   }
 
-  if (requireAdmin && user.role !== 'ADMIN' && user.role !== 'SUBADMIN') {
+  if (requireAdmin && effectiveRole !== 'ADMIN' && effectiveRole !== 'SUBADMIN') {
     return <Navigate to="/meu" replace />;
   }
 

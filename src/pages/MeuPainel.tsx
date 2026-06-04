@@ -92,95 +92,150 @@ export default function MeuPainel() {
   const filteredInfluencers = influencers.filter(inf =>
     inf.handle.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  const activeLocksCount = influencers.filter((inf) => inf.daysRemaining !== null).length;
+  const expiringLocksCount = influencers.filter((inf) => inf.daysRemaining !== null && inf.daysRemaining <= 2).length;
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="flex min-h-[60vh] items-center justify-center rounded-[28px] bg-white py-20 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <div className="border-b">
-        <div className="container px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div className="space-y-6">
+      <section className="rounded-[30px] bg-[linear-gradient(180deg,#ffffff_0%,#fafaf8_100%)] p-5 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03] lg:p-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#f3f3ef] px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-[#676767]">
+              <Users className="h-3.5 w-3.5" />
+              My List
+            </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Minha Lista</h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                Gerencie seus influenciadores
+              <h2 className="text-[34px] font-medium tracking-[-0.06em] text-foreground sm:text-[42px]">
+                Minha Lista
+              </h2>
+              <p className="mt-2 text-[14px] text-[#6e6e73]">
+                Gerencie sua carteira de influenciadores, acompanhe travamentos e encontre rápido quem está perto de liberar.
               </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 lg:items-end">
+            <div className="flex flex-wrap gap-3">
+              <div className="inline-flex items-center rounded-full bg-white px-4 py-2 text-[12px] font-medium text-[#6e6e73] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
+                Ativos: <span className="ml-1 text-[#1f1f1f]">{influencers.length}</span>
+              </div>
+              <div className="inline-flex items-center rounded-full bg-white px-4 py-2 text-[12px] font-medium text-[#6e6e73] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
+                Travados: <span className="ml-1 text-[#1f1f1f]">{activeLocksCount}</span>
+              </div>
+              {expiringLocksCount > 0 && (
+                <div className="inline-flex items-center rounded-full bg-[#fff8eb] px-4 py-2 text-[12px] font-medium text-[#9a6a16] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-[#f0dfb4]">
+                  Liberando em breve: <span className="ml-1 text-[#7c5712]">{expiringLocksCount}</span>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => setUrlModalOpen(true)}>
+              <Button
+                variant="outline"
+                className="h-11 rounded-full border-[#ececeb] bg-white px-4 text-[13px] font-medium shadow-none"
+                onClick={() => setUrlModalOpen(true)}
+              >
                 <Link className="mr-2 h-4 w-4" />
                 URL
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setAddModalOpen(true)}>
+              <Button
+                variant="outline"
+                className="h-11 rounded-full border-[#ececeb] bg-white px-4 text-[13px] font-medium shadow-none"
+                onClick={() => setAddModalOpen(true)}
+              >
                 <UserPlus className="mr-2 h-4 w-4" />
                 Adicionar
               </Button>
-              <Button size="sm" onClick={() => setBulkModalOpen(true)}>
+              <Button
+                className="h-11 rounded-full bg-[#1f1f1f] px-4 text-[13px] font-medium text-white hover:bg-[#111111]"
+                onClick={() => setBulkModalOpen(true)}
+              >
                 <Users className="mr-2 h-4 w-4" />
                 Vários
               </Button>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Search */}
-          <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <section className="rounded-[28px] bg-white p-4 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03] sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="text-[12px] uppercase tracking-[0.18em] text-[#999999]">Carteira operacional</div>
+            <div className="mt-1 text-[24px] font-medium tracking-[-0.04em] text-[#1f1f1f]">Influenciadores sob sua gestão</div>
+          </div>
+
+          <div className="relative w-full max-w-md">
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9a9a96]" />
             <Input
               placeholder="Buscar por @handle..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="h-11 rounded-full border-[#ececeb] bg-white pl-11 pr-4 text-[14px] shadow-none"
             />
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Content */}
-      <div className="container px-4 sm:px-6 lg:px-8 py-6">
+      <div>
         {influencers.length === 0 ? (
-          <div className="empty-state">
-            <Users className="empty-state-icon" />
-            <h3 className="empty-state-title">Nenhum influenciador ainda</h3>
-            <p className="empty-state-description mb-4">
+          <div className="rounded-[28px] bg-white py-20 text-center text-muted-foreground shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
+            <Users className="mx-auto mb-4 h-10 w-10 opacity-30" />
+            <h3 className="text-[18px] font-medium text-[#1f1f1f]">Nenhum influenciador ainda</h3>
+            <p className="mx-auto mt-2 mb-5 max-w-md text-sm text-[#6e6e73]">
               Adicione influenciadores ou registre fechamentos para começar.
             </p>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setAddModalOpen(true)}>
+            <div className="flex justify-center gap-2">
+              <Button variant="outline" className="h-11 rounded-full border-[#ececeb] bg-white px-4" onClick={() => setAddModalOpen(true)}>
                 <UserPlus className="mr-2 h-4 w-4" />
                 Adicionar
               </Button>
-              <Button onClick={() => setBulkModalOpen(true)}>
+              <Button className="h-11 rounded-full bg-[#1f1f1f] px-4 text-white hover:bg-[#111111]" onClick={() => setBulkModalOpen(true)}>
                 <Users className="mr-2 h-4 w-4" />
                 Adicionar Vários
               </Button>
             </div>
           </div>
         ) : filteredInfluencers.length === 0 ? (
-          <div className="empty-state">
-            <Search className="empty-state-icon" />
-            <h3 className="empty-state-title">Nenhum resultado</h3>
-            <p className="empty-state-description">
+          <div className="rounded-[28px] bg-white py-20 text-center text-muted-foreground shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
+            <Search className="mx-auto mb-4 h-10 w-10 opacity-30" />
+            <h3 className="text-[18px] font-medium text-[#1f1f1f]">Nenhum resultado</h3>
+            <p className="mt-2 text-sm text-[#6e6e73]">
               Nenhum influenciador encontrado com "{searchQuery}"
             </p>
           </div>
         ) : (
-          <div className="bg-card rounded-xl border overflow-hidden">
+          <div className="overflow-hidden rounded-[28px] bg-white p-3 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
+            <div className="mb-3 flex items-center justify-between px-2 pt-2">
+              <div>
+                <div className="text-[12px] uppercase tracking-[0.18em] text-[#999999]">Visão geral</div>
+                <div className="mt-1 text-[24px] font-medium tracking-[-0.04em] text-[#1f1f1f]">Sua carteira</div>
+              </div>
+              <div className="rounded-full bg-[#f3f3ef] px-3 py-2 text-[12px] font-medium text-[#676767]">
+                {filteredInfluencers.length} resultados
+              </div>
+            </div>
             <div className="overflow-x-auto">
-              <table className="table-minimal">
+              <table className="w-full min-w-[760px] text-sm">
                 <thead>
                   <tr>
-                    <th>Influenciador</th>
-                    <th>Dias Restantes</th>
-                    <th>Status</th>
-                    <th>Notas</th>
+                    <th className="px-5 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Influenciador</th>
+                    <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Dias Restantes</th>
+                    <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Status</th>
+                    <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Notas</th>
+                  </tr>
+                  <tr>
+                    <td colSpan={4} className="px-5">
+                      <div className="border-b border-dashed border-[#e6ddb0]" />
+                    </td>
                   </tr>
                 </thead>
                 <tbody>
@@ -193,30 +248,30 @@ export default function MeuPainel() {
                     const isExpiring = daysLeft !== null && daysLeft <= 2;
 
                     return (
-                      <tr key={inf.id}>
-                        <td>
-                          <span className="font-medium">{inf.handle}</span>
+                      <tr key={inf.id} className="odd:bg-white even:bg-[#fbfbf8]">
+                        <td className="px-5 py-4">
+                          <span className="text-[13px] font-medium text-[#1f1f1f]">{inf.handle}</span>
                         </td>
-                        <td>
+                        <td className="px-4 py-4">
                           {daysLeft !== null ? (
                             <Badge
                               variant="outline"
                               className={
                                 isExpiring
-                                  ? "bg-amber-50 text-amber-700 border-amber-200/50"
-                                  : "bg-emerald-50 text-emerald-700 border-emerald-200/50"
+                                  ? "rounded-full border-amber-200/60 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700"
+                                  : "rounded-full border-emerald-200/60 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700"
                               }
                             >
                               {daysLeft}d
                             </Badge>
                           ) : (
-                            <span className="text-sm text-muted-foreground">—</span>
+                            <span className="text-[13px] text-[#9a9a96]">—</span>
                           )}
                         </td>
-                        <td>
+                        <td className="px-4 py-4">
                           <StatusBadge status={inf.status} size="sm" />
                         </td>
-                        <td className="text-muted-foreground text-sm">
+                        <td className="px-4 py-4 text-[13px] text-[#6e6e73]">
                           {inf.notas || "—"}
                         </td>
                       </tr>

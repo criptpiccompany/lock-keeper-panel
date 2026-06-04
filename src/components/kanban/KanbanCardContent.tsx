@@ -84,23 +84,22 @@ export function KanbanCardContent({
   };
 
   return (
-    <div className="space-y-2.5">
-      {/* Header: Avatar + Name + Actions */}
+    <div className="space-y-3">
       <div className="flex items-start gap-2">
         <Avatar className="h-8 w-8 shrink-0">
-          <AvatarFallback className="bg-muted text-xs font-medium text-muted-foreground">
+          <AvatarFallback className="bg-[#f3f3ef] text-xs font-medium text-[#6e6e73]">
             {card.display_name.slice(0, 2).toUpperCase()}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-foreground">
+          <p className="truncate text-[13px] font-medium text-[#1f1f1f]">
             {card.display_name}
           </p>
           <a
             href={instagramLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-1 text-[11px] text-[#7b7b78] transition-colors hover:text-[#1f1f1f]"
           >
             @{card.instagram_username}
             <ExternalLink className="h-3 w-3" />
@@ -110,7 +109,7 @@ export function KanbanCardContent({
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 text-muted-foreground hover:text-foreground"
+            className="h-7 w-7 rounded-full text-[#8b8b87] hover:bg-[#f5f5f2] hover:text-[#1f1f1f]"
             onClick={() => onOpenEdit(card)}
           >
             <Pencil className="h-3.5 w-3.5" />
@@ -120,7 +119,7 @@ export function KanbanCardContent({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                className="h-7 w-7 rounded-full text-[#8b8b87] hover:bg-[#f5f5f2] hover:text-[#1f1f1f]"
               >
                 <Archive className="h-3.5 w-3.5" />
               </Button>
@@ -145,19 +144,18 @@ export function KanbanCardContent({
         </div>
       </div>
 
-      {/* Classificação dropdown */}
       <div>
         <Select
           value={card.classificacao ?? ""}
           onValueChange={(val) => onUpdate(card.id, { classificacao: val || null })}
         >
-          <SelectTrigger className="h-6 w-full border-0 bg-transparent px-1 py-0 text-[11px] shadow-none hover:bg-muted focus:ring-0 focus:ring-offset-0">
+          <SelectTrigger className="h-7 w-full rounded-full border-0 bg-[#f7f7f4] px-2 py-0 text-[11px] shadow-none hover:bg-[#f1f1ed] focus:ring-0 focus:ring-offset-0">
             {card.classificacao ? (
               (() => {
                 const opt = CLASSIFICACAO_OPTIONS.find((o) => o.value === card.classificacao);
                 return (
                   <span
-                    className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium"
+                    className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
                     style={{ backgroundColor: opt?.bg, color: opt?.text }}
                   >
                     {card.classificacao}
@@ -165,16 +163,16 @@ export function KanbanCardContent({
                 );
               })()
             ) : (
-              <span className="text-[10px] text-muted-foreground italic">Classificar</span>
+              <span className="text-[10px] italic text-[#8b8b87]">Classificar</span>
             )}
           </SelectTrigger>
           <SelectContent>
             {CLASSIFICACAO_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
-                <span
-                  className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium"
-                  style={{ backgroundColor: opt.bg, color: opt.text }}
-                >
+                  <span
+                    className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
+                    style={{ backgroundColor: opt.bg, color: opt.text }}
+                  >
                   {opt.value}
                 </span>
               </SelectItem>
@@ -183,7 +181,6 @@ export function KanbanCardContent({
         </Select>
       </div>
 
-      {/* Inline editable value */}
       <div>
         {editingValue ? (
           <input
@@ -192,26 +189,25 @@ export function KanbanCardContent({
             onChange={(e) => setValueInput(e.target.value)}
             onBlur={saveValue}
             onKeyDown={handleValueKeyDown}
-            className="w-full rounded-md border bg-background px-2 py-1 text-xs font-medium text-foreground outline-none focus:ring-1 focus:ring-ring"
+            className="w-full rounded-[14px] border border-[#ececeb] bg-white px-3 py-2 text-[12px] font-medium text-[#1f1f1f] outline-none focus:ring-1 focus:ring-black/5"
             placeholder="0,00"
           />
         ) : (
           <button
             onClick={startEditValue}
-            className="w-full text-left rounded-md px-2 py-1 text-xs transition-colors hover:bg-muted"
+            className="w-full rounded-[14px] bg-[#fbfbf8] px-3 py-2 text-left text-[12px] transition-colors hover:bg-[#f4f4f0]"
           >
             {card.valor_negociado != null ? (
-              <span className="font-medium text-foreground">
+              <span className="font-medium text-[#1f1f1f]">
                 R$ {formatCurrency(Number(card.valor_negociado))}
               </span>
             ) : (
-              <span className="text-muted-foreground italic">Adicionar valor</span>
+              <span className="italic text-[#8b8b87]">Adicionar valor</span>
             )}
           </button>
         )}
       </div>
 
-      {/* Apoios */}
       <div className="flex flex-wrap items-center gap-1">
         {apoios.map((name, idx) => (
           editingApoioIdx === idx ? (
@@ -233,13 +229,13 @@ export function KanbanCardContent({
                 if (e.key === "Enter") (e.target as HTMLInputElement).blur();
                 if (e.key === "Escape") setEditingApoioIdx(null);
               }}
-              className="h-5 w-20 rounded border bg-background px-1.5 text-[10px] outline-none focus:ring-1 focus:ring-ring"
+              className="h-6 w-20 rounded-full border border-[#ececeb] bg-white px-2 text-[10px] outline-none focus:ring-1 focus:ring-black/5"
               autoFocus
             />
           ) : (
             <span
               key={idx}
-              className="inline-flex items-center gap-0.5 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground cursor-pointer hover:bg-muted/80 transition-colors"
+              className="inline-flex cursor-pointer items-center gap-0.5 rounded-full bg-[#f3f3ef] px-2 py-1 text-[10px] font-medium text-[#6e6e73] transition-colors hover:bg-[#ecece7]"
               onClick={() => {
                 setEditingApoioIdx(idx);
                 setEditApoioInput(apoios[idx]);
@@ -253,7 +249,7 @@ export function KanbanCardContent({
                   const next = apoios.filter((_, i) => i !== idx);
                   onUpdate(card.id, { apoios: next });
                 }}
-                className="ml-0.5 rounded-full hover:text-destructive"
+                  className="ml-0.5 rounded-full hover:text-destructive"
               >
                 <X className="h-2.5 w-2.5" />
               </button>
@@ -284,7 +280,7 @@ export function KanbanCardContent({
         ) : apoios.length < 3 ? (
           <button
             onClick={() => setAddingApoio(true)}
-            className="inline-flex items-center gap-0.5 rounded-md px-1 py-0.5 text-[10px] text-muted-foreground hover:bg-muted transition-colors"
+            className="inline-flex items-center gap-0.5 rounded-full px-2 py-1 text-[10px] text-[#8b8b87] transition-colors hover:bg-[#f5f5f2]"
           >
             <Plus className="h-2.5 w-2.5" />
             Agente/Indicação
@@ -292,11 +288,10 @@ export function KanbanCardContent({
         ) : null}
       </div>
 
-      {/* Footer: Status badge + time */}
       <div className="flex items-center justify-between">
         <Badge
           variant="outline"
-          className="text-[10px] font-medium border-0 px-1.5 py-0"
+          className="rounded-full border-0 px-2 py-1 text-[10px] font-medium"
           style={{
             backgroundColor: columnDef ? `${columnDef.accent}18` : undefined,
             color: columnDef?.accent,
@@ -304,7 +299,7 @@ export function KanbanCardContent({
         >
           {card.status}
         </Badge>
-        <span className="text-[10px] text-muted-foreground">
+        <span className="text-[10px] text-[#8b8b87]">
           {formatDistanceToNow(new Date(card.last_moved_at), {
             addSuffix: true,
             locale: ptBR,

@@ -7,7 +7,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
-import { Navbar } from "@/components/Navbar";
+import { WorkspaceLayout } from "@/components/WorkspaceLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import MeuPainel from "./pages/MeuPainel";
@@ -52,115 +52,68 @@ function AppRoutes() {
       {/* Default redirect */}
       <Route path="/" element={<DefaultRedirect />} />
 
-      {/* Home - first screen after login */}
       <Route
-        path="/home"
         element={
           <ProtectedRoute>
-            <Navbar />
-            <Home />
+            <WorkspaceLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route path="/home" element={<Home />} />
+        <Route path="/meu" element={<MeuPainel />} />
+        <Route path="/gestao-influenciadores" element={<GestaoInfluenciadores />} />
+        <Route path="/painel" element={<PainelGeral />} />
+        <Route path="/registro" element={<RegistroDiario />} />
 
-      {/* Protected routes for all authenticated users */}
-      <Route
-        path="/meu"
-        element={
-          <ProtectedRoute>
-            <Navbar />
-            <MeuPainel />
-          </ProtectedRoute>
-        }
-      />
-      
-      <Route
-        path="/gestao-influenciadores"
-        element={
-          <ProtectedRoute>
-            <Navbar />
-            <GestaoInfluenciadores />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Painel Geral - for closers (limited view) */}
-      <Route
-        path="/painel"
-        element={
-          <ProtectedRoute>
-            <Navbar />
-            <PainelGeral />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Admin only routes */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute requireAdmin>
-            <Navbar />
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/financeiro"
-        element={
-          <ProtectedRoute requireAdmin>
-            <Navbar />
-            <Financeiro />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/diretorio"
-        element={
-          <ProtectedRoute requireAdmin>
-            <Navbar />
-            <Diretorio />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/notificacoes"
-        element={
-          <ProtectedRoute requireAdmin>
-            <Navbar />
-            <Notificacoes />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/auditoria"
-        element={
-          <ProtectedRoute requireAdmin>
-            <Navbar />
-            <Auditoria />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute requireAdmin>
-            <Navbar />
-            <Admin />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Registro Diário - all authenticated users */}
-      <Route
-        path="/registro"
-        element={
-          <ProtectedRoute>
-            <Navbar />
-            <RegistroDiario />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute requireAdmin>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/financeiro"
+          element={
+            <ProtectedRoute requireAdmin>
+              <Financeiro />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/diretorio"
+          element={
+            <ProtectedRoute requireAdmin>
+              <Diretorio />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notificacoes"
+          element={
+            <ProtectedRoute requireAdmin>
+              <Notificacoes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/auditoria"
+          element={
+            <ProtectedRoute requireAdmin>
+              <Auditoria />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute requireAdmin>
+              <Admin />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
 
       <Route path="*" element={<NotFound />} />
       

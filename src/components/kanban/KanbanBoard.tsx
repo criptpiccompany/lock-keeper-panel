@@ -15,6 +15,9 @@ import { KanbanEditPanel } from "./KanbanEditPanel";
 import { KanbanArchivePanel } from "./KanbanArchivePanel";
 import { COLUMNS, CLASSIFICACAO_ORDER, type KanbanCard } from "./types";
 
+const HIDDEN_COLUMNS = new Set(["Fechar", "Negociando"]);
+const VISIBLE_COLUMNS = COLUMNS.filter((column) => !HIDDEN_COLUMNS.has(column.id));
+
 export function KanbanBoard() {
   const { user } = useAuth();
   const [cards, setCards] = useState<KanbanCard[]>([]);
@@ -103,7 +106,7 @@ export function KanbanBoard() {
             instagram_url: `https://instagram.com/${username}`,
             instagram_username: username,
             display_name: username,
-            status: "Fechar",
+            status: "Positivo",
           })
           .select()
           .single();
@@ -234,7 +237,7 @@ export function KanbanBoard() {
     setEditOpen(true);
   };
 
-  const cardsByColumn = COLUMNS.map((col) => ({
+  const cardsByColumn = VISIBLE_COLUMNS.map((col) => ({
     ...col,
     cards: cards
       .filter((c) => c.status === col.id && !c.archived)
@@ -255,20 +258,42 @@ export function KanbanBoard() {
   }
 
   const archivedCards = cards.filter((c) => c.archived);
+  const activeCardsCount = cards.filter((c) => !c.archived).length;
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <KanbanAddCard onAdd={handleAddCards} />
-        <KanbanArchivePanel
-          archivedCards={archivedCards}
-          onRestore={handleRestoreCard}
-          onDeletePermanently={handleDeletePermanently}
-        />
+      <div className="rounded-[28px] bg-white p-4 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
+        <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <div className="text-[32px] font-medium tracking-[-0.06em] text-[#1f1f1f] sm:text-[38px]">
+              Gestão de Influenciadores
+            </div>
+            <p className="mt-2 text-[14px] text-[#6e6e73]">
+              Adicione perfis por lista ou url e mova cada influenciador conforme a evolução do resultado
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <KanbanArchivePanel
+              archivedCards={archivedCards}
+              onRestore={handleRestoreCard}
+              onDeletePermanently={handleDeletePermanently}
+            />
+            <div className="rounded-full bg-[#f3f3ef] px-3 py-2 text-[12px] font-medium text-[#676767]">
+              {activeCardsCount} cards
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <div className="min-w-0 flex-1">
+            <KanbanAddCard onAdd={handleAddCards} />
+          </div>
+        </div>
       </div>
 
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="flex gap-3 overflow-x-auto pb-4 pt-1 xl:grid xl:grid-cols-5 xl:gap-3 xl:overflow-visible">
           {cardsByColumn.map((col) => (
             <Droppable key={col.id} droppableId={col.id}>
               {(provided, snapshot) => (
@@ -287,9 +312,9 @@ export function KanbanBoard() {
                           ref={dragProvided.innerRef}
                           {...dragProvided.draggableProps}
                           {...dragProvided.dragHandleProps}
-                          className={`rounded-lg border bg-card p-3 shadow-sm transition-shadow ${
+                          className={`rounded-[22px] border border-black/12 bg-white p-3.5 shadow-[0_18px_34px_-20px_rgba(15,23,42,0.26),0_1px_0_rgba(255,255,255,0.98)_inset,0_0_0_1px_rgba(255,255,255,0.65)] ring-1 ring-black/[0.03] transition-shadow ${
                             dragSnapshot.isDragging
-                              ? "shadow-lg ring-2 ring-primary/20"
+                              ? "shadow-[0_26px_44px_-20px_rgba(15,23,42,0.34)] ring-2 ring-black/10"
                               : ""
                           }`}
                         >
