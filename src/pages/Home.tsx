@@ -1,20 +1,40 @@
-import { useMemo, useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { useTeamFeeRate } from "@/hooks/useTeamFeeRate";
-import { FileText, List, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowRight, FileText, List, Wallet } from "lucide-react";
+
+import { MetricCard } from "@/components/design/MetricCard";
+import { PageHeader } from "@/components/design/PageHeader";
+import { PanelCard } from "@/components/design/PanelCard";
 import UnifiedThermometerWidget from "@/components/home/UnifiedThermometerWidget";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useTeamFeeRate } from "@/hooks/useTeamFeeRate";
+import { supabase } from "@/integrations/supabase/client";
+
+type HomeStats = {
+  revenue: number;
+  invested: number;
+  fee: number;
+  result: number;
+};
 
 function getCurrentMonth() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
+function formatCurrency(value: number) {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
 export default function Home() {
   const { user } = useAuth();
-  const [resultado, setResultado] = useState(0);
+  const [stats, setStats] = useState<HomeStats>({
+    revenue: 0,
+    invested: 0,
+    fee: 0,
+    result: 0,
+  });
   const [loading, setLoading] = useState(true);
   const month = useMemo(() => getCurrentMonth(), []);
   const { feeRate } = useTeamFeeRate(user?.teamId);
@@ -37,18 +57,21 @@ export default function Home() {
         .lte("date", endDateStr)
         .is("deleted_at", null);
 
-      let invested = 0;
-      let revenue = 0;
-      (data || []).forEach((r: any) => {
-        invested += Number(r.valor_pago) || 0;
-        revenue += Number(r.faturamento) || 0;
-      });
+      const rows = (data ?? []) as Array<{ valor_pago: number | null; faturamento: number | null }>;
+      const invested = rows.reduce((total, row) => total + Number(row.valor_pago ?? 0), 0);
+      const revenue = rows.reduce((total, row) => total + Number(row.faturamento ?? 0), 0);
       const fee = revenue * feeRate;
-      setResultado(revenue - invested - fee);
+
+      setStats({
+        invested,
+        revenue,
+        fee,
+        result: revenue - invested - fee,
+      });
       setLoading(false);
     };
 
-    fetchResultado();
+    void fetchResultado();
   }, [user, month, feeRate]);
 
   if (!user) return null;
@@ -56,41 +79,80 @@ export default function Home() {
   const firstName = user.nome.split(/\s+/)[0];
 
   return (
-    <main className="container-premium py-8 sm:py-12 animate-fade-in">
-      {/* Header */}
-      <div className="text-center mb-8 sm:mb-10">
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-          Bem-vindo, {firstName}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Acompanhe sua performance do mês.
-        </p>
+    <div className="page-shell">
+      <PageHeader
+        eyebrow="Visão geral"
+        title={`Olá, ${firstName}`}
+        description="Resumo do mês, atalhos operacionais e leitura rápida da sua performance atual."
+        actions={
+          <div className="token-pill">
+            <Wallet className="h-3.5 w-3.5" />
+            <span>Total no link</span>
+          </div>
+        }
+      />
+
+      <div className="metric-grid">
+        <MetricCard label="Total no link" value={formatCurrency(stats.revenue)} hint="Faturamento bruto do mês atual." />
+        <MetricCard label="Investimento" value={formatCurrency(stats.invested)} hint="Soma dos valores pagos no período." />
+        <MetricCard label="Taxa operacional" value={formatCurrency(stats.fee)} hint="Cálculo com a taxa da equipe ativa." />
+        <MetricCard label="Resultado líquido" value={formatCurrency(stats.result)} hint="Valor final após investimento e taxa." />
       </div>
 
-      {/* Unified Thermometer */}
-      <div className="card-premium p-4 sm:p-8 md:p-10 mb-8 overflow-visible">
-        {!loading && (
-          <UnifiedThermometerWidget resultado={resultado} month={month} />
-        )}
-      </div>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.85fr)]">
+        <PanelCard
+          title="Pulso do mês"
+          description="A régua principal continua conectada aos seus dados reais."
+        >
+          <div className="hero-panel overflow-hidden">
+            {!loading ? (
+              <UnifiedThermometerWidget resultado={stats.result} month={month} />
+            ) : (
+              <div className="flex min-h-[18rem] items-center justify-center text-sm text-muted-foreground">
+                Carregando visão do mês...
+              </div>
+            )}
+          </div>
+        </PanelCard>
 
-      {/* Quick links */}
-      <div className="flex flex-col sm:flex-row justify-center gap-3">
-        <Button asChild variant="outline" className="gap-2">
-          <Link to="/registro">
-            <FileText className="h-4 w-4" />
-            Planilhamento
-            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
-          </Link>
-        </Button>
-        <Button asChild variant="outline" className="gap-2">
-          <Link to="/meu">
-            <List className="h-4 w-4" />
-            Minha Lista
-            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
-          </Link>
-        </Button>
+        <PanelCard
+          title="Atalhos"
+          description="Acesso rápido às rotinas que mais movem a operação."
+        >
+          <div className="grid gap-3">
+            <Button asChild className="justify-between rounded-2xl">
+              <Link to="/registro">
+                <span className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Planilhamento
+                </span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button asChild variant="secondary" className="justify-between rounded-2xl">
+              <Link to="/meu">
+                <span className="flex items-center gap-2">
+                  <List className="h-4 w-4" />
+                  Minha Lista
+                </span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+            <div className="surface-soft p-4">
+              <p className="metric-kicker">Mês ativo</p>
+              <p className="mt-2 text-base font-semibold text-foreground">
+                {new Date(`${month}-02T12:00:00`).toLocaleDateString("pt-BR", {
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Use essa base para acompanhar o fechamento antes do consolidado final.
+              </p>
+            </div>
+          </div>
+        </PanelCard>
       </div>
-    </main>
+    </div>
   );
 }

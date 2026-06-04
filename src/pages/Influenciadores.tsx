@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
+import { PageHeader } from "@/components/design/PageHeader";
+import { PanelCard } from "@/components/design/PanelCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -104,32 +106,32 @@ export default function Influenciadores() {
 
   const statusColor = (status: string) => {
     const colors: Record<string, string> = {
-      Fechar: "bg-purple-100 text-purple-700",
-      Abordado: "bg-amber-100 text-amber-700",
-      Negociando: "bg-gray-100 text-gray-700",
-      Positivo: "bg-blue-100 text-blue-700",
-      Empatando: "bg-yellow-100 text-yellow-700",
-      "Empatando / Negociar": "bg-yellow-100 text-yellow-700",
-      Pausado: "bg-red-100 text-red-700",
-      "Com a equipe": "bg-emerald-100 text-emerald-700",
-      "Não posta mais": "bg-gray-100 text-gray-600",
-      Golpe: "bg-red-200 text-red-800",
+      Fechar: "tone-danger",
+      Abordado: "tone-warning",
+      Negociando: "tone-neutral",
+      Positivo: "border-primary/20 bg-primary/10 text-primary",
+      Empatando: "tone-warning",
+      "Empatando / Negociar": "tone-warning",
+      Pausado: "tone-danger",
+      "Com a equipe": "tone-success",
+      "Não posta mais": "tone-neutral",
+      Golpe: "tone-danger",
     };
-    return colors[status] || "bg-muted text-muted-foreground";
+    return colors[status] || "tone-neutral";
   };
 
   return (
-    <div className="max-w-5xl">
-      <header className="mb-6">
-        <h1 className="m-0 text-[44px] leading-[1.03] tracking-[-0.055em] font-medium max-[920px]:text-[32px]">
-          Influenciadores
-        </h1>
-        <p className="mt-2.5 text-sm text-soft">
-          Gerenciamento completo · {grouped.length} influenciador(es) · {influencers.length} registro(s)
-        </p>
-      </header>
+    <div className="page-shell">
+      <PageHeader
+        eyebrow="Administração"
+        title="Influenciadores"
+        description={`Gerenciamento completo com ${grouped.length} influenciador(es) e ${influencers.length} registro(s).`}
+      />
 
-      <div className="surface-card p-5">
+      <PanelCard
+        title="Consolidação por username"
+        description="Agrupamento rápido para identificar duplicidade de entrada entre closers."
+      >
         <div className="flex flex-col sm:flex-row gap-2 mb-4">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -178,7 +180,7 @@ export default function Influenciadores() {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-xs font-medium">{entry.closer_nome}</span>
-                              <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 ${statusColor(entry.status)}`}>
+                              <Badge variant="outline" className={`border text-[10px] px-1.5 py-0 ${statusColor(entry.status)}`}>
                                 {entry.status}
                               </Badge>
                               {entry.archived && (
@@ -229,7 +231,7 @@ export default function Influenciadores() {
             </div>
           </ScrollArea>
         )}
-      </div>
+      </PanelCard>
     </div>
   );
 }
