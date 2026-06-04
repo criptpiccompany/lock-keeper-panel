@@ -18,7 +18,33 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [nome, setNome] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [inviteValid, setInviteValid] = useState<boolean | null>(inviteToken ? null : true);
+  const logoRef = useRef<HTMLImageElement>(null);
+
+  // Intro: logo entra ocupando a tela e encolhe até o slot final em 2s
+  useEffect(() => {
+    const el = logoRef.current;
+    if (!el) return;
+    const run = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width === 0) return;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const targetSize = Math.min(vw * 0.85, vh * 0.7);
+      const scale = targetSize / rect.width;
+      const dx = vw / 2 - (rect.left + rect.width / 2);
+      const dy = vh / 2 - (rect.top + rect.height / 2);
+      el.animate(
+        [
+          { transform: `translate(${dx}px, ${dy}px) scale(${scale})`, opacity: 1, offset: 0 },
+          { transform: 'translate(0, 0) scale(1)', opacity: 1, offset: 1 },
+        ],
+        { duration: 2000, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'both' }
+      );
+    };
+    if (el.complete) run();
+    else el.addEventListener('load', run, { once: true });
+  }, []);
+
 
   useEffect(() => {
     if (inviteToken) {
