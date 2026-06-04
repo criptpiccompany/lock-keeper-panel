@@ -77,6 +77,7 @@ export function WorkspaceLayout() {
   const effectiveRole = viewAsRole ?? realRole;
   const previewRole = viewAsRole;
   const setPreviewRole = setViewAsRole;
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   if (!user) return null;
 
