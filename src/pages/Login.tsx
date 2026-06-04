@@ -18,7 +18,9 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [nome, setNome] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [inviteValid, setInviteValid] = useState<boolean | null>(inviteToken ? null : true);
   const logoRef = useRef<HTMLImageElement>(null);
+
 
   // Intro: logo entra ocupando a tela e encolhe até o slot final em 2s
   useEffect(() => {
