@@ -502,7 +502,7 @@ export function CloserSharedBoard() {
     setLoading(true);
 
     const { data, error } = await supabase
-      .from("kanban_influencers")
+      .from("team_shared_board")
       .select("*")
       .eq("team_id", user.teamId)
       .eq("archived", false)
@@ -513,19 +513,20 @@ export function CloserSharedBoard() {
       return;
     }
 
-    const rawCards = (data || []) as KanbanCard[];
-    const closerIds = [...new Set(rawCards.map((card) => card.closer_id).filter(Boolean))];
+    const rawRows = (data || []) as Array<Record<string, unknown>>;
+    const creatorIds = [...new Set(rawRows.map((r) => r.created_by as string).filter(Boolean))];
     let names = new Map<string, string>();
 
-    if (closerIds.length) {
-      const { data: profiles } = await supabase.from("profiles").select("id, nome").in("id", closerIds);
+    if (creatorIds.length) {
+      const { data: profiles } = await supabase.from("profiles").select("id, nome").in("id", creatorIds);
       names = new Map((profiles || []).map((profile: { id: string; nome: string | null }) => [profile.id, profile.nome || "Closer"]));
     }
 
     setCards(
-      rawCards.map((card) => ({
-        ...card,
-        closerName: names.get(card.closer_id) || "Closer",
+      rawRows.map((row) => ({
+        ...(row as unknown as KanbanCard),
+        closer_id: row.created_by as string,
+        closerName: names.get(row.created_by as string) || "Closer",
       }))
     );
     setLoading(false);
@@ -536,7 +537,7 @@ export function CloserSharedBoard() {
   }, [user?.teamId]);
 
   const updateCard = async (cardId: string, fields: Partial<KanbanCard>) => {
-    const { error } = await supabase.from("kanban_influencers").update(fields).eq("id", cardId);
+    const { error } = await supabase.from("team_shared_board").update(fields).eq("id", cardId);
     if (!error) {
       setCards((current) =>
         current.map((card) => (card.id === cardId ? { ...card, ...fields } : card))
@@ -688,8 +689,8 @@ export function CloserSharedBoard() {
       .filter(Boolean);
     const cleanedValue = newValue.replace(/[^\d.,]/g, "").replace(",", ".");
     const parsedValue = Number.parseFloat(cleanedValue);
-    const { error } = await supabase.from("kanban_influencers").insert({
-      closer_id: user.id,
+    const { error } = await supabase.from("team_shared_board").insert({
+      created_by: user.id,
       instagram_username: username,
       display_name: username,
       instagram_url: `https://instagram.com/${username}`,
