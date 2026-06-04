@@ -46,6 +46,9 @@ import {
   Plus,
   FileText,
   Upload,
+  Search,
+  Copy,
+  SlidersHorizontal,
   ChevronDown,
   ChevronRight,
   ChevronLeft,
@@ -133,6 +136,17 @@ function formatCurrency(val: number | null): string {
 function formatPercent(val: number | null): string {
   if (val === null) return "—";
   return (val * 100).toFixed(1) + "%";
+}
+
+function getHandleInitials(handle: string): string {
+  return handle.replace("@", "").slice(0, 2).toUpperCase();
+}
+
+function workflowBadgeClass(status: string | null, hasProof: boolean) {
+  if (!hasProof) return "bg-[#efefed] text-[#6e6e6e]";
+  if (status === "Postou") return "bg-[#e9f6cf] text-[#628d1f]";
+  if (status === "Apagou") return "bg-[#f1f1ef] text-[#7b7b78]";
+  return "bg-[#eef2ff] text-[#5a67d8]";
 }
 
 // --- Status chip components ---
@@ -277,7 +291,17 @@ const MONTHS = [
 
 // --- Main Component ---
 
-export default function PlanilhamentoDiario({ closerId, externalMonth }: { closerId?: string; externalMonth?: string }) {
+export default function PlanilhamentoDiario({
+  closerId,
+  externalMonth,
+  focusedDate,
+  compact = false,
+}: {
+  closerId?: string;
+  externalMonth?: string;
+  focusedDate?: string;
+  compact?: boolean;
+}) {
   const { user, isAdmin } = useAuth();
   const viewingOther = !!closerId && closerId !== user?.id;
   const now = new Date();
@@ -285,9 +309,10 @@ export default function PlanilhamentoDiario({ closerId, externalMonth }: { close
   const [internalMonth, setInternalMonth] = useState(now.getMonth());
 
   // When externalMonth is provided, derive year/month from it and hide internal selector
-  const hasExternalMonth = !!externalMonth;
-  const selectedYear = hasExternalMonth ? Number(externalMonth.split("-")[0]) : internalYear;
-  const selectedMonth = hasExternalMonth ? Number(externalMonth.split("-")[1]) - 1 : internalMonth;
+  const resolvedExternalMonth = externalMonth || (focusedDate ? focusedDate.slice(0, 7) : undefined);
+  const hasExternalMonth = !!resolvedExternalMonth;
+  const selectedYear = hasExternalMonth ? Number(resolvedExternalMonth!.split("-")[0]) : internalYear;
+  const selectedMonth = hasExternalMonth ? Number(resolvedExternalMonth!.split("-")[1]) - 1 : internalMonth;
   const setSelectedYear = setInternalYear;
   const setSelectedMonth = setInternalMonth;
   const [records, setRecords] = useState<DailyRecord[]>([]);
@@ -332,6 +357,10 @@ export default function PlanilhamentoDiario({ closerId, externalMonth }: { close
   const [persistedDays, setPersistedDays] = useState<string[]>([]);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [creatingAllDays, setCreatingAllDays] = useState(false);
+  const [daySearch, setDaySearch] = useState("");
+  const [dayFilter, setDayFilter] = useState<"all" | "proof" | "pending">("all");
+  const [dayListOpen, setDayListOpen] = useState(false);
+  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
 
   const monthKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}`;
   const monthDays = useMemo(() => getMonthDays(selectedYear, selectedMonth), [selectedYear, selectedMonth]);
@@ -435,13 +464,14 @@ export default function PlanilhamentoDiario({ closerId, externalMonth }: { close
   }, [records]);
 
   const activeDays = useMemo(() => {
+    if (focusedDate) return [focusedDate];
     const days = new Set<string>();
     for (const d of recordsByDate.keys()) days.add(d);
     for (const d of persistedDays) days.add(d);
     const today = new Date().toISOString().split("T")[0];
     if (monthDays.includes(today)) days.add(today);
     return monthDays.filter((d) => days.has(d));
-  }, [recordsByDate, persistedDays, monthDays]);
+  }, [recordsByDate, persistedDays, monthDays, focusedDate]);
 
   const getInfluencerHandle = (id: string) => {
     return influencers.find((i) => i.id === id)?.handle || id;
@@ -1012,6 +1042,30 @@ export default function PlanilhamentoDiario({ closerId, externalMonth }: { close
     );
   }, [modalDate, influencers, recordsByDate]);
 
+  const getFilteredDayRecords = (dayRecords: DailyRecord[]) => {
+    return dayRecords.filter((record) => {
+      const handle = getInfluencerHandle(record.influencer_id).toLowerCase();
+      const matchesSearch = !daySearch.trim() || handle.includes(daySearch.trim().toLowerCase());
+      const matchesFilter =
+        dayFilter === "all" ? true : dayFilter === "proof" ? !!record.comprovante_url : !record.comprovante_url;
+      return matchesSearch && matchesFilter;
+    });
+  };
+
+  const copyDayInfluencers = async (dayRecords: DailyRecord[]) => {
+    const text = dayRecords
+      .map((record) => getInfluencerHandle(record.influencer_id))
+      .filter(Boolean)
+      .join("\n");
+
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Lista do dia copiada!");
+    } catch {
+      toast.error("Não foi possível copiar a lista.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-[40vh] flex items-center justify-center">
@@ -1029,8 +1083,8 @@ export default function PlanilhamentoDiario({ closerId, externalMonth }: { close
           Sincronizando…
         </div>
       )}
-      {/* Month selector — hidden when controlled externally */}
-      {!hasExternalMonth && (
+      {/* Month selector — hidden when controlled externally or embedded in workspace */}
+      {!hasExternalMonth && !compact && !focusedDate && (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={prevMonth} className="h-8 w-8">
@@ -1069,7 +1123,7 @@ export default function PlanilhamentoDiario({ closerId, externalMonth }: { close
           </div>
         </div>
       )}
-      {hasExternalMonth && (
+      {hasExternalMonth && !compact && !focusedDate && (
         <div className="flex items-center gap-6 text-sm flex-wrap">
           <div>
             <span className="text-muted-foreground">Investido: </span>
@@ -1095,7 +1149,7 @@ export default function PlanilhamentoDiario({ closerId, externalMonth }: { close
       )}
 
       {/* Day sections */}
-      {activeDays.length === 0 ? (
+      {!focusedDate && activeDays.length === 0 ? (
         <div className="empty-state">
           <FileText className="empty-state-icon" />
           <h3 className="empty-state-title">Nenhum registro neste mês</h3>
@@ -1105,7 +1159,8 @@ export default function PlanilhamentoDiario({ closerId, externalMonth }: { close
         <div className="space-y-3">
           {activeDays.map((day) => {
             const dayRecords = recordsByDate.get(day) || [];
-            const isExpanded = expandedDays.has(day);
+            const visibleDayRecords = focusedDate ? getFilteredDayRecords(dayRecords) : dayRecords;
+            const isExpanded = focusedDate ? true : expandedDays.has(day);
             const dayTotal = dayRecords.reduce((s, r) => s + Number(r.valor_pago), 0);
             const dayFat = dayRecords.reduce((s, r) => s + (Number(r.faturamento) || 0), 0);
             const pendingCount = dayRecords.filter((r) => !r.comprovante_url).length;
@@ -1113,38 +1168,272 @@ export default function PlanilhamentoDiario({ closerId, externalMonth }: { close
             return (
               <div key={day} className="bg-card rounded-xl border overflow-hidden">
                 {/* Day header */}
-                <button
-                  onClick={() => toggleDay(day)}
-                  className="w-full flex items-center justify-between px-3 sm:px-4 py-3 hover:bg-muted/30 transition-colors gap-2 min-w-0"
-                >
-                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                    {isExpanded ? (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                    )}
-                    <span className="font-semibold text-sm text-foreground capitalize whitespace-nowrap">{formatDayLabel(day)}</span>
-                    <Badge variant="secondary" className="text-xs whitespace-nowrap shrink-0">
-                      {dayRecords.length} {dayRecords.length === 1 ? "registro" : "registros"}
-                    </Badge>
-                    {pendingCount > 0 && (
-                      <Badge variant="destructive" className="text-xs gap-1 whitespace-nowrap shrink-0 hidden sm:inline-flex">
-                        <AlertCircle className="h-3 w-3" />
-                        {pendingCount} sem comprovante
+                {focusedDate ? null : (
+                  <button
+                    onClick={() => toggleDay(day)}
+                    className="w-full flex items-center justify-between px-3 sm:px-4 py-3 hover:bg-muted/30 transition-colors gap-2 min-w-0"
+                  >
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                      {isExpanded ? (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                      )}
+                      <span className="font-semibold text-sm text-foreground capitalize whitespace-nowrap">{formatDayLabel(day)}</span>
+                      <Badge variant="secondary" className="text-xs whitespace-nowrap shrink-0">
+                        {dayRecords.length} {dayRecords.length === 1 ? "registro" : "registros"}
                       </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground whitespace-nowrap shrink-0">
-                    <span className="inline-flex items-center gap-0.5"><ArrowDown className="h-3 w-3" />{formatCurrency(dayTotal)}</span>
-                    <span className="inline-flex items-center gap-0.5"><ArrowUp className="h-3 w-3" />{formatCurrency(dayFat)}</span>
-                  </div>
-                </button>
+                      {pendingCount > 0 && (
+                        <Badge variant="destructive" className="text-xs gap-1 whitespace-nowrap shrink-0 hidden sm:inline-flex">
+                          <AlertCircle className="h-3 w-3" />
+                          {pendingCount} sem comprovante
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                      <span className="inline-flex items-center gap-0.5"><ArrowDown className="h-3 w-3" />{formatCurrency(dayTotal)}</span>
+                      <span className="inline-flex items-center gap-0.5"><ArrowUp className="h-3 w-3" />{formatCurrency(dayFat)}</span>
+                    </div>
+                  </button>
+                )}
 
                 {/* Expanded content */}
                 {isExpanded && (
                   <div className="border-t">
+                    {focusedDate ? (
+                      <div className="space-y-5 bg-[#fcfcf8] p-4 md:p-5">
+                        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                          <div className="flex flex-wrap items-center gap-2">
+                            {[
+                              { id: "all", label: "Todos" },
+                              { id: "proof", label: "Com comprovante" },
+                              { id: "pending", label: `Pendentes${pendingCount > 0 ? ` (${pendingCount})` : ""}` },
+                            ].map((filter) => (
+                              <button
+                                key={filter.id}
+                                type="button"
+                                onClick={() => setDayFilter(filter.id as typeof dayFilter)}
+                                className={cn(
+                                  "rounded-full border px-4 py-2 text-[13px] font-medium transition",
+                                  dayFilter === filter.id
+                                    ? filter.id === "pending" && pendingCount > 0
+                                      ? "border-[#d94b45] bg-[#d94b45] text-white"
+                                      : "border-[#242424] bg-[#242424] text-white"
+                                    : filter.id === "pending" && pendingCount > 0
+                                      ? "border-[#f1c4c1] bg-[#fff5f5] text-[#c73a34]"
+                                      : "border-[#ececeb] bg-white text-[#676767]"
+                                )}
+                              >
+                                {filter.label}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+                            <Button
+                              type="button"
+                              onClick={() => setDayListOpen(true)}
+                              className="h-12 rounded-full bg-[#242424] px-5 text-white shadow-none hover:bg-[#1b1b1b]"
+                            >
+                              Lista do dia
+                            </Button>
+                            <div className="relative min-w-[260px]">
+                              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9a9a97]" />
+                              <Input
+                                value={daySearch}
+                                onChange={(e) => setDaySearch(e.target.value)}
+                                placeholder="Buscar influenciador..."
+                                className="h-12 rounded-full border-[#ececeb] bg-white pl-11 text-[14px] shadow-none"
+                              />
+                            </div>
+                            {!viewingOther && (
+                              <Button
+                                onClick={() => openNewRecord(day)}
+                                className="h-12 rounded-full bg-white px-5 text-[#1f1f1f] shadow-none border border-[#ececeb] hover:bg-[#f8f8f5]"
+                                variant="outline"
+                              >
+                                <Plus className="mr-2 h-4 w-4" />
+                                Adicionar
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="overflow-hidden rounded-[30px] bg-white p-3 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.08)] ring-1 ring-black/[0.03]">
+                          <div className="overflow-x-auto">
+                            <table className="w-full min-w-[1080px] border-collapse">
+                              <thead>
+                                <tr>
+                                  <th className="w-[54px] px-5 py-5 text-left" />
+                                  <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Nome</th>
+                                  <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Valor pago</th>
+                                  <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Faturamento</th>
+                                  <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Resultado</th>
+                                  <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Total no link</th>
+                                  <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Status</th>
+                                  <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Comprovantes</th>
+                                  {!viewingOther && <th className="px-4 py-5 text-right text-[12px] font-medium text-[#6e6e6e]">Ações</th>}
+                                </tr>
+                                <tr>
+                                  <td colSpan={viewingOther ? 8 : 9} className="px-5">
+                                    <div className="border-b border-dashed border-[#e6ddb0]" />
+                                  </td>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {visibleDayRecords.length === 0 ? (
+                                  <tr>
+                                    <td colSpan={viewingOther ? 8 : 9} className="px-6 py-12 text-center text-sm text-muted-foreground">
+                                      Nenhum influenciador encontrado para esse dia.
+                                    </td>
+                                  </tr>
+                                ) : (
+                                  visibleDayRecords.map((record) => {
+                                    const lucro = calcLucroLiquido(record.faturamento, record.valor_pago);
+                                    const resultado = getStatusResultado(record.faturamento, record.valor_pago);
+                                    const handle = getInfluencerHandle(record.influencer_id);
+                                    const selected = selectedRecordId === record.id;
+
+                                    return (
+                                      <tr
+                                        key={record.id}
+                                        className={cn(
+                                          "cursor-pointer transition",
+                                          selected ? "bg-[linear-gradient(180deg,#ffe27a_0%,#ffd75b_100%)]" : "hover:bg-[#fbfbf8]"
+                                        )}
+                                        onClick={() => setSelectedRecordId(record.id)}
+                                      >
+                                        <td className="px-5 py-5 align-middle">
+                                          <Checkbox
+                                            checked={selected}
+                                            onCheckedChange={() => setSelectedRecordId(selected ? null : record.id)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="h-5 w-5 rounded-[6px] border-[#cfcfcb] data-[state=checked]:border-[#242424] data-[state=checked]:bg-[#242424]"
+                                          />
+                                        </td>
+                                        <td className="px-4 py-5 align-middle">
+                                          <div className="flex items-center gap-3">
+                                            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[linear-gradient(180deg,#202020_0%,#3f3f3f_100%)] text-[12px] font-semibold text-white">
+                                              {getHandleInitials(handle)}
+                                            </div>
+                                            <div className="min-w-0">
+                                              <div className="truncate text-[16px] font-medium tracking-[-0.02em] text-[#1f1f1f]">
+                                                {handle}
+                                              </div>
+                                              {record.is_shared && (
+                                                <div className="mt-1">
+                                                  <SharedPartnersPopover
+                                                    partners={sharedPartnersMap.get(record.id) || []}
+                                                    sharedNote={record.shared_note}
+                                                    compact
+                                                  />
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </td>
+                                        <td className="px-4 py-5 text-[15px] text-[#2c2c2c]">{formatCurrency(record.valor_pago)}</td>
+                                        <td className="px-4 py-5 text-[15px] text-[#2c2c2c]">
+                                          {record.faturamento !== null ? formatCurrency(record.faturamento) : "—"}
+                                        </td>
+                                        <td className={cn("px-4 py-5 text-[15px] font-medium", resultadoColor(resultado) || "text-[#2c2c2c]")}>
+                                          {record.faturamento !== null ? formatCurrency(lucro) : "—"}
+                                        </td>
+                                        <td className="px-4 py-5">
+                                          <div className="inline-flex items-center rounded-full border border-[#ececeb] bg-white/75 px-3 py-2 text-[14px] font-medium text-[#2c2c2c]">
+                                            {record.acumulado !== null ? formatCurrency(record.acumulado) : "—"}
+                                          </div>
+                                        </td>
+                                        <td className="px-4 py-5">
+                                          <span className={cn("inline-flex items-center gap-2 rounded-full px-3 py-2 text-[14px] font-medium", workflowBadgeClass(record.status, !!record.comprovante_url))}>
+                                            <span className="h-2 w-2 rounded-full bg-current opacity-70" />
+                                            {!record.comprovante_url ? "Pendente" : record.status || "Gravando"}
+                                          </span>
+                                        </td>
+                                        <td className="px-4 py-5">
+                                          <div className="flex items-center gap-2">
+                                            {record.comprovante_url ? (
+                                              <ComprovanteThumbnail
+                                                url={record.comprovante_url}
+                                                onClick={() => handleViewComprovante(record.comprovante_url)}
+                                              />
+                                            ) : (
+                                              <span className="text-[13px] text-[#9a9a97]">—</span>
+                                            )}
+                                            {record.comprovante_url_2 ? (
+                                              <ComprovanteThumbnail
+                                                url={record.comprovante_url_2}
+                                                onClick={() => handleViewComprovante(record.comprovante_url_2!)}
+                                              />
+                                            ) : null}
+                                          </div>
+                                        </td>
+                                        {!viewingOther && (
+                                          <td className="px-4 py-5 text-right">
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="h-10 rounded-full border-[#ececeb] bg-white px-4 text-[#1f1f1f] shadow-none"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                openEditRecord(record);
+                                              }}
+                                            >
+                                              Editar
+                                            </Button>
+                                          </td>
+                                        )}
+                                      </tr>
+                                    );
+                                  })
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+
+                        <Dialog open={dayListOpen} onOpenChange={setDayListOpen}>
+                          <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                              <DialogTitle>Lista do dia</DialogTitle>
+                            </DialogHeader>
+
+                            <div className="space-y-4">
+                              <div className="max-h-[360px] overflow-y-auto rounded-[22px] border border-[#ececeb] bg-[#fcfcf8] p-4">
+                                {dayRecords.length === 0 ? (
+                                  <p className="text-sm text-muted-foreground">Nenhum influenciador fechado neste dia.</p>
+                                ) : (
+                                  <div className="space-y-2">
+                                    {dayRecords.map((record) => (
+                                      <div
+                                        key={`day-list-${record.id}`}
+                                        className="rounded-[16px] bg-white px-4 py-3 text-[15px] font-medium text-[#1f1f1f] shadow-[0_8px_24px_rgba(0,0,0,0.04)]"
+                                      >
+                                        {getInfluencerHandle(record.influencer_id)}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="flex justify-end">
+                                <Button
+                                  type="button"
+                                  onClick={() => copyDayInfluencers(dayRecords)}
+                                  className="h-11 rounded-full bg-[#242424] px-5 text-white shadow-none hover:bg-[#1b1b1b]"
+                                >
+                                  <Copy className="mr-2 h-4 w-4" />
+                                  Copiar
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    ) : null}
+
                     {/* Desktop table (hidden on mobile) */}
-                    <div className="hidden md:block">
+                    {!focusedDate && <div className="hidden md:block">
                       <table className="w-full">
                         <thead>
                           <tr className="bg-muted/60">
@@ -1275,10 +1564,10 @@ export default function PlanilhamentoDiario({ closerId, externalMonth }: { close
                           )}
                         </tbody>
                       </table>
-                    </div>
+                    </div>}
 
                     {/* Mobile card view (visible only on mobile) */}
-                    <div className="md:hidden">
+                    {!focusedDate && <div className="md:hidden">
                       {dayRecords.length === 0 ? (
                         <div className="py-6 text-center text-sm text-muted-foreground">
                           Nenhum registro. Clique no + para adicionar.
@@ -1395,10 +1684,10 @@ export default function PlanilhamentoDiario({ closerId, externalMonth }: { close
                           })}
                         </div>
                       )}
-                    </div>
+                    </div>}
 
                     {/* Blue + button: add influencer to this day */}
-                    {!viewingOther && (
+                    {!viewingOther && !focusedDate && (
                       <div className="px-4 py-2 border-t border-border/30">
                         <Button
                           size="sm"
@@ -1420,7 +1709,7 @@ export default function PlanilhamentoDiario({ closerId, externalMonth }: { close
       )}
 
       {/* Action buttons: add day */}
-      {!viewingOther && (
+      {!viewingOther && !compact && !focusedDate && (
         <div className="flex justify-center gap-2 flex-wrap">
           <Button
             variant="outline"
@@ -1473,7 +1762,7 @@ export default function PlanilhamentoDiario({ closerId, externalMonth }: { close
       )}
 
       {/* Mobile month totals */}
-      <div className="md:hidden grid grid-cols-2 gap-3">
+      {!compact && !focusedDate && <div className="md:hidden grid grid-cols-2 gap-3">
         <div className="bg-card rounded-xl border p-3">
           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Investido</p>
           <p className="text-base font-semibold">{formatCurrency(monthTotals.totalInvestido)}</p>
@@ -1492,302 +1781,317 @@ export default function PlanilhamentoDiario({ closerId, externalMonth }: { close
             {formatCurrency(monthTotals.resultadoLiquido)}
           </p>
         </div>
-      </div>
+      </div>}
 
       {/* New/Edit Record Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="sm:max-w-md max-h-[85vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>{editRecord ? "Editar Registro" : "Novo Registro"}</DialogTitle>
-          </DialogHeader>
-
-          <div className="overflow-y-auto flex-1 -mx-6 px-6">
-          {/* Empty state when no influencers available */}
-          {!editRecord && modalAvailableInfluencers.length === 0 ? (
-            <div className="py-8 text-center space-y-2">
-              <FileText className="h-10 w-10 mx-auto text-muted-foreground/50" />
-              <p className="text-sm font-medium text-muted-foreground">
-                Sem influenciadores disponíveis para este dia
+        <DialogContent className="w-[min(1120px,calc(100vw-32px))] max-w-none overflow-hidden rounded-[32px] border border-black/[0.05] bg-[linear-gradient(180deg,#ffffff_0%,#fbfbf8_100%)] p-0 shadow-[0_32px_80px_-40px_rgba(15,23,42,0.28)]">
+          <div className="border-b border-[#ececeb] px-8 py-6">
+            <DialogHeader className="space-y-1 text-left">
+              <DialogTitle className="text-[34px] font-medium tracking-[-0.05em] text-[#1f1f1f]">
+                {editRecord ? "Editar registro" : "Novo registro"}
+              </DialogTitle>
+              <p className="text-[14px] text-[#6e6e73]">
+                Preencha tudo em uma única superfície, sem precisar rolar.
               </p>
-              <p className="text-xs text-muted-foreground">
-                Todos os seus influenciadores já possuem registro nesta data.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4 py-2">
-              {!editRecord && (
-                <div className="space-y-2">
-                  <Label>Influenciador</Label>
-                  <Popover open={comboOpen} onOpenChange={setComboOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={comboOpen}
-                        className="w-full justify-between font-normal"
-                      >
-                        {formInfluencerId
-                          ? influencers.find((i) => i.id === formInfluencerId)?.handle
-                          : "Buscar influenciador..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0 bg-popover z-50" align="start">
-                      <Command>
-                        <CommandInput placeholder="Buscar..." />
-                        <CommandList>
-                          <CommandEmpty>Nenhum encontrado.</CommandEmpty>
-                          <CommandGroup>
-                            {modalAvailableInfluencers.map((inf) => (
-                              <CommandItem
-                                key={inf.id}
-                                value={inf.handle}
-                                onSelect={() => {
-                                  setFormInfluencerId(inf.id);
-                                  setComboOpen(false);
-                                }}
-                              >
-                                <Check
-                                  className={`mr-2 h-4 w-4 ${formInfluencerId === inf.id ? "opacity-100" : "opacity-0"}`}
-                                />
-                                {inf.handle}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              )}
+            </DialogHeader>
+          </div>
 
-              {editRecord && (
-                <div className="text-sm text-muted-foreground">
-                  Influenciador: <strong>{getInfluencerHandle(editRecord.influencer_id)}</strong>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label>Valor Pago (R$)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0,00"
-                  value={formValorPago}
-                  onChange={(e) => setFormValorPago(e.target.value)}
-                />
+          <div className="px-8 py-6">
+            {!editRecord && modalAvailableInfluencers.length === 0 ? (
+              <div className="py-10 text-center space-y-2">
+                <FileText className="mx-auto h-10 w-10 text-muted-foreground/50" />
+                <p className="text-sm font-medium text-muted-foreground">
+                  Sem influenciadores disponíveis para este dia
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Todos os seus influenciadores já possuem registro nesta data.
+                </p>
               </div>
-
-              {/* Total no link field */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-1">
-                  <Label className="text-foreground/70">Total no link</Label>
-                  <TooltipProvider delayDuration={0}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-3.5 w-3.5 text-muted-foreground/50 cursor-help shrink-0" />
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="max-w-[260px] text-xs font-normal leading-relaxed">
-                        Digite o valor total que está no link do influenciador. Amanhã você compara com o novo valor para saber quanto entrou no dia.
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0,00"
-                  value={formAcumulado}
-                  onChange={(e) => setFormAcumulado(e.target.value)}
-                  className="bg-[#F3F4F6] border-[#E5E7EB] text-foreground"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Faturamento (R$) <span className="text-muted-foreground text-xs">— pode preencher depois</span></Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0,00"
-                  value={formFaturamento}
-                  onChange={(e) => setFormFaturamento(e.target.value)}
-                />
-              </div>
-
-              {formValorPago && formFaturamento && (
-                <div className="bg-muted/50 rounded-lg p-3 space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{DAILY_FEE_LABEL}</span>
-                    <span>{formatCurrency(calcTaxaPlataforma(Number(formFaturamento)))}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Lucro líquido</span>
-                    <span className={`font-medium ${calcLucroLiquido(Number(formFaturamento), Number(formValorPago)) >= 0 ? "text-emerald-700" : "text-red-600"}`}>
-                      {formatCurrency(calcLucroLiquido(Number(formFaturamento), Number(formValorPago)))}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Margem</span>
-                    <span>{formatPercent(calcMargem(Number(formFaturamento), Number(formValorPago)))}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Status</span>
-                    <ResultadoChip status={getStatusResultado(Number(formFaturamento), Number(formValorPago))} />
-                  </div>
-                </div>
-              )}
-
-              <ProofUploader
-                label={editRecord ? (editRecord.comprovante_url ? "Substituir Comprovante 1" : "Anexar Comprovante 1") : "Comprovante 1"}
-                sublabel="— pode anexar depois"
-                value={formFile1}
-                existingUrl={editRecord?.comprovante_url || undefined}
-                onChange={setFormFile1}
-                disabled={submitting}
-              />
-
-              <ProofUploader
-                label={editRecord ? (editRecord.comprovante_url_2 ? "Substituir Comprovante 2" : "Anexar Comprovante 2") : "Comprovante 2"}
-                sublabel="(opcional)"
-                value={formFile2}
-                existingUrl={editRecord?.comprovante_url_2 || undefined}
-                onChange={setFormFile2}
-                disabled={submitting}
-              />
-
-
-              {/* Shared / Partners toggle */}
-              <div className="space-y-3 border-t border-border/40 pt-4">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Foi dividido com alguém?</Label>
-                  <Switch checked={formIsShared} onCheckedChange={setFormIsShared} />
-                </div>
-
-                {formIsShared && (
-                  <div className="space-y-3 pl-1">
-                    {/* Partner input - free text */}
+            ) : (
+              <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)]">
+                <div className="h-full space-y-5 rounded-[28px] bg-white p-6 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
+                  {!editRecord ? (
                     <div className="space-y-2">
-                      <Label className="text-xs text-muted-foreground">Parceiros (até 4)</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Nome do parceiro"
-                          className="h-9 text-sm flex-1"
-                          value={formPartnerInput}
-                          onChange={(e) => setFormPartnerInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              const name = formPartnerInput.trim();
-                              if (!name) return;
-                              if (formPartnerNames.length >= 4) {
-                                toast.info("Máximo de 4 parceiros");
-                                return;
-                              }
-                              if (formPartnerNames.some((n) => n.toLowerCase() === name.toLowerCase())) {
-                                toast.info("Parceiro já adicionado");
-                                return;
-                              }
-                              setFormPartnerNames((prev) => [...prev, name]);
-                              setFormPartnerInput("");
-                            }
-                          }}
-                        />
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="secondary"
-                          className="h-9 px-3"
-                          disabled={!formPartnerInput.trim() || formPartnerNames.length >= 4}
-                          onClick={() => {
-                            const name = formPartnerInput.trim();
-                            if (!name) return;
-                            if (formPartnerNames.some((n) => n.toLowerCase() === name.toLowerCase())) {
-                              toast.info("Parceiro já adicionado");
-                              return;
-                            }
-                            setFormPartnerNames((prev) => [...prev, name]);
-                            setFormPartnerInput("");
-                          }}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      {formPartnerNames.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {formPartnerNames.map((name) => (
-                            <Badge key={name} variant="secondary" className="gap-1 text-xs pr-1">
-                              {name}
-                              <button
-                                type="button"
-                                className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5"
-                                onClick={() => setFormPartnerNames((prev) => prev.filter((n) => n !== name))}
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
+                      <Label className="text-[12px] font-medium uppercase tracking-[0.16em] text-[#7a7a78]">Influenciador</Label>
+                      <Popover open={comboOpen} onOpenChange={setComboOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={comboOpen}
+                            className="h-14 w-full justify-between rounded-[20px] border-[#ececeb] bg-[#fcfcf8] px-5 text-[16px] font-normal text-[#1f1f1f] shadow-none"
+                          >
+                            {formInfluencerId
+                              ? influencers.find((i) => i.id === formInfluencerId)?.handle
+                              : "Buscar influenciador..."}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0 bg-popover z-50" align="start">
+                          <Command>
+                            <CommandInput placeholder="Buscar..." />
+                            <CommandList>
+                              <CommandEmpty>Nenhum encontrado.</CommandEmpty>
+                              <CommandGroup>
+                                {modalAvailableInfluencers.map((inf) => (
+                                  <CommandItem
+                                    key={inf.id}
+                                    value={inf.handle}
+                                    onSelect={() => {
+                                      setFormInfluencerId(inf.id);
+                                      setComboOpen(false);
+                                    }}
+                                  >
+                                    <Check
+                                      className={`mr-2 h-4 w-4 ${formInfluencerId === inf.id ? "opacity-100" : "opacity-0"}`}
+                                    />
+                                    {inf.handle}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  ) : (
+                    <div className="rounded-[20px] bg-[#f6f6f2] px-5 py-4 text-[15px] text-[#6e6e73]">
+                      Influenciador: <strong className="text-[#1f1f1f]">{getInfluencerHandle(editRecord.influencer_id)}</strong>
+                    </div>
+                  )}
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label className="text-[12px] font-medium uppercase tracking-[0.16em] text-[#7a7a78]">Valor Pago (R$)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0,00"
+                        value={formValorPago}
+                        onChange={(e) => setFormValorPago(e.target.value)}
+                        className="h-14 rounded-[20px] border-[#ececeb] bg-[#fcfcf8] px-5 text-[16px] shadow-none"
+                      />
                     </div>
 
-                    {formPartnerNames.length > 0 && (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Label className="text-xs text-muted-foreground">Tipo de divisão</Label>
-                          <Select value={formShareType} onValueChange={setFormShareType}>
-                            <SelectTrigger className="h-7 w-[120px] text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="percent" className="text-xs">Porcentagem</SelectItem>
-                              <SelectItem value="value" className="text-xs">Valor (R$)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        {formPartnerNames.map((name) => (
-                          <div key={name} className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground w-24 truncate">{name}</span>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              placeholder={formShareType === "percent" ? "%" : "R$"}
-                              className="h-7 text-xs w-24"
-                              value={formPartnerAmounts[name] || ""}
-                              onChange={(e) =>
-                                setFormPartnerAmounts((prev) => ({ ...prev, [name]: e.target.value }))
-                              }
-                            />
-                            <span className="text-[10px] text-muted-foreground">(opcional)</span>
-                          </div>
-                        ))}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1">
+                        <Label className="text-[12px] font-medium uppercase tracking-[0.16em] text-[#7a7a78]">Total no link</Label>
+                        <TooltipProvider delayDuration={0}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3.5 w-3.5 text-muted-foreground/50 cursor-help shrink-0" />
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-[260px] text-xs font-normal leading-relaxed">
+                              Digite o valor total que está no link do influenciador. Amanhã você compara com o novo valor para saber quanto entrou no dia.
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
-                    )}
-
-                    {/* Shared note */}
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Observação do split</Label>
                       <Input
-                        placeholder="Ex: 50/50, pagamento em 2 pix..."
-                        className="h-8 text-sm"
-                        value={formSharedNote}
-                        onChange={(e) => setFormSharedNote(e.target.value)}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0,00"
+                        value={formAcumulado}
+                        onChange={(e) => setFormAcumulado(e.target.value)}
+                        className="h-14 rounded-[20px] border-[#ececeb] bg-[#f3f4f6] px-5 text-[16px] shadow-none"
                       />
                     </div>
                   </div>
-                )}
+
+                  <div className="space-y-2">
+                    <Label className="text-[12px] font-medium uppercase tracking-[0.16em] text-[#7a7a78]">Faturamento (R$) <span className="normal-case tracking-normal text-[#8d8d92]">— pode preencher depois</span></Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0,00"
+                      value={formFaturamento}
+                      onChange={(e) => setFormFaturamento(e.target.value)}
+                      className="h-14 rounded-[20px] border-[#ececeb] bg-[#fcfcf8] px-5 text-[16px] shadow-none"
+                    />
+                  </div>
+
+                  {formValorPago && formFaturamento && (
+                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                      <div className="rounded-[22px] bg-[#f6f6f2] px-4 py-4">
+                        <div className="text-[11px] uppercase tracking-[0.16em] text-[#8a8a8a]">{DAILY_FEE_LABEL}</div>
+                        <div className="mt-2 text-[18px] font-semibold text-[#1f1f1f]">{formatCurrency(calcTaxaPlataforma(Number(formFaturamento)))}</div>
+                      </div>
+                      <div className="rounded-[22px] bg-[#f6f6f2] px-4 py-4">
+                        <div className="text-[11px] uppercase tracking-[0.16em] text-[#8a8a8a]">Lucro líquido</div>
+                        <div className={`mt-2 text-[18px] font-semibold ${calcLucroLiquido(Number(formFaturamento), Number(formValorPago)) >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                          {formatCurrency(calcLucroLiquido(Number(formFaturamento), Number(formValorPago)))}
+                        </div>
+                      </div>
+                      <div className="rounded-[22px] bg-[#f6f6f2] px-4 py-4">
+                        <div className="text-[11px] uppercase tracking-[0.16em] text-[#8a8a8a]">Margem</div>
+                        <div className="mt-2 text-[18px] font-semibold text-[#1f1f1f]">{formatPercent(calcMargem(Number(formFaturamento), Number(formValorPago)))}</div>
+                      </div>
+                      <div className="rounded-[22px] bg-[#f6f6f2] px-4 py-4">
+                        <div className="text-[11px] uppercase tracking-[0.16em] text-[#8a8a8a]">Status</div>
+                        <div className="mt-2"><ResultadoChip status={getStatusResultado(Number(formFaturamento), Number(formValorPago))} /></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="h-full space-y-5 rounded-[28px] bg-white p-6 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
+                  <div className="grid items-start gap-4 md:grid-cols-2">
+                    <ProofUploader
+                      label={editRecord ? (editRecord.comprovante_url ? "Substituir Comprovante 1" : "Anexar Comprovante 1") : "Comprovante 1"}
+                      sublabel="— pode anexar depois"
+                      value={formFile1}
+                      existingUrl={editRecord?.comprovante_url || undefined}
+                      onChange={setFormFile1}
+                      disabled={submitting}
+                      compact
+                    />
+
+                    <ProofUploader
+                      label={editRecord ? (editRecord.comprovante_url_2 ? "Substituir Comprovante 2" : "Anexar Comprovante 2") : "Comprovante 2"}
+                      sublabel="(opcional)"
+                      value={formFile2}
+                      existingUrl={editRecord?.comprovante_url_2 || undefined}
+                      onChange={setFormFile2}
+                      disabled={submitting}
+                      compact
+                    />
+                  </div>
+
+                  <div className="space-y-4 border-t border-[#ececeb] pt-5">
+                    <div className="flex min-h-[36px] items-center justify-between">
+                      <Label className="text-[12px] font-medium uppercase tracking-[0.16em] text-[#7a7a78]">Foi dividido com alguém?</Label>
+                      <Switch checked={formIsShared} onCheckedChange={setFormIsShared} />
+                    </div>
+
+                    {formIsShared && (
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-[12px] font-medium uppercase tracking-[0.16em] text-[#7a7a78]">Parceiros (até 4)</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Nome do parceiro"
+                              className="h-12 flex-1 rounded-[18px] border-[#ececeb] bg-[#fcfcf8] px-4 text-sm shadow-none"
+                              value={formPartnerInput}
+                              onChange={(e) => setFormPartnerInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  const name = formPartnerInput.trim();
+                                  if (!name) return;
+                                  if (formPartnerNames.length >= 4) {
+                                    toast.info("Máximo de 4 parceiros");
+                                    return;
+                                  }
+                                  if (formPartnerNames.some((n) => n.toLowerCase() === name.toLowerCase())) {
+                                    toast.info("Parceiro já adicionado");
+                                    return;
+                                  }
+                                  setFormPartnerNames((prev) => [...prev, name]);
+                                  setFormPartnerInput("");
+                                }
+                              }}
+                            />
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="secondary"
+                              className="h-12 rounded-[18px] px-4"
+                              disabled={!formPartnerInput.trim() || formPartnerNames.length >= 4}
+                              onClick={() => {
+                                const name = formPartnerInput.trim();
+                                if (!name) return;
+                                if (formPartnerNames.some((n) => n.toLowerCase() === name.toLowerCase())) {
+                                  toast.info("Parceiro já adicionado");
+                                  return;
+                                }
+                                setFormPartnerNames((prev) => [...prev, name]);
+                                setFormPartnerInput("");
+                              }}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          {formPartnerNames.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5">
+                              {formPartnerNames.map((name) => (
+                                <Badge key={name} variant="secondary" className="gap-1 rounded-full bg-[#f3f3ef] pr-1 text-xs">
+                                  {name}
+                                  <button
+                                    type="button"
+                                    className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5"
+                                    onClick={() => setFormPartnerNames((prev) => prev.filter((n) => n !== name))}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {formPartnerNames.length > 0 && (
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <Label className="text-[12px] font-medium uppercase tracking-[0.16em] text-[#7a7a78]">Tipo de divisão</Label>
+                              <Select value={formShareType} onValueChange={setFormShareType}>
+                                <SelectTrigger className="h-9 w-[140px] rounded-[14px] border-[#ececeb] bg-[#fcfcf8] text-xs shadow-none">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="percent" className="text-xs">Porcentagem</SelectItem>
+                                  <SelectItem value="value" className="text-xs">Valor (R$)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="grid gap-2 sm:grid-cols-2">
+                              {formPartnerNames.map((name) => (
+                                <div key={name} className="rounded-[18px] border border-[#ececeb] bg-[#fcfcf8] px-3 py-3">
+                                  <div className="truncate text-xs font-medium text-[#6e6e73]">{name}</div>
+                                  <div className="mt-2 flex items-center gap-2">
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      min="0"
+                                      placeholder={formShareType === "percent" ? "%" : "R$"}
+                                      className="h-9 rounded-[12px] border-[#e5e7eb] bg-white text-xs shadow-none"
+                                      value={formPartnerAmounts[name] || ""}
+                                      onChange={(e) =>
+                                        setFormPartnerAmounts((prev) => ({ ...prev, [name]: e.target.value }))
+                                      }
+                                    />
+                                    <span className="text-[10px] text-muted-foreground">(opcional)</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="space-y-2">
+                          <Label className="text-[12px] font-medium uppercase tracking-[0.16em] text-[#7a7a78]">Observação do split</Label>
+                          <Input
+                            placeholder="Ex: 50/50, pagamento em 2 pix..."
+                            className="h-12 rounded-[18px] border-[#ececeb] bg-[#fcfcf8] px-4 text-sm shadow-none"
+                            value={formSharedNote}
+                            onChange={(e) => setFormSharedNote(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
+            )}
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
+          <DialogFooter className="border-t border-[#ececeb] px-8 py-5">
+            <Button variant="outline" className="h-12 rounded-full border-[#ececeb] px-6" onClick={() => setModalOpen(false)}>Cancelar</Button>
             {(editRecord || modalAvailableInfluencers.length > 0) && (
-              <Button onClick={() => handleSubmit()} disabled={submitting}>
+              <Button className="h-12 rounded-full bg-[#242424] px-6 text-white hover:bg-[#1b1b1b]" onClick={() => handleSubmit()} disabled={submitting}>
                 {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {submitting ? "Salvando…" : editRecord ? "Salvar" : "Registrar"}
               </Button>

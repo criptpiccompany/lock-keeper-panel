@@ -1,16 +1,10 @@
-import { useEffect, useState } from "react";
-import { Info, LayoutGrid, Loader2, Lock, Search } from "lucide-react";
-
-import { EmptyPanel } from "@/components/design/EmptyPanel";
-import { MetricCard } from "@/components/design/MetricCard";
-import { PageHeader } from "@/components/design/PageHeader";
-import { PanelCard } from "@/components/design/PanelCard";
-import { Badge } from "@/components/ui/badge";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { cn } from "@/lib/utils";
+import { Search, LayoutGrid, Loader2, Lock, Info } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface LockEntry {
   id: string;
@@ -37,143 +31,191 @@ function daysUntil(dateStr: string): number {
 }
 
 export default function PainelGeral() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [locks, setLocks] = useState<LockEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchLocks = async () => {
-      const { data, error } = await supabase
-        .from("influencer_locks")
-        .select("*")
-        .gt("locked_until", new Date().toISOString())
-        .order("locked_until", { ascending: true });
+  const fetchLocks = async () => {
+    const { data, error } = await supabase
+      .from("influencer_locks")
+      .select("*")
+      .gt("locked_until", new Date().toISOString())
+      .order("locked_until", { ascending: true });
 
-      if (error) {
-        setLoading(false);
-        return;
-      }
-
-      setLocks((data as LockEntry[]) ?? []);
+    if (error) {
+      console.error("Error fetching locks:", error);
       setLoading(false);
-    };
+      return;
+    }
 
-    void fetchLocks();
+    setLocks((data as LockEntry[]) || []);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchLocks();
   }, []);
 
-  const filteredLocks = locks.filter((lock) =>
-    lock.handle_normalized.includes(searchQuery.toLowerCase().replace(/^@/, "")),
+  const filteredLocks = locks.filter((l) =>
+    l.handle_normalized.includes(searchQuery.toLowerCase().replace(/^@/, ""))
   );
   const mineCount = locks.filter((lock) => lock.locked_by_user_id === user?.id).length;
-  const expiringSoon = locks.filter((lock) => daysUntil(lock.locked_until) <= 2).length;
+  const expiringCount = locks.filter((lock) => daysUntil(lock.locked_until) <= 2).length;
 
   if (loading) {
     return (
-      <div className="page-shell">
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
+      <div className="flex min-h-[60vh] items-center justify-center rounded-[28px] bg-white py-20 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="page-shell">
-      <PageHeader
-        eyebrow="Consulta compartilhada"
-        title="Painel de Consulta"
-        description="Visão viva dos influenciadores atualmente protegidos e dos locks prestes a expirar."
-        actions={
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button className="icon-badge" type="button" aria-label="Mais informações">
-                <Info className="h-4 w-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs">
-              Os locks são renovados automaticamente a partir da atividade registrada no Planilhamento.
-            </TooltipContent>
-          </Tooltip>
-        }
-      />
+    <div className="space-y-6">
+      <section className="rounded-[30px] bg-[linear-gradient(180deg,#ffffff_0%,#fafaf8_100%)] p-5 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03] lg:p-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#f3f3ef] px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-[#676767]">
+              <LayoutGrid className="h-3.5 w-3.5" />
+              Lock Board
+            </div>
+            <div>
+              <h2 className="text-[34px] font-medium tracking-[-0.06em] text-foreground sm:text-[42px]">
+                Painel Geral
+              </h2>
+              <p className="mt-2 text-[14px] text-[#6e6e73]">
+                Influenciadores travados, responsáveis e janelas de liberação em uma leitura operacional única.
+              </p>
+            </div>
+          </div>
 
-      <div className="metric-grid">
-        <MetricCard label="Locks ativos" value={String(locks.length)} hint="Influenciadores em proteção neste momento." />
-        <MetricCard label="Responsabilidade sua" value={String(mineCount)} hint="Itens atribuídos ao seu usuário." />
-        <MetricCard label="Expirando" value={String(expiringSoon)} hint="Locks com até 2 dias restantes." />
-        <MetricCard label="Resultado da busca" value={String(filteredLocks.length)} hint="Itens exibidos com o filtro atual." />
-      </div>
+          <div className="flex flex-col gap-3 lg:items-end">
+            <div className="flex flex-wrap gap-3">
+              <div className="inline-flex items-center rounded-full bg-white px-4 py-2 text-[12px] font-medium text-[#6e6e73] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
+                Travados: <span className="ml-1 text-[#1f1f1f]">{locks.length}</span>
+              </div>
+              <div className="inline-flex items-center rounded-full bg-white px-4 py-2 text-[12px] font-medium text-[#6e6e73] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
+                Seus: <span className="ml-1 text-[#1f1f1f]">{mineCount}</span>
+              </div>
+              {expiringCount > 0 && (
+                <div className="inline-flex items-center rounded-full bg-[#fff8eb] px-4 py-2 text-[12px] font-medium text-[#9a6a16] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-[#f0dfb4]">
+                  Liberando em breve: <span className="ml-1 text-[#7c5712]">{expiringCount}</span>
+                </div>
+              )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#6e6e73] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03] transition-colors hover:text-[#1f1f1f]">
+                    <Info className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p>Os locks são criados automaticamente ao registrar no Planilhamento Diário. Cada novo registro renova o travamento por +10 dias.</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
 
-      <PanelCard
-        title="Mapa de travas"
-        description="Busque por handle para localizar rapidamente quem está com cada lock."
-      >
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por handle..."
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            className="rounded-full pl-10"
-          />
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9a9a96]" />
+              <Input
+                placeholder="Buscar por @handle..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-11 rounded-full border-[#ececeb] bg-white pl-11 pr-4 text-[14px] shadow-none"
+              />
+            </div>
+          </div>
         </div>
+      </section>
+
+      <div className="space-y-6">
 
         {locks.length === 0 ? (
-          <EmptyPanel
-            icon={<Lock className="h-5 w-5" />}
-            title="Nenhum influenciador travado"
-            description="Registre atividade no Planilhamento para criar travas automaticamente."
-          />
+          <div className="rounded-[28px] bg-white py-20 text-center text-muted-foreground shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
+            <Lock className="mx-auto mb-4 h-10 w-10 opacity-30" />
+            <h3 className="text-[18px] font-medium text-[#1f1f1f]">Nenhum influenciador travado</h3>
+            <p className="mt-2 text-sm text-[#6e6e73]">
+              Registre atividade no Planilhamento Diário para travar influenciadores automaticamente.
+            </p>
+          </div>
         ) : filteredLocks.length === 0 ? (
-          <EmptyPanel
-            icon={<Search className="h-5 w-5" />}
-            title="Nenhum resultado"
-            description={`Nenhum influenciador encontrado com "${searchQuery}".`}
-          />
+          <div className="rounded-[28px] bg-white py-20 text-center text-muted-foreground shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
+            <Search className="mx-auto mb-4 h-10 w-10 opacity-30" />
+            <h3 className="text-[18px] font-medium text-[#1f1f1f]">Nenhum resultado</h3>
+            <p className="mt-2 text-sm text-[#6e6e73]">
+              Nenhum influenciador encontrado com "{searchQuery}"
+            </p>
+          </div>
         ) : (
-          <div className="surface-card overflow-hidden">
+          <div className="overflow-hidden rounded-[28px] bg-white p-3 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
+            <div className="mb-3 flex items-center justify-between px-2 pt-2">
+              <div>
+                <div className="text-[12px] uppercase tracking-[0.18em] text-[#999999]">Travamentos ativos</div>
+                <div className="mt-1 text-[24px] font-medium tracking-[-0.04em] text-[#1f1f1f]">Influenciadores protegidos</div>
+              </div>
+              <div className="rounded-full bg-[#f3f3ef] px-3 py-2 text-[12px] font-medium text-[#676767]">
+                {filteredLocks.length} resultados
+              </div>
+            </div>
             <div className="overflow-x-auto">
-              <table className="table-minimal">
-                <thead>
-                  <tr>
-                    <th>Influenciador</th>
-                    <th>Responsável</th>
-                    <th>Última atividade</th>
-                    <th>Libera em</th>
-                    <th>Dias restantes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredLocks.map((lock) => {
-                    const isMine = lock.locked_by_user_id === user?.id;
-                    const days = daysUntil(lock.locked_until);
-                    const toneClass = days <= 2 ? "tone-warning" : "tone-success";
+              <table className="w-full min-w-[760px] text-sm">
+              <thead>
+                <tr>
+                  <th className="px-5 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Influenciador</th>
+                  <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Responsável</th>
+                  <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Última Atividade</th>
+                  <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Libera em</th>
+                  <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Dias Restantes</th>
+                </tr>
+                <tr>
+                  <td colSpan={5} className="px-5">
+                    <div className="border-b border-dashed border-[#e6ddb0]" />
+                  </td>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredLocks.map((lock) => {
+                  const isMine = lock.locked_by_user_id === user?.id;
+                  const days = daysUntil(lock.locked_until);
+                  const isExpiring = days <= 2;
 
-                    return (
-                      <tr key={lock.id}>
-                        <td className="font-medium">@{lock.handle_normalized}</td>
-                        <td>
-                          <span className={cn("text-sm", isMine ? "font-semibold text-foreground" : "text-muted-foreground")}>
-                            {isMine ? "Você" : lock.locked_by_nome || "—"}
-                          </span>
-                        </td>
-                        <td className="text-sm text-muted-foreground">{formatDate(lock.last_activity_at)}</td>
-                        <td className="text-sm text-muted-foreground">{formatDate(lock.locked_until)}</td>
-                        <td>
-                          <Badge variant="outline" className={cn("border", toneClass)}>
-                            {days}d
-                          </Badge>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
+                  return (
+                    <tr key={lock.id} className="odd:bg-white even:bg-[#fbfbf8]">
+                      <td className="px-5 py-4">
+                        <span className="text-[13px] font-medium text-[#1f1f1f]">@{lock.handle_normalized}</span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className={isMine ? "text-[13px] font-medium text-[#1f1f1f]" : "text-[13px] text-[#6e6e73]"}>
+                          {isMine ? "Você" : lock.locked_by_nome || "—"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 text-[13px] text-[#6e6e73]">
+                        {formatDate(lock.last_activity_at)}
+                      </td>
+                      <td className="px-4 py-4 text-[13px] text-[#6e6e73]">
+                        {formatDate(lock.locked_until)}
+                      </td>
+                      <td className="px-4 py-4">
+                        <Badge
+                          variant="outline"
+                          className={
+                            isExpiring
+                              ? "rounded-full border-amber-200/60 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700"
+                              : "rounded-full border-emerald-200/60 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700"
+                          }
+                        >
+                          {days}d
+                        </Badge>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
               </table>
             </div>
           </div>
         )}
-      </PanelCard>
+      </div>
     </div>
   );
 }

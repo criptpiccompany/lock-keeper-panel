@@ -17,6 +17,7 @@ interface Props {
   existingUrl?: string;
   onChange: (file: File | null) => void;
   disabled?: boolean;
+  compact?: boolean;
 }
 
 function formatFileSize(bytes: number): string {
@@ -101,7 +102,7 @@ function supportsClipboardRead(): boolean {
   }
 }
 
-export default function ProofUploader({ label, sublabel, value, existingUrl, onChange, disabled }: Props) {
+export default function ProofUploader({ label, sublabel, value, existingUrl, onChange, disabled, compact = false }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -238,15 +239,17 @@ export default function ProofUploader({ label, sublabel, value, existingUrl, onC
   const hasExisting = !value && !!existingUrl;
 
   return (
-    <div className="space-y-2">
-      <label className="text-sm font-medium leading-none">
-        {label}
-        {sublabel && <span className="text-muted-foreground text-xs ml-1">{sublabel}</span>}
-      </label>
+    <div className={compact ? "space-y-1.5" : "space-y-2"}>
+      <div className={compact ? "flex min-h-[52px] flex-col justify-end" : ""}>
+        <label className={compact ? "text-[12px] font-medium leading-5 text-[#3c3c3a]" : "text-sm font-medium leading-none"}>
+          <span>{label}</span>
+          {sublabel && <span className={compact ? "ml-1 text-[11px] text-muted-foreground" : "ml-1 text-muted-foreground text-xs"}>{sublabel}</span>}
+        </label>
+      </div>
 
       {/* File selected — show preview */}
       {value ? (
-        <div className="flex items-center gap-3 border rounded-lg px-3 py-2.5 bg-muted/30">
+        <div className={compact ? "flex items-center gap-3 rounded-[18px] border border-[#ececeb] px-3 py-2 bg-muted/30" : "flex items-center gap-3 border rounded-lg px-3 py-2.5 bg-muted/30"}>
           <div className="w-10 h-10 rounded-md overflow-hidden bg-muted/60 flex items-center justify-center shrink-0 border border-border/30">
             {preview ? (
               <img src={preview} alt="Preview" className="w-full h-full object-cover" />
@@ -274,7 +277,7 @@ export default function ProofUploader({ label, sublabel, value, existingUrl, onC
         </div>
       ) : (
         /* Dropzone */
-        <div className="space-y-2">
+        <div className={compact ? "space-y-1.5" : "space-y-2"}>
           <div
             ref={dropzoneRef}
             onClick={() => !disabled && inputRef.current?.click()}
@@ -282,12 +285,12 @@ export default function ProofUploader({ label, sublabel, value, existingUrl, onC
             onDragLeave={onDragLeave}
             onDrop={onDrop}
             className={`
-              cursor-pointer border-2 border-dashed rounded-lg px-4 py-4 text-center transition-colors
+              cursor-pointer border-2 border-dashed ${compact ? "min-h-[124px] rounded-[18px] px-4 py-3" : "rounded-lg px-4 py-4"} text-center transition-colors
               ${dragOver ? "border-primary bg-primary/5" : "border-border/50 hover:border-primary/40 hover:bg-muted/30"}
               ${disabled ? "opacity-50 pointer-events-none" : ""}
             `}
           >
-            <Upload className="h-5 w-5 mx-auto text-muted-foreground mb-1.5" />
+            <Upload className={`${compact ? "mb-1 h-4 w-4" : "mb-1.5 h-5 w-5"} mx-auto text-muted-foreground`} />
             {/* Desktop text */}
             <p className="text-xs text-muted-foreground hidden sm:block">
               Clique para selecionar, cole (Ctrl+V) ou arraste
@@ -296,7 +299,7 @@ export default function ProofUploader({ label, sublabel, value, existingUrl, onC
             <p className="text-xs text-muted-foreground sm:hidden">
               Toque para selecionar ou use os botões abaixo
             </p>
-            <p className="text-[10px] text-muted-foreground/70 mt-0.5">JPG, PNG, WEBP, PDF • Máx 10 MB</p>
+            <p className="mt-0.5 text-[10px] text-muted-foreground/70">JPG, PNG, WEBP, PDF • Máx 10 MB</p>
             {hasExisting && (
               <p className="text-[10px] text-primary mt-1">Já possui comprovante anexado</p>
             )}
@@ -308,7 +311,7 @@ export default function ProofUploader({ label, sublabel, value, existingUrl, onC
               type="button"
               variant="secondary"
               size="sm"
-              className="h-8 text-xs gap-1.5 flex-1 min-w-0"
+              className={`${compact ? "h-7" : "h-8"} text-xs gap-1.5 flex-1 min-w-0`}
               onClick={(e) => { e.stopPropagation(); cameraInputRef.current?.click(); }}
               disabled={disabled}
             >
@@ -319,7 +322,7 @@ export default function ProofUploader({ label, sublabel, value, existingUrl, onC
               type="button"
               variant="secondary"
               size="sm"
-              className="h-8 text-xs gap-1.5 flex-1 min-w-0"
+              className={`${compact ? "h-7" : "h-8"} text-xs gap-1.5 flex-1 min-w-0`}
               onClick={(e) => { e.stopPropagation(); galleryInputRef.current?.click(); }}
               disabled={disabled}
             >
@@ -331,7 +334,7 @@ export default function ProofUploader({ label, sublabel, value, existingUrl, onC
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs gap-1.5"
+                className={`${compact ? "h-7" : "h-8"} text-xs gap-1.5`}
                 onClick={(e) => { e.stopPropagation(); handleClipboardPaste(); }}
                 disabled={disabled}
               >

@@ -25,7 +25,6 @@ import {
   Home,
   ShieldAlert,
   Menu,
-  Eye,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
@@ -33,10 +32,10 @@ import { useState } from "react";
 export function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut, isAdmin, isSubAdmin, realRole, viewAsRole, setViewAsRole, isImpersonating } = useAuth();
-  const canImpersonate = realRole === 'ADMIN' || realRole === 'SUBADMIN';
+  const { user, signOut, isAdmin, isSubAdmin } = useAuth();
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isHome = location.pathname === "/home";
 
   const handleSignOut = async () => {
     await signOut();
@@ -128,8 +127,13 @@ export function Navbar() {
   );
 
   return (
-    <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="container flex h-14 items-center justify-between px-4 sm:px-6 lg:px-8">
+    <nav
+      className={cn(
+        "sticky top-0 z-50 border-b backdrop-blur supports-[backdrop-filter]:bg-background/80",
+        isHome ? "border-black/5 bg-[#fcfcfb]/95" : "bg-background/95"
+      )}
+    >
+      <div className="mx-auto flex h-[66px] w-full max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link to="/home" className="flex items-center gap-2 shrink-0">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
@@ -150,10 +154,10 @@ export function Navbar() {
                   <Link
                     to={item.path}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                      "flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-colors",
                       isActive || isDropdownActive
                         ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                     )}
                   >
                     <Icon className="h-4 w-4" />
@@ -201,67 +205,6 @@ export function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-2">
-          {/* View-as toggle (admins/subadmins only) */}
-          {canImpersonate && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant={isImpersonating ? "default" : "outline"}
-                  size="sm"
-                  className={cn(
-                    "gap-1.5 h-8",
-                    isImpersonating && "bg-amber-500 hover:bg-amber-600 text-white border-amber-500"
-                  )}
-                  title="Visualizar como"
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                  <span className="hidden md:inline text-xs font-medium">
-                    {isImpersonating ? `Vendo como ${viewAsRole}` : "Ver como"}
-                  </span>
-                  <ChevronDown className="h-3 w-3 opacity-70" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
-                <div className="px-2 py-1.5">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Visualizar como</p>
-                </div>
-                <DropdownMenuItem
-                  onClick={() => setViewAsRole(null)}
-                  className={cn(!viewAsRole && "bg-accent")}
-                >
-                  <ShieldAlert className="mr-2 h-4 w-4" />
-                  {realRole} <span className="ml-1 text-xs text-muted-foreground">(meu papel)</span>
-                </DropdownMenuItem>
-                {(realRole === 'ADMIN' || realRole === 'SUBADMIN') && (
-                  <DropdownMenuItem
-                    onClick={() => setViewAsRole('CLOSER')}
-                    className={cn(viewAsRole === 'CLOSER' && "bg-accent")}
-                  >
-                    <User className="mr-2 h-4 w-4" />
-                    CLOSER
-                  </DropdownMenuItem>
-                )}
-                {realRole === 'ADMIN' && (
-                  <DropdownMenuItem
-                    onClick={() => setViewAsRole('SUBADMIN')}
-                    className={cn(viewAsRole === 'SUBADMIN' && "bg-accent")}
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    SUBADMIN
-                  </DropdownMenuItem>
-                )}
-                {isImpersonating && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => setViewAsRole(null)}>
-                      Sair da visualização
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-
           {/* User badge (desktop) */}
           {user && !isMobile && (
             <DropdownMenu>

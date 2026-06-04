@@ -13,6 +13,7 @@ import { useTeamFeeRate } from "@/hooks/useTeamFeeRate";
 import { getEstimatedCommission } from "@/lib/commissionCalc";
 import { useCommissionTier } from "@/hooks/useCommissionTier";
 import UnifiedThermometerWidget from "@/components/home/UnifiedThermometerWidget";
+import { cn } from "@/lib/utils";
 
 interface DailyRecord {
   id: string;
@@ -186,66 +187,87 @@ export default function Balanco({ closerId }: { closerId?: string }) {
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3">
-        <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-          <SelectTrigger className="w-full sm:w-[200px] h-9 text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {monthOptions.map((o) => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <section className="rounded-[30px] bg-[linear-gradient(180deg,#ffffff_0%,#fafaf8_100%)] p-5 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03] lg:p-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#f3f3ef] px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-[#676767]">
+              <Wallet className="h-3.5 w-3.5" />
+              Financial Balance
+            </div>
+            <div>
+              <h2 className="text-[34px] font-medium tracking-[-0.06em] text-foreground sm:text-[42px]">
+                {monthOptions.find((o) => o.value === selectedMonth)?.label || "Balanço"}
+              </h2>
+              <p className="mt-2 text-[14px] text-[#6e6e73]">
+                Leitura consolidada do mês com investimento, taxa, resultado e comissão.
+              </p>
+            </div>
+          </div>
 
-        {!closerId && isAdmin && closers.length > 1 && (
-          <Select value={selectedCloserId} onValueChange={setSelectedCloserId}>
-            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm">
-              <SelectValue placeholder="Selecionar closer" />
-            </SelectTrigger>
-            <SelectContent>
-              {closers.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+          <div className="flex flex-col gap-3 lg:items-end">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center">
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="h-11 w-full rounded-full border-[#ececeb] bg-white px-4 text-sm shadow-none md:w-[220px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {monthOptions.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-        {currentCloser && (
-          <span className="text-xs text-muted-foreground ml-auto">
-            Comissão: {currentPercentage}%
-          </span>
-        )}
-      </div>
+              {currentCloser && (
+                <div className="inline-flex items-center rounded-full bg-white px-4 py-2 text-[12px] font-medium text-[#6e6e73] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
+                  Comissão atual: <span className="ml-1 text-[#1f1f1f]">{currentPercentage}%</span>
+                </div>
+              )}
+
+              {!closerId && isAdmin && closers.length > 1 && (
+                <Select value={selectedCloserId} onValueChange={setSelectedCloserId}>
+                  <SelectTrigger className="h-11 w-full rounded-full border-[#ececeb] bg-white px-4 text-sm shadow-none md:w-[210px]">
+                    <SelectValue placeholder="Selecionar closer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {closers.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20">
+        <div className="flex items-center justify-center rounded-[28px] bg-white py-20 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : records.length === 0 ? (
-        <div className="text-center py-20 text-muted-foreground">
+        <div className="rounded-[28px] bg-white py-20 text-center text-muted-foreground shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
           <DollarSign className="h-10 w-10 mx-auto mb-3 opacity-30" />
           <p className="text-sm">Nenhum registro encontrado para este período.</p>
         </div>
       ) : (
         <>
-          {/* Two-column layout: Thermometer + Cards */}
-           <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-3">
-            {/* Left: Thermometer */}
-            <div className="card-premium p-5 flex items-center justify-center lg:min-h-[380px]">
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.3fr_1fr]">
+            <div className="rounded-[28px] bg-white p-6 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <div className="text-[12px] uppercase tracking-[0.18em] text-[#999999]">Termômetro</div>
+                  <div className="mt-1 text-[28px] font-medium tracking-[-0.04em] text-[#1f1f1f]">Performance do mês</div>
+                </div>
+                <div className="rounded-full bg-[#f3f3ef] px-3 py-2 text-[12px] font-medium text-[#676767]">
+                  {records.length} registros
+                </div>
+              </div>
               <UnifiedThermometerWidget resultado={totals.profit} month={selectedMonth} />
             </div>
 
-            {/* Right: Financial Cards Grid */}
-            <div className="flex flex-col gap-2">
-              {/* Row 1 */}
-              <div className="grid grid-cols-2 gap-2">
+            <div className="grid gap-4 sm:grid-cols-2">
                 <SummaryCard label="Faturamento" value={totals.revenue} icon={TrendingUp} />
                 <SummaryCard label="Investido" value={totals.invested} icon={DollarSign} />
-              </div>
-              {/* Row 2 */}
-              <div className="grid grid-cols-2 gap-2">
                 <SummaryCard label={feeLabel} value={totals.fee} icon={Percent} variant="muted" />
                 <SummaryCard
                   label="Resultado"
@@ -253,54 +275,67 @@ export default function Balanco({ closerId }: { closerId?: string }) {
                   icon={totals.profit >= 0 ? TrendingUp : TrendingDown}
                   variant={totals.profit > 0 ? (totals.profit / totals.invested >= 0.3 ? "positive" : "warning") : "negative"}
                 />
-              </div>
-              {/* Row 3 */}
-              <SummaryCard label="Comissão" value={tierCommission} icon={Receipt} />
-              {isAdmin && (
+                <SummaryCard label="Comissão" value={tierCommission} icon={Receipt} />
+                {isAdmin ? (
                 <SummaryCard
                   label="Saldo Final"
                   value={saldo}
                   icon={Wallet}
                   variant={saldo >= 0 ? "positive" : "negative"}
                 />
-              )}
+                ) : (
+                  <SummaryCard label="Saldo Final" value={totals.profit - tierCommission} icon={Wallet} variant={totals.profit - tierCommission >= 0 ? "positive" : "negative"} />
+                )}
             </div>
           </div>
 
-          {/* Daily Breakdown Table */}
-          <div className="bg-card rounded-xl border border-border/40 overflow-hidden">
+          <div className="overflow-hidden rounded-[28px] bg-white p-3 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
+            <div className="mb-3 flex items-center justify-between px-2 pt-2">
+              <div>
+                <div className="text-[12px] uppercase tracking-[0.18em] text-[#999999]">Quebra diária</div>
+                <div className="mt-1 text-[24px] font-medium tracking-[-0.04em] text-[#1f1f1f]">Dias do mês</div>
+              </div>
+              <div className="rounded-full bg-[#f3f3ef] px-3 py-2 text-[12px] font-medium text-[#676767]">
+                {dailySummaries.length} dias com movimento
+              </div>
+            </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full min-w-[880px] text-sm">
                 <thead>
-                  <tr className="border-b border-border/60 text-foreground" style={{ backgroundColor: '#E9E9EA' }}>
-                    <th className="text-left py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Data</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Investido</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Faturado</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">{feeLabel}</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Resultado</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Comissão</th>
-                    {isAdmin && <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Saldo</th>}
+                  <tr>
+                    <th className="px-5 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Data</th>
+                    <th className="px-4 py-5 text-right text-[12px] font-medium text-[#6e6e6e]">Investido</th>
+                    <th className="px-4 py-5 text-right text-[12px] font-medium text-[#6e6e6e]">Faturado</th>
+                    <th className="px-4 py-5 text-right text-[12px] font-medium text-[#6e6e6e]">{feeLabel}</th>
+                    <th className="px-4 py-5 text-right text-[12px] font-medium text-[#6e6e6e]">Resultado</th>
+                    <th className="px-4 py-5 text-right text-[12px] font-medium text-[#6e6e6e]">Comissão</th>
+                    {isAdmin && <th className="px-4 py-5 text-right text-[12px] font-medium text-[#6e6e6e]">Saldo</th>}
+                  </tr>
+                  <tr>
+                    <td colSpan={isAdmin ? 7 : 6} className="px-5">
+                      <div className="border-b border-dashed border-[#e6ddb0]" />
+                    </td>
                   </tr>
                 </thead>
                 <tbody>
                   {dailySummaries.map((day, idx) => {
-                    const zebraClass = idx % 2 === 1 ? "bg-muted/30" : "";
+                    const zebraClass = idx % 2 === 1 ? "bg-[#fbfbf8]" : "bg-white";
                     const profitColor = day.profit > 0
                       ? (day.invested > 0 && day.profit / day.invested >= 0.3 ? "text-emerald-700" : "text-amber-700")
                       : day.profit < 0 ? "text-red-600" : "";
 
                     return (
-                      <tr key={day.date} className={`border-b border-border/20 ${zebraClass}`}>
-                        <td className="py-2.5 px-4 text-xs font-medium">{formatDateLabel(day.date)}</td>
-                        <td className="py-2.5 px-4 text-xs text-right tabular-nums">{formatBRL(day.invested)}</td>
-                        <td className="py-2.5 px-4 text-xs text-right tabular-nums">{formatBRL(day.revenue)}</td>
-                        <td className="py-2.5 px-4 text-xs text-right tabular-nums text-muted-foreground">{formatBRL(day.fee)}</td>
-                        <td className={`py-2.5 px-4 text-xs text-right tabular-nums font-medium ${profitColor}`}>
+                      <tr key={day.date} className={zebraClass}>
+                        <td className="px-5 py-4 text-[13px] font-medium text-[#1f1f1f]">{formatDateLabel(day.date)}</td>
+                        <td className="px-4 py-4 text-right text-[13px] tabular-nums text-[#2c2c2c]">{formatBRL(day.invested)}</td>
+                        <td className="px-4 py-4 text-right text-[13px] tabular-nums text-[#2c2c2c]">{formatBRL(day.revenue)}</td>
+                        <td className="px-4 py-4 text-right text-[13px] tabular-nums text-[#7b7b78]">{formatBRL(day.fee)}</td>
+                        <td className={`px-4 py-4 text-right text-[13px] tabular-nums font-medium ${profitColor}`}>
                           {formatBRL(day.profit)}
                         </td>
-                        <td className="py-2.5 px-4 text-xs text-right tabular-nums">{formatBRL(day.commission)}</td>
+                        <td className="px-4 py-4 text-right text-[13px] tabular-nums text-[#2c2c2c]">{formatBRL(day.commission)}</td>
                         {isAdmin && (
-                          <td className={`py-2.5 px-4 text-xs text-right tabular-nums font-medium ${day.saldo < 0 ? "text-red-600" : ""}`}>
+                          <td className={`px-4 py-4 text-right text-[13px] tabular-nums font-medium ${day.saldo < 0 ? "text-red-600" : "text-[#2c2c2c]"}`}>
                             {formatBRL(day.saldo)}
                           </td>
                         )}
@@ -309,17 +344,17 @@ export default function Balanco({ closerId }: { closerId?: string }) {
                   })}
                 </tbody>
                 <tfoot>
-                  <tr className="border-t border-border/60 font-semibold text-foreground" style={{ backgroundColor: '#E9E9EA' }}>
-                    <td className="py-3 px-4 text-xs">Total</td>
-                    <td className="py-3 px-4 text-xs text-right tabular-nums">{formatBRL(totals.invested)}</td>
-                    <td className="py-3 px-4 text-xs text-right tabular-nums">{formatBRL(totals.revenue)}</td>
-                    <td className="py-3 px-4 text-xs text-right tabular-nums text-muted-foreground">{formatBRL(totals.fee)}</td>
-                    <td className={`py-3 px-4 text-xs text-right tabular-nums ${totals.profit < 0 ? "text-red-600" : "text-emerald-700"}`}>
+                  <tr className="border-t border-[#ececeb] bg-[#f5f5f2] font-semibold text-foreground">
+                    <td className="px-5 py-4 text-[13px]">Total</td>
+                    <td className="px-4 py-4 text-right text-[13px] tabular-nums">{formatBRL(totals.invested)}</td>
+                    <td className="px-4 py-4 text-right text-[13px] tabular-nums">{formatBRL(totals.revenue)}</td>
+                    <td className="px-4 py-4 text-right text-[13px] tabular-nums text-[#7b7b78]">{formatBRL(totals.fee)}</td>
+                    <td className={`px-4 py-4 text-right text-[13px] tabular-nums ${totals.profit < 0 ? "text-red-600" : "text-emerald-700"}`}>
                       {formatBRL(totals.profit)}
                     </td>
-                    <td className="py-3 px-4 text-xs text-right tabular-nums">{formatBRL(tierCommission)}</td>
+                    <td className="px-4 py-4 text-right text-[13px] tabular-nums">{formatBRL(tierCommission)}</td>
                     {isAdmin && (
-                      <td className={`py-3 px-4 text-xs text-right tabular-nums ${saldo < 0 ? "text-red-600" : "text-emerald-700"}`}>
+                      <td className={`px-4 py-4 text-right text-[13px] tabular-nums ${saldo < 0 ? "text-red-600" : "text-emerald-700"}`}>
                         {formatBRL(saldo)}
                       </td>
                     )}
@@ -348,20 +383,22 @@ function SummaryCard({
   variant?: "default" | "positive" | "negative" | "warning" | "muted";
 }) {
   const colorMap = {
-    default: "",
+    default: "text-[#1f1f1f]",
     positive: "text-emerald-700",
     negative: "text-red-600",
     warning: "text-amber-700",
-    muted: "text-muted-foreground",
+    muted: "text-[#7b7b78]",
   };
 
   return (
-    <div className="rounded-xl border border-border/40 bg-card p-4 space-y-1">
-      <div className="flex items-center gap-1.5">
-        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="text-xs text-muted-foreground font-medium">{label}</span>
+    <div className="rounded-[24px] bg-white p-5 shadow-[0_8px_24px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.03]">
+      <div className="flex items-center gap-2">
+        <div className="grid h-8 w-8 place-items-center rounded-full bg-[#f3f3ef] text-[#6e6e73]">
+          <Icon className="h-4 w-4" />
+        </div>
+        <span className="text-[13px] font-medium text-[#7b7b78]">{label}</span>
       </div>
-      <p className={`text-lg font-semibold tabular-nums ${colorMap[variant]}`}>
+      <p className={cn("mt-4 text-[20px] font-semibold tracking-[-0.04em] tabular-nums", colorMap[variant])}>
         {formatBRL(value)}
       </p>
     </div>
