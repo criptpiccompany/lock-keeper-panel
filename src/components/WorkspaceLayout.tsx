@@ -1,0 +1,251 @@
+import { type ComponentType } from "react";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import {
+  Bell,
+  BookOpen,
+  CalendarDays,
+  DollarSign,
+  FileText,
+  Home as HomeIcon,
+  Info,
+  LayoutGrid,
+  Lock,
+  LogOut,
+  Search,
+  Settings,
+  Shield,
+  User,
+  Users,
+} from "lucide-react";
+
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+
+type NavItem = {
+  path: string;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+};
+
+function SidebarLink({
+  item,
+  active,
+}: {
+  item: NavItem;
+  active: boolean;
+}) {
+  const Icon = item.icon;
+
+  return (
+    <Link
+      to={item.path}
+      title={item.label}
+      aria-label={item.label}
+      className={cn(
+        "group grid h-[44px] w-[44px] place-items-center rounded-[18px] text-[13px] transition-all",
+        active
+          ? "bg-[#242424] text-white shadow-[0_16px_36px_-30px_rgba(15,23,42,0.28)]"
+          : "bg-white text-[#676767] shadow-[0_8px_24px_rgba(0,0,0,0.04)] hover:text-slate-900"
+      )}
+    >
+      <Icon className="h-4 w-4" />
+    </Link>
+  );
+}
+
+export function WorkspaceLayout() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isAdmin, isSubAdmin, signOut, actualRole, effectiveRole, previewRole, setPreviewRole } = useAuth();
+
+  if (!user) return null;
+
+  const isManagementView = isAdmin || isSubAdmin;
+  const firstName = user.nome.split(/\s+/)[0];
+  const isPreviewingCloser = previewRole === 'CLOSER' && effectiveRole === 'CLOSER' && actualRole !== 'CLOSER';
+  const canToggleCloserPreview = actualRole === 'ADMIN' || actualRole === 'SUBADMIN';
+
+  const primaryNav: NavItem[] = isManagementView
+    ? [
+        { path: "/home", label: "Home", icon: HomeIcon },
+        { path: "/financeiro", label: "Financeiro", icon: DollarSign },
+        { path: "/diretorio", label: "Diretório", icon: BookOpen },
+        { path: "/notificacoes", label: "Notificações", icon: Bell },
+        { path: "/auditoria", label: "Auditoria", icon: Shield },
+        { path: "/admin", label: "Admin", icon: Settings },
+      ]
+    : [
+        { path: "/home", label: "Home", icon: HomeIcon },
+        { path: "/registro", label: "Planilhamento", icon: FileText },
+        { path: "/meu", label: "Minha Lista", icon: User },
+        { path: "/painel", label: "Meu Painel", icon: Lock },
+        { path: "/gestao-influenciadores", label: "Gestão de Influs", icon: Users },
+      ];
+
+  const operationsNav: NavItem[] = [
+    { path: "/registro", label: "Planilhamento", icon: FileText },
+    { path: "/meu", label: "Minha Lista", icon: User },
+    { path: "/gestao-influenciadores", label: "Gestão de Influs", icon: Users },
+    { path: "/painel", label: "Painel de Consulta", icon: LayoutGrid },
+  ];
+
+  const topNavItems = isManagementView
+    ? [
+        { label: "Financeiro", path: "/financeiro" },
+        { label: "Diretório", path: "/diretorio" },
+        { label: "Auditoria", path: "/auditoria" },
+        { label: "Notificações", path: "/notificacoes" },
+        { label: "Admin", path: "/admin" },
+      ]
+    : [
+        { label: "Home", path: "/home" },
+        { label: "Planilhamento", path: "/registro" },
+        { label: "Minha Lista", path: "/meu" },
+        { label: "Painel", path: "/painel" },
+        { label: "Gestão", path: "/gestao-influenciadores" },
+      ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/login");
+  };
+
+  const handleToggleCloserPreview = () => {
+    if (!canToggleCloserPreview) return;
+
+    if (isPreviewingCloser) {
+      setPreviewRole(null);
+    } else {
+      setPreviewRole('CLOSER');
+      navigate('/home');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#f3f3ef] text-slate-950">
+      <div className="px-5 pb-8 pt-6 lg:px-6 lg:pt-6">
+        <div className="grid items-center gap-6 pb-[18px] lg:grid-cols-[auto_1fr_auto]">
+          <div className="inline-flex min-w-[116px] items-center gap-[10px] rounded-[20px] bg-white px-[14px] py-[10px] shadow-[0_12px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[linear-gradient(180deg,#48a857_0%,#28773f_100%)] text-xs font-semibold text-white">
+              C
+            </div>
+            <div className="text-[14px] font-medium tracking-[-0.01em] text-slate-900">CREATORS</div>
+          </div>
+
+          <div className="flex justify-start lg:justify-center">
+            <div className="inline-flex items-center gap-[6px] rounded-[20px] bg-white p-[6px] shadow-[0_14px_30px_-26px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
+              {topNavItems.map((item) => {
+                const active = location.pathname === item.path;
+                return (
+                  <button
+                    key={item.path}
+                    type="button"
+                    onClick={() => navigate(item.path)}
+                    className={cn(
+                      "rounded-full px-4 py-2.5 text-[13px] font-medium tracking-[-0.01em] transition-colors",
+                      active ? "bg-[#242424] text-white" : "text-slate-500 hover:text-slate-900"
+                    )}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-start gap-3 lg:justify-end">
+            {canToggleCloserPreview ? (
+              <button
+                type="button"
+                onClick={handleToggleCloserPreview}
+                className={cn(
+                  "rounded-full px-4 py-2 text-[12px] font-medium tracking-[-0.01em] shadow-[0_12px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]",
+                  isPreviewingCloser ? "bg-[#242424] text-white" : "bg-white text-[#676767]"
+                )}
+              >
+                {isPreviewingCloser ? "Sair do modo closer" : "Ver como closer"}
+              </button>
+            ) : null}
+
+            <div className="flex items-center gap-2 rounded-[20px] bg-white p-[6px] shadow-[0_12px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
+              <button type="button" className="grid h-[34px] w-[34px] place-items-center rounded-full text-slate-700 transition hover:bg-black/[0.03] hover:text-slate-900">
+                <Search className="h-4 w-4" />
+              </button>
+              <button type="button" className="grid h-[34px] w-[34px] place-items-center rounded-full text-slate-700 transition hover:bg-black/[0.03] hover:text-slate-900">
+                <Bell className="h-4 w-4" />
+              </button>
+              <button type="button" className="grid h-[34px] w-[34px] place-items-center rounded-full text-slate-700 transition hover:bg-black/[0.03] hover:text-slate-900">
+                <Info className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="hidden min-w-[178px] items-center gap-[10px] rounded-[20px] bg-white px-3 py-2 shadow-[0_12px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03] sm:flex">
+              <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[linear-gradient(180deg,#f2d7c4_0%,#b47f59_100%)] text-[12px] font-semibold text-white">
+                {firstName.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <div className="truncate text-[13px] font-medium tracking-[-0.01em] text-slate-900">{user.nome}</div>
+                <div className="mt-0.5 truncate text-[11px] text-slate-400">
+                  {isPreviewingCloser ? "Visualizando como CLOSER" : user.email}
+                </div>
+              </div>
+              <span className="ml-auto text-slate-400">•••</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid min-h-[calc(100vh-98px)] lg:grid-cols-[56px_minmax(0,1fr)] lg:gap-6 lg:px-6">
+        <aside className="border-b border-black/[0.04] bg-transparent px-5 pb-4 pt-4 lg:sticky lg:top-[92px] lg:h-[calc(100vh-120px)] lg:border-b-0 lg:px-0 lg:pt-[18px]">
+          <div className="flex items-center gap-3 lg:flex-col lg:items-center lg:gap-3">
+            <button type="button" className="grid h-[44px] w-[44px] place-items-center rounded-[18px] bg-white text-[#676767] shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
+              <CalendarDays className="h-4 w-4" />
+            </button>
+            <button type="button" className="grid h-[44px] w-[44px] place-items-center rounded-[18px] bg-white text-[#676767] shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
+              <Bell className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="mt-6 space-y-3 lg:space-y-0">
+            <div className="flex flex-wrap gap-3 lg:flex-col lg:items-center">
+              {primaryNav.map((item) => (
+                <SidebarLink key={item.path} item={item} active={location.pathname === item.path} />
+              ))}
+            </div>
+
+            {isManagementView ? (
+              <div className="flex flex-wrap gap-3 lg:mt-3 lg:flex-col lg:items-center">
+                {operationsNav.map((item) => (
+                  <SidebarLink key={item.path} item={item} active={location.pathname === item.path} />
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="mt-8 lg:flex lg:min-h-[180px] lg:flex-col lg:justify-end">
+            <div className="flex gap-3 lg:flex-col lg:items-center">
+              <button type="button" className="grid h-[44px] w-[44px] place-items-center rounded-[18px] bg-white text-[#676767] shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
+                <Shield className="h-4 w-4" />
+              </button>
+              <div className="rounded-[18px] bg-white p-2 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="grid h-[28px] w-[28px] place-items-center rounded-full text-[#676767] transition hover:bg-[#f3f3ef] hover:text-slate-950"
+                  title="Sair"
+                  aria-label="Sair"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <main className="min-w-0 px-5 py-6 lg:px-3 lg:py-8 xl:pr-8">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}

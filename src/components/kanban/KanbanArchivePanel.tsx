@@ -41,11 +41,11 @@ export function KanbanArchivePanel({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2 text-muted-foreground">
+        <Button variant="outline" size="sm" className="h-11 gap-2 rounded-full border-[#ececeb] bg-white px-4 text-[13px] font-medium text-[#6e6e73] shadow-none">
           <Archive className="h-4 w-4" />
           Arquivados
           {archivedCards.length > 0 && (
-            <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5 text-[10px]">
+            <Badge variant="secondary" className="ml-1 h-5 min-w-5 rounded-full bg-[#f3f3ef] px-1.5 text-[10px] text-[#6e6e73]">
               {archivedCards.length}
             </Badge>
           )}
@@ -70,7 +70,7 @@ export function KanbanArchivePanel({
               return (
                 <div
                   key={card.id}
-                  className="rounded-lg border bg-card p-3 space-y-2"
+                  className="space-y-2 rounded-[20px] border border-black/[0.04] bg-white p-4 shadow-[0_10px_28px_-24px_rgba(15,23,42,0.12)]"
                 >
                   <div className="flex items-start gap-2">
                     <Avatar className="h-8 w-8 shrink-0">
@@ -92,7 +92,7 @@ export function KanbanArchivePanel({
                     {card.archived_from_status && (
                       <Badge
                         variant="outline"
-                        className="text-[10px] font-medium border-0 px-1.5 py-0"
+                        className="rounded-full border-0 px-2 py-1 text-[10px] font-medium"
                         style={{
                           backgroundColor: columnDef ? `${columnDef.accent}18` : undefined,
                           color: columnDef?.accent,
@@ -113,7 +113,7 @@ export function KanbanArchivePanel({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-7 gap-1 text-xs"
+                      className="h-8 gap-1 rounded-full border-[#ececeb] bg-white px-3 text-xs"
                       onClick={() => onRestore(card.id)}
                     >
                       <RotateCcw className="h-3 w-3" />
