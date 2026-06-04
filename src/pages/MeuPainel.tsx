@@ -135,27 +135,11 @@ export default function MeuPainel() {
 
             <div className="flex flex-wrap gap-2">
               <Button
-                variant="outline"
-                className="h-11 rounded-full border-[#ececeb] bg-white px-4 text-[13px] font-medium shadow-none"
-                onClick={() => setUrlModalOpen(true)}
-              >
-                <Link className="mr-2 h-4 w-4" />
-                URL
-              </Button>
-              <Button
-                variant="outline"
-                className="h-11 rounded-full border-[#ececeb] bg-white px-4 text-[13px] font-medium shadow-none"
+                className="h-11 rounded-full bg-[#1f1f1f] px-5 text-[13px] font-medium text-white hover:bg-[#111111]"
                 onClick={() => setAddModalOpen(true)}
               >
                 <UserPlus className="mr-2 h-4 w-4" />
-                Adicionar
-              </Button>
-              <Button
-                className="h-11 rounded-full bg-[#1f1f1f] px-4 text-[13px] font-medium text-white hover:bg-[#111111]"
-                onClick={() => setBulkModalOpen(true)}
-              >
-                <Users className="mr-2 h-4 w-4" />
-                Vários
+                Adicionar influenciador
               </Button>
             </div>
           </div>
