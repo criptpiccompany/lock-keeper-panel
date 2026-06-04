@@ -796,6 +796,66 @@ export type Database = {
           },
         ]
       }
+      team_shared_board: {
+        Row: {
+          apoios: string[] | null
+          archived: boolean
+          archived_at: string | null
+          archived_from_status: string | null
+          classificacao: string | null
+          created_at: string
+          created_by: string
+          display_name: string
+          id: string
+          instagram_url: string | null
+          instagram_username: string
+          last_moved_at: string
+          observacao: string | null
+          status: string
+          team_id: string | null
+          updated_at: string
+          valor_negociado: number | null
+        }
+        Insert: {
+          apoios?: string[] | null
+          archived?: boolean
+          archived_at?: string | null
+          archived_from_status?: string | null
+          classificacao?: string | null
+          created_at?: string
+          created_by: string
+          display_name: string
+          id?: string
+          instagram_url?: string | null
+          instagram_username: string
+          last_moved_at?: string
+          observacao?: string | null
+          status?: string
+          team_id?: string | null
+          updated_at?: string
+          valor_negociado?: number | null
+        }
+        Update: {
+          apoios?: string[] | null
+          archived?: boolean
+          archived_at?: string | null
+          archived_from_status?: string | null
+          classificacao?: string | null
+          created_at?: string
+          created_by?: string
+          display_name?: string
+          id?: string
+          instagram_url?: string | null
+          instagram_username?: string
+          last_moved_at?: string
+          observacao?: string | null
+          status?: string
+          team_id?: string | null
+          updated_at?: string
+          valor_negociado?: number | null
+        }
+        Relationships: []
+      }
       teams: {
         Row: {
           created_at: string
