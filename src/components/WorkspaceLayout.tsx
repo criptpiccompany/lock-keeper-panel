@@ -31,9 +31,11 @@ type NavItem = {
 function SidebarLink({
   item,
   active,
+  expanded,
 }: {
   item: NavItem;
   active: boolean;
+  expanded: boolean;
 }) {
   const Icon = item.icon;
 
@@ -42,14 +44,27 @@ function SidebarLink({
       to={item.path}
       title={item.label}
       aria-label={item.label}
-      className={cn(
-        "group grid h-[44px] w-[44px] place-items-center rounded-[18px] text-[13px] transition-all",
-        active
-          ? "bg-[#242424] text-white shadow-[0_16px_36px_-30px_rgba(15,23,42,0.28)]"
-          : "bg-white text-[#676767] shadow-[0_8px_24px_rgba(0,0,0,0.04)] hover:text-slate-900"
-      )}
+      className="relative grid h-[44px] w-[44px] place-items-center"
     >
-      <Icon className="h-4 w-4" />
+      <span
+        className={cn(
+          "grid h-[44px] w-[44px] place-items-center rounded-[18px] transition-all",
+          active
+            ? "bg-[#242424] text-white shadow-[0_16px_36px_-30px_rgba(15,23,42,0.28)]"
+            : "bg-white text-[#676767] shadow-[0_8px_24px_rgba(0,0,0,0.04)] hover:text-slate-900"
+        )}
+      >
+        <Icon className="h-4 w-4" />
+      </span>
+      <span
+        className={cn(
+          "pointer-events-none absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 whitespace-nowrap text-[13px] font-medium tracking-[-0.01em] transition-opacity duration-150",
+          expanded ? "opacity-100" : "opacity-0",
+          active ? "text-slate-950" : "text-slate-500"
+        )}
+      >
+        {item.label}
+      </span>
     </Link>
   );
 }
