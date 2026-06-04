@@ -260,19 +260,9 @@ export default function MeuPainel() {
         )}
       </div>
 
-      <AddInfluencerModal 
-        open={addModalOpen} 
+      <AddInfluencerUnifiedModal
+        open={addModalOpen}
         onOpenChange={setAddModalOpen}
-        onSuccess={fetchMyInfluencers}
-      />
-      <BulkAddModal 
-        open={bulkModalOpen} 
-        onOpenChange={setBulkModalOpen}
-        onSuccess={fetchMyInfluencers}
-      />
-      <AddInfluencerByUrlModal
-        open={urlModalOpen}
-        onOpenChange={setUrlModalOpen}
         onSuccess={fetchMyInfluencers}
       />
     </div>
