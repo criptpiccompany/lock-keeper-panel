@@ -95,13 +95,17 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#F6F4F0' }}>
       <div className="w-full max-w-md">
-        {/* Logo CRIPTPIC com fade-in + drop-shadow vermelho sutil pulsante */}
-        <div className="flex justify-center mb-10 h-36">
+        {/* Logo CRIPTPIC — intro: ocupa a tela e encolhe até o slot em 2s */}
+        <div className="flex justify-center mb-10 h-36 relative z-10">
           <img
+            ref={logoRef}
             src={criptpicLogo.url}
             alt="CRIPTPIC"
-            className="h-36 w-auto object-contain logo-premium animate-[fadeInSolid_1.2s_ease-out_forwards] opacity-0"
+            className="h-36 w-auto object-contain logo-premium will-change-transform"
+            style={{ transformOrigin: 'center center' }}
           />
+        </div>
+
         </div>
 
 
