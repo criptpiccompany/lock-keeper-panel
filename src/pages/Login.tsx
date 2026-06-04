@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import criptpicLogo from '@/assets/criptpic-logo.png.asset.json';
 
 export default function Login() {
   const { user, loading, signIn, signUp } = useAuth();
@@ -64,15 +65,18 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30">
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F6F4F0' }}>
       <div className="w-full max-w-sm mx-4">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary mb-4">
-            <span className="text-lg font-bold text-primary-foreground">IB</span>
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight">InfluBoard</h1>
+        {/* Logo CRIPTPIC com fade-in transparente → sólido */}
+        <div className="flex justify-center mb-8 h-32">
+          <img
+            src={criptpicLogo.url}
+            alt="CRIPTPIC"
+            className="h-32 w-auto object-contain animate-[fadeInSolid_1.2s_ease-out_forwards] opacity-0"
+          />
         </div>
+
+
 
         {/* Form Card */}
         <div className="bg-card rounded-xl border shadow-subtle p-6">
