@@ -56,7 +56,11 @@ function SidebarLink({
 export function WorkspaceLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAdmin, isSubAdmin, signOut, actualRole, effectiveRole, previewRole, setPreviewRole } = useAuth();
+  const { user, isAdmin, isSubAdmin, signOut, realRole, viewAsRole, setViewAsRole } = useAuth();
+  const actualRole = realRole;
+  const effectiveRole = viewAsRole ?? realRole;
+  const previewRole = viewAsRole;
+  const setPreviewRole = setViewAsRole;
 
   if (!user) return null;
 
