@@ -14,7 +14,7 @@ import {
 
 import { TAX_TOTAL } from "@/components/financeiro/financeiroHelpers";
 import { CloserSharedBoard } from "@/components/home/CloserSharedBoard";
-import { CommissionCard } from "@/components/home/CommissionCard";
+import { CommissionCardCarousel } from "@/components/home/CommissionCard";
 import { getEstimatedCommission } from "@/lib/commissionCalc";
 import { getTeamThermometerSnapshots, type ThermometerSnapshot } from "@/lib/thermometerSnapshot";
 import { cn } from "@/lib/utils";
@@ -782,7 +782,7 @@ export default function Home() {
               <SourceTrackCard title="Meta diária do time" current={resultado} target={progressTarget} />
 
               <SourceDualPanel title="Meu Espaço" actionLabel="Performance Club">
-                <CommissionCard
+                <CommissionCardCarousel
                   employeeName={user.nome}
                   resultado={resultado}
                   revenue={closerData.revenue}
