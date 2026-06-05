@@ -718,8 +718,9 @@ export function CloserSharedBoard() {
     <section className="overflow-hidden rounded-[30px] bg-white p-6 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.08)] ring-1 ring-black/[0.03] lg:p-7">
       <div className="mb-6">
         <div>
-          <h3 className="text-lg font-semibold tracking-[-0.03em] text-slate-950">Board Compartilhado</h3>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500/90">
+          <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#9a9a95]">Time</span>
+          <h3 className="mt-2 text-[32px] font-medium leading-[1.05] tracking-[-0.04em] text-slate-950">Board Compartilhado</h3>
+          <p className="mt-2 max-w-2xl text-[13px] leading-6 text-slate-500/90">
             Acompanhe os influenciadores de interesse do time e a evolução das negociações em uma visão única.
           </p>
         </div>
