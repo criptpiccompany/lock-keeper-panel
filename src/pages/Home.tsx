@@ -340,14 +340,9 @@ function SourceDualPanel({
   return (
     <div className="rounded-[18px] bg-white px-7 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
       <div className="mb-5 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className="grid h-[36px] w-[36px] place-items-center rounded-full bg-[#f4f4f3] text-[#676767]">
-            <LayoutGrid className="h-4 w-4" />
-          </span>
-          <div>
-            <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#999999]">Painel</div>
-            <div className="text-[32px] font-semibold leading-[1.05] tracking-[-0.04em] text-[#1f1f1f]">{title}</div>
-          </div>
+        <div>
+          <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#999999]">Painel</div>
+          <div className="mt-2 text-[32px] font-medium leading-[1.05] tracking-[-0.04em] text-[#1f1f1f]">{title}</div>
         </div>
         <div className="inline-flex items-center gap-2 rounded-full border border-[#ececeb] bg-white px-4 py-2 text-[12px] font-medium text-[#676767]">
           {actionLabel}
