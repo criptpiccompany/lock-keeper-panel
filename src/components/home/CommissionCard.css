@@ -1,11 +1,11 @@
-/* Criptpic Performance Card — Platinum-grade layout */
+/* Criptpic Performance Card — Amex Platinum fidelity pass */
 .cpic-card-shell {
-  --ink: #111;
-  --line: rgba(0, 0, 0, 0.16);
-  --micro: rgba(0, 0, 0, 0.085);
-  --deep: rgba(0, 0, 0, 0.78);
-  --emboss-hi: rgba(255, 255, 255, 0.92);
-  --emboss-lo: rgba(0, 0, 0, 0.5);
+  --ink: #0a0a0a;
+  --line: rgba(0, 0, 0, 0.26);
+  --micro: rgba(0, 0, 0, 0.14);
+  --deep: rgba(0, 0, 0, 0.92);
+  --emboss-hi: rgba(255, 255, 255, 1);
+  --emboss-lo: rgba(0, 0, 0, 0.72);
 
   width: 100%;
   aspect-ratio: 1.586;
@@ -15,12 +15,12 @@
   overflow: hidden;
   color: var(--ink);
   background:
-    linear-gradient(135deg, #f5f5f3 0%, #cbcbc8 22%, #f4f4f1 44%, #b8b9b6 66%, #ececea 100%);
+    linear-gradient(135deg, #f8f8f6 0%, #b9b9b5 22%, #f4f4f1 44%, #9d9d99 66%, #ececea 100%);
   box-shadow:
-    0 30px 70px -20px rgba(0, 0, 0, 0.45),
-    0 12px 28px -10px rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.16);
+    0 34px 80px -22px rgba(0, 0, 0, 0.55),
+    0 14px 28px -10px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.22);
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -31,169 +31,178 @@
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.78), transparent 22%),
-    radial-gradient(circle at 78% 82%, rgba(255, 255, 255, 0.38), transparent 26%),
-    linear-gradient(145deg, #e6e7e4 0%, #f6f7f4 30%, #c4c5c2 60%, #ededeb 100%);
+    radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.88), transparent 24%),
+    radial-gradient(circle at 82% 88%, rgba(255, 255, 255, 0.4), transparent 26%),
+    linear-gradient(145deg, #dedfdb 0%, #f7f8f5 28%, #aeafab 60%, #ebebe9 100%);
 }
 
+/* reflexo metálico sutil + microtextura */
 .cpic-card::after {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(115deg, transparent 0 38%, rgba(255, 255, 255, 0.42) 44%, transparent 50% 100%),
-    linear-gradient(25deg, rgba(255, 255, 255, 0.14), transparent 42%);
+    linear-gradient(112deg, transparent 0 36%, rgba(255, 255, 255, 0.55) 44%, transparent 52% 100%),
+    linear-gradient(25deg, rgba(255, 255, 255, 0.18), transparent 42%),
+    radial-gradient(circle at 50% 50%, transparent 60%, rgba(0, 0, 0, 0.14) 100%);
   mix-blend-mode: soft-light;
   pointer-events: none;
 }
 
 .cpic-card-shell svg.cpic-bg { position: absolute; inset: 0; }
 
-/* ============ BRAND ============ */
+/* ============ BRAND — smaller, top, breathing ============ */
 .cpic-brand {
   position: absolute;
-  top: 8.5%;
+  top: 6.5%;
   left: 50%;
   transform: translateX(-50%);
   font-family: "Arial Black", Impact, Arial, sans-serif;
-  font-size: clamp(15px, 3.4vw, 36px);
+  font-size: clamp(11px, 2.45vw, 26px);
   font-weight: 900;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   line-height: 1;
-  color: rgba(0, 0, 0, 0.88);
+  color: rgba(0, 0, 0, 0.95);
   white-space: nowrap;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.95),
+    0 -1px 0 rgba(0, 0, 0, 0.35);
   z-index: 5;
 }
 
 .cpic-brand-sub {
   position: absolute;
-  top: 16.5%;
+  top: 12%;
   left: 50%;
   transform: translateX(-50%);
-  font-size: clamp(6px, 0.9vw, 10px);
+  font-size: clamp(5px, 0.72vw, 8px);
   font-weight: 900;
-  letter-spacing: 0.42em;
-  color: rgba(0, 0, 0, 0.42);
+  letter-spacing: 0.52em;
+  color: rgba(0, 0, 0, 0.58);
   z-index: 4;
   white-space: nowrap;
 }
 
-/* ============ CHIP ============ */
+/* ============ CHIP — bank-grade EMV geometry ============ */
 .cpic-chip {
   position: absolute;
   left: 8%;
   top: 36%;
-  width: 11.5%;
-  aspect-ratio: 1.32;
+  width: 12.5%;
+  aspect-ratio: 1.28;
   z-index: 5;
-  border-radius: 7px;
+  border-radius: 6px;
   background:
-    linear-gradient(125deg, #b6b6b2 0%, #f4f4f1 26%, #8a8a86 52%, #ededea 78%, #b2b2ae 100%);
-  border: 1px solid rgba(0, 0, 0, 0.55);
+    linear-gradient(125deg, #8c7a3c 0%, #f0d98a 22%, #b89a3a 48%, #f7e7a6 74%, #8c7a3c 100%);
+  border: 1px solid rgba(0, 0, 0, 0.78);
   box-shadow:
-    inset 0 0 8px rgba(0, 0, 0, 0.22),
-    inset 1px 1px 0 rgba(255, 255, 255, 0.7),
-    0 1px 2px rgba(0, 0, 0, 0.22);
+    inset 0 0 10px rgba(0, 0, 0, 0.32),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.85),
+    0 1px 2px rgba(0, 0, 0, 0.3);
   overflow: hidden;
 }
 .cpic-chip svg { width: 100%; height: 100%; display: block; }
 
-/* ============ MEDALLION (vertical oval) ============ */
+/* ============ MEDALLION — bigger, deeper, minted ============ */
 .cpic-medallion {
   position: absolute;
   z-index: 4;
   left: 50%;
   top: 51%;
-  width: 24%;
+  width: 30%;
   aspect-ratio: 0.74;
   transform: translate(-50%, -50%);
   border-radius: 50%;
   overflow: hidden;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.28));
 }
 .cpic-medallion svg { width: 100%; height: 100%; display: block; }
 
-/* ============ NUMBERS (hug the medallion) ============ */
+/* ============ NUMBERS — embossed, sharp ============ */
 .cpic-numbers {
   position: absolute;
   z-index: 7;
-  left: 8%;
-  right: 8%;
-  top: 49%;
+  left: 6%;
+  right: 6%;
+  top: 50%;
+  transform: translateY(-50%);
   display: grid;
-  grid-template-columns: 1fr 24% 1fr;
+  grid-template-columns: 1fr 30% 1fr;
   align-items: center;
-  font-family: "Courier New", monospace;
-  font-size: clamp(18px, 4vw, 44px);
+  font-family: "OCR A Std", "Courier New", monospace;
+  font-size: clamp(14px, 2.7vw, 30px);
   font-weight: 800;
-  letter-spacing: 0.18em;
-  color: rgba(0, 0, 0, 0.62);
+  letter-spacing: 0.22em;
+  color: rgba(0, 0, 0, 0.78);
   text-shadow:
     1px 1px 0 var(--emboss-hi),
     -1px -1px 0 var(--emboss-lo),
-    0 4px 5px rgba(0, 0, 0, 0.22);
+    0 2px 2px rgba(0, 0, 0, 0.22);
   white-space: nowrap;
   pointer-events: none;
 }
-.cpic-numbers .cpic-num-left { text-align: right; padding-right: 4%; }
+.cpic-numbers .cpic-num-left { text-align: right; padding-right: 6%; }
 .cpic-numbers .cpic-num-mid { visibility: hidden; }
-.cpic-numbers .cpic-num-right { text-align: left; padding-left: 4%; }
+.cpic-numbers .cpic-num-right { text-align: left; padding-left: 6%; }
 
-/* ============ BOTTOM META (Valid Thru / Member Since style) ============ */
+/* ============ BOTTOM META ============ */
 .cpic-meta-left {
   position: absolute;
   z-index: 6;
   left: 8.2%;
-  top: 71%;
-  font-size: clamp(7px, 1vw, 10px);
+  top: 72%;
+  font-size: clamp(6px, 0.85vw, 9px);
   font-weight: 800;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.7);
+  color: rgba(0, 0, 0, 0.85);
 }
 .cpic-meta-left .cpic-meta-value {
   display: block;
   margin-top: 4px;
-  font-family: "Courier New", monospace;
-  font-size: clamp(14px, 2.4vw, 26px);
+  font-family: "OCR A Std", "Courier New", monospace;
+  font-size: clamp(12px, 1.9vw, 20px);
   font-weight: 800;
-  letter-spacing: 0.06em;
-  color: rgba(0, 0, 0, 0.6);
+  letter-spacing: 0.1em;
+  color: rgba(0, 0, 0, 0.78);
   text-shadow:
     1px 1px 0 var(--emboss-hi),
     -1px -1px 0 var(--emboss-lo),
-    0 3px 4px rgba(0, 0, 0, 0.18);
+    0 2px 2px rgba(0, 0, 0, 0.2);
 }
 
 .cpic-since {
   position: absolute;
   z-index: 6;
   right: 9%;
-  top: 69.5%;
+  top: 70%;
   text-align: center;
 }
 .cpic-since .cpic-ribbon {
   display: inline-block;
   padding: 3px 14px 2px;
-  border: 1.5px solid rgba(0, 0, 0, 0.75);
+  border: 1.5px solid rgba(0, 0, 0, 0.88);
   border-radius: 50% / 50%;
-  font-size: clamp(7px, 1vw, 11px);
+  font-size: clamp(6px, 0.85vw, 9px);
   font-weight: 900;
-  letter-spacing: 0.22em;
-  background: rgba(255, 255, 255, 0.18);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.26em;
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 1px 0 rgba(0, 0, 0, 0.18);
+  color: rgba(0, 0, 0, 0.92);
 }
 .cpic-since .cpic-year {
   display: block;
   margin-top: 4px;
-  font-family: "Courier New", monospace;
-  font-size: clamp(14px, 2.5vw, 28px);
+  font-family: "OCR A Std", "Courier New", monospace;
+  font-size: clamp(12px, 2vw, 22px);
   font-weight: 800;
-  color: rgba(0, 0, 0, 0.6);
+  color: rgba(0, 0, 0, 0.78);
   text-shadow:
     1px 1px 0 var(--emboss-hi),
     -1px -1px 0 var(--emboss-lo),
-    0 3px 4px rgba(0, 0, 0, 0.18);
+    0 2px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* ============ NAME + LEVEL ============ */
@@ -203,11 +212,11 @@
   left: 8.2%;
   bottom: 8%;
   width: 56%;
-  font-family: "Courier New", monospace;
-  font-size: clamp(13px, 2.4vw, 26px);
+  font-family: "OCR A Std", "Courier New", monospace;
+  font-size: clamp(11px, 1.9vw, 22px);
   font-weight: 900;
-  letter-spacing: 0.16em;
-  color: rgba(0, 0, 0, 0.62);
+  letter-spacing: 0.18em;
+  color: rgba(0, 0, 0, 0.82);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -215,7 +224,7 @@
   text-shadow:
     1px 1px 0 var(--emboss-hi),
     -1px -1px 0 var(--emboss-lo),
-    0 3px 4px rgba(0, 0, 0, 0.18);
+    0 2px 2px rgba(0, 0, 0, 0.2);
 }
 
 .cpic-level {
@@ -223,10 +232,10 @@
   z-index: 6;
   right: 7%;
   bottom: 9%;
-  font-size: clamp(8px, 1.15vw, 12px);
+  font-size: clamp(7px, 1vw, 11px);
   font-weight: 900;
-  letter-spacing: 0.22em;
-  color: rgba(0, 0, 0, 0.7);
+  letter-spacing: 0.28em;
+  color: rgba(0, 0, 0, 0.88);
 }
 
 .cpic-microbrand {
@@ -236,141 +245,128 @@
   right: 6%;
   bottom: 2.8%;
   overflow: hidden;
-  font-size: clamp(4px, 0.65vw, 7px);
+  font-size: clamp(4px, 0.6vw, 6px);
   font-weight: 800;
-  letter-spacing: 0;
-  opacity: 0.55;
+  opacity: 0.7;
   white-space: nowrap;
-  color: rgba(0, 0, 0, 0.7);
+  color: rgba(0, 0, 0, 0.82);
 }
 
 .cpic-copyright {
   position: absolute;
   right: 4.5%;
   bottom: 5%;
-  font-size: clamp(5px, 0.75vw, 8px);
+  font-size: clamp(5px, 0.7vw, 7px);
   font-weight: 900;
-  opacity: 0.65;
+  opacity: 0.75;
   z-index: 7;
 }
 
-/* ============ PROGRESS (subtle, near bottom edge) ============ */
+/* ============ PROGRESS ============ */
 .cpic-progress-track {
   position: absolute;
   z-index: 3;
   left: 7%;
   right: 7%;
-  top: 25%;
+  top: 21%;
   height: 2px;
   border-radius: 99px;
-  background: rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.12);
   overflow: hidden;
 }
 .cpic-progress-bar {
   height: 100%;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.68);
   border-radius: inherit;
   transition: width 600ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 /* ============ LEVEL VARIANTS ============ */
-
-/* GOLD */
 .cpic-card-shell.gold {
-  background: linear-gradient(135deg, #fff3c4 0%, #c79c3a 25%, #fbe590 50%, #a87c25 75%, #f4d472 100%);
+  background: linear-gradient(135deg, #fff3c4 0%, #b88829 25%, #fbe590 50%, #8c651d 75%, #f4d472 100%);
 }
 .cpic-card-shell.gold .cpic-card {
   background:
-    radial-gradient(circle at 22% 20%, rgba(255, 255, 255, 0.55), transparent 22%),
-    linear-gradient(145deg, #f3d770 0%, #cda03c 35%, #fae597 65%, #aa7c25 100%);
+    radial-gradient(circle at 22% 20%, rgba(255, 255, 255, 0.6), transparent 22%),
+    linear-gradient(145deg, #f0d36a 0%, #b88829 35%, #fae597 65%, #8c651d 100%);
 }
 
-/* PLATINUM */
 .cpic-card-shell.platinum {
-  background: linear-gradient(135deg, #e9edf0 0%, #b3bdc6 25%, #eff2f5 50%, #919ca6 75%, #dde4e9 100%);
+  background: linear-gradient(135deg, #eef1f4 0%, #9aa6b0 25%, #f1f4f7 50%, #768290 75%, #dde4e9 100%);
 }
 .cpic-card-shell.platinum .cpic-card {
   background:
-    radial-gradient(circle at 22% 20%, rgba(255, 255, 255, 0.75), transparent 22%),
-    linear-gradient(145deg, #dde5eb 0%, #f3f6f9 30%, #b0bbc6 60%, #ebf0f4 100%);
+    radial-gradient(circle at 22% 20%, rgba(255, 255, 255, 0.82), transparent 22%),
+    linear-gradient(145deg, #d8e0e7 0%, #f3f6f9 30%, #97a4b0 60%, #ebf0f4 100%);
 }
 
-/* BLACK */
 .cpic-card-shell.black {
   --ink: #f4f4f4;
-  --line: rgba(255, 255, 255, 0.18);
-  --micro: rgba(255, 255, 255, 0.09);
-  --deep: rgba(255, 255, 255, 0.82);
-  --emboss-hi: rgba(255, 255, 255, 0.28);
-  --emboss-lo: rgba(0, 0, 0, 0.92);
+  --line: rgba(255, 255, 255, 0.32);
+  --micro: rgba(255, 255, 255, 0.16);
+  --deep: rgba(255, 255, 255, 0.95);
+  --emboss-hi: rgba(255, 255, 255, 0.4);
+  --emboss-lo: rgba(0, 0, 0, 1);
   color: #f4f4f4;
-  background: linear-gradient(135deg, #040404, #232323 42%, #0a0a0a 72%, #353535);
+  background: linear-gradient(135deg, #020202, #1f1f1f 42%, #060606 72%, #2a2a2a);
 }
 .cpic-card-shell.black .cpic-card {
   background:
-    radial-gradient(circle at 22% 20%, rgba(255, 255, 255, 0.14), transparent 18%),
-    radial-gradient(circle at 68% 42%, rgba(255, 255, 255, 0.08), transparent 20%),
-    linear-gradient(145deg, #0a0a0a 0%, #232323 32%, #050505 68%, #1a1a1a 100%);
+    radial-gradient(circle at 22% 20%, rgba(255, 255, 255, 0.18), transparent 18%),
+    radial-gradient(circle at 68% 42%, rgba(255, 255, 255, 0.1), transparent 20%),
+    linear-gradient(145deg, #060606 0%, #1c1c1c 32%, #020202 68%, #161616 100%);
 }
 .cpic-card-shell.black .cpic-brand,
 .cpic-card-shell.black .cpic-numbers,
 .cpic-card-shell.black .cpic-meta-left,
 .cpic-card-shell.black .cpic-meta-left .cpic-meta-value,
 .cpic-card-shell.black .cpic-since,
+.cpic-card-shell.black .cpic-since .cpic-ribbon,
 .cpic-card-shell.black .cpic-since .cpic-year,
 .cpic-card-shell.black .cpic-name,
 .cpic-card-shell.black .cpic-level,
-.cpic-card-shell.black .cpic-microbrand { color: rgba(255, 255, 255, 0.84); }
-.cpic-card-shell.black .cpic-brand-sub { color: rgba(255, 255, 255, 0.55); }
-.cpic-card-shell.black .cpic-since .cpic-ribbon { border-color: rgba(255, 255, 255, 0.75); }
-.cpic-card-shell.black .cpic-progress-bar { background: rgba(255, 255, 255, 0.78); }
-.cpic-card-shell.black .cpic-chip {
-  background: linear-gradient(125deg, #4a4a48 0%, #c5c5c0 26%, #2e2e2c 52%, #b8b8b3 78%, #4a4a48 100%);
-  border-color: rgba(0, 0, 0, 0.85);
-}
+.cpic-card-shell.black .cpic-microbrand { color: rgba(255, 255, 255, 0.96); }
+.cpic-card-shell.black .cpic-brand-sub { color: rgba(255, 255, 255, 0.7); }
+.cpic-card-shell.black .cpic-since .cpic-ribbon { border-color: rgba(255, 255, 255, 0.9); }
+.cpic-card-shell.black .cpic-progress-bar { background: rgba(255, 255, 255, 0.9); }
 
-/* DIAMOND */
 .cpic-card-shell.diamond {
-  background: linear-gradient(135deg, #dff3ff 0%, #7fb6d8 25%, #f0faff 50%, #5e9ec2 75%, #cfe7f5 100%);
+  background: linear-gradient(135deg, #dff3ff 0%, #5fa0c6 25%, #f0faff 50%, #427fa3 75%, #cfe7f5 100%);
 }
 .cpic-card-shell.diamond .cpic-card {
   background:
-    radial-gradient(circle at 22% 20%, rgba(255, 255, 255, 0.78), transparent 22%),
-    linear-gradient(145deg, #e6f4fc 0%, #b9d8eb 35%, #f3fafe 65%, #99c1d9 100%);
+    radial-gradient(circle at 22% 20%, rgba(255, 255, 255, 0.85), transparent 22%),
+    linear-gradient(145deg, #dceffa 0%, #9dc3dc 35%, #f3fafe 65%, #6f9fc0 100%);
 }
 
-/* OBSIDIAN */
 .cpic-card-shell.obsidian {
   --ink: #f4f4f4;
-  --line: rgba(255, 255, 255, 0.16);
-  --micro: rgba(255, 255, 255, 0.08);
-  --deep: rgba(255, 255, 255, 0.78);
-  --emboss-hi: rgba(255, 255, 255, 0.22);
-  --emboss-lo: rgba(0, 0, 0, 0.92);
+  --line: rgba(255, 255, 255, 0.3);
+  --micro: rgba(255, 255, 255, 0.14);
+  --deep: rgba(255, 255, 255, 0.95);
+  --emboss-hi: rgba(255, 255, 255, 0.34);
+  --emboss-lo: rgba(0, 0, 0, 1);
   color: #f4f4f4;
   background: linear-gradient(135deg, #1a0030 0%, #4a1465 30%, #0d0024 60%, #6a1f8a 100%);
 }
 .cpic-card-shell.obsidian .cpic-card {
   background:
-    radial-gradient(circle at 22% 20%, rgba(255, 255, 255, 0.1), transparent 18%),
-    linear-gradient(145deg, #150028 0%, #3c0f55 35%, #0a001c 70%, #561a72 100%);
+    radial-gradient(circle at 22% 20%, rgba(255, 255, 255, 0.12), transparent 18%),
+    linear-gradient(145deg, #120024 0%, #350d4d 35%, #08001a 70%, #4b176a 100%);
 }
 .cpic-card-shell.obsidian .cpic-brand,
 .cpic-card-shell.obsidian .cpic-numbers,
 .cpic-card-shell.obsidian .cpic-meta-left,
 .cpic-card-shell.obsidian .cpic-meta-left .cpic-meta-value,
 .cpic-card-shell.obsidian .cpic-since,
+.cpic-card-shell.obsidian .cpic-since .cpic-ribbon,
 .cpic-card-shell.obsidian .cpic-since .cpic-year,
 .cpic-card-shell.obsidian .cpic-name,
 .cpic-card-shell.obsidian .cpic-level,
-.cpic-card-shell.obsidian .cpic-microbrand { color: rgba(255, 255, 255, 0.86); }
-.cpic-card-shell.obsidian .cpic-brand-sub { color: rgba(255, 255, 255, 0.55); }
-.cpic-card-shell.obsidian .cpic-since .cpic-ribbon { border-color: rgba(255, 255, 255, 0.7); }
-.cpic-card-shell.obsidian .cpic-progress-bar { background: rgba(255, 255, 255, 0.78); }
-.cpic-card-shell.obsidian .cpic-chip {
-  background: linear-gradient(125deg, #4a4a48 0%, #c5c5c0 26%, #2e2e2c 52%, #b8b8b3 78%, #4a4a48 100%);
-  border-color: rgba(0, 0, 0, 0.85);
-}
+.cpic-card-shell.obsidian .cpic-microbrand { color: rgba(255, 255, 255, 0.96); }
+.cpic-card-shell.obsidian .cpic-brand-sub { color: rgba(255, 255, 255, 0.7); }
+.cpic-card-shell.obsidian .cpic-since .cpic-ribbon { border-color: rgba(255, 255, 255, 0.85); }
+.cpic-card-shell.obsidian .cpic-progress-bar { background: rgba(255, 255, 255, 0.9); }
 
 /* ============ OUTSIDE CAPTION ============ */
 .cpic-caption {
@@ -387,9 +383,7 @@
   letter-spacing: 0.02em;
   color: #1f1f1f;
 }
-.cpic-caption .cpic-caption-main strong {
-  font-weight: 700;
-}
+.cpic-caption .cpic-caption-main strong { font-weight: 700; }
 .cpic-caption .cpic-caption-sub {
   font-size: 11px;
   letter-spacing: 0.18em;

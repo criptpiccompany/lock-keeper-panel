@@ -2,16 +2,6 @@ import { useMemo } from "react";
 import { useCommissionTier } from "@/hooks/useCommissionTier";
 import "./CommissionCard.css";
 
-/**
- * Criptpic Performance Card — premium status card driven by the existing
- * commission thermometer (`useCommissionTier`). Layout mirrors a real
- * premium credit card: dense security background, refined ornamental frame,
- * EMV chip, vertical oval medallion, embossed numbers hugging the medallion.
- *
- * The progression caption ("Faltam R$ X para …") is rendered OUTSIDE the
- * card to keep the card surface feeling like a physical object.
- */
-
 const LEVELS = ["SILVER", "GOLD", "PLATINUM", "BLACK", "DIAMOND", "OBSIDIAN"] as const;
 type Level = (typeof LEVELS)[number];
 
@@ -64,205 +54,275 @@ export function CommissionCard({
         Faltam <strong>R$ {brNumber(amountMissing)}</strong> para virar <strong>{nextLevel}</strong>
       </span>
     ) : (
-      <span>
-        <strong>Nível máximo</strong> desbloqueado
-      </span>
+      <span><strong>Nível máximo</strong> desbloqueado</span>
     );
 
   return (
     <div>
       <div className={`cpic-card-shell ${level.toLowerCase()}`} role="img" aria-label={`Cartão ${level}`}>
         <div className="cpic-card">
-          {/* Fundo de segurança — alta densidade */}
+          {/* ===== Fundo de segurança — papel-moeda ===== */}
           <svg className="cpic-bg" viewBox="0 0 920 580" preserveAspectRatio="none" aria-hidden="true">
             <defs>
-              {/* Padrão denso de moeda — círculos + ondas + microtexto repetido */}
-              <pattern id="cpicSec" width="74" height="46" patternUnits="userSpaceOnUse">
-                <circle cx="18" cy="23" r="14" fill="none" stroke="var(--line)" strokeWidth="0.7" />
-                <circle cx="18" cy="23" r="9" fill="none" stroke="var(--micro)" strokeWidth="0.6" />
-                <circle cx="56" cy="23" r="14" fill="none" stroke="var(--line)" strokeWidth="0.7" />
-                <circle cx="56" cy="23" r="9" fill="none" stroke="var(--micro)" strokeWidth="0.6" />
-                <path d="M0 38 C18 24 28 24 46 38 S82 52 92 36" fill="none" stroke="var(--micro)" strokeWidth="0.6" />
-                <path d="M0 10 C18 -4 28 -4 46 10 S82 24 92 8" fill="none" stroke="var(--micro)" strokeWidth="0.6" />
+              <pattern id="cpicSec" width="62" height="38" patternUnits="userSpaceOnUse">
+                <circle cx="15" cy="19" r="12" fill="none" stroke="var(--line)" strokeWidth="0.8" />
+                <circle cx="15" cy="19" r="7.5" fill="none" stroke="var(--micro)" strokeWidth="0.6" />
+                <circle cx="15" cy="19" r="3.5" fill="none" stroke="var(--micro)" strokeWidth="0.5" />
+                <circle cx="47" cy="19" r="12" fill="none" stroke="var(--line)" strokeWidth="0.8" />
+                <circle cx="47" cy="19" r="7.5" fill="none" stroke="var(--micro)" strokeWidth="0.6" />
+                <path d="M0 32 C15 20 24 20 38 32 S70 44 78 30" fill="none" stroke="var(--micro)" strokeWidth="0.55" />
+                <path d="M0 8 C15 -4 24 -4 38 8 S70 20 78 6" fill="none" stroke="var(--micro)" strokeWidth="0.55" />
               </pattern>
-
-              {/* Guilhochê fino — curvas senoidais cruzadas */}
-              <pattern id="cpicWeave" width="36" height="14" patternUnits="userSpaceOnUse">
-                <path d="M0 7 C9 0 18 14 27 7 S45 0 54 7" fill="none" stroke="var(--micro)" strokeWidth="0.45" />
+              <pattern id="cpicWeave" width="32" height="12" patternUnits="userSpaceOnUse">
+                <path d="M0 6 C8 0 16 12 24 6 S40 0 48 6" fill="none" stroke="var(--micro)" strokeWidth="0.5" />
               </pattern>
-              <pattern id="cpicWeave2" width="36" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(8)">
-                <path d="M0 7 C9 14 18 0 27 7 S45 14 54 7" fill="none" stroke="var(--micro)" strokeWidth="0.45" />
+              <pattern id="cpicWeave2" width="32" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(10)">
+                <path d="M0 6 C8 12 16 0 24 6 S40 12 48 6" fill="none" stroke="var(--micro)" strokeWidth="0.5" />
               </pattern>
-
-              {/* Microtexto repetido contínuo */}
-              <pattern id="cpicMicro" width="190" height="9" patternUnits="userSpaceOnUse">
-                <text x="0" y="7" fontFamily="Arial" fontSize="6.4" fontWeight="900" letterSpacing="0.5" fill="var(--deep)" opacity="0.28">
+              <pattern id="cpicMicro" width="180" height="9" patternUnits="userSpaceOnUse">
+                <text x="0" y="7" fontFamily="Arial" fontSize="6.2" fontWeight="900" letterSpacing="0.6" fill="var(--deep)" opacity="0.5">
                   CRIPTPICPERFORMANCECLUBCRIPTPICPERFORMANCECLUB
                 </text>
               </pattern>
-
-              {/* Texto curvo concêntrico no entorno do medalhão */}
+              <radialGradient id="cpicRosette" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="rgba(0,0,0,0.18)" />
+                <stop offset="60%" stopColor="rgba(0,0,0,0.04)" />
+                <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+              </radialGradient>
               <radialGradient id="cpicVignette" cx="50%" cy="50%" r="65%">
                 <stop offset="0%" stopColor="rgba(255,255,255,0)" />
-                <stop offset="80%" stopColor="rgba(255,255,255,0)" />
-                <stop offset="100%" stopColor="rgba(0,0,0,0.08)" />
+                <stop offset="78%" stopColor="rgba(255,255,255,0)" />
+                <stop offset="100%" stopColor="rgba(0,0,0,0.18)" />
               </radialGradient>
             </defs>
 
-            <rect width="920" height="580" fill="url(#cpicSec)" opacity="0.85" />
-            <rect width="920" height="580" fill="url(#cpicWeave)" opacity="0.6" />
-            <rect width="920" height="580" fill="url(#cpicWeave2)" opacity="0.45" />
+            <rect width="920" height="580" fill="url(#cpicSec)" opacity="0.95" />
+            <rect width="920" height="580" fill="url(#cpicWeave)" opacity="0.7" />
+            <rect width="920" height="580" fill="url(#cpicWeave2)" opacity="0.55" />
 
-            {/* faixas de microtexto repetidas */}
-            <rect x="20" y="555" width="880" height="9" fill="url(#cpicMicro)" opacity="0.85" />
-            <rect x="20" y="546" width="880" height="9" fill="url(#cpicMicro)" opacity="0.7" />
-            <rect x="20" y="16" width="880" height="9" fill="url(#cpicMicro)" opacity="0.35" />
-            <rect x="20" y="25" width="880" height="9" fill="url(#cpicMicro)" opacity="0.25" />
-
-            {/* círculos concêntricos no centro — atrás do medalhão */}
-            <g transform="translate(460 295)" fill="none" stroke="var(--micro)" strokeWidth="0.6">
-              <ellipse cx="0" cy="0" rx="148" ry="200" />
-              <ellipse cx="0" cy="0" rx="132" ry="178" />
-              <ellipse cx="0" cy="0" rx="116" ry="158" />
-              <ellipse cx="0" cy="0" rx="100" ry="138" />
+            {/* roseta concêntrica central */}
+            <g transform="translate(460 295)" fill="none" stroke="var(--micro)" strokeWidth="0.7">
+              {Array.from({ length: 24 }).map((_, i) => (
+                <ellipse key={i} cx="0" cy="0" rx={60 + i * 9} ry={80 + i * 11} opacity={0.4 - i * 0.012} />
+              ))}
             </g>
 
+            {/* raios finos saindo do centro */}
+            <g transform="translate(460 295)" stroke="var(--micro)" strokeWidth="0.4" opacity="0.5">
+              {Array.from({ length: 36 }).map((_, i) => {
+                const a = (i * Math.PI) / 18;
+                return <line key={i} x1={Math.cos(a) * 60} y1={Math.sin(a) * 80} x2={Math.cos(a) * 360} y2={Math.sin(a) * 360} />;
+              })}
+            </g>
+
+            {/* faixas de microtexto */}
+            <rect x="20" y="555" width="880" height="9" fill="url(#cpicMicro)" opacity="0.9" />
+            <rect x="20" y="546" width="880" height="9" fill="url(#cpicMicro)" opacity="0.75" />
+            <rect x="20" y="16" width="880" height="9" fill="url(#cpicMicro)" opacity="0.45" />
+            <rect x="20" y="25" width="880" height="9" fill="url(#cpicMicro)" opacity="0.32" />
+
+            <rect width="920" height="580" fill="url(#cpicRosette)" />
             <rect width="920" height="580" fill="url(#cpicVignette)" />
           </svg>
 
-          {/* Moldura ornamental — fina, dupla, com cantos */}
+          {/* ===== Moldura ornamental refinada ===== */}
           <svg className="cpic-bg" viewBox="0 0 920 580" preserveAspectRatio="none" aria-hidden="true">
-            <rect x="14" y="14" width="892" height="552" rx="14" fill="none" stroke="var(--deep)" strokeWidth="1.3" opacity="0.7" />
-            <rect x="22" y="22" width="876" height="536" rx="10" fill="none" stroke="var(--deep)" strokeWidth="0.6" opacity="0.5" />
+            <rect x="12" y="12" width="896" height="556" rx="14" fill="none" stroke="var(--deep)" strokeWidth="1.8" opacity="0.85" />
+            <rect x="20" y="20" width="880" height="540" rx="11" fill="none" stroke="var(--deep)" strokeWidth="0.7" opacity="0.6" />
+            <rect x="26" y="26" width="868" height="528" rx="9" fill="none" stroke="var(--micro)" strokeWidth="0.5" opacity="0.7" />
 
-            {/* cantos ornamentais simétricos */}
-            <g fill="none" stroke="var(--deep)" strokeWidth="0.9" opacity="0.78">
-              <path d="M22 60 C22 38 38 22 60 22" />
-              <path d="M898 60 C898 38 882 22 860 22" />
-              <path d="M22 520 C22 542 38 558 60 558" />
-              <path d="M898 520 C898 542 882 558 860 558" />
-              <path d="M30 70 C30 48 48 30 70 30" />
-              <path d="M890 70 C890 48 872 30 850 30" />
-              <path d="M30 510 C30 532 48 550 70 550" />
-              <path d="M890 510 C890 532 872 550 850 550" />
+            {/* arabescos de canto */}
+            <g fill="none" stroke="var(--deep)" strokeWidth="1.05" opacity="0.9">
+              {/* top-left */}
+              <path d="M20 70 C20 42 42 20 70 20" />
+              <path d="M28 78 C28 50 50 28 78 28" />
+              <path d="M44 36 q10 -8 22 -2 M36 44 q-8 10 -2 22" />
+              <circle cx="32" cy="32" r="2.2" fill="var(--deep)" />
+              {/* top-right */}
+              <path d="M900 70 C900 42 878 20 850 20" />
+              <path d="M892 78 C892 50 870 28 842 28" />
+              <path d="M876 36 q-10 -8 -22 -2 M884 44 q8 10 2 22" />
+              <circle cx="888" cy="32" r="2.2" fill="var(--deep)" />
+              {/* bottom-left */}
+              <path d="M20 510 C20 538 42 560 70 560" />
+              <path d="M28 502 C28 530 50 552 78 552" />
+              <circle cx="32" cy="548" r="2.2" fill="var(--deep)" />
+              {/* bottom-right */}
+              <path d="M900 510 C900 538 878 560 850 560" />
+              <path d="M892 502 C892 530 870 552 842 552" />
+              <circle cx="888" cy="548" r="2.2" fill="var(--deep)" />
             </g>
 
-            {/* arabescos sutis no topo e base */}
-            <g fill="none" stroke="var(--deep)" strokeWidth="0.55" opacity="0.55">
-              <path d="M120 30 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0" />
-              <path d="M120 550 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0" />
+            {/* arabescos finos no topo e base */}
+            <g fill="none" stroke="var(--deep)" strokeWidth="0.55" opacity="0.6">
+              <path d="M110 28 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0" />
+              <path d="M110 552 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0 q14 8 28 0 q14 -8 28 0" />
             </g>
           </svg>
 
-          {/* Brand */}
+          {/* ===== Brand ===== */}
           <div className="cpic-brand">{brand}</div>
           <div className="cpic-brand-sub">PERFORMANCE CLUB</div>
 
-          {/* Progresso fino abaixo da brand */}
           <div className="cpic-progress-track">
             <div className="cpic-progress-bar" style={{ width: `${progressPct}%` }} />
           </div>
 
-          {/* Chip EMV */}
+          {/* ===== Chip EMV — geometria bancária real ===== */}
           <div className="cpic-chip" aria-hidden="true">
             <svg viewBox="0 0 160 120" preserveAspectRatio="none">
-              {/* contorno do contato EMV: divide em 6 áreas com bordas arredondadas */}
-              <g fill="none" stroke="rgba(0,0,0,0.85)" strokeWidth="2.2">
-                <path d="M52 4 v40 q0 8 -8 8 h-40" />
-                <path d="M52 116 v-40 q0 -8 -8 -8 h-40" />
-                <path d="M108 4 v40 q0 8 8 8 h40" />
-                <path d="M108 116 v-40 q0 -8 8 -8 h40" />
-                {/* divisórias internas */}
-                <line x1="80" y1="0" x2="80" y2="44" />
-                <line x1="80" y1="76" x2="80" y2="120" />
-                <line x1="0" y1="60" x2="44" y2="60" />
-                <line x1="116" y1="60" x2="160" y2="60" />
-                {/* meio: bloco central */}
-                <rect x="60" y="44" width="40" height="32" rx="3" />
+              <g fill="none" stroke="rgba(0,0,0,0.92)" strokeWidth="2.6" strokeLinejoin="round">
+                {/* contorno externo */}
+                <rect x="3" y="3" width="154" height="114" rx="10" />
+                {/* 8 contatos EMV */}
+                <line x1="60" y1="3" x2="60" y2="44" />
+                <line x1="100" y1="3" x2="100" y2="44" />
+                <line x1="60" y1="76" x2="60" y2="117" />
+                <line x1="100" y1="76" x2="100" y2="117" />
+                <line x1="3" y1="40" x2="46" y2="40" />
+                <line x1="114" y1="40" x2="157" y2="40" />
+                <line x1="3" y1="80" x2="46" y2="80" />
+                <line x1="114" y1="80" x2="157" y2="80" />
+                {/* zona central (processador) */}
+                <rect x="48" y="42" width="64" height="36" rx="4" />
+                <line x1="48" y1="60" x2="112" y2="60" />
+                <line x1="80" y1="42" x2="80" y2="78" />
+                {/* cantos arredondados dos contatos */}
+                <path d="M46 28 q-6 0 -6 -6" />
+                <path d="M114 28 q6 0 6 -6" />
+                <path d="M46 92 q-6 0 -6 6" />
+                <path d="M114 92 q6 0 6 6" />
               </g>
             </svg>
           </div>
 
-          {/* Medalhão — oval vertical, gravura fina */}
+          {/* ===== Medalhão — maior, mais profundo, brasão rico ===== */}
           <div className="cpic-medallion" aria-hidden="true">
             <svg viewBox="0 0 200 270" preserveAspectRatio="xMidYMid meet">
               <defs>
                 <clipPath id="cpicMedalClip">
-                  <ellipse cx="100" cy="135" rx="92" ry="128" />
+                  <ellipse cx="100" cy="135" rx="94" ry="130" />
                 </clipPath>
-                <pattern id="cpicMedalHatch" width="3.2" height="3.2" patternUnits="userSpaceOnUse" patternTransform="rotate(28)">
-                  <line x1="0" y1="0" x2="0" y2="3.2" stroke="var(--deep)" strokeWidth="0.55" opacity="0.8" />
+                <pattern id="cpicMedalHatch" width="2.8" height="2.8" patternUnits="userSpaceOnUse" patternTransform="rotate(30)">
+                  <line x1="0" y1="0" x2="0" y2="2.8" stroke="var(--deep)" strokeWidth="0.7" opacity="0.95" />
                 </pattern>
-                <pattern id="cpicMedalHatch2" width="2.4" height="2.4" patternUnits="userSpaceOnUse" patternTransform="rotate(-32)">
-                  <line x1="0" y1="0" x2="0" y2="2.4" stroke="var(--deep)" strokeWidth="0.35" opacity="0.55" />
+                <pattern id="cpicMedalHatch2" width="2.2" height="2.2" patternUnits="userSpaceOnUse" patternTransform="rotate(-32)">
+                  <line x1="0" y1="0" x2="0" y2="2.2" stroke="var(--deep)" strokeWidth="0.4" opacity="0.7" />
                 </pattern>
-                <radialGradient id="cpicMedalBg" cx="50%" cy="48%" r="58%">
-                  <stop offset="0%" stopColor="rgba(255,255,255,0.6)" />
-                  <stop offset="70%" stopColor="rgba(0,0,0,0.05)" />
-                  <stop offset="100%" stopColor="rgba(0,0,0,0.18)" />
+                <radialGradient id="cpicMedalBg" cx="50%" cy="45%" r="62%">
+                  <stop offset="0%" stopColor="rgba(255,255,255,0.78)" />
+                  <stop offset="55%" stopColor="rgba(255,255,255,0.1)" />
+                  <stop offset="100%" stopColor="rgba(0,0,0,0.32)" />
+                </radialGradient>
+                <radialGradient id="cpicMedalRim" cx="50%" cy="50%" r="60%">
+                  <stop offset="92%" stopColor="rgba(0,0,0,0)" />
+                  <stop offset="100%" stopColor="rgba(0,0,0,0.45)" />
                 </radialGradient>
               </defs>
 
-              {/* fundo */}
-              <ellipse cx="100" cy="135" rx="92" ry="128" fill="url(#cpicMedalBg)" />
+              {/* fundo cunhado */}
+              <ellipse cx="100" cy="135" rx="94" ry="130" fill="url(#cpicMedalBg)" />
 
-              {/* moldura oval dupla */}
-              <ellipse cx="100" cy="135" rx="92" ry="128" fill="none" stroke="var(--deep)" strokeWidth="2.4" />
-              <ellipse cx="100" cy="135" rx="86" ry="120" fill="none" stroke="var(--deep)" strokeWidth="0.9" opacity="0.6" />
-              <ellipse cx="100" cy="135" rx="80" ry="113" fill="none" stroke="var(--deep)" strokeWidth="0.5" opacity="0.4" />
+              {/* moldura externa engrossada — sensação de relevo metálico */}
+              <ellipse cx="100" cy="135" rx="94" ry="130" fill="none" stroke="var(--deep)" strokeWidth="3.4" />
+              <ellipse cx="100" cy="135" rx="90" ry="125" fill="none" stroke="var(--emboss-hi)" strokeWidth="0.8" opacity="0.7" />
+              <ellipse cx="100" cy="135" rx="86" ry="120" fill="none" stroke="var(--deep)" strokeWidth="1.2" opacity="0.7" />
+              <ellipse cx="100" cy="135" rx="82" ry="115" fill="none" stroke="var(--deep)" strokeWidth="0.45" opacity="0.5" />
+              <ellipse cx="100" cy="135" rx="94" ry="130" fill="url(#cpicMedalRim)" />
+
+              {/* texto curvo em volta */}
+              <defs>
+                <path id="cpicArcTop" d="M 18 135 A 82 115 0 0 1 182 135" />
+                <path id="cpicArcBot" d="M 18 135 A 82 115 0 0 0 182 135" />
+              </defs>
+              <text fontFamily="Arial" fontSize="7.2" fontWeight="900" letterSpacing="2.8" fill="var(--deep)" opacity="0.85">
+                <textPath href="#cpicArcTop" startOffset="50%" textAnchor="middle">CRIPTPIC · PERFORMANCE</textPath>
+              </text>
+              <text fontFamily="Arial" fontSize="6.4" fontWeight="900" letterSpacing="3.6" fill="var(--deep)" opacity="0.7">
+                <textPath href="#cpicArcBot" startOffset="50%" textAnchor="middle">EST · MMXXIV · CLUB</textPath>
+              </text>
 
               <g clipPath="url(#cpicMedalClip)">
-                {/* guilhochê de fundo dentro do medalhão */}
-                <g fill="none" stroke="var(--deep)" strokeWidth="0.35" opacity="0.45">
-                  <path d="M-20 70 C40 40 80 90 120 60 S220 30 280 60" />
-                  <path d="M-20 100 C40 70 80 120 120 90 S220 60 280 90" />
-                  <path d="M-20 130 C40 100 80 150 120 120 S220 90 280 120" />
-                  <path d="M-20 160 C40 130 80 180 120 150 S220 120 280 150" />
-                  <path d="M-20 190 C40 160 80 210 120 180 S220 150 280 180" />
-                  <path d="M-20 220 C40 190 80 240 120 210 S220 180 280 210" />
+                {/* guilhochê de fundo */}
+                <g fill="none" stroke="var(--deep)" strokeWidth="0.35" opacity="0.55">
+                  {Array.from({ length: 9 }).map((_, i) => (
+                    <path key={i} d={`M-20 ${60 + i * 20} C40 ${40 + i * 20} 80 ${80 + i * 20} 120 ${50 + i * 20} S220 ${30 + i * 20} 280 ${60 + i * 20}`} />
+                  ))}
                 </g>
 
-                {/* Emblema central: escudo coroado com C estilizado — vetorial, gravura */}
-                {/* coroa */}
-                <g transform="translate(100 70)" fill="url(#cpicMedalHatch)" stroke="var(--deep)" strokeWidth="1.6">
-                  <path d="M-32 6 L-32 -10 L-20 4 L-12 -16 L-4 6 L0 -22 L4 6 L12 -16 L20 4 L32 -10 L32 6 Z" />
-                  <circle cx="-32" cy="-12" r="2.6" fill="var(--deep)" stroke="none" />
-                  <circle cx="0" cy="-24" r="3" fill="var(--deep)" stroke="none" />
-                  <circle cx="32" cy="-12" r="2.6" fill="var(--deep)" stroke="none" />
-                  <rect x="-34" y="6" width="68" height="5" rx="1" stroke="var(--deep)" />
+                {/* estrelas decorativas */}
+                <g fill="var(--deep)" opacity="0.85">
+                  <path d="M40 130 l1.4 4 4 .4 -3.2 2.6 1 4 -3.2 -2.4 -3.2 2.4 1 -4 -3.2 -2.6 4 -.4 z" />
+                  <path d="M160 130 l1.4 4 4 .4 -3.2 2.6 1 4 -3.2 -2.4 -3.2 2.4 1 -4 -3.2 -2.6 4 -.4 z" />
                 </g>
 
-                {/* escudo */}
-                <g transform="translate(100 150)">
+                {/* coroa rica */}
+                <g transform="translate(100 64)" stroke="var(--deep)" strokeWidth="1.8">
+                  <path fill="url(#cpicMedalHatch)" d="M-38 8 L-38 -8 L-28 6 L-22 -14 L-14 8 L-8 -22 L0 6 L8 -22 L14 8 L22 -14 L28 6 L38 -8 L38 8 Z" />
+                  <circle cx="-38" cy="-10" r="2.8" fill="var(--deep)" stroke="none" />
+                  <circle cx="-8" cy="-24" r="2.4" fill="var(--deep)" stroke="none" />
+                  <circle cx="8" cy="-24" r="2.4" fill="var(--deep)" stroke="none" />
+                  <circle cx="38" cy="-10" r="2.8" fill="var(--deep)" stroke="none" />
+                  <rect x="-40" y="8" width="80" height="5" rx="1" stroke="var(--deep)" fill="var(--deep)" opacity="0.85" />
+                  <rect x="-40" y="14" width="80" height="2" rx="1" stroke="none" fill="var(--deep)" opacity="0.6" />
+                </g>
+
+                {/* louros */}
+                <g fill="none" stroke="var(--deep)" strokeWidth="1.2" opacity="0.85">
+                  <path d="M50 160 q-8 -22 4 -52" />
+                  <path d="M150 160 q8 -22 -4 -52" />
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <g key={i}>
+                      <ellipse cx={48 - i} cy={150 - i * 8} rx="5" ry="2.6" transform={`rotate(${-40 - i * 4} ${48 - i} ${150 - i * 8})`} fill="var(--deep)" opacity="0.6" />
+                      <ellipse cx={152 + i} cy={150 - i * 8} rx="5" ry="2.6" transform={`rotate(${40 + i * 4} ${152 + i} ${150 - i * 8})`} fill="var(--deep)" opacity="0.6" />
+                    </g>
+                  ))}
+                </g>
+
+                {/* escudo elaborado */}
+                <g transform="translate(100 152)">
                   <path
-                    d="M-46 -52 L46 -52 L46 -8 C46 30 22 60 0 76 C-22 60 -46 30 -46 -8 Z"
+                    d="M-48 -54 L48 -54 Q52 -54 52 -50 L52 -8 C52 32 24 64 0 80 C-24 64 -52 32 -52 -8 L-52 -50 Q-52 -54 -48 -54 Z"
                     fill="url(#cpicMedalHatch2)"
                     stroke="var(--deep)"
-                    strokeWidth="2.6"
+                    strokeWidth="3"
                   />
                   <path
-                    d="M-38 -44 L38 -44 L38 -10 C38 22 18 48 0 62 C-18 48 -38 22 -38 -10 Z"
+                    d="M-40 -46 L40 -46 L40 -10 C40 24 18 50 0 64 C-18 50 -40 24 -40 -10 Z"
                     fill="none"
                     stroke="var(--deep)"
-                    strokeWidth="0.8"
-                    opacity="0.55"
+                    strokeWidth="1"
+                    opacity="0.7"
                   />
-                  {/* monograma "C" estilizado */}
+                  {/* chevron interno */}
+                  <path d="M-30 -28 L0 -10 L30 -28" fill="none" stroke="var(--deep)" strokeWidth="1.4" opacity="0.7" />
+                  <path d="M-30 -18 L0 0 L30 -18" fill="none" stroke="var(--deep)" strokeWidth="1" opacity="0.5" />
+                  {/* monograma C robusto */}
                   <path
-                    d="M22 -10 C22 -26 8 -36 -8 -36 C-26 -36 -36 -22 -36 -4 C-36 16 -22 30 -6 30 C8 30 18 22 22 12"
+                    d="M24 -8 C24 -26 8 -38 -10 -38 C-28 -38 -38 -22 -38 -2 C-38 18 -24 32 -6 32 C10 32 22 24 26 12"
                     fill="none"
                     stroke="var(--deep)"
-                    strokeWidth="6"
+                    strokeWidth="7"
                     strokeLinecap="round"
                   />
-                  {/* serifa do C */}
-                  <path d="M22 -12 L22 0 M22 10 L22 22" stroke="var(--deep)" strokeWidth="6" strokeLinecap="round" />
+                  <path d="M24 -10 L24 2 M24 12 L24 24" stroke="var(--deep)" strokeWidth="7" strokeLinecap="round" />
+                  {/* destaque do C */}
+                  <path
+                    d="M24 -8 C24 -26 8 -38 -10 -38"
+                    fill="none"
+                    stroke="var(--emboss-hi)"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    opacity="0.85"
+                  />
                 </g>
 
-                {/* faixa "PERFORMANCE" abaixo do escudo */}
-                <g transform="translate(100 232)">
-                  <path d="M-58 0 L58 0 L52 12 L-52 12 Z" fill="rgba(0,0,0,0.05)" stroke="var(--deep)" strokeWidth="1" />
-                  <text x="0" y="9" textAnchor="middle" fontFamily="Arial" fontSize="7.2" fontWeight="900" letterSpacing="1" fill="var(--deep)">
+                {/* faixa PERFORMANCE refinada */}
+                <g transform="translate(100 244)">
+                  <path d="M-66 0 L66 0 L60 14 L-60 14 Z" fill="rgba(0,0,0,0.12)" stroke="var(--deep)" strokeWidth="1.2" />
+                  <path d="M-66 0 L-72 6 L-66 12" fill="rgba(0,0,0,0.18)" stroke="var(--deep)" strokeWidth="1" />
+                  <path d="M66 0 L72 6 L66 12" fill="rgba(0,0,0,0.18)" stroke="var(--deep)" strokeWidth="1" />
+                  <text x="0" y="10" textAnchor="middle" fontFamily="Arial" fontSize="7.6" fontWeight="900" letterSpacing="2" fill="var(--deep)">
                     PERFORMANCE
                   </text>
                 </g>
@@ -270,7 +330,7 @@ export function CommissionCard({
             </svg>
           </div>
 
-          {/* Números embossados — abraçam o medalhão (esquerda: revenue, direita: target) */}
+          {/* ===== Números embossados ===== */}
           <div className="cpic-numbers">
             <span className="cpic-num-left">
               {currency} {brNumber(revenue)}
@@ -279,13 +339,11 @@ export function CommissionCard({
             <span className="cpic-num-right">{shortNumber(target)}</span>
           </div>
 
-          {/* Faturado % — equivalente a "VALID THRU" do Amex */}
           <div className="cpic-meta-left">
             Faturado
             <span className="cpic-meta-value">{progressPct}%</span>
           </div>
 
-          {/* Comissão — equivalente a "MEMBER SINCE" */}
           <div className="cpic-since">
             <div className="cpic-ribbon">COMISSÃO</div>
             <span className="cpic-year">{currentPercentage}%</span>
@@ -301,7 +359,6 @@ export function CommissionCard({
         </div>
       </div>
 
-      {/* Caption FORA do cartão (psicologia de progressão) */}
       <div className="cpic-caption">
         <div className="cpic-caption-main">{captionMain}</div>
         <div className="cpic-caption-sub">Tier {level}</div>
