@@ -434,9 +434,9 @@ function SourceActivityCard({
     <div className="rounded-[18px] bg-white px-7 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
       <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#999999]">Atividade</div>
-          <div className="mt-1 text-[22px] font-semibold tracking-[-0.035em] text-[#1f1f1f]">Atividades recentes</div>
-          <div className="mt-1 text-[12.5px] font-normal text-[#999999]">{subtitle}</div>
+          <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#999999]">Atividade</div>
+          <div className="mt-2 text-[32px] font-semibold leading-[1.05] tracking-[-0.04em] text-[#1f1f1f]">Atividades recentes</div>
+          <div className="mt-2 text-[13px] font-normal text-[#999999]">{subtitle}</div>
         </div>
 
         <div className="flex items-center gap-3">
