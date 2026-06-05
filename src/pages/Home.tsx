@@ -309,19 +309,20 @@ function SourceTrackCard({
   const progress = target > 0 ? Math.max(0, Math.min(100, (current / target) * 100)) : 0;
 
   return (
-    <div className="rounded-[18px] bg-white px-6 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
-      <div className="text-[14px] font-medium text-[#1f1f1f]">{title}</div>
+    <div className="rounded-[18px] bg-white px-7 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#999999]">Progresso</div>
+      <div className="mt-1 text-[20px] font-semibold tracking-[-0.03em] text-[#1f1f1f]">{title}</div>
       <div className="my-4 h-[11px] overflow-hidden rounded-full bg-[repeating-linear-gradient(90deg,#f0f0ef_0px,#f0f0ef_3px,#f7f7f6_3px,#f7f7f6_6px)]">
         <div
           className="h-full rounded-full bg-[linear-gradient(90deg,#20724f_0%,#0f5b42_100%)]"
           style={{ width: `${progress}%` }}
         />
       </div>
-      <div className="flex items-center justify-between gap-3 text-[12px] text-[#676767]">
+      <div className="flex items-center justify-between gap-3 text-[12px] text-[#999999]">
         <span>
-          <span className="font-medium text-[#1f1f1f]">{formatCurrency(current)}</span> de
+          <span className="font-semibold text-[#1f1f1f]">{formatCurrency(current)}</span> de
         </span>
-        <span>{formatCurrency(target)}</span>
+        <span className="font-medium text-[#676767]">{formatCurrency(target)}</span>
       </div>
     </div>
   );
