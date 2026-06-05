@@ -14,6 +14,7 @@ import {
 
 import { TAX_TOTAL } from "@/components/financeiro/financeiroHelpers";
 import { CloserSharedBoard } from "@/components/home/CloserSharedBoard";
+import { CommissionCard } from "@/components/home/CommissionCard";
 import { getEstimatedCommission } from "@/lib/commissionCalc";
 import { getTeamThermometerSnapshots, type ThermometerSnapshot } from "@/lib/thermometerSnapshot";
 import { cn } from "@/lib/utils";
