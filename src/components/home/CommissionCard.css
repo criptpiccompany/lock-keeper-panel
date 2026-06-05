@@ -212,7 +212,7 @@
 }
 
 .cpic-name {
-  margin-top: 6px;
+  margin-top: 3px;
   font-family: "OCR A Std", "Courier New", monospace;
   font-size: clamp(10px, 1.5vw, 16px);
   font-weight: 900;
