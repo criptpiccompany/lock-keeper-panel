@@ -852,8 +852,8 @@ export default function Home() {
                 </div>
 
                 <SourceChartCard
-                  title="Total Income"
-                  subtitle="View your income in a certain period of time"
+                  title="Receita semanal"
+                  subtitle="Receita e gasto consolidados dos últimos 7 dias."
                   values={adminData.weekSeries.map((item) => ({ date: item.date, value: item.revenue }))}
                   expenses={adminData.weekSeries.map((item) => ({ date: item.date, value: item.invested }))}
                 />
