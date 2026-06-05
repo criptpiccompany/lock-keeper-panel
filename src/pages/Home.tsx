@@ -229,26 +229,26 @@ function SourceTopBalanceCard({
   miniCards: Array<{ title: string; value: string; note: string; status: string }>;
 }) {
   return (
-    <div className="h-fit self-start rounded-[18px] bg-white px-6 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
+    <div className="h-fit self-start rounded-[18px] bg-white px-7 py-7 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
       <div className="mb-1 flex items-start justify-between gap-3">
         <div>
-          <div className="text-[13px] font-medium text-[#676767]">{heading}</div>
-          <div className="mt-2 text-[25px] font-semibold tracking-[-0.05em] text-[#1f1f1f]">{value}</div>
-          <div className="mt-2 flex items-center gap-1.5 text-[12px]">
-            <span className="font-medium text-[#7dbd34]">{delta}</span>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#999999]">{heading}</div>
+          <div className="mt-3 text-[40px] font-semibold leading-none tracking-[-0.055em] text-[#1f1f1f]">{value}</div>
+          <div className="mt-3 flex items-center gap-1.5 text-[12.5px]">
+            <span className="font-semibold text-[#7dbd34]">{delta}</span>
             <span className="text-[#999999]">{deltaNote}</span>
           </div>
         </div>
 
         {topPill ? (
-          <div className="inline-flex items-center rounded-full border border-[#ececeb] bg-white px-4 py-3 text-[13px] font-medium text-[#676767]">
+          <div className="inline-flex items-center rounded-full border border-[#ececeb] bg-white px-4 py-2.5 text-[12px] font-medium text-[#676767]">
             {topPill}
           </div>
         ) : null}
       </div>
 
-      <div className="mt-4 border-t border-[#ececeb] pt-4">
-        <div className="mb-3 text-[12px] font-medium text-[#676767]">Resumo | Total {miniCards.length} blocos</div>
+      <div className="mt-6 border-t border-[#ececeb] pt-5">
+        <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#999999]">Resumo · {miniCards.length} blocos</div>
 
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {miniCards.map((card) => (
