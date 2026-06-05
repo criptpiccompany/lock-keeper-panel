@@ -739,10 +739,14 @@ export default function Home() {
     <>
       <div className="mb-2">
             <div className="max-w-[62rem]">
-              <h1 className="max-w-4xl text-[42px] font-medium leading-[1.05] tracking-[-0.06em] text-slate-950 sm:text-[50px]">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#ececeb] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#676767]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#1f1f1f]" />
+                {isManagementView ? "Visão Executiva" : "Meu Painel"}
+              </div>
+              <h1 className="max-w-4xl text-[42px] font-semibold leading-[1.02] tracking-[-0.06em] text-slate-950 sm:text-[54px]">
                 {greeting}, {firstName}
               </h1>
-              <p className="mt-[10px] whitespace-nowrap text-[14px] font-normal leading-7 text-slate-500/90">
+              <p className="mt-3 max-w-2xl text-[14px] font-normal leading-7 text-slate-500/90">
                 {isManagementView
                   ? "Acompanhe a saúde financeira da operação, o ritmo da equipe e os movimentos do mês em uma visão executiva."
                   : "Acompanhe sua comissão, seu ritmo operacional e os movimentos do mês em uma leitura mais clara."}
