@@ -772,7 +772,7 @@ export default function Home() {
                 ]}
               />
 
-              <SourceTrackCard title="Progressão da Meta" current={resultado} target={progressTarget} />
+              <SourceTrackCard title="Meta diária do time" current={resultado} target={progressTarget} />
 
               <SourceDualPanel title="Meu Espaço" actionLabel="Fluxo ativo">
                 <SourceSplitCards
