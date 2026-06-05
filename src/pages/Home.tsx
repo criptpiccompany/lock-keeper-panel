@@ -338,13 +338,16 @@ function SourceDualPanel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-[18px] bg-white px-6 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
-      <div className="mb-[18px] flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 text-[16px] font-medium text-[#1f1f1f]">
-          <span className="grid h-[34px] w-[34px] place-items-center rounded-full bg-[#f4f4f3] text-[#676767]">
+    <div className="rounded-[18px] bg-white px-7 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="grid h-[36px] w-[36px] place-items-center rounded-full bg-[#f4f4f3] text-[#676767]">
             <LayoutGrid className="h-4 w-4" />
           </span>
-          {title}
+          <div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#999999]">Painel</div>
+            <div className="text-[20px] font-semibold tracking-[-0.03em] text-[#1f1f1f]">{title}</div>
+          </div>
         </div>
         <div className="inline-flex items-center gap-2 rounded-full border border-[#ececeb] bg-white px-4 py-2 text-[12px] font-medium text-[#676767]">
           {actionLabel}
