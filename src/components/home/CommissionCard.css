@@ -226,7 +226,7 @@
 }
 
 .cpic-tier {
-  margin-top: 6px;
+  margin-top: 3px;
   font-size: clamp(8px, 1.05vw, 12px);
   font-weight: 900;
   letter-spacing: 0.32em;
