@@ -200,12 +200,11 @@ function CardFace({
         </div>
 
         <div className="cpic-numbers">
-          <span className="cpic-num-left">
-            {currency} {brNumber(revenue)}
-          </span>
+          <span className="cpic-num-left">{shortCurrency(revenue, currency)}</span>
           <span className="cpic-num-mid" />
           <span className="cpic-num-right">{shortNumber(target)}</span>
         </div>
+
 
         {/* ZONE 3 — BOTTOM */}
         <div className="cpic-footer-left">
