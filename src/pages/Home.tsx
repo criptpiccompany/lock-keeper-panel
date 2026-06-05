@@ -201,14 +201,14 @@ function SourceMiniCard({
   status: string;
 }) {
   return (
-    <div className="rounded-[16px] border border-[#ececeb] bg-white px-3 py-3 shadow-none">
+    <div className="rounded-[16px] border border-[#ececeb] bg-white px-3.5 py-3.5 shadow-none">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <div className="truncate text-[12px] font-medium text-[#1f1f1f]">{title}</div>
-        <span className="text-[#999999]">•••</span>
+        <div className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-[#999999]">{title}</div>
+        <span className="text-[#cfcfce]">•••</span>
       </div>
-      <div className="text-[13px] font-semibold tracking-[-0.02em] text-[#1f1f1f]">{value}</div>
-      <div className="mt-1 text-[10px] leading-[1.35] text-[#999999]">{note}</div>
-      <div className="mt-1.5 text-[10px] font-medium text-[#6ea93d]">{status}</div>
+      <div className="text-[18px] font-semibold tracking-[-0.03em] text-[#1f1f1f]">{value}</div>
+      <div className="mt-1 text-[11px] leading-[1.4] text-[#999999]">{note}</div>
+      <div className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6ea93d]">{status}</div>
     </div>
   );
 }
@@ -229,26 +229,26 @@ function SourceTopBalanceCard({
   miniCards: Array<{ title: string; value: string; note: string; status: string }>;
 }) {
   return (
-    <div className="h-fit self-start rounded-[18px] bg-white px-6 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
+    <div className="h-fit self-start rounded-[18px] bg-white px-7 py-7 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
       <div className="mb-1 flex items-start justify-between gap-3">
         <div>
-          <div className="text-[13px] font-medium text-[#676767]">{heading}</div>
-          <div className="mt-2 text-[25px] font-semibold tracking-[-0.05em] text-[#1f1f1f]">{value}</div>
-          <div className="mt-2 flex items-center gap-1.5 text-[12px]">
-            <span className="font-medium text-[#7dbd34]">{delta}</span>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#999999]">{heading}</div>
+          <div className="mt-3 text-[40px] font-semibold leading-none tracking-[-0.055em] text-[#1f1f1f]">{value}</div>
+          <div className="mt-3 flex items-center gap-1.5 text-[12.5px]">
+            <span className="font-semibold text-[#7dbd34]">{delta}</span>
             <span className="text-[#999999]">{deltaNote}</span>
           </div>
         </div>
 
         {topPill ? (
-          <div className="inline-flex items-center rounded-full border border-[#ececeb] bg-white px-4 py-3 text-[13px] font-medium text-[#676767]">
+          <div className="inline-flex items-center rounded-full border border-[#ececeb] bg-white px-4 py-2.5 text-[12px] font-medium text-[#676767]">
             {topPill}
           </div>
         ) : null}
       </div>
 
-      <div className="mt-4 border-t border-[#ececeb] pt-4">
-        <div className="mb-3 text-[12px] font-medium text-[#676767]">Resumo | Total {miniCards.length} blocos</div>
+      <div className="mt-6 border-t border-[#ececeb] pt-5">
+        <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#999999]">Resumo · {miniCards.length} blocos</div>
 
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {miniCards.map((card) => (
@@ -278,20 +278,20 @@ function SourceStatCard({
   return (
     <div
       className={cn(
-        "min-h-[132px] rounded-[18px] px-5 py-[22px] shadow-[0_8px_24px_rgba(0,0,0,0.04)]",
+        "min-h-[148px] rounded-[18px] px-5 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]",
         highlight ? "bg-[linear-gradient(180deg,#77cd31_0%,#0d5d4a_100%)] text-white" : "bg-white text-[#1f1f1f]"
       )}
     >
       <div className="mb-6 flex items-center justify-between gap-3">
-        <div className={cn("text-[13px] font-medium", highlight ? "text-white/80" : "text-[#676767]")}>{label}</div>
-        <div className={cn("grid h-6 w-6 place-items-center rounded-full", highlight ? "bg-white/15 text-white" : "bg-[#f4f4f3] text-[#676767]")}>
+        <div className={cn("text-[10px] font-semibold uppercase tracking-[0.14em]", highlight ? "text-white/85" : "text-[#999999]")}>{label}</div>
+        <div className={cn("grid h-7 w-7 place-items-center rounded-full", highlight ? "bg-white/15 text-white" : "bg-[#f4f4f3] text-[#676767]")}>
           <Icon className="h-3.5 w-3.5" />
         </div>
       </div>
-      <div className="mb-3 text-[26px] font-semibold leading-none tracking-[-0.05em]">{value}</div>
+      <div className="mb-3 text-[34px] font-semibold leading-none tracking-[-0.055em]">{value}</div>
       <div className="flex items-center gap-1.5 text-[12px]">
-        <span className={cn("font-medium", highlight ? "text-white/82" : "text-[#7dbd34]")}>{delta}</span>
-        <span className={cn(highlight ? "text-white/72" : "text-[#999999]")}>{note}</span>
+        <span className={cn("font-semibold", highlight ? "text-white/85" : "text-[#7dbd34]")}>{delta}</span>
+        <span className={cn(highlight ? "text-white/75" : "text-[#999999]")}>{note}</span>
       </div>
     </div>
   );
@@ -309,19 +309,20 @@ function SourceTrackCard({
   const progress = target > 0 ? Math.max(0, Math.min(100, (current / target) * 100)) : 0;
 
   return (
-    <div className="rounded-[18px] bg-white px-6 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
-      <div className="text-[14px] font-medium text-[#1f1f1f]">{title}</div>
+    <div className="rounded-[18px] bg-white px-7 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#999999]">Progresso</div>
+      <div className="mt-1 text-[20px] font-semibold tracking-[-0.03em] text-[#1f1f1f]">{title}</div>
       <div className="my-4 h-[11px] overflow-hidden rounded-full bg-[repeating-linear-gradient(90deg,#f0f0ef_0px,#f0f0ef_3px,#f7f7f6_3px,#f7f7f6_6px)]">
         <div
           className="h-full rounded-full bg-[linear-gradient(90deg,#20724f_0%,#0f5b42_100%)]"
           style={{ width: `${progress}%` }}
         />
       </div>
-      <div className="flex items-center justify-between gap-3 text-[12px] text-[#676767]">
+      <div className="flex items-center justify-between gap-3 text-[12px] text-[#999999]">
         <span>
-          <span className="font-medium text-[#1f1f1f]">{formatCurrency(current)}</span> de
+          <span className="font-semibold text-[#1f1f1f]">{formatCurrency(current)}</span> de
         </span>
-        <span>{formatCurrency(target)}</span>
+        <span className="font-medium text-[#676767]">{formatCurrency(target)}</span>
       </div>
     </div>
   );
@@ -337,13 +338,16 @@ function SourceDualPanel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-[18px] bg-white px-6 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
-      <div className="mb-[18px] flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 text-[16px] font-medium text-[#1f1f1f]">
-          <span className="grid h-[34px] w-[34px] place-items-center rounded-full bg-[#f4f4f3] text-[#676767]">
+    <div className="rounded-[18px] bg-white px-7 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="grid h-[36px] w-[36px] place-items-center rounded-full bg-[#f4f4f3] text-[#676767]">
             <LayoutGrid className="h-4 w-4" />
           </span>
-          {title}
+          <div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#999999]">Painel</div>
+            <div className="text-[20px] font-semibold tracking-[-0.03em] text-[#1f1f1f]">{title}</div>
+          </div>
         </div>
         <div className="inline-flex items-center gap-2 rounded-full border border-[#ececeb] bg-white px-4 py-2 text-[12px] font-medium text-[#676767]">
           {actionLabel}
@@ -427,11 +431,12 @@ function SourceActivityCard({
   subtitle: string;
 }) {
   return (
-    <div className="rounded-[18px] bg-white px-6 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
-      <div className="mb-[18px] flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="rounded-[18px] bg-white px-7 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
+      <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <div className="text-[18px] font-medium tracking-[-0.03em] text-[#1f1f1f]">Recent Activities</div>
-          <div className="mt-1 text-[12px] font-normal text-[#676767]">{subtitle}</div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#999999]">Atividade</div>
+          <div className="mt-1 text-[22px] font-semibold tracking-[-0.035em] text-[#1f1f1f]">Atividades recentes</div>
+          <div className="mt-1 text-[12.5px] font-normal text-[#999999]">{subtitle}</div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -462,9 +467,10 @@ function SourceChartCard({
   expenses?: { date: string; value: number }[];
 }) {
   return (
-    <div className="rounded-[18px] bg-white px-6 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
-      <div className="mb-1 text-[14px] font-medium text-[#1f1f1f]">{title}</div>
-      <div className="mb-4 text-[12px] font-normal text-[#676767]">{subtitle}</div>
+    <div className="rounded-[18px] bg-white px-7 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#999999]">Receita</div>
+      <div className="mt-1 text-[22px] font-semibold tracking-[-0.035em] text-[#1f1f1f]">{title}</div>
+      <div className="mb-4 mt-1 text-[12.5px] font-normal text-[#999999]">{subtitle}</div>
       <WeekChart values={values} expenses={expenses} />
     </div>
   );
@@ -733,10 +739,14 @@ export default function Home() {
     <>
       <div className="mb-2">
             <div className="max-w-[62rem]">
-              <h1 className="max-w-4xl text-[42px] font-medium leading-[1.05] tracking-[-0.06em] text-slate-950 sm:text-[50px]">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#ececeb] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#676767]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#1f1f1f]" />
+                {isManagementView ? "Visão Executiva" : "Meu Painel"}
+              </div>
+              <h1 className="max-w-4xl text-[42px] font-semibold leading-[1.02] tracking-[-0.06em] text-slate-950 sm:text-[54px]">
                 {greeting}, {firstName}
               </h1>
-              <p className="mt-[10px] whitespace-nowrap text-[14px] font-normal leading-7 text-slate-500/90">
+              <p className="mt-3 max-w-2xl text-[14px] font-normal leading-7 text-slate-500/90">
                 {isManagementView
                   ? "Acompanhe a saúde financeira da operação, o ritmo da equipe e os movimentos do mês em uma visão executiva."
                   : "Acompanhe sua comissão, seu ritmo operacional e os movimentos do mês em uma leitura mais clara."}
@@ -842,8 +852,8 @@ export default function Home() {
                 </div>
 
                 <SourceChartCard
-                  title="Total Income"
-                  subtitle="View your income in a certain period of time"
+                  title="Receita semanal"
+                  subtitle="Receita e gasto consolidados dos últimos 7 dias."
                   values={adminData.weekSeries.map((item) => ({ date: item.date, value: item.revenue }))}
                   expenses={adminData.weekSeries.map((item) => ({ date: item.date, value: item.invested }))}
                 />
