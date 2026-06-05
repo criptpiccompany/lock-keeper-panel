@@ -723,7 +723,7 @@ export default function Home() {
     };
 
     fetchData();
-  }, [user, month, feeRate, isManagementView, isAdmin]);
+  }, [user?.id, user?.teamId, month, feeRate, isManagementView, isAdmin]);
 
   if (!user) return null;
 
