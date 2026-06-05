@@ -278,20 +278,20 @@ function SourceStatCard({
   return (
     <div
       className={cn(
-        "min-h-[132px] rounded-[18px] px-5 py-[22px] shadow-[0_8px_24px_rgba(0,0,0,0.04)]",
+        "min-h-[148px] rounded-[18px] px-5 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]",
         highlight ? "bg-[linear-gradient(180deg,#77cd31_0%,#0d5d4a_100%)] text-white" : "bg-white text-[#1f1f1f]"
       )}
     >
       <div className="mb-6 flex items-center justify-between gap-3">
-        <div className={cn("text-[13px] font-medium", highlight ? "text-white/80" : "text-[#676767]")}>{label}</div>
-        <div className={cn("grid h-6 w-6 place-items-center rounded-full", highlight ? "bg-white/15 text-white" : "bg-[#f4f4f3] text-[#676767]")}>
+        <div className={cn("text-[10px] font-semibold uppercase tracking-[0.14em]", highlight ? "text-white/85" : "text-[#999999]")}>{label}</div>
+        <div className={cn("grid h-7 w-7 place-items-center rounded-full", highlight ? "bg-white/15 text-white" : "bg-[#f4f4f3] text-[#676767]")}>
           <Icon className="h-3.5 w-3.5" />
         </div>
       </div>
-      <div className="mb-3 text-[26px] font-semibold leading-none tracking-[-0.05em]">{value}</div>
+      <div className="mb-3 text-[34px] font-semibold leading-none tracking-[-0.055em]">{value}</div>
       <div className="flex items-center gap-1.5 text-[12px]">
-        <span className={cn("font-medium", highlight ? "text-white/82" : "text-[#7dbd34]")}>{delta}</span>
-        <span className={cn(highlight ? "text-white/72" : "text-[#999999]")}>{note}</span>
+        <span className={cn("font-semibold", highlight ? "text-white/85" : "text-[#7dbd34]")}>{delta}</span>
+        <span className={cn(highlight ? "text-white/75" : "text-[#999999]")}>{note}</span>
       </div>
     </div>
   );
