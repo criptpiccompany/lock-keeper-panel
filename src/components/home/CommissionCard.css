@@ -172,23 +172,24 @@
   position: absolute;
   z-index: 6;
   left: 7%;
-  top: 73%;
+  top: 68%;
   width: 44%;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 .cpic-footer-right {
   position: absolute;
   z-index: 6;
   right: 7%;
-  top: 73%;
+  top: 68%;
   width: 38%;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 3px;
+  gap: 2px;
 }
+
 
 .cpic-foot-label {
   font-size: clamp(6px, 0.78vw, 9px);
