@@ -780,36 +780,11 @@ export default function Home() {
 
               <SourceTrackCard title="Meta diária do time" current={resultado} target={progressTarget} />
 
-              <SourceDualPanel title="Meu Espaço" actionLabel="Fluxo ativo">
-                <SourceSplitCards
-                  left={
-                    <div className="rounded-[16px] bg-[linear-gradient(180deg,#1e1b17_0%,#26211b_100%)] p-4 text-white">
-                      <div className="inline-flex rounded-full bg-white/15 px-3 py-1 text-[10px] font-medium">Closer</div>
-                      <div className="mt-10 text-[13px] text-white/60">Meta atual</div>
-                      <div className="mt-1 text-[20px] font-medium tracking-[-0.03em]">{currentPercentage}% de comissão</div>
-                      <div className="mt-5 grid grid-cols-3 gap-3 text-[10px]">
-                        <div>
-                          <div className="text-white/55">Ranking</div>
-                          <div className="mt-1 text-[13px] font-medium text-white">{closerData.teamRank ? `#${closerData.teamRank}` : "--"}</div>
-                        </div>
-                        <div>
-                          <div className="text-white/55">Hoje</div>
-                          <div className="mt-1 text-[13px] font-medium text-white">{closerData.todayEntries}</div>
-                        </div>
-                        <div>
-                          <div className="text-white/55">Influs</div>
-                          <div className="mt-1 text-[13px] font-medium text-white">{closerData.managedInfluencers}</div>
-                        </div>
-                      </div>
-                    </div>
-                  }
-                  right={
-                    <div className="rounded-[16px] bg-[linear-gradient(180deg,#305c35_0%,#133c30_100%)] p-4 text-white">
-                      <div className="inline-flex rounded-full bg-white/15 px-3 py-1 text-[10px] font-medium">Ativo</div>
-                      <div className="mt-10 text-[13px] text-white/60">Travamentos</div>
-                      <div className="mt-1 text-[20px] font-medium tracking-[-0.03em]">{closerData.activeLocks}</div>
-                    </div>
-                  }
+              <SourceDualPanel title="Meu Espaço" actionLabel="Performance Club">
+                <CommissionCard
+                  employeeName={user.nome}
+                  resultado={resultado}
+                  revenue={closerData.revenue}
                 />
               </SourceDualPanel>
             </div>
