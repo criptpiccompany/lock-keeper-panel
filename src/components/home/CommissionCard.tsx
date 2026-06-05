@@ -16,10 +16,20 @@ function brNumber(value: number) {
 
 function shortNumber(value: number) {
   const v = Math.max(0, value);
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(v >= 10_000_000 ? 0 : 1).replace(".0", "")}M`;
-  if (v >= 1_000) return `${Math.round(v / 1000)}K`;
+  if (v >= 1_000_000) {
+    const n = v / 1_000_000;
+    return `${(n >= 10 ? Math.round(n) : Math.round(n * 10) / 10).toString().replace(".", ",")}M`;
+  }
+  if (v >= 1_000) {
+    const n = v / 1_000;
+    return `${(n >= 100 ? Math.round(n) : Math.round(n * 10) / 10).toString().replace(".", ",")}k`;
+  }
   return String(Math.round(v));
 }
+function shortCurrency(value: number, currency: string) {
+  return `${currency} ${shortNumber(value)}`;
+}
+
 
 // ----------------- Pure visual card face -----------------
 interface CardFaceProps {
