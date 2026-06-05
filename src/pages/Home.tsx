@@ -232,8 +232,8 @@ function SourceTopBalanceCard({
     <div className="h-fit self-start rounded-[18px] bg-white px-7 py-7 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
       <div className="mb-1 flex items-start justify-between gap-3">
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#999999]">{heading}</div>
-          <div className="mt-3 text-[40px] font-semibold leading-none tracking-[-0.055em] text-[#1f1f1f]">{value}</div>
+          <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#999999]">{heading}</div>
+          <div className="mt-3 text-[44px] font-semibold leading-none tracking-[-0.055em] text-[#1f1f1f]">{value}</div>
           <div className="mt-3 flex items-center gap-1.5 text-[12.5px]">
             <span className="font-semibold text-[#7dbd34]">{delta}</span>
             <span className="text-[#999999]">{deltaNote}</span>
