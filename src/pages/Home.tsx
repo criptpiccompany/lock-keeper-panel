@@ -201,14 +201,14 @@ function SourceMiniCard({
   status: string;
 }) {
   return (
-    <div className="rounded-[16px] border border-[#ececeb] bg-white px-3 py-3 shadow-none">
+    <div className="rounded-[16px] border border-[#ececeb] bg-white px-3.5 py-3.5 shadow-none">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <div className="truncate text-[12px] font-medium text-[#1f1f1f]">{title}</div>
-        <span className="text-[#999999]">•••</span>
+        <div className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-[#999999]">{title}</div>
+        <span className="text-[#cfcfce]">•••</span>
       </div>
-      <div className="text-[13px] font-semibold tracking-[-0.02em] text-[#1f1f1f]">{value}</div>
-      <div className="mt-1 text-[10px] leading-[1.35] text-[#999999]">{note}</div>
-      <div className="mt-1.5 text-[10px] font-medium text-[#6ea93d]">{status}</div>
+      <div className="text-[18px] font-semibold tracking-[-0.03em] text-[#1f1f1f]">{value}</div>
+      <div className="mt-1 text-[11px] leading-[1.4] text-[#999999]">{note}</div>
+      <div className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6ea93d]">{status}</div>
     </div>
   );
 }
