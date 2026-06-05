@@ -78,10 +78,10 @@ serve(async (req) => {
       .eq("user_id", user.id)
       .single();
 
-    // Lookup admin recipient: find user with email cipheraadmin@gmail.com
+    // Lookup admin recipient: find user with email criptpicadmin@gmail.com
     const { data: adminUser } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
     const adminAccount = adminUser?.users?.find(
-      (u) => u.email === "cipheraadmin@gmail.com"
+      (u) => u.email === "criptpicadmin@gmail.com"
     );
     const recipientAdminId = adminAccount?.id || null;
 
