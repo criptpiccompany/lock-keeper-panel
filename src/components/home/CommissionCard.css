@@ -1,0 +1,379 @@
+/* Criptpic Performance Card — premium status card driven by thermometer tiers */
+.cpic-card-shell {
+  --ink: #111;
+  --paper: #eeeeec;
+  --paper2: #d6d6d3;
+  --line: rgba(0, 0, 0, 0.17);
+  --micro: rgba(0, 0, 0, 0.095);
+  --deep: rgba(0, 0, 0, 0.88);
+  --emboss-hi: rgba(255, 255, 255, 0.85);
+  --emboss-lo: rgba(0, 0, 0, 0.45);
+
+  width: 100%;
+  aspect-ratio: 1.586;
+  position: relative;
+  border-radius: 21px;
+  padding: 11px;
+  overflow: hidden;
+  color: var(--ink);
+  background: linear-gradient(135deg, #fafafa 0%, #cfcfcb 23%, #f7f7f4 45%, #bfc0bd 68%, #f1f1ef 100%);
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.cpic-card {
+  width: 100%;
+  height: 100%;
+  border-radius: 13px;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 22% 20%, rgba(255, 255, 255, 0.74), transparent 18%),
+    radial-gradient(circle at 68% 42%, rgba(255, 255, 255, 0.5), transparent 20%),
+    radial-gradient(circle at 82% 82%, rgba(255, 255, 255, 0.44), transparent 25%),
+    linear-gradient(145deg, #e9e9e6 0%, #f9f9f7 28%, #cacbc8 54%, #f2f2f0 78%, #c7c8c4 100%);
+}
+
+.cpic-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(115deg, transparent 0 36%, rgba(255, 255, 255, 0.4) 43%, transparent 49% 100%),
+    linear-gradient(25deg, rgba(255, 255, 255, 0.18), transparent 42%);
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+.cpic-card-shell svg.cpic-bg { position: absolute; inset: 0; }
+
+.cpic-brand {
+  position: absolute;
+  top: 11.5%;
+  left: 50%;
+  transform: translateX(-50%) scaleX(1.06);
+  font-family: "Arial Black", Impact, Arial, sans-serif;
+  font-size: clamp(22px, 5.4vw, 60px);
+  font-weight: 950;
+  letter-spacing: -1.5px;
+  line-height: 0.8;
+  color: #111;
+  white-space: nowrap;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8), 0 -1px 0 rgba(0, 0, 0, 0.1);
+  z-index: 5;
+}
+
+.cpic-brand-sub {
+  position: absolute;
+  top: 22%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: clamp(7px, 1.1vw, 11px);
+  font-weight: 900;
+  letter-spacing: 0.34em;
+  opacity: 0.28;
+  z-index: 4;
+  white-space: nowrap;
+}
+
+.cpic-chip {
+  position: absolute;
+  left: 8.35%;
+  top: 32.5%;
+  width: 15%;
+  aspect-ratio: 1.29;
+  z-index: 5;
+  border-radius: 10px;
+  background: linear-gradient(125deg, #c7c7c5 0%, #fefefe 28%, #a9aaa8 53%, #f8f8f6 75%, #c9c9c6 100%);
+  border: 2px solid rgba(0, 0, 0, 0.72);
+  box-shadow:
+    inset 0 0 11px rgba(0, 0, 0, 0.18),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.8),
+    0 2px 4px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+.cpic-chip svg { width: 100%; height: 100%; }
+
+.cpic-medallion {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 49%;
+  width: 26%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2.7px solid #111;
+  background: radial-gradient(circle at 52% 48%, #efefed, #cbcbc7 70%, #f7f7f4);
+  box-shadow:
+    inset 0 0 0 4px rgba(255, 255, 255, 0.38),
+    inset 0 0 0 7px rgba(0, 0, 0, 0.12),
+    0 2px 2px rgba(0, 0, 0, 0.18);
+}
+
+.cpic-numbers {
+  position: absolute;
+  z-index: 7;
+  left: 8%;
+  right: 8%;
+  top: 57.5%;
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1fr;
+  align-items: center;
+  gap: 4%;
+  font-family: "Courier New", monospace;
+  font-size: clamp(20px, 4.5vw, 50px);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: rgba(0, 0, 0, 0.58);
+  text-shadow:
+    2px 2px 0 var(--emboss-hi),
+    -1px -1px 0 var(--emboss-lo),
+    0 5px 4px rgba(0, 0, 0, 0.22);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.cpic-numbers span:nth-child(2) { text-align: center; }
+.cpic-numbers span:nth-child(3) { text-align: right; }
+
+.cpic-valid {
+  position: absolute;
+  z-index: 6;
+  left: 8.2%;
+  top: 71%;
+  font-size: clamp(9px, 1.45vw, 16px);
+  font-weight: 950;
+  line-height: 1.05;
+  color: rgba(0, 0, 0, 0.82);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+.cpic-valid .cpic-date {
+  display: block;
+  margin-top: 6px;
+  font-family: "Courier New", monospace;
+  font-size: clamp(18px, 3.2vw, 34px);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: rgba(0, 0, 0, 0.56);
+  text-shadow:
+    2px 2px 0 var(--emboss-hi),
+    -1px -1px 0 var(--emboss-lo),
+    0 4px 4px rgba(0, 0, 0, 0.18);
+}
+
+.cpic-since {
+  position: absolute;
+  z-index: 6;
+  right: 10%;
+  top: 69%;
+  text-align: center;
+}
+.cpic-since .cpic-ribbon {
+  display: inline-block;
+  padding: 4px 16px 3px;
+  border: 2px solid rgba(0, 0, 0, 0.84);
+  border-radius: 50% / 44%;
+  font-size: clamp(9px, 1.3vw, 14px);
+  font-weight: 950;
+  letter-spacing: 0.23em;
+  transform: rotate(3deg);
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.cpic-since .cpic-year {
+  display: block;
+  margin-top: 6px;
+  font-family: "Courier New", monospace;
+  font-size: clamp(19px, 3.3vw, 36px);
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.56);
+  text-shadow:
+    2px 2px 0 var(--emboss-hi),
+    -1px -1px 0 var(--emboss-lo),
+    0 4px 4px rgba(0, 0, 0, 0.18);
+}
+
+.cpic-name {
+  position: absolute;
+  z-index: 6;
+  left: 8.2%;
+  bottom: 8%;
+  width: 60%;
+  font-family: "Courier New", monospace;
+  font-size: clamp(16px, 3vw, 34px);
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  color: rgba(0, 0, 0, 0.58);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  text-shadow:
+    2px 2px 0 var(--emboss-hi),
+    -1px -1px 0 var(--emboss-lo),
+    0 4px 4px rgba(0, 0, 0, 0.18);
+}
+
+.cpic-microbrand {
+  position: absolute;
+  z-index: 5;
+  left: 8.1%;
+  right: 8.1%;
+  bottom: 4.5%;
+  overflow: hidden;
+  font-size: clamp(5px, 0.78vw, 9px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  opacity: 0.45;
+  white-space: nowrap;
+}
+
+.cpic-level {
+  position: absolute;
+  z-index: 6;
+  right: 6.2%;
+  bottom: 8.5%;
+  font-size: clamp(9px, 1.3vw, 14px);
+  font-weight: 950;
+  letter-spacing: 0.11em;
+  opacity: 0.82;
+}
+
+.cpic-missing {
+  position: absolute;
+  z-index: 6;
+  right: 6.2%;
+  bottom: 14%;
+  max-width: 38%;
+  text-align: right;
+  font-size: clamp(8px, 1.05vw, 11px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(0, 0, 0, 0.62);
+  text-transform: uppercase;
+}
+
+.cpic-progress-track {
+  position: absolute;
+  z-index: 8;
+  left: 8.2%;
+  right: 8.2%;
+  bottom: 2.5%;
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+.cpic-progress-bar {
+  height: 100%;
+  background: rgba(0, 0, 0, 0.82);
+  border-radius: inherit;
+  transition: width 600ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.cpic-copyright {
+  position: absolute;
+  right: 8.2%;
+  bottom: 4.2%;
+  font-size: clamp(7px, 0.95vw, 10px);
+  font-weight: 900;
+  opacity: 0.7;
+  z-index: 7;
+}
+
+/* ============= LEVEL VARIANTS ============= */
+
+/* SILVER (default) — keep base */
+
+/* GOLD */
+.cpic-card-shell.gold {
+  background: linear-gradient(135deg, #fff4d2 0%, #c9a64a 25%, #fff0c2 50%, #b8862f 75%, #f7d77a 100%);
+}
+.cpic-card-shell.gold .cpic-card {
+  background:
+    radial-gradient(circle at 22% 20%, rgba(255, 255, 255, 0.55), transparent 22%),
+    radial-gradient(circle at 78% 78%, rgba(255, 255, 255, 0.3), transparent 25%),
+    linear-gradient(145deg, #f6dc7a 0%, #d2a13a 35%, #f9e89c 65%, #b6862e 100%);
+}
+
+/* PLATINUM — cool steel */
+.cpic-card-shell.platinum {
+  background: linear-gradient(135deg, #e9eef2 0%, #b9c4cd 25%, #f1f4f7 50%, #9aa6b1 75%, #e3eaef 100%);
+}
+.cpic-card-shell.platinum .cpic-card {
+  background:
+    radial-gradient(circle at 22% 20%, rgba(255, 255, 255, 0.7), transparent 22%),
+    linear-gradient(145deg, #dfe6ec 0%, #f4f7fa 30%, #b8c2cc 60%, #ecf1f5 100%);
+}
+
+/* BLACK */
+.cpic-card-shell.black {
+  --ink: #f4f4f4;
+  --line: rgba(255, 255, 255, 0.2);
+  --micro: rgba(255, 255, 255, 0.1);
+  --deep: rgba(255, 255, 255, 0.9);
+  --emboss-hi: rgba(255, 255, 255, 0.34);
+  --emboss-lo: rgba(0, 0, 0, 0.9);
+  color: #f4f4f4;
+  background: linear-gradient(135deg, #050505, #2a2a2a 42%, #0b0b0b 72%, #3c3c3c);
+}
+.cpic-card-shell.black .cpic-card {
+  background:
+    radial-gradient(circle at 22% 20%, rgba(255, 255, 255, 0.16), transparent 18%),
+    radial-gradient(circle at 68% 42%, rgba(255, 255, 255, 0.09), transparent 20%),
+    linear-gradient(145deg, #0b0b0b 0%, #272727 32%, #050505 68%, #1e1e1e 100%);
+}
+.cpic-card-shell.black .cpic-brand,
+.cpic-card-shell.black .cpic-valid,
+.cpic-card-shell.black .cpic-numbers,
+.cpic-card-shell.black .cpic-valid .cpic-date,
+.cpic-card-shell.black .cpic-since .cpic-year,
+.cpic-card-shell.black .cpic-name,
+.cpic-card-shell.black .cpic-level { color: rgba(255, 255, 255, 0.86); }
+.cpic-card-shell.black .cpic-missing { color: rgba(255, 255, 255, 0.6); }
+.cpic-card-shell.black .cpic-progress-bar { background: rgba(255, 255, 255, 0.86); }
+.cpic-card-shell.black .cpic-chip { filter: invert(1) grayscale(1); }
+
+/* DIAMOND — icy blue */
+.cpic-card-shell.diamond {
+  --emboss-hi: rgba(255, 255, 255, 0.85);
+  background: linear-gradient(135deg, #dff3ff 0%, #7fb6d8 25%, #f0faff 50%, #5e9ec2 75%, #cfe7f5 100%);
+}
+.cpic-card-shell.diamond .cpic-card {
+  background:
+    radial-gradient(circle at 22% 20%, rgba(255, 255, 255, 0.75), transparent 22%),
+    radial-gradient(circle at 75% 75%, rgba(180, 220, 240, 0.45), transparent 28%),
+    linear-gradient(145deg, #e6f4fc 0%, #b9d8eb 35%, #f3fafe 65%, #99c1d9 100%);
+}
+
+/* OBSIDIAN — top tier */
+.cpic-card-shell.obsidian {
+  --ink: #f4f4f4;
+  --line: rgba(255, 255, 255, 0.18);
+  --micro: rgba(255, 255, 255, 0.1);
+  --deep: rgba(255, 255, 255, 0.85);
+  --emboss-hi: rgba(255, 255, 255, 0.28);
+  --emboss-lo: rgba(0, 0, 0, 0.9);
+  color: #f4f4f4;
+  background: linear-gradient(135deg, #1a0030 0%, #4a1465 30%, #0d0024 60%, #6a1f8a 100%);
+}
+.cpic-card-shell.obsidian .cpic-card {
+  background:
+    radial-gradient(circle at 22% 20%, rgba(255, 255, 255, 0.12), transparent 18%),
+    linear-gradient(145deg, #150028 0%, #3c0f55 35%, #0a001c 70%, #561a72 100%);
+}
+.cpic-card-shell.obsidian .cpic-brand,
+.cpic-card-shell.obsidian .cpic-valid,
+.cpic-card-shell.obsidian .cpic-numbers,
+.cpic-card-shell.obsidian .cpic-valid .cpic-date,
+.cpic-card-shell.obsidian .cpic-since .cpic-year,
+.cpic-card-shell.obsidian .cpic-name,
+.cpic-card-shell.obsidian .cpic-level { color: rgba(255, 255, 255, 0.88); }
+.cpic-card-shell.obsidian .cpic-missing { color: rgba(255, 255, 255, 0.6); }
+.cpic-card-shell.obsidian .cpic-progress-bar { background: rgba(255, 255, 255, 0.86); }
+.cpic-card-shell.obsidian .cpic-chip { filter: invert(1) grayscale(0.6) hue-rotate(260deg); }
