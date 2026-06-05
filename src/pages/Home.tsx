@@ -232,8 +232,8 @@ function SourceTopBalanceCard({
     <div className="h-fit self-start rounded-[18px] bg-white px-7 py-7 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
       <div className="mb-1 flex items-start justify-between gap-3">
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#999999]">{heading}</div>
-          <div className="mt-3 text-[40px] font-semibold leading-none tracking-[-0.055em] text-[#1f1f1f]">{value}</div>
+          <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#999999]">{heading}</div>
+          <div className="mt-3 text-[44px] font-semibold leading-none tracking-[-0.055em] text-[#1f1f1f]">{value}</div>
           <div className="mt-3 flex items-center gap-1.5 text-[12.5px]">
             <span className="font-semibold text-[#7dbd34]">{delta}</span>
             <span className="text-[#999999]">{deltaNote}</span>
@@ -310,8 +310,8 @@ function SourceTrackCard({
 
   return (
     <div className="rounded-[18px] bg-white px-7 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
-      <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#999999]">Progresso</div>
-      <div className="mt-1 text-[20px] font-semibold tracking-[-0.03em] text-[#1f1f1f]">{title}</div>
+      <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#999999]">Progresso</div>
+      <div className="mt-2 text-[32px] font-semibold leading-[1.05] tracking-[-0.04em] text-[#1f1f1f]">{title}</div>
       <div className="my-4 h-[11px] overflow-hidden rounded-full bg-[repeating-linear-gradient(90deg,#f0f0ef_0px,#f0f0ef_3px,#f7f7f6_3px,#f7f7f6_6px)]">
         <div
           className="h-full rounded-full bg-[linear-gradient(90deg,#20724f_0%,#0f5b42_100%)]"
@@ -345,8 +345,8 @@ function SourceDualPanel({
             <LayoutGrid className="h-4 w-4" />
           </span>
           <div>
-            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#999999]">Painel</div>
-            <div className="text-[20px] font-semibold tracking-[-0.03em] text-[#1f1f1f]">{title}</div>
+            <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#999999]">Painel</div>
+            <div className="text-[32px] font-semibold leading-[1.05] tracking-[-0.04em] text-[#1f1f1f]">{title}</div>
           </div>
         </div>
         <div className="inline-flex items-center gap-2 rounded-full border border-[#ececeb] bg-white px-4 py-2 text-[12px] font-medium text-[#676767]">
@@ -434,9 +434,9 @@ function SourceActivityCard({
     <div className="rounded-[18px] bg-white px-7 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
       <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#999999]">Atividade</div>
-          <div className="mt-1 text-[22px] font-semibold tracking-[-0.035em] text-[#1f1f1f]">Atividades recentes</div>
-          <div className="mt-1 text-[12.5px] font-normal text-[#999999]">{subtitle}</div>
+          <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#999999]">Atividade</div>
+          <div className="mt-2 text-[32px] font-semibold leading-[1.05] tracking-[-0.04em] text-[#1f1f1f]">Atividades recentes</div>
+          <div className="mt-2 text-[13px] font-normal text-[#999999]">{subtitle}</div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -468,9 +468,9 @@ function SourceChartCard({
 }) {
   return (
     <div className="rounded-[18px] bg-white px-7 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
-      <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#999999]">Receita</div>
-      <div className="mt-1 text-[22px] font-semibold tracking-[-0.035em] text-[#1f1f1f]">{title}</div>
-      <div className="mb-4 mt-1 text-[12.5px] font-normal text-[#999999]">{subtitle}</div>
+      <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#999999]">Receita</div>
+      <div className="mt-2 text-[32px] font-semibold leading-[1.05] tracking-[-0.04em] text-[#1f1f1f]">{title}</div>
+      <div className="mb-4 mt-2 text-[13px] font-normal text-[#999999]">{subtitle}</div>
       <WeekChart values={values} expenses={expenses} />
     </div>
   );
