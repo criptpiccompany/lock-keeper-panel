@@ -1,4 +1,4 @@
-/* Criptpic Performance Card — Amex Platinum fidelity pass */
+/* Criptpic Performance Card — strict grid, no collisions */
 .cpic-card-shell {
   --ink: #0a0a0a;
   --line: rgba(0, 0, 0, 0.26);
@@ -10,15 +10,15 @@
   width: 100%;
   aspect-ratio: 1.586;
   position: relative;
-  border-radius: 22px;
-  padding: 9px;
+  border-radius: 20px;
+  padding: 8px;
   overflow: hidden;
   color: var(--ink);
   background:
     linear-gradient(135deg, #f8f8f6 0%, #b9b9b5 22%, #f4f4f1 44%, #9d9d99 66%, #ececea 100%);
   box-shadow:
-    0 34px 80px -22px rgba(0, 0, 0, 0.55),
-    0 14px 28px -10px rgba(0, 0, 0, 0.32),
+    0 28px 64px -22px rgba(0, 0, 0, 0.5),
+    0 12px 24px -10px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 1),
     inset 0 -2px 0 rgba(0, 0, 0, 0.22);
   font-family: Arial, Helvetica, sans-serif;
@@ -27,7 +27,7 @@
 .cpic-card {
   width: 100%;
   height: 100%;
-  border-radius: 14px;
+  border-radius: 13px;
   position: relative;
   overflow: hidden;
   background:
@@ -36,31 +36,29 @@
     linear-gradient(145deg, #dedfdb 0%, #f7f8f5 28%, #aeafab 60%, #ebebe9 100%);
 }
 
-/* reflexo metálico sutil + microtextura */
 .cpic-card::after {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(112deg, transparent 0 36%, rgba(255, 255, 255, 0.55) 44%, transparent 52% 100%),
-    linear-gradient(25deg, rgba(255, 255, 255, 0.18), transparent 42%),
-    radial-gradient(circle at 50% 50%, transparent 60%, rgba(0, 0, 0, 0.14) 100%);
+    linear-gradient(112deg, transparent 0 36%, rgba(255, 255, 255, 0.5) 44%, transparent 52% 100%),
+    radial-gradient(circle at 50% 50%, transparent 60%, rgba(0, 0, 0, 0.12) 100%);
   mix-blend-mode: soft-light;
   pointer-events: none;
 }
 
 .cpic-card-shell svg.cpic-bg { position: absolute; inset: 0; }
 
-/* ============ BRAND — smaller, top, breathing ============ */
+/* ============ ZONE 1 — TOP (0% → 18%) ============ */
 .cpic-brand {
   position: absolute;
-  top: 6.5%;
+  top: 6%;
   left: 50%;
   transform: translateX(-50%);
   font-family: "Arial Black", Impact, Arial, sans-serif;
-  font-size: clamp(11px, 2.45vw, 26px);
+  font-size: clamp(9px, 2.0vw, 21px);
   font-weight: 900;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   line-height: 1;
   color: rgba(0, 0, 0, 0.95);
   white-space: nowrap;
@@ -72,23 +70,41 @@
 
 .cpic-brand-sub {
   position: absolute;
-  top: 12%;
+  top: 14.5%;
   left: 50%;
   transform: translateX(-50%);
-  font-size: clamp(5px, 0.72vw, 8px);
-  font-weight: 900;
-  letter-spacing: 0.52em;
-  color: rgba(0, 0, 0, 0.58);
+  font-size: clamp(5px, 0.7vw, 8px);
+  font-weight: 800;
+  letter-spacing: 0.42em;
+  color: rgba(0, 0, 0, 0.55);
   z-index: 4;
   white-space: nowrap;
 }
 
-/* ============ CHIP — bank-grade EMV geometry ============ */
+.cpic-progress-track {
+  position: absolute;
+  z-index: 3;
+  left: 8%;
+  right: 8%;
+  top: 22%;
+  height: 2px;
+  border-radius: 99px;
+  background: rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+.cpic-progress-bar {
+  height: 100%;
+  background: rgba(0, 0, 0, 0.68);
+  border-radius: inherit;
+  transition: width 600ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ============ ZONE 2 — CENTER (28% → 68%) ============ */
 .cpic-chip {
   position: absolute;
-  left: 8%;
-  top: 36%;
-  width: 12.5%;
+  left: 7%;
+  top: 30%;
+  width: 11.5%;
   aspect-ratio: 1.28;
   z-index: 5;
   border-radius: 6px;
@@ -103,13 +119,12 @@
 }
 .cpic-chip svg { width: 100%; height: 100%; display: block; }
 
-/* ============ MEDALLION — bigger, deeper, minted ============ */
 .cpic-medallion {
   position: absolute;
   z-index: 4;
   left: 50%;
-  top: 51%;
-  width: 30%;
+  top: 48%;
+  width: 28%;
   aspect-ratio: 0.74;
   transform: translate(-50%, -50%);
   border-radius: 50%;
@@ -118,22 +133,22 @@
 }
 .cpic-medallion svg { width: 100%; height: 100%; display: block; }
 
-/* ============ NUMBERS — embossed, sharp ============ */
+/* Numbers hug the medallion with generous side air */
 .cpic-numbers {
   position: absolute;
   z-index: 7;
-  left: 6%;
-  right: 6%;
-  top: 50%;
+  left: 4%;
+  right: 4%;
+  top: 47%;
   transform: translateY(-50%);
   display: grid;
-  grid-template-columns: 1fr 30% 1fr;
+  grid-template-columns: 1fr 42% 1fr;
   align-items: center;
   font-family: "OCR A Std", "Courier New", monospace;
-  font-size: clamp(14px, 2.7vw, 30px);
+  font-size: clamp(12px, 2.3vw, 26px);
   font-weight: 800;
-  letter-spacing: 0.22em;
-  color: rgba(0, 0, 0, 0.78);
+  letter-spacing: 0.18em;
+  color: rgba(0, 0, 0, 0.8);
   text-shadow:
     1px 1px 0 var(--emboss-hi),
     -1px -1px 0 var(--emboss-lo),
@@ -141,144 +156,73 @@
   white-space: nowrap;
   pointer-events: none;
 }
-.cpic-numbers .cpic-num-left { text-align: right; padding-right: 6%; }
+.cpic-numbers .cpic-num-left { text-align: right; padding-right: 4%; }
 .cpic-numbers .cpic-num-mid { visibility: hidden; }
-.cpic-numbers .cpic-num-right { text-align: left; padding-left: 6%; }
+.cpic-numbers .cpic-num-right { text-align: left; padding-left: 4%; }
 
-/* ============ BOTTOM META ============ */
-.cpic-meta-left {
+/* ============ ZONE 3 — BOTTOM (74% → 96%) ============ */
+.cpic-footer-left {
   position: absolute;
   z-index: 6;
-  left: 8.2%;
-  top: 72%;
-  font-size: clamp(6px, 0.85vw, 9px);
-  font-weight: 800;
-  letter-spacing: 0.22em;
+  left: 7%;
+  top: 73%;
+  width: 44%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.cpic-footer-right {
+  position: absolute;
+  z-index: 6;
+  right: 7%;
+  top: 73%;
+  width: 38%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.cpic-foot-label {
+  font-size: clamp(6px, 0.78vw, 9px);
+  font-weight: 900;
+  letter-spacing: 0.28em;
+  color: rgba(0, 0, 0, 0.7);
   text-transform: uppercase;
+}
+.cpic-foot-value {
+  font-family: "OCR A Std", "Courier New", monospace;
+  font-size: clamp(13px, 2.1vw, 22px);
+  font-weight: 800;
+  letter-spacing: 0.08em;
   color: rgba(0, 0, 0, 0.85);
-}
-.cpic-meta-left .cpic-meta-value {
-  display: block;
-  margin-top: 4px;
-  font-family: "OCR A Std", "Courier New", monospace;
-  font-size: clamp(12px, 1.9vw, 20px);
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  color: rgba(0, 0, 0, 0.78);
+  line-height: 1;
   text-shadow:
     1px 1px 0 var(--emboss-hi),
     -1px -1px 0 var(--emboss-lo),
-    0 2px 2px rgba(0, 0, 0, 0.2);
+    0 2px 2px rgba(0, 0, 0, 0.18);
 }
 
-.cpic-since {
-  position: absolute;
-  z-index: 6;
-  right: 9%;
-  top: 70%;
-  text-align: center;
-}
-.cpic-since .cpic-ribbon {
-  display: inline-block;
-  padding: 3px 14px 2px;
-  border: 1.5px solid rgba(0, 0, 0, 0.88);
-  border-radius: 50% / 50%;
-  font-size: clamp(6px, 0.85vw, 9px);
-  font-weight: 900;
-  letter-spacing: 0.26em;
-  background: rgba(255, 255, 255, 0.25);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
-    0 1px 0 rgba(0, 0, 0, 0.18);
-  color: rgba(0, 0, 0, 0.92);
-}
-.cpic-since .cpic-year {
-  display: block;
-  margin-top: 4px;
-  font-family: "OCR A Std", "Courier New", monospace;
-  font-size: clamp(12px, 2vw, 22px);
-  font-weight: 800;
-  color: rgba(0, 0, 0, 0.78);
-  text-shadow:
-    1px 1px 0 var(--emboss-hi),
-    -1px -1px 0 var(--emboss-lo),
-    0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-/* ============ NAME + LEVEL ============ */
 .cpic-name {
-  position: absolute;
-  z-index: 6;
-  left: 8.2%;
-  bottom: 8%;
-  width: 56%;
+  margin-top: 6px;
   font-family: "OCR A Std", "Courier New", monospace;
-  font-size: clamp(11px, 1.9vw, 22px);
+  font-size: clamp(10px, 1.5vw, 16px);
   font-weight: 900;
-  letter-spacing: 0.18em;
-  color: rgba(0, 0, 0, 0.82);
+  letter-spacing: 0.16em;
+  color: rgba(0, 0, 0, 0.78);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
   text-transform: uppercase;
-  text-shadow:
-    1px 1px 0 var(--emboss-hi),
-    -1px -1px 0 var(--emboss-lo),
-    0 2px 2px rgba(0, 0, 0, 0.2);
 }
 
-.cpic-level {
-  position: absolute;
-  z-index: 6;
-  right: 7%;
-  bottom: 9%;
-  font-size: clamp(7px, 1vw, 11px);
+.cpic-tier {
+  margin-top: 6px;
+  font-size: clamp(8px, 1.05vw, 12px);
   font-weight: 900;
-  letter-spacing: 0.28em;
-  color: rgba(0, 0, 0, 0.88);
-}
-
-.cpic-microbrand {
-  position: absolute;
-  z-index: 5;
-  left: 6%;
-  right: 6%;
-  bottom: 2.8%;
-  overflow: hidden;
-  font-size: clamp(4px, 0.6vw, 6px);
-  font-weight: 800;
-  opacity: 0.7;
-  white-space: nowrap;
-  color: rgba(0, 0, 0, 0.82);
-}
-
-.cpic-copyright {
-  position: absolute;
-  right: 4.5%;
-  bottom: 5%;
-  font-size: clamp(5px, 0.7vw, 7px);
-  font-weight: 900;
-  opacity: 0.75;
-  z-index: 7;
-}
-
-/* ============ PROGRESS ============ */
-.cpic-progress-track {
-  position: absolute;
-  z-index: 3;
-  left: 7%;
-  right: 7%;
-  top: 21%;
-  height: 2px;
-  border-radius: 99px;
-  background: rgba(0, 0, 0, 0.12);
-  overflow: hidden;
-}
-.cpic-progress-bar {
-  height: 100%;
-  background: rgba(0, 0, 0, 0.68);
-  border-radius: inherit;
-  transition: width 600ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  letter-spacing: 0.32em;
+  color: rgba(0, 0, 0, 0.78);
 }
 
 /* ============ LEVEL VARIANTS ============ */
@@ -313,21 +257,15 @@
 .cpic-card-shell.black .cpic-card {
   background:
     radial-gradient(circle at 22% 20%, rgba(255, 255, 255, 0.18), transparent 18%),
-    radial-gradient(circle at 68% 42%, rgba(255, 255, 255, 0.1), transparent 20%),
     linear-gradient(145deg, #060606 0%, #1c1c1c 32%, #020202 68%, #161616 100%);
 }
 .cpic-card-shell.black .cpic-brand,
+.cpic-card-shell.black .cpic-brand-sub,
 .cpic-card-shell.black .cpic-numbers,
-.cpic-card-shell.black .cpic-meta-left,
-.cpic-card-shell.black .cpic-meta-left .cpic-meta-value,
-.cpic-card-shell.black .cpic-since,
-.cpic-card-shell.black .cpic-since .cpic-ribbon,
-.cpic-card-shell.black .cpic-since .cpic-year,
+.cpic-card-shell.black .cpic-foot-label,
+.cpic-card-shell.black .cpic-foot-value,
 .cpic-card-shell.black .cpic-name,
-.cpic-card-shell.black .cpic-level,
-.cpic-card-shell.black .cpic-microbrand { color: rgba(255, 255, 255, 0.96); }
-.cpic-card-shell.black .cpic-brand-sub { color: rgba(255, 255, 255, 0.7); }
-.cpic-card-shell.black .cpic-since .cpic-ribbon { border-color: rgba(255, 255, 255, 0.9); }
+.cpic-card-shell.black .cpic-tier { color: rgba(255, 255, 255, 0.96); }
 .cpic-card-shell.black .cpic-progress-bar { background: rgba(255, 255, 255, 0.9); }
 
 .cpic-card-shell.diamond {
@@ -355,17 +293,12 @@
     linear-gradient(145deg, #120024 0%, #350d4d 35%, #08001a 70%, #4b176a 100%);
 }
 .cpic-card-shell.obsidian .cpic-brand,
+.cpic-card-shell.obsidian .cpic-brand-sub,
 .cpic-card-shell.obsidian .cpic-numbers,
-.cpic-card-shell.obsidian .cpic-meta-left,
-.cpic-card-shell.obsidian .cpic-meta-left .cpic-meta-value,
-.cpic-card-shell.obsidian .cpic-since,
-.cpic-card-shell.obsidian .cpic-since .cpic-ribbon,
-.cpic-card-shell.obsidian .cpic-since .cpic-year,
+.cpic-card-shell.obsidian .cpic-foot-label,
+.cpic-card-shell.obsidian .cpic-foot-value,
 .cpic-card-shell.obsidian .cpic-name,
-.cpic-card-shell.obsidian .cpic-level,
-.cpic-card-shell.obsidian .cpic-microbrand { color: rgba(255, 255, 255, 0.96); }
-.cpic-card-shell.obsidian .cpic-brand-sub { color: rgba(255, 255, 255, 0.7); }
-.cpic-card-shell.obsidian .cpic-since .cpic-ribbon { border-color: rgba(255, 255, 255, 0.85); }
+.cpic-card-shell.obsidian .cpic-tier { color: rgba(255, 255, 255, 0.96); }
 .cpic-card-shell.obsidian .cpic-progress-bar { background: rgba(255, 255, 255, 0.9); }
 
 /* ============ OUTSIDE CAPTION ============ */
@@ -389,4 +322,29 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: #8a8a85;
+}
+
+/* ============ CAROUSEL ============ */
+.cpic-carousel-wrap {
+  width: 100%;
+}
+.cpic-carousel {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 6px 0 14px;
+  -webkit-overflow-scrolling: touch;
+}
+.cpic-carousel::-webkit-scrollbar { display: none; }
+.cpic-carousel-slide {
+  flex: 0 0 84%;
+  scroll-snap-align: center;
+  min-width: 0;
+}
+@media (max-width: 640px) {
+  .cpic-carousel-slide { flex-basis: 88%; }
 }
