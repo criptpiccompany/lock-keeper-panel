@@ -467,9 +467,10 @@ function SourceChartCard({
   expenses?: { date: string; value: number }[];
 }) {
   return (
-    <div className="rounded-[18px] bg-white px-6 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
-      <div className="mb-1 text-[14px] font-medium text-[#1f1f1f]">{title}</div>
-      <div className="mb-4 text-[12px] font-normal text-[#676767]">{subtitle}</div>
+    <div className="rounded-[18px] bg-white px-7 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#999999]">Receita</div>
+      <div className="mt-1 text-[22px] font-semibold tracking-[-0.035em] text-[#1f1f1f]">{title}</div>
+      <div className="mb-4 mt-1 text-[12.5px] font-normal text-[#999999]">{subtitle}</div>
       <WeekChart values={values} expenses={expenses} />
     </div>
   );
