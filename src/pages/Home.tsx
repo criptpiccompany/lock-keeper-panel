@@ -552,7 +552,8 @@ export default function Home() {
     const fetchData = async () => {
       if (!user) return;
 
-      setLoading(true);
+      // Só mostrar overlay na carga inicial; refetches subsequentes acontecem silenciosamente
+      if (!closerData && !adminData) setLoading(true);
       const { startDate, endDateStr } = getMonthRange(month);
       const lastSevenDays = getLastSevenDays();
 
@@ -723,7 +724,7 @@ export default function Home() {
     };
 
     fetchData();
-  }, [user, month, feeRate, isManagementView, isAdmin]);
+  }, [user?.id, user?.teamId, month, feeRate, isManagementView, isAdmin]);
 
   if (!user) return null;
 
