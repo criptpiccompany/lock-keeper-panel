@@ -740,7 +740,7 @@ export default function Home() {
                 <span className="h-1.5 w-1.5 rounded-full bg-[#1f1f1f]" />
                 {isManagementView ? "Visão Executiva" : "Meu Painel"}
               </div>
-              <h1 className="max-w-4xl text-[42px] leading-[1.02] tracking-[-0.06em] text-slate-950 font-medium sm:text-9xl">
+              <h1 className="max-w-4xl text-[42px] leading-[1.02] tracking-[-0.06em] text-slate-950 font-medium sm:text-5xl">
                 {greeting}, {firstName}
               </h1>
               <p className="mt-3 max-w-2xl text-[14px] font-normal leading-7 text-slate-500/90">
