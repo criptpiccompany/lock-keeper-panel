@@ -59,7 +59,7 @@ export default function Login() {
 
   // Redirect if already logged in
   if (!loading && user) {
-    return <Navigate to="/meu" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
