@@ -272,9 +272,6 @@ export function WorkspaceLayout() {
 
           <div className="mt-8 lg:flex lg:min-h-[180px] lg:flex-col lg:justify-end">
             <div className="flex gap-3 lg:flex-col lg:items-center">
-              <button type="button" className="grid h-[44px] w-[44px] place-items-center rounded-[18px] bg-white text-[#676767] shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
-                <Shield className="h-4 w-4" />
-              </button>
               <div className="rounded-[18px] bg-white p-2 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
                 <button
                   type="button"
