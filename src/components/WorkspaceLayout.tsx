@@ -254,7 +254,7 @@ export function WorkspaceLayout() {
             </button>
           </div>
 
-          <div className="relative z-10 mt-6 space-y-3 lg:space-y-0">
+          <div className="relative z-10 mt-3 space-y-3 lg:space-y-0">
             <div className="flex flex-wrap gap-3 lg:flex-col lg:items-center">
               {primaryNav.map((item) => (
                 <SidebarLink key={item.path} item={item} active={location.pathname === item.path} expanded={sidebarExpanded} />
