@@ -252,12 +252,6 @@ export function WorkspaceLayout() {
                 )}
               />
             </button>
-            <button type="button" className="grid h-[44px] w-[44px] place-items-center rounded-[18px] bg-white text-[#676767] shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
-              <CalendarDays className="h-4 w-4" />
-            </button>
-            <button type="button" className="grid h-[44px] w-[44px] place-items-center rounded-[18px] bg-white text-[#676767] shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
-              <Bell className="h-4 w-4" />
-            </button>
           </div>
 
           <div className="relative z-10 mt-6 space-y-3 lg:space-y-0">
