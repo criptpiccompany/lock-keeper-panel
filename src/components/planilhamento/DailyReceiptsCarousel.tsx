@@ -140,14 +140,19 @@ export default function DailyReceiptsCarousel({
     e.target.value = "";
   };
 
-  // Paste support when carousel is in viewport
+  // Paste support when carousel is in viewport (and focused, if scoped)
   useEffect(() => {
     if (!canEdit) return;
     const handler = (e: ClipboardEvent) => {
       if (!carouselRef.current) return;
-      const rect = carouselRef.current.getBoundingClientRect();
-      const inView = rect.top < window.innerHeight && rect.bottom > 0;
-      if (!inView) return;
+      if (requireFocus) {
+        const active = document.activeElement;
+        if (!active || !carouselRef.current.contains(active)) return;
+      } else {
+        const rect = carouselRef.current.getBoundingClientRect();
+        const inView = rect.top < window.innerHeight && rect.bottom > 0;
+        if (!inView) return;
+      }
       const items = e.clipboardData?.items;
       if (!items) return;
       const files: File[] = [];
@@ -162,7 +167,7 @@ export default function DailyReceiptsCarousel({
     };
     document.addEventListener("paste", handler);
     return () => document.removeEventListener("paste", handler);
-  }, [canEdit, closerId, date]);
+  }, [canEdit, closerId, date, requireFocus]);
 
   const handleDelete = async (id: string) => {
     if (!user) return;
