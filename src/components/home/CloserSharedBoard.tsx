@@ -575,6 +575,20 @@ export function CloserSharedBoard() {
     fetchCards();
   }, [user?.teamId]);
 
+  // Realtime: keep board in sync across all team members
+  useEffect(() => {
+    if (!user?.teamId) return;
+    const channel = supabase
+      .channel(`team_shared_board:${user.teamId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "team_shared_board", filter: `team_id=eq.${user.teamId}` },
+        () => { fetchCards(); }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.teamId]);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
