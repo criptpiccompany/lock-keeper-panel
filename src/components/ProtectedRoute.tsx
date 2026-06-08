@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requireAdmin = false, requireFinanceiro = false }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+  const { user, loading, isFinanceiro } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -28,6 +28,11 @@ export function ProtectedRoute({ children, requireAdmin = false, requireFinancei
 
   if (user.status !== 'approved' && !elevated) {
     return <Navigate to="/aguardando-aprovacao" replace />;
+  }
+
+  const financeiroPaths = ['/financeiro/comprovantes', '/financeiro/espelhamento'];
+  if (isFinanceiro && !financeiroPaths.some((path) => location.pathname.startsWith(path))) {
+    return <Navigate to="/financeiro/comprovantes" replace />;
   }
 
   if (requireAdmin && user.role !== 'ADMIN' && user.role !== 'SUBADMIN') {

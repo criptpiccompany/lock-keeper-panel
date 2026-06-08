@@ -30,7 +30,7 @@ interface UserWithRole {
   id: string;
   nome: string;
   email: string;
-  role: 'CLOSER' | 'ADMIN' | 'SUBADMIN';
+  role: 'CLOSER' | 'ADMIN' | 'SUBADMIN' | 'FINANCEIRO';
   commission_rate: number;
   team_id: string | null;
 }
@@ -140,7 +140,7 @@ export default function Admin() {
           id: profile.id,
           nome: profile.nome,
           email: '',
-          role: (userRole?.role as 'CLOSER' | 'ADMIN' | 'SUBADMIN') || 'CLOSER',
+          role: (userRole?.role as 'CLOSER' | 'ADMIN' | 'SUBADMIN' | 'FINANCEIRO') || 'CLOSER',
           commission_rate: profile.commission_rate ?? 0.1,
           team_id: profile.team_id,
         };
@@ -251,10 +251,9 @@ export default function Admin() {
     }
   };
 
-  const handleToggleRole = async (userId: string, currentRole: string) => {
+  const handleSetRole = async (userId: string, newRole: UserWithRole['role']) => {
     if (userId === user?.id) { toast.error('Você não pode alterar seu próprio papel'); return; }
     setUpdatingRole(userId);
-    const newRole = currentRole === 'ADMIN' ? 'CLOSER' : 'ADMIN';
     try {
       const { error } = await supabase.from('user_roles').update({ role: newRole }).eq('user_id', userId);
       if (error) throw error;
@@ -411,6 +410,8 @@ export default function Admin() {
                             ? "border-amber-300 text-amber-700 bg-amber-50" 
                             : u.role === 'SUBADMIN'
                             ? "border-blue-300 text-blue-700 bg-blue-50"
+                            : u.role === 'FINANCEIRO'
+                            ? "border-violet-300 text-violet-700 bg-violet-50"
                             : "border-emerald-300 text-emerald-700 bg-emerald-50"
                           }
                         >
@@ -448,21 +449,23 @@ export default function Admin() {
                             <Key className="h-4 w-4" />
                           </Button>
                           {isAdmin && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleToggleRole(u.id, u.role)}
-                            disabled={updatingRole === u.id || u.id === user?.id}
-                          >
-                            {updatingRole === u.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                            updatingRole === u.id ? (
+                              <Button variant="outline" size="sm" disabled>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              </Button>
                             ) : (
-                              <>
-                                <Shield className="h-4 w-4 mr-1" />
-                                {u.role === 'ADMIN' ? 'Tornar Closer' : 'Tornar Admin'}
-                              </>
-                            )}
-                          </Button>
+                              <Select value={u.role} onValueChange={(role) => handleSetRole(u.id, role as UserWithRole['role'])} disabled={u.id === user?.id}>
+                                <SelectTrigger className="h-9 w-[150px] text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="CLOSER">CLOSER</SelectItem>
+                                  <SelectItem value="FINANCEIRO">FINANCEIRO</SelectItem>
+                                  <SelectItem value="SUBADMIN">SUBADMIN</SelectItem>
+                                  <SelectItem value="ADMIN">ADMIN</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )
                           )}
                           <Button 
                             variant="outline" 
