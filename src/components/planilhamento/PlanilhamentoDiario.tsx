@@ -163,9 +163,11 @@ function getHandleInitials(handle: string): string {
 }
 
 function workflowBadgeClass(status: string | null, hasProof: boolean) {
+  if (status === "FECHADO") return "bg-[#e9f6cf] text-[#3f6f12]";
+  if (status === "POSTAR") return "bg-[#fff1cc] text-[#8a5a00]";
+  if (status === "GRAVANDO") return "bg-[#dbe7ff] text-[#2c4fa0]";
+  if (status === "CHAMEI") return "bg-[#f1eede] text-[#7a6a2c]";
   if (!hasProof) return "bg-[#efefed] text-[#6e6e6e]";
-  if (status === "Postou") return "bg-[#e9f6cf] text-[#628d1f]";
-  if (status === "Apagou") return "bg-[#f1f1ef] text-[#7b7b78]";
   return "bg-[#eef2ff] text-[#5a67d8]";
 }
 
@@ -190,7 +192,7 @@ function resultadoColor(status: StatusResultado): string {
   return "text-red-600";
 }
 
-const WORKFLOW_STATUSES = ["Gravando", "Postou", "Apagou"] as const;
+const WORKFLOW_STATUSES = ["CHAMEI", "GRAVANDO", "POSTAR", "FECHADO"] as const;
 
 function WorkflowStatusDropdown({
   value,
@@ -201,13 +203,13 @@ function WorkflowStatusDropdown({
 }) {
   return (
     <Select value={value || "__none__"} onValueChange={(v) => onChange(v === "__none__" ? null : v)}>
-      <SelectTrigger className="h-7 text-xs w-[110px] border-border/50">
-        <SelectValue placeholder="Status..." />
+      <SelectTrigger className="h-9 text-[12px] w-[130px] rounded-full border-[#ececeb] bg-white font-medium tracking-[0.04em]">
+        <SelectValue placeholder="Selecionar" />
       </SelectTrigger>
       <SelectContent className="bg-popover z-50">
-        <SelectItem value="__none__" className="text-xs text-muted-foreground">— Sem status</SelectItem>
+        <SelectItem value="__none__" className="text-xs text-muted-foreground">— Sem ação</SelectItem>
         {WORKFLOW_STATUSES.map((s) => (
-          <SelectItem key={s} value={s} className="text-xs">
+          <SelectItem key={s} value={s} className="text-xs font-medium tracking-[0.04em]">
             {s}
           </SelectItem>
         ))}
@@ -1268,10 +1270,11 @@ export default function PlanilhamentoDiario({
                                   <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Faturamento</th>
                                   <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Resultado</th>
                                   <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Total no link</th>
+                                  <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Ação</th>
                                   <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Comprovantes</th>
                                 </tr>
                                 <tr>
-                                  <td colSpan={7} className="px-5">
+                                  <td colSpan={8} className="px-5">
                                     <div className="border-b border-dashed border-[#e6ddb0]" />
                                   </td>
                                 </tr>
@@ -1279,7 +1282,7 @@ export default function PlanilhamentoDiario({
                               <tbody>
                                 {visibleDayRecords.length === 0 ? (
                                   <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-sm text-muted-foreground">
+                                    <td colSpan={8} className="px-6 py-12 text-center text-sm text-muted-foreground">
                                       Nenhum influenciador encontrado para esse dia.
                                     </td>
                                   </tr>
@@ -1344,7 +1347,21 @@ export default function PlanilhamentoDiario({
                                             {record.acumulado !== null ? formatCurrency(record.acumulado) : "—"}
                                           </div>
                                         </td>
+                                        <td className="px-4 py-5" onClick={(e) => e.stopPropagation()}>
+                                          {viewingOther ? (
+                                            <span className={cn("inline-flex items-center gap-2 rounded-full px-3 py-2 text-[12px] font-medium tracking-[0.04em]", workflowBadgeClass(record.status, !!record.comprovante_url))}>
+                                              <span className="h-2 w-2 rounded-full bg-current opacity-70" />
+                                              {record.status || "—"}
+                                            </span>
+                                          ) : (
+                                            <WorkflowStatusDropdown
+                                              value={record.status}
+                                              onChange={(val) => handleStatusChange(record.id, val)}
+                                            />
+                                          )}
+                                        </td>
                                         <td className="px-4 py-5">
+
                                           <div className="flex items-center gap-2">
                                             {record.comprovante_url ? (
                                               <ComprovanteThumbnail
