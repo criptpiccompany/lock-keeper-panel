@@ -755,7 +755,7 @@ export function CloserSharedBoard() {
                 type="button"
                 variant="ghost"
                 onClick={() => setDialogOpen(true)}
-                className="h-8 rounded-md border border-[#e7e7e3] bg-white px-3 text-[12px] font-medium text-[#9a9a95] shadow-none hover:bg-[#fafaf8] hover:text-[#3d3d39]"
+                className="h-8 rounded-md bg-black px-3 text-[12px] font-medium text-white shadow-none hover:bg-black/90 hover:text-white"
               >
                 <Plus className="mr-1.5 h-3.5 w-3.5" />
                 Novo influenciador
