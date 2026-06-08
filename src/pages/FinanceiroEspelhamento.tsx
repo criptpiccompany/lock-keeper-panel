@@ -73,11 +73,10 @@ export default function FinanceiroEspelhamento() {
             <LayoutGrid className="h-3.5 w-3.5" />
             Espelhamento
           </div>
-          <h1 className="text-[40px] leading-[1.05] font-semibold tracking-[-0.04em] text-[#1f1f1f] sm:text-[52px]">
-            Espelhe o Planilhamento
-            <span className="block text-[#cfcfce]">de qualquer closer, ao vivo.</span>
+          <h1 className="whitespace-nowrap text-[40px] leading-[1.05] font-semibold tracking-[-0.04em] text-[#1f1f1f] sm:text-[52px]">
+            Espelhe o Planilhamento <span className="text-[#cfcfce]">de qualquer closer, ao vivo.</span>
           </h1>
-          <p className="max-w-xl text-[13.5px] leading-relaxed text-[#676767]">
+          <p className="whitespace-nowrap text-[13.5px] leading-relaxed text-[#676767]">
             Veja Planilhamento Diário, Balanço e Lista do Mês exatamente como o closer enxerga — em tempo real.
           </p>
         </div>
