@@ -984,6 +984,10 @@ export type Database = {
         Args: { _admin_id: string; _target_id: string }
         Returns: boolean
       }
+      sync_influencer_to_closer: {
+        Args: { _closer_id: string; _handle: string }
+        Returns: undefined
+      }
       validate_invite_token: { Args: { _token: string }; Returns: boolean }
     }
     Enums: {

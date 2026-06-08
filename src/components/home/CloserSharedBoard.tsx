@@ -904,6 +904,13 @@ export function CloserSharedBoard() {
       // @ts-expect-error closed_by exists in DB but not in KanbanCard type
       closed_by: isConcorrencia ? null : markCloserId || null,
     });
+    // Sincroniza com a "Minha Lista" do closer escolhido
+    if (!isConcorrencia && markCloserId && markCard.instagram_username) {
+      await (supabase.rpc as any)("sync_influencer_to_closer", {
+        _handle: markCard.instagram_username,
+        _closer_id: markCloserId,
+      });
+    }
     setMarkSaving(false);
     setMarkModalOpen(false);
     setMarkCard(null);
