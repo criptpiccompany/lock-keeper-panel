@@ -25,7 +25,11 @@ import { CLASSIFICACAO_OPTIONS, type KanbanCard } from "@/components/kanban/type
 
 type TeamBoardCard = KanbanCard & {
   closerName: string;
+  assigned_to?: string | null;
+  assignedName?: string | null;
 };
+
+type TeamMember = { id: string; nome: string };
 
 type SortField = "status" | "display_name" | "classificacao" | "closerName" | "valor_negociado" | "last_moved_at";
 type SortDir = "asc" | "desc";
