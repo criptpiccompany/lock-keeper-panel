@@ -1066,7 +1066,7 @@ export function CloserSharedBoard() {
                           <SelectItem
                             key={option}
                             value={option}
-                            className="cursor-pointer rounded-[10px] px-3 py-2 text-[13px] text-[#1f1f1f] focus:bg-[#f3f3ef]"
+                            className="cursor-pointer rounded-[10px] pl-8 pr-3 py-2 text-[13px] text-[#1f1f1f] focus:bg-[#f3f3ef]"
                           >
                             <span className="inline-flex items-center gap-2">
                               <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium" style={{ backgroundColor: meta.bg, color: meta.text }}>
@@ -1090,11 +1090,11 @@ export function CloserSharedBoard() {
                       <SelectValue placeholder="Ninguém — fica no Geral" />
                     </SelectTrigger>
                     <SelectContent className="rounded-[14px] border-[#ececeb] bg-white p-1 shadow-[0_16px_40px_-20px_rgba(15,23,42,0.25)]">
-                      <SelectItem value="none" className="cursor-pointer rounded-[10px] px-3 py-2 text-[13px] text-[#6e6e73] focus:bg-[#f3f3ef]">
+                      <SelectItem value="none" className="cursor-pointer rounded-[10px] pl-8 pr-3 py-2 text-[13px] text-[#6e6e73] focus:bg-[#f3f3ef]">
                         Ninguém — fica no Geral
                       </SelectItem>
                       {teamMembers.map((member) => (
-                        <SelectItem key={member.id} value={member.id} className="cursor-pointer rounded-[10px] px-3 py-2 text-[13px] text-[#1f1f1f] focus:bg-[#f3f3ef]">
+                        <SelectItem key={member.id} value={member.id} className="cursor-pointer rounded-[10px] pl-8 pr-3 py-2 text-[13px] text-[#1f1f1f] focus:bg-[#f3f3ef]">
                           {member.nome}{member.id === user?.id ? " (você)" : ""}
                         </SelectItem>
                       ))}
