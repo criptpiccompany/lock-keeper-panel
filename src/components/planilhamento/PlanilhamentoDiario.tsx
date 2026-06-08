@@ -753,7 +753,7 @@ export default function PlanilhamentoDiario({
       toast.error("Selecione um influenciador");
       return;
     }
-    if (!formValorPago || Number(formValorPago) <= 0) {
+    if (!formValorPago || parseBRL(formValorPago) <= 0) {
       toast.error("Informe o valor pago");
       return;
     }
