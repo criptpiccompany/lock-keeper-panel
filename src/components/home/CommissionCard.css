@@ -344,7 +344,8 @@
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  padding: 6px 0 14px;
+  padding: 6px 8% 14px;
+  scroll-padding-inline: 8%;
   -webkit-overflow-scrolling: touch;
 }
 .cpic-carousel::-webkit-scrollbar { display: none; }
@@ -354,5 +355,7 @@
   min-width: 0;
 }
 @media (max-width: 640px) {
+  .cpic-carousel { padding-inline: 6%; scroll-padding-inline: 6%; }
   .cpic-carousel-slide { flex-basis: 88%; }
 }
+
