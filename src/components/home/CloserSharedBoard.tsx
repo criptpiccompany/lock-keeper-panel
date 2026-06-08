@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { CLASSIFICACAO_OPTIONS, type KanbanCard } from "@/components/kanban/types";
+import { CardHistorySheet } from "@/components/home/CardHistorySheet";
 
 type TeamBoardCard = KanbanCard & {
   closerName: string;
