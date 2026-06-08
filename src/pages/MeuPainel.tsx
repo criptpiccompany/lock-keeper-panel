@@ -146,25 +146,6 @@ export default function MeuPainel() {
         </div>
       </section>
 
-      <section className="rounded-[28px] bg-white p-4 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03] sm:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <div className="text-[12px] uppercase tracking-[0.18em] text-[#999999]">Carteira operacional</div>
-            <div className="mt-1 text-[24px] font-medium tracking-[-0.04em] text-[#1f1f1f]">Influenciadores sob sua gestão</div>
-          </div>
-
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9a9a96]" />
-            <Input
-              placeholder="Buscar por @handle..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-11 rounded-full border-[#ececeb] bg-white pl-11 pr-4 text-[14px] shadow-none"
-            />
-          </div>
-        </div>
-      </section>
-
       <div>
         {influencers.length === 0 ? (
           <div className="rounded-[28px] bg-white py-20 text-center text-muted-foreground shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
@@ -180,25 +161,37 @@ export default function MeuPainel() {
               </Button>
             </div>
           </div>
-        ) : filteredInfluencers.length === 0 ? (
-          <div className="rounded-[28px] bg-white py-20 text-center text-muted-foreground shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
-            <Search className="mx-auto mb-4 h-10 w-10 opacity-30" />
-            <h3 className="text-[18px] font-medium text-[#1f1f1f]">Nenhum resultado</h3>
-            <p className="mt-2 text-sm text-[#6e6e73]">
-              Nenhum influenciador encontrado com "{searchQuery}"
-            </p>
-          </div>
         ) : (
-          <div className="overflow-hidden rounded-[28px] bg-white p-3 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
-            <div className="mb-3 flex items-center justify-between px-2 pt-2">
+          <div className="overflow-hidden rounded-[28px] bg-white p-3 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03] sm:p-5">
+            <div className="mb-4 flex flex-col gap-4 px-2 pt-2 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <div className="text-[12px] uppercase tracking-[0.18em] text-[#999999]">Visão geral</div>
-                <div className="mt-1 text-[24px] font-medium tracking-[-0.04em] text-[#1f1f1f]">Sua carteira</div>
+                <div className="text-[12px] uppercase tracking-[0.18em] text-[#999999]">Carteira operacional</div>
+                <div className="mt-1 text-[24px] font-medium tracking-[-0.04em] text-[#1f1f1f]">Influenciadores sob sua gestão</div>
               </div>
-              <div className="rounded-full bg-[#f3f3ef] px-3 py-2 text-[12px] font-medium text-[#676767]">
-                {filteredInfluencers.length} resultados
+              <div className="flex items-center gap-3">
+                <div className="relative w-full max-w-md lg:w-80">
+                  <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9a9a96]" />
+                  <Input
+                    placeholder="Buscar por @handle..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="h-11 rounded-full border-[#ececeb] bg-white pl-11 pr-4 text-[14px] shadow-none"
+                  />
+                </div>
+                <div className="shrink-0 rounded-full bg-[#f3f3ef] px-3 py-2 text-[12px] font-medium text-[#676767]">
+                  {filteredInfluencers.length} resultados
+                </div>
               </div>
             </div>
+            {filteredInfluencers.length === 0 ? (
+              <div className="py-16 text-center">
+                <Search className="mx-auto mb-4 h-10 w-10 opacity-30" />
+                <h3 className="text-[18px] font-medium text-[#1f1f1f]">Nenhum resultado</h3>
+                <p className="mt-2 text-sm text-[#6e6e73]">
+                  Nenhum influenciador encontrado com "{searchQuery}"
+                </p>
+              </div>
+            ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[760px] text-sm">
                 <thead>
