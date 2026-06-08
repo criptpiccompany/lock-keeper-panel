@@ -568,6 +568,17 @@ export function CloserSharedBoard() {
     fetchCards();
   }, [user?.teamId]);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.rpc("get_approved_closers");
+      if (!cancelled && Array.isArray(data)) {
+        setTeamMembers(data.filter((m): m is TeamMember => !!m && !!m.id && !!m.nome));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user?.teamId]);
+
   const updateCard = async (cardId: string, fields: Partial<KanbanCard>) => {
     const { error } = await supabase.from("team_shared_board").update(fields).eq("id", cardId);
     if (!error) {
