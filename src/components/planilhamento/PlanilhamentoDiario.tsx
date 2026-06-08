@@ -1233,7 +1233,7 @@ export default function PlanilhamentoDiario({
                             <Button
                               type="button"
                               onClick={() => setDayListOpen(true)}
-                              className="h-12 rounded-full bg-[#242424] px-5 text-white shadow-none hover:bg-[#1b1b1b]"
+                              className="h-12 rounded-full bg-[#4a4a4a] px-5 text-white shadow-none hover:bg-[#3a3a3a]"
                             >
                               Lista do dia
                             </Button>
