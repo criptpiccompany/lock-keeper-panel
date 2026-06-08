@@ -939,6 +939,10 @@ export type Database = {
           nome: string
         }[]
       }
+      get_global_daily_revenue: {
+        Args: { _end: string; _start: string }
+        Returns: number
+      }
       get_public_influencers: {
         Args: never
         Returns: {
