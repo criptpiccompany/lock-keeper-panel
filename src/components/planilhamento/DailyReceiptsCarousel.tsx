@@ -25,6 +25,8 @@ interface ReceiptRow {
   daily_record_id: string | null;
   created_at: string;
   closer_id: string;
+  parsed_data?: any;
+  parse_status?: string | null;
 }
 
 interface LegacyReceipt {
