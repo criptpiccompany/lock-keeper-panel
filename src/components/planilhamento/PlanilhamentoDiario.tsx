@@ -1220,7 +1220,7 @@ export default function PlanilhamentoDiario({
                       <Badge variant="secondary" className="text-xs whitespace-nowrap shrink-0">
                         {dayRecords.length} {dayRecords.length === 1 ? "registro" : "registros"}
                       </Badge>
-                      {pendingCount > 0 && (
+                      {!RECEIPTS_AS_CAROUSEL && pendingCount > 0 && (
                         <Badge variant="destructive" className="text-xs gap-1 whitespace-nowrap shrink-0 hidden sm:inline-flex">
                           <AlertCircle className="h-3 w-3" />
                           {pendingCount} sem comprovante
