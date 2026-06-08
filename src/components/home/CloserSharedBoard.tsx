@@ -663,17 +663,11 @@ export function CloserSharedBoard() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
 
   const fetchCards = async () => {
-    if (!user?.teamId) {
-      setCards([]);
-      setLoading(false);
-      return;
-    }
     setLoading(true);
 
     const { data, error } = await supabase
       .from("team_shared_board")
       .select("*")
-      .eq("team_id", user.teamId)
       .eq("archived", false)
       .order("created_at", { ascending: false });
 
@@ -686,12 +680,18 @@ export function CloserSharedBoard() {
     const creatorIds = [...new Set(rawRows.map((r) => r.created_by as string).filter(Boolean))];
     const assignedIds = [...new Set(rawRows.map((r) => r.assigned_to as string).filter(Boolean))];
     const closedIds = [...new Set(rawRows.map((r) => r.closed_by as string).filter(Boolean))];
-    const idsToFetch = [...new Set([...creatorIds, ...assignedIds, ...closedIds])];
+    const idsToFetch = new Set([...creatorIds, ...assignedIds, ...closedIds]);
     let names = new Map<string, string>();
 
-    if (idsToFetch.length) {
-      const { data: profiles } = await supabase.from("profiles").select("id, nome").in("id", idsToFetch);
-      names = new Map((profiles || []).map((profile: { id: string; nome: string | null }) => [profile.id, profile.nome || "Closer"]));
+    if (idsToFetch.size) {
+      const { data: profiles } = await (supabase.rpc as any)("get_shared_board_users");
+      if (Array.isArray(profiles)) {
+        names = new Map(
+          (profiles as Array<{ id: string; nome: string | null }>)
+            .filter((p) => idsToFetch.has(p.id))
+            .map((p) => [p.id, p.nome || "Closer"])
+        );
+      }
     }
 
     setCards(
@@ -710,32 +710,31 @@ export function CloserSharedBoard() {
 
   useEffect(() => {
     fetchCards();
-  }, [user?.teamId]);
+  }, []);
 
-  // Realtime: keep board in sync across all team members
+  // Realtime: keep board in sync across ALL accounts (global shared board)
   useEffect(() => {
-    if (!user?.teamId) return;
     const channel = supabase
-      .channel(`team_shared_board:${user.teamId}`)
+      .channel("team_shared_board:global")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "team_shared_board", filter: `team_id=eq.${user.teamId}` },
+        { event: "*", schema: "public", table: "team_shared_board" },
         () => { fetchCards(); }
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user?.teamId]);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase.rpc("get_approved_closers");
+      const { data } = await (supabase.rpc as any)("get_shared_board_users");
       if (!cancelled && Array.isArray(data)) {
-        setTeamMembers(data.filter((m): m is TeamMember => !!m && !!m.id && !!m.nome));
+        setTeamMembers((data as TeamMember[]).filter((m) => !!m && !!m.id && !!m.nome));
       }
     })();
     return () => { cancelled = true; };
-  }, [user?.teamId]);
+  }, []);
 
   const updateCard = async (cardId: string, fields: Partial<KanbanCard>) => {
     const { error } = await supabase.from("team_shared_board").update(fields).eq("id", cardId);
