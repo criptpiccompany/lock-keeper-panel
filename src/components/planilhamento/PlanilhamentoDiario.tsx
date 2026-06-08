@@ -65,9 +65,14 @@ import {
 import ComprovanteThumbnail from "./ComprovanteThumbnail";
 import ComprovanteLightbox from "./ComprovanteLightbox";
 import ProofUploader from "./ProofUploader";
+import DailyReceiptsCarousel from "./DailyReceiptsCarousel";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import EditReasonModal, { formatFieldLabel, type FieldDiff } from "./EditReasonModal";
 import SharedPartnersPopover, { type SharedPartner } from "./SharedPartnersPopover";
+
+// Feature flag: receipts now live in a horizontal carousel at the end of each day
+// instead of per-row inside the influencer table. Kept as a flag for easy rollback.
+const RECEIPTS_AS_CAROUSEL = true;
 
 // --- Types ---
 
