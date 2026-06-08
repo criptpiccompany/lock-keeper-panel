@@ -585,6 +585,9 @@ function SectionBlock({
   visibleColumns,
   gridTemplateColumns,
   onUpdate,
+  statusOptions,
+  onCheckClick,
+  showCheck,
 }: {
   title: string;
   subtitle?: string;
@@ -595,6 +598,9 @@ function SectionBlock({
   visibleColumns: Array<{ key: ColumnKey; label: string; width: string; sortable?: boolean }>;
   gridTemplateColumns: string;
   onUpdate?: (cardId: string, fields: Partial<KanbanCard>) => Promise<void>;
+  statusOptions: string[];
+  onCheckClick?: (card: TeamBoardCard) => void;
+  showCheck?: boolean;
 }) {
   return (
     <section>
@@ -620,6 +626,9 @@ function SectionBlock({
                 visibleColumns={visibleColumns}
                 gridTemplateColumns={gridTemplateColumns}
                 onUpdate={onUpdate}
+                statusOptions={statusOptions}
+                onCheckClick={onCheckClick}
+                showCheck={showCheck}
               />
             ))}
           </div>
