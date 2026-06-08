@@ -760,13 +760,31 @@ export function CloserSharedBoard() {
                 <Plus className="mr-1.5 h-3.5 w-3.5" />
                 Novo influenciador
               </Button>
-              <button
-                type="button"
-                className="grid h-7 w-7 place-items-center rounded-md text-[#b2b2ad] transition-colors hover:bg-[#f7f7f5] hover:text-[#54544f]"
-              >
-                <ChevronDown className="h-3.5 w-3.5" />
-              </button>
+              <div className="ml-1 flex items-center gap-0.5 rounded-md border border-[#e7e7e3] bg-white p-0.5">
+                {([
+                  { key: "forYou", label: "Para você", count: sections.forYou.length },
+                  { key: "closing", label: "Fechando", count: sections.closing.length },
+                  { key: "teamClosed", label: "Equipe Fechou", count: sections.teamClosed.length },
+                  { key: "general", label: "Geral", count: sections.general.length },
+                ] as const).map((tab) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setActiveTab(tab.key)}
+                    className={cn(
+                      "h-7 rounded-[6px] px-2.5 text-[11px] font-medium transition-colors",
+                      activeTab === tab.key
+                        ? "bg-[#f1f1ee] text-[#37352f]"
+                        : "text-[#9a9a95] hover:bg-[#fafaf8] hover:text-[#54544f]"
+                    )}
+                  >
+                    {tab.label}
+                    <span className="ml-1 text-[10px] text-[#b4b4b0]">({tab.count})</span>
+                  </button>
+                ))}
+              </div>
             </div>
+
 
             <div className="flex items-center gap-1">
               <DropdownMenu>
