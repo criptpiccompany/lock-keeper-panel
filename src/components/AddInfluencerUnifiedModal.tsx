@@ -62,6 +62,33 @@ export function AddInfluencerUnifiedModal({ open, onOpenChange, onSuccess }: Pro
     onOpenChange(false);
   };
 
+  // Sincroniza com o Board Compartilhado (aba "Fechados") marcando este closer como fechador
+  const syncToSharedBoard = async (handle: string, closerId: string) => {
+    const username = handle.replace(/^@/, "").toLowerCase();
+    if (!username) return;
+    const { data: existing } = await supabase
+      .from("team_shared_board")
+      .select("id")
+      .ilike("instagram_username", username)
+      .eq("archived", false)
+      .maybeSingle();
+    if (existing) {
+      await supabase
+        .from("team_shared_board")
+        .update({ closed_by: closerId, status: "Positivo" } as never)
+        .eq("id", (existing as any).id);
+    } else {
+      await supabase.from("team_shared_board").insert({
+        created_by: closerId,
+        instagram_username: username,
+        display_name: username,
+        instagram_url: `https://instagram.com/${username}`,
+        status: "Positivo",
+        closed_by: closerId,
+      } as never);
+    }
+  };
+
   // ===== Single submit (accepts @handle OR url) =====
   const handleSingleSubmit = async () => {
     if (!user) return;
