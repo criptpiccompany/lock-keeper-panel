@@ -64,11 +64,9 @@ const STATUS_ORDER: Record<string, number> = {
 };
 
 const COLUMN_DEFS: Array<{ key: ColumnKey; label: string; width: string; sortable?: boolean }> = [
-  { key: "check", label: "", width: "24px" },
+  { key: "classificacao", label: "Engaj.", width: "32px", sortable: true },
   { key: "status", label: "Status", width: "104px", sortable: true },
   { key: "display_name", label: "Influenciador", width: "minmax(136px,1fr)", sortable: true },
-  { key: "classificacao", label: "Engaj.", width: "56px", sortable: true },
-  
   { key: "apoios", label: "Ponte", width: "minmax(52px,0.45fr)" },
   { key: "valor_negociado", label: "Valor", width: "74px", sortable: true },
   { key: "last_moved_at", label: "Att", width: "56px", sortable: true },
