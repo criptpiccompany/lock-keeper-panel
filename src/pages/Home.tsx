@@ -766,7 +766,7 @@ export default function Home() {
       {!loading && closerData ? (
         <div className="mt-1 space-y-3">
           <div className="grid gap-6 xl:grid-cols-[560px_minmax(0,1fr)]">
-            <div className="grid w-full gap-[18px]">
+            <div className="flex w-full flex-col gap-[18px]">
               <SourceTopBalanceCard
                 heading="Patrimônio Total"
                 value={formatCurrency(closerData.result)}
@@ -791,8 +791,10 @@ export default function Home() {
               </SourceDualPanel>
             </div>
 
-            <div className="flex h-full min-w-0 flex-col">
-              <CloserSharedBoard />
+            <div className="relative min-w-0">
+              <div className="xl:absolute xl:inset-0 xl:flex xl:flex-col">
+                <CloserSharedBoard />
+              </div>
             </div>
           </div>
         </div>
