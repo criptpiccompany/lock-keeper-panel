@@ -1125,21 +1125,34 @@ export function CloserSharedBoard() {
               <>
                 {activeTab === "fechados" ? (
                   <>
-                    <SectionBlock
-                      title="Fechando"
-                      cards={sections.closing}
-                      visibleColumns={visibleColumns}
-                      gridTemplateColumns={gridTemplateColumns}
-                      onUpdate={updateCard}
-                    />
-                    <SectionBlock
-                      title="Equipe Fechou"
-                      cards={sections.teamClosed}
-                      emptyMessage="Nenhum influenciador fechado por outra pessoa no momento."
-                      visibleColumns={visibleColumns}
-                      gridTemplateColumns={gridTemplateColumns}
-                      onUpdate={updateCard}
-                    />
+                    {sections.closerGroups.length === 0 && sections.concorrencia.length === 0 ? (
+                      <div className="px-6 py-4 text-[12px] text-[#aaa9a4]">Nenhum influenciador fechado ainda.</div>
+                    ) : null}
+                    {sections.closerGroups.map((group) => (
+                      <SectionBlock
+                        key={group.closerId}
+                        title={group.closerId === user?.id ? `${group.closerName} (você)` : group.closerName}
+                        cards={group.cards}
+                        visibleColumns={visibleColumns}
+                        gridTemplateColumns={gridTemplateColumns}
+                        onUpdate={updateCard}
+                        statusOptions={CLOSED_STATUSES as unknown as string[]}
+                        onCheckClick={openMarkModal}
+                        showCheck
+                      />
+                    ))}
+                    {sections.concorrencia.length > 0 ? (
+                      <SectionBlock
+                        title="Concorrência"
+                        cards={sections.concorrencia}
+                        visibleColumns={visibleColumns}
+                        gridTemplateColumns={gridTemplateColumns}
+                        onUpdate={updateCard}
+                        statusOptions={CLOSED_STATUSES as unknown as string[]}
+                        onCheckClick={openMarkModal}
+                        showCheck
+                      />
+                    ) : null}
                   </>
                 ) : (
                   <>
@@ -1150,6 +1163,9 @@ export function CloserSharedBoard() {
                       visibleColumns={visibleColumns}
                       gridTemplateColumns={gridTemplateColumns}
                       onUpdate={updateCard}
+                      statusOptions={PROSPECT_STATUSES as unknown as string[]}
+                      onCheckClick={openMarkModal}
+                      showCheck
                     />
                     <SectionBlock
                       title="Geral"
@@ -1158,6 +1174,9 @@ export function CloserSharedBoard() {
                       visibleColumns={visibleColumns}
                       gridTemplateColumns={gridTemplateColumns}
                       onUpdate={updateCard}
+                      statusOptions={PROSPECT_STATUSES as unknown as string[]}
+                      onCheckClick={openMarkModal}
+                      showCheck
                     />
                   </>
                 )}
