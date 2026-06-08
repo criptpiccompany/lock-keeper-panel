@@ -802,6 +802,7 @@ export type Database = {
           archived: boolean
           archived_at: string | null
           archived_from_status: string | null
+          assigned_to: string | null
           classificacao: string | null
           created_at: string
           created_by: string
@@ -821,6 +822,7 @@ export type Database = {
           archived?: boolean
           archived_at?: string | null
           archived_from_status?: string | null
+          assigned_to?: string | null
           classificacao?: string | null
           created_at?: string
           created_by: string
@@ -840,6 +842,7 @@ export type Database = {
           archived?: boolean
           archived_at?: string | null
           archived_from_status?: string | null
+          assigned_to?: string | null
           classificacao?: string | null
           created_at?: string
           created_by?: string
@@ -854,7 +857,15 @@ export type Database = {
           updated_at?: string
           valor_negociado?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "team_shared_board_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teams: {
         Row: {
