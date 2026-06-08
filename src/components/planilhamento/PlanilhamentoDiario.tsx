@@ -1377,25 +1377,26 @@ export default function PlanilhamentoDiario({
                                             />
                                           )}
                                         </td>
-                                        <td className="px-4 py-5">
-
-                                          <div className="flex items-center gap-2">
-                                            {record.comprovante_url ? (
-                                              <ComprovanteThumbnail
-                                                url={record.comprovante_url}
-                                                onClick={() => handleViewComprovante(record.comprovante_url)}
-                                              />
-                                            ) : (
-                                              <span className="text-[13px] text-[#9a9a97]">—</span>
-                                            )}
-                                            {record.comprovante_url_2 ? (
-                                              <ComprovanteThumbnail
-                                                url={record.comprovante_url_2}
-                                                onClick={() => handleViewComprovante(record.comprovante_url_2!)}
-                                              />
-                                            ) : null}
-                                          </div>
-                                        </td>
+                                        {!RECEIPTS_AS_CAROUSEL && (
+                                          <td className="px-4 py-5">
+                                            <div className="flex items-center gap-2">
+                                              {record.comprovante_url ? (
+                                                <ComprovanteThumbnail
+                                                  url={record.comprovante_url}
+                                                  onClick={() => handleViewComprovante(record.comprovante_url)}
+                                                />
+                                              ) : (
+                                                <span className="text-[13px] text-[#9a9a97]">—</span>
+                                              )}
+                                              {record.comprovante_url_2 ? (
+                                                <ComprovanteThumbnail
+                                                  url={record.comprovante_url_2}
+                                                  onClick={() => handleViewComprovante(record.comprovante_url_2!)}
+                                                />
+                                              ) : null}
+                                            </div>
+                                          </td>
+                                        )}
                                       </tr>
                                     );
                                   })
