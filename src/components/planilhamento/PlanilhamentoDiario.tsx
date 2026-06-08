@@ -39,6 +39,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { useAuth } from "@/hooks/useAuth";
+import { CommissionCardCarousel } from "@/components/home/CommissionCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -1173,7 +1174,22 @@ export default function PlanilhamentoDiario({
         </div>
       )}
 
+      {!viewingOther && !compact && !focusedDate && !isAdmin && user?.nome && (
+        <div className="rounded-2xl bg-white p-5 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
+          <div className="mb-3">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-[#999999]">Porcentagem Atual</div>
+            <div className="mt-0.5 text-[20px] font-medium tracking-[-0.04em] text-[#1f1f1f]">Performance Club</div>
+          </div>
+          <CommissionCardCarousel
+            employeeName={user.nome}
+            resultado={monthTotals.resultadoLiquido}
+            revenue={monthTotals.totalFaturado}
+          />
+        </div>
+      )}
+
       {/* Day sections */}
+
       {!focusedDate && activeDays.length === 0 ? (
         <div className="empty-state">
           <FileText className="empty-state-icon" />
