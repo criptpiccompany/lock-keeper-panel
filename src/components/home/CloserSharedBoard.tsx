@@ -983,7 +983,7 @@ export function CloserSharedBoard() {
           </div>
 
           <div className="grid gap-5 p-6 md:grid-cols-2">
-            {/* LEFT — Identificação */}
+            {/* LEFT — Identificação & Negociação */}
             <div className="rounded-[24px] bg-white p-6 ring-1 ring-black/[0.04] shadow-[0_18px_44px_-38px_rgba(15,23,42,0.18)]">
               <div className="mb-5 flex items-center gap-2.5">
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f3f3ef]">
@@ -1007,82 +1007,6 @@ export function CloserSharedBoard() {
                     className="h-12 rounded-[12px] border-[#ececeb] bg-[#fafaf8] text-[14px] shadow-none"
                   />
                 </div>
-
-                <div className="space-y-2">
-                  <label className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">
-                    <Tag className="h-3 w-3" /> Ponte
-                  </label>
-                  <Input
-                    value={newBridge}
-                    onChange={(event) => setNewBridge(event.target.value)}
-                    placeholder="@apoio1, @apoio2"
-                    className="h-12 rounded-[12px] border-[#ececeb] bg-[#fafaf8] text-[14px] shadow-none"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">
-                    <Wallet className="h-3 w-3" /> Valor negociado
-                  </label>
-                  <Input
-                    value={newValue}
-                    onChange={(event) => setNewValue(event.target.value)}
-                    placeholder="0,00"
-                    className="h-12 rounded-[12px] border-[#ececeb] bg-[#fafaf8] text-[14px] shadow-none"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* RIGHT — Negociação */}
-            <div className="rounded-[24px] bg-white p-6 ring-1 ring-black/[0.04] shadow-[0_18px_44px_-38px_rgba(15,23,42,0.18)]">
-              <div className="mb-5 flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f3f3ef]">
-                  <Zap className="h-4 w-4 text-[#1f1f1f]" />
-                </div>
-                <div>
-                  <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#999999]">Negociação</div>
-                  <div className="text-[16px] font-medium tracking-[-0.02em] text-[#1f1f1f]">Status & engajamento</div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">Status</label>
-                  <Select value={newStatus} onValueChange={setNewStatus}>
-                    <SelectTrigger className="h-12 rounded-[12px] border-[#ececeb] bg-[#fafaf8] px-4 text-[14px] text-[#1f1f1f] shadow-none focus:ring-0 focus:ring-offset-0">
-                      <SelectValue>
-                        <span className="inline-flex items-center gap-2">
-                          <span
-                            className="h-2 w-2 rounded-full"
-                            style={{ backgroundColor: (STATUS_META[newStatus] ?? STATUS_META.Fechar).dot }}
-                          />
-                          {newStatus}
-                        </span>
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className="rounded-[14px] border-[#ececeb] bg-white p-1 shadow-[0_16px_40px_-20px_rgba(15,23,42,0.25)]">
-                      {["Fechar", "Abordado", "Negociando", "Positivo", "Empatando / Negociar", "Pausado", "Com a equipe", "Não posta mais"].map((option) => {
-                        const meta = STATUS_META[option] ?? STATUS_META.Fechar;
-                        return (
-                          <SelectItem
-                            key={option}
-                            value={option}
-                            className="cursor-pointer rounded-[10px] px-3 py-2 text-[13px] text-[#1f1f1f] focus:bg-[#f3f3ef]"
-                          >
-                            <span className="inline-flex items-center gap-2">
-                              <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium" style={{ backgroundColor: meta.bg, color: meta.text }}>
-                                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: meta.dot }} />
-                                {option}
-                              </span>
-                            </span>
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                </div>
-
 
                 <div className="space-y-2">
                   <label className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">Engajamento</label>
@@ -1122,6 +1046,42 @@ export function CloserSharedBoard() {
                 </div>
 
                 <div className="space-y-2">
+                  <label className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">Status</label>
+                  <Select value={newStatus} onValueChange={setNewStatus}>
+                    <SelectTrigger className="h-12 rounded-[12px] border-[#ececeb] bg-[#fafaf8] px-4 text-[14px] text-[#1f1f1f] shadow-none focus:ring-0 focus:ring-offset-0">
+                      <SelectValue>
+                        <span className="inline-flex items-center gap-2">
+                          <span
+                            className="h-2 w-2 rounded-full"
+                            style={{ backgroundColor: (STATUS_META[newStatus] ?? STATUS_META.Fechar).dot }}
+                          />
+                          {newStatus}
+                        </span>
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="rounded-[14px] border-[#ececeb] bg-white p-1 shadow-[0_16px_40px_-20px_rgba(15,23,42,0.25)]">
+                      {["Fechar", "Abordado", "Negociando", "Positivo", "Empatando / Negociar", "Pausado", "Com a equipe", "Não posta mais"].map((option) => {
+                        const meta = STATUS_META[option] ?? STATUS_META.Fechar;
+                        return (
+                          <SelectItem
+                            key={option}
+                            value={option}
+                            className="cursor-pointer rounded-[10px] px-3 py-2 text-[13px] text-[#1f1f1f] focus:bg-[#f3f3ef]"
+                          >
+                            <span className="inline-flex items-center gap-2">
+                              <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium" style={{ backgroundColor: meta.bg, color: meta.text }}>
+                                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: meta.dot }} />
+                                {option}
+                              </span>
+                            </span>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
                   <label className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">
                     <AtSign className="h-3 w-3" /> Direcionar para
                   </label>
@@ -1142,6 +1102,45 @@ export function CloserSharedBoard() {
                   </Select>
                   <p className="text-[11px] text-[#9a9a96]">A pessoa direcionada verá esse influenciador na seção "Para você".</p>
                 </div>
+              </div>
+            </div>
+
+            {/* RIGHT — Detalhes complementares */}
+            <div className="rounded-[24px] bg-white p-6 ring-1 ring-black/[0.04] shadow-[0_18px_44px_-38px_rgba(15,23,42,0.18)]">
+              <div className="mb-5 flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f3f3ef]">
+                  <Zap className="h-4 w-4 text-[#1f1f1f]" />
+                </div>
+                <div>
+                  <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#999999]">Detalhes</div>
+                  <div className="text-[16px] font-medium tracking-[-0.02em] text-[#1f1f1f]">Ponte, valor & observação</div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">
+                    <Tag className="h-3 w-3" /> Ponte
+                  </label>
+                  <Input
+                    value={newBridge}
+                    onChange={(event) => setNewBridge(event.target.value)}
+                    placeholder="@apoio1, @apoio2"
+                    className="h-12 rounded-[12px] border-[#ececeb] bg-[#fafaf8] text-[14px] shadow-none"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">
+                    <Wallet className="h-3 w-3" /> Valor negociado
+                  </label>
+                  <Input
+                    value={newValue}
+                    onChange={(event) => setNewValue(event.target.value)}
+                    placeholder="0,00"
+                    className="h-12 rounded-[12px] border-[#ececeb] bg-[#fafaf8] text-[14px] shadow-none"
+                  />
+                </div>
 
                 <div className="space-y-2">
                   <label className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">
@@ -1151,12 +1150,13 @@ export function CloserSharedBoard() {
                     value={newObservation}
                     onChange={(event) => setNewObservation(event.target.value)}
                     placeholder="Observação opcional..."
-                    className="min-h-[96px] rounded-[14px] border-[#ececeb] bg-[#fafaf8] text-[14px] shadow-none"
+                    className="min-h-[160px] rounded-[14px] border-[#ececeb] bg-[#fafaf8] text-[14px] shadow-none"
                   />
                 </div>
               </div>
             </div>
           </div>
+
 
           <div className="flex justify-end gap-2 border-t border-black/[0.06] bg-white px-8 py-4">
             <Button
