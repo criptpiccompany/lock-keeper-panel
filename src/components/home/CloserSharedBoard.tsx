@@ -1025,20 +1025,40 @@ export function CloserSharedBoard() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">Status</label>
-                  <div className="rounded-[12px] border border-[#ececeb] bg-[#fafaf8] px-3">
-                    <select
-                      value={newStatus}
-                      onChange={(event) => setNewStatus(event.target.value)}
-                      className="h-12 w-full bg-transparent text-[14px] text-[#1f1f1f] outline-none"
-                    >
-                      {["Fechar", "Abordado", "Negociando", "Positivo", "Empatando / Negociar", "Pausado", "Com a equipe", "Não posta mais"].map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <Select value={newStatus} onValueChange={setNewStatus}>
+                    <SelectTrigger className="h-12 rounded-[12px] border-[#ececeb] bg-[#fafaf8] px-4 text-[14px] text-[#1f1f1f] shadow-none focus:ring-0 focus:ring-offset-0">
+                      <SelectValue>
+                        <span className="inline-flex items-center gap-2">
+                          <span
+                            className="h-2 w-2 rounded-full"
+                            style={{ backgroundColor: (STATUS_META[newStatus] ?? STATUS_META.Fechar).dot }}
+                          />
+                          {newStatus}
+                        </span>
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="rounded-[14px] border-[#ececeb] bg-white p-1 shadow-[0_16px_40px_-20px_rgba(15,23,42,0.25)]">
+                      {["Fechar", "Abordado", "Negociando", "Positivo", "Empatando / Negociar", "Pausado", "Com a equipe", "Não posta mais"].map((option) => {
+                        const meta = STATUS_META[option] ?? STATUS_META.Fechar;
+                        return (
+                          <SelectItem
+                            key={option}
+                            value={option}
+                            className="cursor-pointer rounded-[10px] px-3 py-2 text-[13px] text-[#1f1f1f] focus:bg-[#f3f3ef]"
+                          >
+                            <span className="inline-flex items-center gap-2">
+                              <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium" style={{ backgroundColor: meta.bg, color: meta.text }}>
+                                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: meta.dot }} />
+                                {option}
+                              </span>
+                            </span>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
                 </div>
+
 
                 <div className="space-y-2">
                   <label className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">Engajamento</label>
