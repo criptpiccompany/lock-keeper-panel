@@ -945,96 +945,127 @@ export function CloserSharedBoard() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[440px]">
-          <DialogHeader>
-            <DialogTitle className="text-[15px] font-semibold text-[#37352f]">Adicionar influenciador</DialogTitle>
-            <DialogDescription className="text-[13px] text-[#8f8f89]">
-              Adicione um @username ou URL do Instagram ao board compartilhado dos closers.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="space-y-1">
-              <label className="text-[12px] font-medium text-[#9b9a97]">Instagram</label>
+        <DialogContent className="gap-0 overflow-hidden rounded-[20px] border-none bg-[#fafaf8] p-0 shadow-[0_30px_80px_-30px_rgba(15,23,42,0.35)] sm:max-w-[520px]">
+          <div className="border-b border-black/[0.06] px-7 pt-7 pb-5">
+            <DialogHeader>
+              <DialogTitle className="text-[24px] font-medium tracking-[-0.03em] text-[#1f1f1f]">
+                Adicionar influenciador
+              </DialogTitle>
+              <DialogDescription className="text-[13px] text-[#6e6e73]">
+                Adicione um @username ou URL do Instagram ao board compartilhado dos closers.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          <div className="space-y-4 px-7 py-6">
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#9b9a97]">Instagram</label>
               <Input
                 value={newInfluencer}
                 onChange={(event) => setNewInfluencer(event.target.value)}
                 placeholder="@username ou URL do Instagram"
-                className="h-9 border-[#e5e5e5] text-[13px]"
+                className="h-11 rounded-[10px] border-[#ececeb] bg-white text-[13px] shadow-none"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-[12px] font-medium text-[#9b9a97]">Status</label>
-                <div className="rounded-md border border-[#e5e5e5] bg-white px-3">
-                  <select
-                    value={newStatus}
-                    onChange={(event) => setNewStatus(event.target.value)}
-                    className="h-9 w-full bg-transparent text-[13px] text-[#37352f] outline-none"
-                  >
-                    {["Fechar", "Abordado", "Negociando", "Positivo", "Empatando / Negociar", "Pausado", "Com a equipe", "Não posta mais"].map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[12px] font-medium text-[#9b9a97]">Engajamento</label>
-                <div className="rounded-md border border-[#e5e5e5] bg-white px-3">
-                  <select
-                    value={newEngagement}
-                    onChange={(event) => setNewEngagement(event.target.value)}
-                    className="h-9 w-full bg-transparent text-[13px] text-[#37352f] outline-none"
-                  >
-                    <option value="none">Nenhum</option>
-                    {CLASSIFICACAO_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.value}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#9b9a97]">Status</label>
+              <div className="rounded-[10px] border border-[#ececeb] bg-white px-3">
+                <select
+                  value={newStatus}
+                  onChange={(event) => setNewStatus(event.target.value)}
+                  className="h-11 w-full bg-transparent text-[13px] text-[#1f1f1f] outline-none"
+                >
+                  {["Fechar", "Abordado", "Negociando", "Positivo", "Empatando / Negociar", "Pausado", "Com a equipe", "Não posta mais"].map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[12px] font-medium text-[#9b9a97]">Ponte</label>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#9b9a97]">Engajamento</label>
+              <div className="grid grid-cols-4 gap-2">
+                {([
+                  { value: "none", label: "Nenhum", color: null as string | null },
+                  { value: "Fraca", label: "Fraca", color: "#dc2626" },
+                  { value: "Média", label: "Média", color: "#eab308" },
+                  { value: "Forte", label: "Forte", color: "#16a34a" },
+                ]).map((option) => {
+                  const active = newEngagement === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setNewEngagement(option.value)}
+                      className={cn(
+                        "flex h-11 items-center justify-center gap-1.5 rounded-[10px] border text-[12px] font-medium transition-colors",
+                        active
+                          ? "border-[#1f1f1f] bg-[#1f1f1f] text-white"
+                          : "border-[#ececeb] bg-white text-[#37352f] hover:border-[#d4d4cf]"
+                      )}
+                    >
+                      {option.color ? (
+                        <span
+                          className="h-2.5 w-2.5 rounded-full"
+                          style={{ backgroundColor: option.color }}
+                        />
+                      ) : (
+                        <span className="h-2.5 w-2.5 rounded-full border border-dashed border-current opacity-60" />
+                      )}
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#9b9a97]">Ponte</label>
               <Input
                 value={newBridge}
                 onChange={(event) => setNewBridge(event.target.value)}
                 placeholder="@apoio1, @apoio2"
-                className="h-9 border-[#e5e5e5] text-[13px]"
+                className="h-11 rounded-[10px] border-[#ececeb] bg-white text-[13px] shadow-none"
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[12px] font-medium text-[#9b9a97]">Valor negociado</label>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#9b9a97]">Valor negociado</label>
               <Input
                 value={newValue}
                 onChange={(event) => setNewValue(event.target.value)}
                 placeholder="0,00"
-                className="h-9 border-[#e5e5e5] text-[13px]"
+                className="h-11 rounded-[10px] border-[#ececeb] bg-white text-[13px] shadow-none"
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[12px] font-medium text-[#9b9a97]">Observação</label>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#9b9a97]">Observação</label>
               <Textarea
                 value={newObservation}
                 onChange={(event) => setNewObservation(event.target.value)}
                 placeholder="Observação opcional..."
-                className="min-h-[72px] border-[#e5e5e5] text-[13px]"
+                className="min-h-[80px] rounded-[10px] border-[#ececeb] bg-white text-[13px] shadow-none"
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+
+          <DialogFooter className="flex justify-end gap-2 border-t border-black/[0.06] bg-white px-7 py-4">
+            <Button
+              variant="outline"
+              onClick={() => setDialogOpen(false)}
+              className="h-10 rounded-[10px] border-[#ececeb] bg-white px-5 text-[13px]"
+            >
               Cancelar
             </Button>
-            <Button onClick={handleQuickAdd} disabled={!newInfluencer.trim() || saving}>
+            <Button
+              onClick={handleQuickAdd}
+              disabled={!newInfluencer.trim() || saving}
+              className="h-10 rounded-[10px] bg-[#1f1f1f] px-5 text-[13px] font-medium text-white hover:bg-[#111111]"
+            >
               {saving ? "Adicionando..." : "Adicionar"}
             </Button>
           </DialogFooter>
