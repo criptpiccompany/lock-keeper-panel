@@ -7,9 +7,10 @@ interface Props {
   open: boolean;
   onClose: () => void;
   url: string;
+  parsedData?: any;
 }
 
-export default function ComprovanteLightbox({ open, onClose, url }: Props) {
+export default function ComprovanteLightbox({ open, onClose, url, parsedData }: Props) {
   const isPdf = url.toLowerCase().includes(".pdf");
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
