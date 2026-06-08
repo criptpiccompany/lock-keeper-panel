@@ -23,6 +23,7 @@ import Notificacoes from "./pages/Notificacoes";
 import PendingApproval from "./pages/PendingApproval";
 import Financeiro from "./pages/Financeiro";
 import Home from "./pages/Home";
+import FinanceiroWorkspace from "./pages/FinanceiroWorkspace";
 
 const queryClient = new QueryClient();
 
