@@ -940,24 +940,24 @@ export function CloserSharedBoard() {
                   gridTemplateColumns={gridTemplateColumns}
                   onUpdate={updateCard}
                 />
-                {activeTab === "closing" && (
-                  <SectionBlock
-                    title="Fechando"
-                    cards={sections.closing}
-                    visibleColumns={visibleColumns}
-                    gridTemplateColumns={gridTemplateColumns}
-                    onUpdate={updateCard}
-                  />
-                )}
-                {activeTab === "teamClosed" && (
-                  <SectionBlock
-                    title="Equipe Fechou"
-                    cards={sections.teamClosed}
-                    emptyMessage="Nenhum influenciador fechado por outra pessoa no momento."
-                    visibleColumns={visibleColumns}
-                    gridTemplateColumns={gridTemplateColumns}
-                    onUpdate={updateCard}
-                  />
+                {activeTab === "fechados" && (
+                  <>
+                    <SectionBlock
+                      title="Fechando"
+                      cards={sections.closing}
+                      visibleColumns={visibleColumns}
+                      gridTemplateColumns={gridTemplateColumns}
+                      onUpdate={updateCard}
+                    />
+                    <SectionBlock
+                      title="Equipe Fechou"
+                      cards={sections.teamClosed}
+                      emptyMessage="Nenhum influenciador fechado por outra pessoa no momento."
+                      visibleColumns={visibleColumns}
+                      gridTemplateColumns={gridTemplateColumns}
+                      onUpdate={updateCard}
+                    />
+                  </>
                 )}
                 <SectionBlock
                   title="Geral"
