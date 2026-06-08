@@ -81,52 +81,42 @@ export default function FinanceiroEspelhamento() {
           </p>
         </div>
 
-        {selectedCloser && (
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#ececeb] bg-white px-3.5 py-1.5 text-[11.5px] font-medium text-[#676767]">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#7dbd34] opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#6ea93d]" />
-            </span>
-            Ao vivo · {selectedCloser.nome}
-          </div>
-        )}
-      </header>
-
-      {/* Toolbar */}
-      <div className="rounded-[18px] bg-white px-5 py-4 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
-          <label className="flex items-center gap-3">
-            <Users className="h-4 w-4 text-[#999999]" />
-            <div className="flex flex-col">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#999999]">Time</span>
+        <div className="flex flex-col items-end gap-2">
+          {selectedCloser && (
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#ececeb] bg-white px-3.5 py-1.5 text-[11.5px] font-medium text-[#676767]">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#7dbd34] opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#6ea93d]" />
+              </span>
+              Ao vivo · {selectedCloser.nome}
+            </div>
+          )}
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <label className="inline-flex items-center gap-2 rounded-full border border-[#ececeb] bg-white px-3.5 py-2">
+              <Users className="h-3.5 w-3.5 text-[#999999]" />
               <select
                 value={teamId}
                 onChange={(e) => { setTeamId(e.target.value); setCloserId(""); }}
-                className="bg-transparent text-[14px] font-medium tracking-[-0.01em] text-[#1f1f1f] outline-none"
+                className="max-w-[160px] bg-transparent text-[13px] font-medium tracking-[-0.01em] text-[#1f1f1f] outline-none"
               >
                 {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
-            </div>
-          </label>
-
-          <div className="h-8 w-px bg-[#ececeb]" />
-
-          <label className="flex items-center gap-3 flex-1 min-w-[220px]">
-            <User className="h-4 w-4 text-[#999999]" />
-            <div className="flex flex-col flex-1">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#999999]">Closer</span>
+            </label>
+            <label className="inline-flex items-center gap-2 rounded-full border border-[#ececeb] bg-white px-3.5 py-2">
+              <User className="h-3.5 w-3.5 text-[#999999]" />
               <select
                 value={closerId}
                 onChange={(e) => setCloserId(e.target.value)}
-                className="bg-transparent text-[14px] font-medium tracking-[-0.01em] text-[#1f1f1f] outline-none"
+                className="max-w-[200px] bg-transparent text-[13px] font-medium tracking-[-0.01em] text-[#1f1f1f] outline-none"
               >
                 <option value="">Selecione um closer…</option>
                 {filtered.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
               </select>
-            </div>
-          </label>
+            </label>
+          </div>
         </div>
-      </div>
+      </header>
+
 
       {!closerId ? (
         <div className="rounded-[18px] border border-dashed border-[#ececeb] bg-white px-6 py-16 text-center">
