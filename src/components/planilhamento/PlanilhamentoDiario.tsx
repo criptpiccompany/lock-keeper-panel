@@ -1472,7 +1472,7 @@ export default function PlanilhamentoDiario({
                               </span>
                             </th>
                             <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Status</th>
-                            <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-center">📎</th>
+                            {!RECEIPTS_AS_CAROUSEL && <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-center">📎</th>}
                             {!viewingOther && <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-right">Ações</th>}
                           </tr>
                         </thead>
