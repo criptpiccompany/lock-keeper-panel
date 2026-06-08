@@ -786,8 +786,7 @@ export function CloserSharedBoard() {
               </Button>
               <div className="ml-1 flex items-center gap-0.5 rounded-md border border-[#e7e7e3] bg-white p-0.5">
                 {([
-                  { key: "closing", label: "Fechando", count: sections.closing.length },
-                  { key: "teamClosed", label: "Equipe Fechou", count: sections.teamClosed.length },
+                  { key: "fechados", label: "Fechados", count: sections.closing.length + sections.teamClosed.length },
                 ] as const).map((tab) => (
                   <button
                     key={tab.key}
