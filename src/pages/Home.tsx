@@ -791,7 +791,9 @@ export default function Home() {
               </SourceDualPanel>
             </div>
 
-            <CloserSharedBoard />
+            <div className="min-w-0">
+              <CloserSharedBoard />
+            </div>
           </div>
         </div>
       ) : null}
