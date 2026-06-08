@@ -47,7 +47,6 @@ export function Navbar() {
     { path: "/meu", label: "Minha Lista", icon: User },
     { path: "/registro", label: "Planilhamento", icon: FileText },
     { path: "/painel", label: "Painel de Consulta", icon: LayoutGrid },
-    { path: "/gestao-influenciadores", label: "Gestão de Influs", icon: Users },
   ];
 
   const adminItems = [
