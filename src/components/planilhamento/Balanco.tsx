@@ -111,17 +111,18 @@ export default function Balanco({ closerId }: { closerId?: string }) {
     fetchClosers();
   }, [user, isAdmin, closerId]);
 
-  // Fetch records for selected closer + month
+  // Fetch records for selected closer + month + Realtime sync
   useEffect(() => {
+    if (!selectedCloserId || !selectedMonth) return;
+
+    const [year, month] = selectedMonth.split("-");
+    const startDate = `${year}-${month}-01`;
+    const endDate = new Date(Number(year), Number(month), 0);
+    const endDateStr = `${year}-${month}-${String(endDate.getDate()).padStart(2, "0")}`;
+
+    let active = true;
     const fetchRecords = async () => {
-      if (!selectedCloserId || !selectedMonth) return;
       setLoading(true);
-
-      const [year, month] = selectedMonth.split("-");
-      const startDate = `${year}-${month}-01`;
-      const endDate = new Date(Number(year), Number(month), 0);
-      const endDateStr = `${year}-${month}-${String(endDate.getDate()).padStart(2, "0")}`;
-
       const { data } = await supabase
         .from("daily_influencer_records")
         .select("id, date, influencer_id, closer_id, valor_pago, faturamento, comprovante_url")
@@ -130,12 +131,32 @@ export default function Balanco({ closerId }: { closerId?: string }) {
         .lte("date", endDateStr)
         .is("deleted_at", null)
         .order("date", { ascending: true });
-
+      if (!active) return;
       setRecords((data as any as DailyRecord[]) || []);
       setLoading(false);
     };
     fetchRecords();
+
+    const channel = supabase
+      .channel(`balanco-${selectedCloserId}-${selectedMonth}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "daily_influencer_records",
+          filter: `closer_id=eq.${selectedCloserId}`,
+        },
+        () => fetchRecords()
+      )
+      .subscribe();
+
+    return () => {
+      active = false;
+      supabase.removeChannel(channel);
+    };
   }, [selectedCloserId, selectedMonth]);
+
 
   const currentCloser = closers.find((c) => c.id === selectedCloserId);
 
