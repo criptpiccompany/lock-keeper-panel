@@ -1038,12 +1038,7 @@ export function CloserSharedBoard() {
                           )}
                         >
                           {option.fire ? (
-                            <Flame
-                              className="h-3.5 w-3.5"
-                              fill={active ? "#f97316" : "#f97316"}
-                              stroke={active ? "#fed7aa" : "#9a3412"}
-                              strokeWidth={1.5}
-                            />
+                            <span className="text-[14px] leading-none">🔥</span>
                           ) : option.color ? (
                             <span
                               className="h-2.5 w-2.5 rounded-full"
