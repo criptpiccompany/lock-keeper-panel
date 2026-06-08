@@ -269,68 +269,94 @@ export default function DailyReceiptsCarousel({
           <span className="text-xs text-muted-foreground px-2">Nenhum comprovante</span>
         ) : (
           allItems.map((it) => (
-            <div key={it.id} className="shrink-0 relative group">
-              <div className="w-[68px] h-[68px] rounded-2xl overflow-hidden ring-1 ring-black/5 bg-white flex items-center justify-center">
-                <ComprovanteThumbnail
-                  url={it.url}
-                  onClick={async () => {
-                    const path = it.url.split("/comprovantes/")[1];
-                    if (path) {
-                      const { data } = await supabase.storage.from("comprovantes").createSignedUrl(path, 600);
-                      setLightboxUrl(data?.signedUrl || it.url);
-                    } else {
-                      setLightboxUrl(it.url);
-                    }
-                    setLightboxOpen(true);
-                  }}
-                />
-              </div>
-              {it.tagHandle && (
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 max-w-[80px] truncate rounded-full bg-foreground text-background text-[9px] px-1.5 py-0.5 font-medium">
-                  {it.tagHandle}
+            <div key={it.id} className="shrink-0 flex flex-col items-center gap-1">
+              <div className="relative group">
+                <div className="w-[68px] h-[68px] rounded-2xl overflow-hidden ring-1 ring-black/5 bg-white flex items-center justify-center">
+                  <ComprovanteThumbnail
+                    url={it.url}
+                    onClick={async () => {
+                      const path = it.url.split("/comprovantes/")[1];
+                      if (path) {
+                        const { data } = await supabase.storage.from("comprovantes").createSignedUrl(path, 600);
+                        setLightboxUrl(data?.signedUrl || it.url);
+                      } else {
+                        setLightboxUrl(it.url);
+                      }
+                      setLightboxParsed(it.parsedData || null);
+                      setLightboxOpen(true);
+                    }}
+                  />
                 </div>
-              )}
-              {canEdit && it.kind === "receipt" && it.receiptId && (
-                <div className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {influencerLines.length > 0 && (
-                    <Popover open={tagOpenFor === it.receiptId} onOpenChange={(o) => setTagOpenFor(o ? it.receiptId! : null)}>
-                      <PopoverTrigger asChild>
-                        <button
-                          className="h-5 w-5 rounded-full bg-foreground text-background flex items-center justify-center shadow-sm"
-                          title="Marcar influenciador"
-                        >
-                          <Tag className="h-2.5 w-2.5" />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-56 p-2" align="end">
-                        <p className="text-[11px] font-medium text-muted-foreground mb-1 px-1">Marcar influenciador</p>
-                        <div className="max-h-[200px] overflow-y-auto space-y-0.5">
+                {it.tagHandle && (
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 max-w-[80px] truncate rounded-full bg-foreground text-background text-[9px] px-1.5 py-0.5 font-medium">
+                    {it.tagHandle}
+                  </div>
+                )}
+                {canEdit && it.kind === "receipt" && it.receiptId && (
+                  <div className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {influencerLines.length > 0 && (
+                      <Popover open={tagOpenFor === it.receiptId} onOpenChange={(o) => setTagOpenFor(o ? it.receiptId! : null)}>
+                        <PopoverTrigger asChild>
                           <button
-                            onClick={() => handleTagInfluencer(it.receiptId!, null)}
-                            className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-muted text-muted-foreground"
+                            className="h-5 w-5 rounded-full bg-foreground text-background flex items-center justify-center shadow-sm"
+                            title="Marcar influenciador"
                           >
-                            — Sem marcação
+                            <Tag className="h-2.5 w-2.5" />
                           </button>
-                          {influencerLines.map((l) => (
+                        </PopoverTrigger>
+                        <PopoverContent className="w-56 p-2" align="end">
+                          <p className="text-[11px] font-medium text-muted-foreground mb-1 px-1">Marcar influenciador</p>
+                          <div className="max-h-[200px] overflow-y-auto space-y-0.5">
                             <button
-                              key={l.recordId}
-                              onClick={() => handleTagInfluencer(it.receiptId!, l.recordId)}
-                              className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-muted"
+                              onClick={() => handleTagInfluencer(it.receiptId!, null)}
+                              className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-muted text-muted-foreground"
                             >
-                              {l.handle}
+                              — Sem marcação
                             </button>
-                          ))}
+                            {influencerLines.map((l) => (
+                              <button
+                                key={l.recordId}
+                                onClick={() => handleTagInfluencer(it.receiptId!, l.recordId)}
+                                className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-muted"
+                              >
+                                {l.handle}
+                              </button>
+                            ))}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                    <button
+                      onClick={() => handleDelete(it.receiptId!)}
+                      className="h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm"
+                      title="Remover"
+                    >
+                      <X className="h-2.5 w-2.5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+              {/* Dados extraídos pela IA */}
+              {it.kind === "receipt" && (
+                <div className="w-[120px] text-center leading-tight mt-0.5">
+                  {it.parseStatus === "processing" || (!it.parsedData && it.parseStatus !== "error" && it.parseStatus !== "unsupported" && it.parseStatus !== "done") ? (
+                    <span className="text-[9px] text-muted-foreground inline-flex items-center gap-1">
+                      <Loader2 className="h-2.5 w-2.5 animate-spin" /> lendo…
+                    </span>
+                  ) : it.parsedData ? (
+                    <div className="text-[9px] text-foreground space-y-0.5">
+                      {it.parsedData.valor && (
+                        <div className="font-semibold text-[10px] text-[#2c2c2c]">R$ {it.parsedData.valor}</div>
+                      )}
+                      {it.parsedData.destinatario && (
+                        <div className="truncate text-muted-foreground" title={it.parsedData.destinatario}>
+                          {it.parsedData.destinatario}
                         </div>
-                      </PopoverContent>
-                    </Popover>
-                  )}
-                  <button
-                    onClick={() => handleDelete(it.receiptId!)}
-                    className="h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm"
-                    title="Remover"
-                  >
-                    <X className="h-2.5 w-2.5" />
-                  </button>
+                      )}
+                    </div>
+                  ) : it.parseStatus === "error" ? (
+                    <span className="text-[9px] text-red-500/70">falha leitura</span>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -339,7 +365,7 @@ export default function DailyReceiptsCarousel({
       </div>
 
       <input ref={inputRef} type="file" accept={ACCEPTED} multiple className="hidden" onChange={onInputChange} />
-      <ComprovanteLightbox open={lightboxOpen} url={lightboxUrl} onClose={() => setLightboxOpen(false)} />
+      <ComprovanteLightbox open={lightboxOpen} url={lightboxUrl} parsedData={lightboxParsed} onClose={() => setLightboxOpen(false)} />
     </div>
   );
 }
