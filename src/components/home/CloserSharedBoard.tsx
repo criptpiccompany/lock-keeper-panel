@@ -498,7 +498,11 @@ export function CloserSharedBoard() {
   const [newBridge, setNewBridge] = useState("");
 
   const fetchCards = async () => {
-    if (!user?.teamId) return;
+    if (!user?.teamId) {
+      setCards([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
     const { data, error } = await supabase
