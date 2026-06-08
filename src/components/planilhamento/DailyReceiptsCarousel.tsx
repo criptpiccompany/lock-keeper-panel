@@ -304,7 +304,7 @@ export default function DailyReceiptsCarousel({
       </div>
 
       <input ref={inputRef} type="file" accept={ACCEPTED} multiple className="hidden" onChange={onInputChange} />
-      <ComprovanteLightbox open={lightboxOpen} url={lightboxUrl} onOpenChange={setLightboxOpen} />
+      <ComprovanteLightbox open={lightboxOpen} url={lightboxUrl} onClose={() => setLightboxOpen(false)} />
     </div>
   );
 }
