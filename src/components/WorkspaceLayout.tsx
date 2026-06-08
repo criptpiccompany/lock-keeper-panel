@@ -105,7 +105,7 @@ export function WorkspaceLayout() {
   const operationsNav: NavItem[] = [
     { path: "/registro", label: "Planilhamento", icon: FileText },
     { path: "/meu", label: "Minha Lista", icon: User },
-    { path: "/gestao-influenciadores", label: "Gestão de Influs", icon: Users },
+    
     { path: "/painel", label: "Painel de Consulta", icon: LayoutGrid },
   ];
 
