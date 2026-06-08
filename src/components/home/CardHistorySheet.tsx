@@ -69,7 +69,7 @@ export function CardHistorySheet({ cardId, cardName, open, onOpenChange }: CardH
     supabase
       .from("audit_logs")
       .select("id, created_at, actor_nome, action, description, field_changes")
-      .eq("entity_type", "kanban_influencers")
+      .eq("entity_type", "team_shared_board")
       .eq("entity_id", cardId)
       .order("created_at", { ascending: false })
       .then(({ data }) => {
