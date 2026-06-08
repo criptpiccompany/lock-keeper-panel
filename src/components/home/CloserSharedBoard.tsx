@@ -798,9 +798,15 @@ export function CloserSharedBoard() {
     });
   }, [cards, query, sortDir, sortField]);
 
-  const visibleColumns = useMemo(
+  const baseVisibleColumns = useMemo(
     () => COLUMN_DEFS.filter((column) => visibleCols.has(column.key)),
     [visibleCols]
+  );
+
+  // Prepend the "check" column for the to-do behavior (always present in this board).
+  const visibleColumns = useMemo(
+    () => [{ key: "check" as ColumnKey, label: "", width: "28px" }, ...baseVisibleColumns],
+    [baseVisibleColumns]
   );
 
   const dynamicInfluencerWidth = useMemo(() => {
