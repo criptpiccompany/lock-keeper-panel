@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useCommissionTier } from "@/hooks/useCommissionTier";
 import "./CommissionCard.css";
 
@@ -313,7 +313,7 @@ export function CommissionCardCarousel({
   const snapTimer = useRef<number | null>(null);
   const userInteracting = useRef(false);
 
-  const scrollToCurrent = (behavior: ScrollBehavior = "smooth") => {
+  const scrollToCurrent = useCallback((behavior: ScrollBehavior = "smooth") => {
     const track = trackRef.current;
     if (!track) return;
     const slide = track.querySelector<HTMLElement>(`[data-slide-idx="${currentIdx}"]`);
@@ -323,13 +323,28 @@ export function CommissionCardCarousel({
     const slideLeftInTrack = slideRect.left - trackRect.left + track.scrollLeft;
     const left = slideLeftInTrack - (track.clientWidth - slide.clientWidth) / 2;
     track.scrollTo({ left: Math.max(0, left), behavior });
-  };
+  }, [currentIdx]);
 
   // Center current tier on mount / data change
   useEffect(() => {
-    scrollToCurrent("auto");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIdx, tiers.length]);
+    const raf = window.requestAnimationFrame(() => {
+      scrollToCurrent("auto");
+      window.requestAnimationFrame(() => scrollToCurrent("auto"));
+    });
+    const timeout = window.setTimeout(() => scrollToCurrent("auto"), 250);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.clearTimeout(timeout);
+    };
+  }, [scrollToCurrent, tiers.length]);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => scrollToCurrent("auto"));
+    observer.observe(track);
+    return () => observer.disconnect();
+  }, [scrollToCurrent, tiers.length]);
 
   // Snap back to current card after user stops interacting
   useEffect(() => {
@@ -381,8 +396,7 @@ export function CommissionCardCarousel({
       track.removeEventListener("touchend", onTouchEnd);
       if (snapTimer.current) window.clearTimeout(snapTimer.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIdx, tiers.length]);
+  }, [currentIdx, tiers.length, scrollToCurrent]);
 
   return (
     <div className="cpic-carousel-wrap">
