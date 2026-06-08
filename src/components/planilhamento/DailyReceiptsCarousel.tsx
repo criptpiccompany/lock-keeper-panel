@@ -42,10 +42,11 @@ interface Props {
   influencerLines?: InfluencerLine[];      // for "marcar influenciador"
   legacyReceipts?: LegacyReceipt[];         // old comprovante_url from daily_influencer_records
   compact?: boolean;
+  requireFocus?: boolean;                   // when true, paste only triggers if this carousel is focused
 }
 
 export default function DailyReceiptsCarousel({
-  date, closerId, teamId, canEdit = true, influencerLines = [], legacyReceipts = [], compact = false,
+  date, closerId, teamId, canEdit = true, influencerLines = [], legacyReceipts = [], compact = false, requireFocus = false,
 }: Props) {
   const { user } = useAuth();
   const [receipts, setReceipts] = useState<ReceiptRow[]>([]);
