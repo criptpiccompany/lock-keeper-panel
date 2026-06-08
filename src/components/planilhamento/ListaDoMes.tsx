@@ -132,10 +132,14 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
     fetchClosers();
   }, [user, isAdmin, closerId]);
 
-  /* ── load data ── */
+  /* ── load data + Realtime sync ── */
   useEffect(() => {
+    if (!selectedCloserId || !selectedMonth) return;
+
+    let active = true;
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
     const loadData = async () => {
-      if (!selectedCloserId || !selectedMonth) return;
       setLoading(true);
 
       const [year, month] = selectedMonth.split("-");
@@ -165,6 +169,8 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
           .eq("month", selectedMonth),
       ]);
 
+      if (!active) return;
+
       // Investido = sum of valor_pago from daily records
       const dailyRecords = (dailyRes.data || []) as any[];
       const totalInvestido = dailyRecords.reduce((sum: number, r: any) => sum + (Number(r.valor_pago) || 0), 0);
@@ -181,6 +187,7 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
           .in("record_id", sharedRecordIds);
         partnersData = data || [];
       }
+      if (!active) return;
       const partnersByRecord = new Map<string, SharedPartner[]>();
       for (const p of partnersData) {
         const list = partnersByRecord.get(p.record_id) || [];
@@ -222,6 +229,7 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
         .select("id, handle")
         .in("id", uniqueInfluencerIds);
 
+      if (!active) return;
       const handleMap = new Map((influencers || []).map((i) => [i.id, i.handle]));
       const existingMap = new Map((existingRes.data || []).map((r: any) => [r.influencer_id, r]));
 
@@ -249,6 +257,7 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
         .eq("month", selectedMonth)
         .order("influencer_handle", { ascending: true });
 
+      if (!active) return;
       setRows(
         (finalRows || []).map((r: any) => ({
           id: r.id,
@@ -266,8 +275,47 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
       );
       setLoading(false);
     };
+
     loadData();
+
+    const scheduleReload = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        if (active) loadData();
+      }, 400);
+    };
+
+    const channel = supabase
+      .channel(`lista-mes-${selectedCloserId}-${selectedMonth}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "daily_influencer_records",
+          filter: `closer_id=eq.${selectedCloserId}`,
+        },
+        scheduleReload
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "monthly_influencer_list",
+          filter: `closer_id=eq.${selectedCloserId}`,
+        },
+        scheduleReload
+      )
+      .subscribe();
+
+    return () => {
+      active = false;
+      if (debounceTimer) clearTimeout(debounceTimer);
+      supabase.removeChannel(channel);
+    };
   }, [selectedCloserId, selectedMonth]);
+
 
   /* ── computed summary ── */
   const currentCloser = closers.find((c) => c.id === selectedCloserId);
