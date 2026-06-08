@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowUpDown, AtSign, ChevronDown, ChevronRight, Clock3, ExternalLink, FileText, Flame, Link as LinkIcon, MoreHorizontal, Plus, Search, SlidersHorizontal, Tag, Wallet, Zap } from "lucide-react";
+import { ArrowUpDown, AtSign, ChevronDown, ChevronRight, Clock3, ExternalLink, FileText, Link as LinkIcon, MoreHorizontal, Plus, Search, SlidersHorizontal, Tag, Wallet, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -112,12 +112,7 @@ const ENGAGEMENT_META: Record<string, { color: string; percent: number }> = {
 function EngagementDot({ value }: { value: string | null }) {
   if (value === "Prioridade") {
     return (
-      <Flame
-        className="h-3.5 w-3.5"
-        fill="#f97316"
-        stroke="#9a3412"
-        strokeWidth={1.5}
-      />
+      <span className="text-[14px] leading-none" title="Prioridade">🔥</span>
     );
   }
   const meta = value ? ENGAGEMENT_META[value] : null;
@@ -615,11 +610,6 @@ export function CloserSharedBoard() {
         });
 
     return [...list].sort((a, b) => {
-      // Prioridade sempre vai para o topo
-      const priorityA = a.classificacao === "Prioridade" ? 0 : 1;
-      const priorityB = b.classificacao === "Prioridade" ? 0 : 1;
-      if (priorityA !== priorityB) return priorityA - priorityB;
-
       if (sortField === "status") {
         const statusDiff = (STATUS_ORDER[a.status] ?? 50) - (STATUS_ORDER[b.status] ?? 50);
         if (statusDiff !== 0) return sortDir === "asc" ? statusDiff : -statusDiff;
@@ -1048,12 +1038,7 @@ export function CloserSharedBoard() {
                           )}
                         >
                           {option.fire ? (
-                            <Flame
-                              className="h-3.5 w-3.5"
-                              fill={active ? "#f97316" : "#f97316"}
-                              stroke={active ? "#fed7aa" : "#9a3412"}
-                              strokeWidth={1.5}
-                            />
+                            <span className="text-[14px] leading-none">🔥</span>
                           ) : option.color ? (
                             <span
                               className="h-2.5 w-2.5 rounded-full"
