@@ -840,29 +840,71 @@ export function CloserSharedBoard() {
   };
 
   const sections = useMemo(() => {
-    const closing: TeamBoardCard[] = [];
-    const teamClosed: TeamBoardCard[] = [];
     const forYou: TeamBoardCard[] = [];
     const general: TeamBoardCard[] = [];
-
-    const PROSPECT_STATUSES = ["Fechar", "Abordado", "Negociando"];
-    const CLOSED_STATUSES = ["Positivo", "Empatando / Negociar", "Pausado", "Com a equipe", "Não posta mais"];
+    const closedByCloser = new Map<string, { closerId: string; closerName: string; cards: TeamBoardCard[] }>();
+    const concorrencia: TeamBoardCard[] = [];
 
     filteredCards.forEach((card) => {
-      if (CLOSED_STATUSES.includes(card.status)) {
-        if (card.closer_id === user?.id) closing.push(card);
-        else teamClosed.push(card);
+      // Concorrência sempre vai pro grupo "Concorrência", independente de quem fechou
+      if (card.status === "Concorrência") {
+        concorrencia.push(card);
         return;
       }
 
-      if (PROSPECT_STATUSES.includes(card.status)) {
+      if ((CLOSED_STATUSES as readonly string[]).includes(card.status)) {
+        const closerId = card.closed_by || card.closer_id;
+        const closerName = card.closed_by ? card.closedByName || "Closer" : card.closerName || "Closer";
+        if (!closedByCloser.has(closerId)) {
+          closedByCloser.set(closerId, { closerId, closerName, cards: [] });
+        }
+        closedByCloser.get(closerId)!.cards.push(card);
+        return;
+      }
+
+      if ((PROSPECT_STATUSES as readonly string[]).includes(card.status)) {
         if (card.assigned_to === user?.id) forYou.push(card);
         else general.push(card);
       }
     });
 
-    return { closing, teamClosed, forYou, general };
+    const closerGroups = Array.from(closedByCloser.values()).sort((a, b) => {
+      // current user first, then alphabetical
+      if (a.closerId === user?.id) return -1;
+      if (b.closerId === user?.id) return 1;
+      return a.closerName.localeCompare(b.closerName, "pt-BR", { sensitivity: "base" });
+    });
+
+    return { forYou, general, closerGroups, concorrencia };
   }, [filteredCards, user?.id]);
+
+  // Mark-as-closed modal state
+  const [markModalOpen, setMarkModalOpen] = useState(false);
+  const [markCard, setMarkCard] = useState<TeamBoardCard | null>(null);
+  const [markCloserId, setMarkCloserId] = useState<string>("");
+  const [markStatus, setMarkStatus] = useState<string>("Positivo");
+  const [markSaving, setMarkSaving] = useState(false);
+
+  const openMarkModal = (card: TeamBoardCard) => {
+    setMarkCard(card);
+    setMarkCloserId(card.closed_by || user?.id || "");
+    setMarkStatus(card.status && (CLOSED_STATUSES as readonly string[]).includes(card.status) ? card.status : "Positivo");
+    setMarkModalOpen(true);
+  };
+
+  const confirmMarkClosed = async () => {
+    if (!markCard) return;
+    setMarkSaving(true);
+    const isConcorrencia = markStatus === "Concorrência";
+    await updateCard(markCard.id, {
+      status: markStatus,
+      // @ts-expect-error closed_by exists in DB but not in KanbanCard type
+      closed_by: isConcorrencia ? null : markCloserId || null,
+    });
+    setMarkSaving(false);
+    setMarkModalOpen(false);
+    setMarkCard(null);
+  };
 
   const handleQuickAdd = async () => {
     const normalized = newInfluencer
