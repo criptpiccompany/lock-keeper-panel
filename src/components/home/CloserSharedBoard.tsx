@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowUpDown, AtSign, ChevronDown, ChevronRight, Clock3, ExternalLink, FileText, Link as LinkIcon, MoreHorizontal, Plus, Search, SlidersHorizontal, Tag, Wallet, Zap } from "lucide-react";
+import { ArrowUpDown, AtSign, ChevronDown, ChevronRight, Clock3, ExternalLink, FileText, Flame, Link as LinkIcon, MoreHorizontal, Plus, Search, SlidersHorizontal, Tag, Wallet, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -106,9 +106,20 @@ const ENGAGEMENT_META: Record<string, { color: string; percent: number }> = {
   Fraca: { color: "#dc2626", percent: 33 },
   Média: { color: "#eab308", percent: 66 },
   Forte: { color: "#16a34a", percent: 100 },
+  Prioridade: { color: "#f97316", percent: 100 },
 };
 
 function EngagementDot({ value }: { value: string | null }) {
+  if (value === "Prioridade") {
+    return (
+      <Flame
+        className="h-3.5 w-3.5"
+        fill="#f97316"
+        stroke="#9a3412"
+        strokeWidth={1.5}
+      />
+    );
+  }
   const meta = value ? ENGAGEMENT_META[value] : null;
   if (!meta) {
     return (
@@ -604,6 +615,11 @@ export function CloserSharedBoard() {
         });
 
     return [...list].sort((a, b) => {
+      // Prioridade sempre vai para o topo
+      const priorityA = a.classificacao === "Prioridade" ? 0 : 1;
+      const priorityB = b.classificacao === "Prioridade" ? 0 : 1;
+      if (priorityA !== priorityB) return priorityA - priorityB;
+
       if (sortField === "status") {
         const statusDiff = (STATUS_ORDER[a.status] ?? 50) - (STATUS_ORDER[b.status] ?? 50);
         if (statusDiff !== 0) return sortDir === "asc" ? statusDiff : -statusDiff;
@@ -1010,12 +1026,13 @@ export function CloserSharedBoard() {
 
                 <div className="space-y-2">
                   <label className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">Engajamento</label>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-5 gap-2">
                     {([
-                      { value: "none", label: "Nenhum", color: null as string | null },
-                      { value: "Fraca", label: "Fraca", color: "#dc2626" },
-                      { value: "Média", label: "Média", color: "#eab308" },
-                      { value: "Forte", label: "Forte", color: "#16a34a" },
+                      { value: "none", label: "Nenhum", color: null as string | null, fire: false },
+                      { value: "Fraca", label: "Fraca", color: "#dc2626", fire: false },
+                      { value: "Média", label: "Média", color: "#eab308", fire: false },
+                      { value: "Forte", label: "Forte", color: "#16a34a", fire: false },
+                      { value: "Prioridade", label: "Prioridade", color: "#f97316", fire: true },
                     ]).map((option) => {
                       const active = newEngagement === option.value;
                       return (
@@ -1030,7 +1047,14 @@ export function CloserSharedBoard() {
                               : "border-[#ececeb] bg-[#fafaf8] text-[#37352f] hover:border-[#d4d4cf]"
                           )}
                         >
-                          {option.color ? (
+                          {option.fire ? (
+                            <Flame
+                              className="h-3.5 w-3.5"
+                              fill={active ? "#f97316" : "#f97316"}
+                              stroke={active ? "#fed7aa" : "#9a3412"}
+                              strokeWidth={1.5}
+                            />
+                          ) : option.color ? (
                             <span
                               className="h-2.5 w-2.5 rounded-full"
                               style={{ backgroundColor: option.color }}
