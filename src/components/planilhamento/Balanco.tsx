@@ -272,43 +272,29 @@ export default function Balanco({ closerId }: { closerId?: string }) {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.3fr_1fr]">
-            <div className="rounded-[28px] bg-white p-6 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <div className="text-[12px] uppercase tracking-[0.18em] text-[#999999]">Termômetro</div>
-                  <div className="mt-1 text-[28px] font-medium tracking-[-0.04em] text-[#1f1f1f]">Performance do mês</div>
-                </div>
-                <div className="rounded-full bg-[#f3f3ef] px-3 py-2 text-[12px] font-medium text-[#676767]">
-                  {records.length} registros
-                </div>
-              </div>
-              <UnifiedThermometerWidget resultado={totals.profit} month={selectedMonth} />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-                <SummaryCard label="Faturamento" value={totals.revenue} icon={TrendingUp} />
-                <SummaryCard label="Investido" value={totals.invested} icon={DollarSign} />
-                <SummaryCard label={feeLabel} value={totals.fee} icon={Percent} variant="muted" />
-                <SummaryCard
-                  label="Resultado"
-                  value={totals.profit}
-                  icon={totals.profit >= 0 ? TrendingUp : TrendingDown}
-                  variant={totals.profit > 0 ? (totals.profit / totals.invested >= 0.3 ? "positive" : "warning") : "negative"}
-                />
-                <SummaryCard label="Comissão" value={tierCommission} icon={Receipt} />
-                {isAdmin ? (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <SummaryCard label="Faturamento" value={totals.revenue} icon={TrendingUp} />
+              <SummaryCard label="Investido" value={totals.invested} icon={DollarSign} />
+              <SummaryCard label={feeLabel} value={totals.fee} icon={Percent} variant="muted" />
+              <SummaryCard
+                label="Resultado"
+                value={totals.profit}
+                icon={totals.profit >= 0 ? TrendingUp : TrendingDown}
+                variant={totals.profit > 0 ? (totals.profit / totals.invested >= 0.3 ? "positive" : "warning") : "negative"}
+              />
+              <SummaryCard label="Comissão" value={tierCommission} icon={Receipt} />
+              {isAdmin ? (
                 <SummaryCard
                   label="Saldo Final"
                   value={saldo}
                   icon={Wallet}
                   variant={saldo >= 0 ? "positive" : "negative"}
                 />
-                ) : (
-                  <SummaryCard label="Saldo Final" value={totals.profit - tierCommission} icon={Wallet} variant={totals.profit - tierCommission >= 0 ? "positive" : "negative"} />
-                )}
-            </div>
+              ) : (
+                <SummaryCard label="Saldo Final" value={totals.profit - tierCommission} icon={Wallet} variant={totals.profit - tierCommission >= 0 ? "positive" : "negative"} />
+              )}
           </div>
+
 
           <div className="overflow-hidden rounded-[28px] bg-white p-3 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
             <div className="mb-3 flex items-center justify-between px-2 pt-2">
