@@ -100,13 +100,12 @@ export function WorkspaceLayout() {
         { path: "/meu", label: "Minha Lista", icon: User },
         { path: "/registro", label: "Planilhamento", icon: FileText },
         { path: "/painel", label: "Meu Painel", icon: Lock },
-        { path: "/gestao-influenciadores", label: "Gestão de Influs", icon: Users },
       ];
 
   const operationsNav: NavItem[] = [
     { path: "/registro", label: "Planilhamento", icon: FileText },
     { path: "/meu", label: "Minha Lista", icon: User },
-    { path: "/gestao-influenciadores", label: "Gestão de Influs", icon: Users },
+    
     { path: "/painel", label: "Painel de Consulta", icon: LayoutGrid },
   ];
 
@@ -124,7 +123,7 @@ export function WorkspaceLayout() {
         { label: "Minha Lista", path: "/meu" },
         { label: "Planilhamento", path: "/registro" },
         { label: "Painel", path: "/painel" },
-        { label: "Gestão", path: "/gestao-influenciadores" },
+        
       ];
 
   const handleSignOut = async () => {

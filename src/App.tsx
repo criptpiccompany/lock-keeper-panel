@@ -19,7 +19,7 @@ import NotFound from "./pages/NotFound";
 import ImportData from "./pages/ImportData";
 import RegistroDiario from "./pages/RegistroDiario";
 import Notificacoes from "./pages/Notificacoes";
-import GestaoInfluenciadores from "./pages/GestaoInfluenciadores";
+
 import PendingApproval from "./pages/PendingApproval";
 import Financeiro from "./pages/Financeiro";
 import Home from "./pages/Home";
@@ -61,7 +61,7 @@ function AppRoutes() {
       >
         <Route path="/home" element={<Home />} />
         <Route path="/meu" element={<MeuPainel />} />
-        <Route path="/gestao-influenciadores" element={<GestaoInfluenciadores />} />
+        
         <Route path="/painel" element={<PainelGeral />} />
         <Route path="/registro" element={<RegistroDiario />} />
 
