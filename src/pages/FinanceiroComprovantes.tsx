@@ -60,11 +60,10 @@ export default function FinanceiroComprovantes() {
             <FileText className="h-3.5 w-3.5" />
             Comprovantes
           </div>
-          <h1 className="text-[40px] leading-[1.05] font-semibold tracking-[-0.04em] text-[#1f1f1f] sm:text-[52px]">
-            Anexe comprovantes
-            <span className="block text-[#cfcfce]">por closer e por dia.</span>
+          <h1 className="whitespace-nowrap text-[40px] leading-[1.05] font-semibold tracking-[-0.04em] text-[#1f1f1f] sm:text-[52px]">
+            Anexe comprovantes <span className="text-[#cfcfce]">por closer e por dia.</span>
           </h1>
-          <p className="max-w-xl text-[13.5px] leading-relaxed text-[#676767]">
+          <p className="whitespace-nowrap text-[13.5px] leading-relaxed text-[#676767]">
             Mantenha cada fechamento com seu comprovante no lugar certo, sem interromper o closer durante a prospecção.
           </p>
         </div>
