@@ -571,7 +571,7 @@ export default function PlanilhamentoDiario({
       const { error } = await supabase.from("daily_sheets").insert({
         date: targetDate,
         month: monthKey,
-        closer_id: user.id,
+        closer_id: effectiveCloserId,
       } as any);
 
       if (error) {
@@ -606,7 +606,7 @@ export default function PlanilhamentoDiario({
       const { error } = await supabase.from("daily_sheets").insert({
         date: dateStr,
         month: monthKey,
-        closer_id: user.id,
+        closer_id: effectiveCloserId,
       } as any);
 
       if (error) {
@@ -645,7 +645,7 @@ export default function PlanilhamentoDiario({
     const toInsert = missingDays.map((d) => ({
       date: d,
       month: monthKey,
-      closer_id: user.id,
+      closer_id: effectiveCloserId,
     }));
 
     const { error } = await supabase.from("daily_sheets").insert(toInsert as any);
