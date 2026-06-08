@@ -61,15 +61,16 @@ export default function DailyReceiptsCarousel({
     if (!closerId || !date) return;
     const { data, error } = await supabase
       .from("daily_receipt_uploads")
-      .select("id, file_url, file_type, daily_record_id, created_at, closer_id")
+      .select("id, file_url, file_type, daily_record_id, created_at, closer_id, deleted_at")
       .eq("date", date)
       .eq("closer_id", closerId)
-      .is("deleted_at", null)
       .order("created_at", { ascending: true });
     if (error) {
       console.error("[DailyReceiptsCarousel] fetch error:", error);
     } else {
-      setReceipts((data as any) || []);
+      // Filter out soft-deleted client-side so SELECT policy can stay open enough
+      // for PostgREST to return the row right after a soft-delete update.
+      setReceipts(((data as any[]) || []).filter((r) => !r.deleted_at));
     }
     setLoading(false);
   }, [closerId, date]);
@@ -247,7 +248,16 @@ export default function DailyReceiptsCarousel({
               <div className="w-[68px] h-[68px] rounded-2xl overflow-hidden ring-1 ring-black/5 bg-white flex items-center justify-center">
                 <ComprovanteThumbnail
                   url={it.url}
-                  onClick={() => { setLightboxUrl(it.url); setLightboxOpen(true); }}
+                  onClick={async () => {
+                    const path = it.url.split("/comprovantes/")[1];
+                    if (path) {
+                      const { data } = await supabase.storage.from("comprovantes").createSignedUrl(path, 600);
+                      setLightboxUrl(data?.signedUrl || it.url);
+                    } else {
+                      setLightboxUrl(it.url);
+                    }
+                    setLightboxOpen(true);
+                  }}
                 />
               </div>
               {it.tagHandle && (
