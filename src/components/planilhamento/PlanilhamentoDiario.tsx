@@ -1203,17 +1203,19 @@ export default function PlanilhamentoDiario({
                     {focusedDate ? (
                       <div className="space-y-5 bg-[#fcfcf8] p-4 md:p-5">
                         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                          <div className="flex flex-wrap items-center gap-2" />
-
-
-                          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+                          <div className="flex flex-wrap items-center gap-2">
                             <Button
                               type="button"
                               onClick={() => setDayListOpen(true)}
-                              className="h-12 rounded-full bg-[#4a4a4a] px-5 text-white shadow-none hover:bg-[#3a3a3a]"
+                              variant="outline"
+                              className="h-12 rounded-full border-[#ececeb] bg-white px-5 text-[#1f1f1f] shadow-none hover:bg-[#f8f8f5]"
                             >
                               Lista do dia
                             </Button>
+                          </div>
+
+
+                          <div className="flex flex-col gap-3 md:flex-row md:items-center">
                             <div className="relative min-w-[260px]">
                               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9a9a97]" />
                               <Input
