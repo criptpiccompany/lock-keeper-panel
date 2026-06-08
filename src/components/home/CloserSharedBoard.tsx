@@ -694,23 +694,20 @@ export function CloserSharedBoard() {
     const forYou: TeamBoardCard[] = [];
     const general: TeamBoardCard[] = [];
 
+    const PROSPECT_STATUSES = ["Fechar", "Abordado", "Negociando"];
+    const CLOSED_STATUSES = ["Positivo", "Empatando / Negociar", "Pausado", "Com a equipe", "Não posta mais"];
+
     filteredCards.forEach((card) => {
-      if (["Positivo", "Empatando / Negociar"].includes(card.status)) {
-        closing.push(card);
+      if (CLOSED_STATUSES.includes(card.status)) {
+        if (card.closer_id === user?.id) closing.push(card);
+        else teamClosed.push(card);
         return;
       }
 
-      if (card.status === "Com a equipe") {
-        teamClosed.push(card);
-        return;
+      if (PROSPECT_STATUSES.includes(card.status)) {
+        if (card.assigned_to === user?.id) forYou.push(card);
+        else general.push(card);
       }
-
-      if (card.assigned_to === user?.id) {
-        forYou.push(card);
-        return;
-      }
-
-      general.push(card);
     });
 
     return { closing, teamClosed, forYou, general };
