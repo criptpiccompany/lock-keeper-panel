@@ -64,7 +64,7 @@ export default function DailyReceiptsCarousel({
     if (!closerId || !date) return;
     const { data, error } = await supabase
       .from("daily_receipt_uploads")
-      .select("id, file_url, file_type, daily_record_id, created_at, closer_id, deleted_at")
+      .select("id, file_url, file_type, daily_record_id, created_at, closer_id, deleted_at, parsed_data, parse_status")
       .eq("date", date)
       .eq("closer_id", closerId)
       .order("created_at", { ascending: true });
