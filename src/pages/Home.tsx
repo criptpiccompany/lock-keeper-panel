@@ -726,6 +726,31 @@ export default function Home() {
     };
 
     fetchData();
+
+    if (!user?.id) return;
+
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleRefetch = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => fetchData(), 500);
+    };
+
+    const filter = isManagementView ? undefined : `closer_id=eq.${user.id}`;
+    const channel = supabase
+      .channel(`home-sync-${user.id}-${month}`)
+      .on(
+        "postgres_changes",
+        filter
+          ? { event: "*", schema: "public", table: "daily_influencer_records", filter }
+          : { event: "*", schema: "public", table: "daily_influencer_records" },
+        scheduleRefetch
+      )
+      .subscribe();
+
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      supabase.removeChannel(channel);
+    };
   }, [user?.id, user?.teamId, month, feeRate, isManagementView, isAdmin]);
 
   if (!user) return null;
