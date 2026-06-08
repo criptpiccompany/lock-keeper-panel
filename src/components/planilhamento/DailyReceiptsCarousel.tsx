@@ -68,7 +68,9 @@ export default function DailyReceiptsCarousel({
     if (error) {
       console.error("[DailyReceiptsCarousel] fetch error:", error);
     } else {
-      setReceipts((data as any) || []);
+      // Filter out soft-deleted client-side so SELECT policy can stay open enough
+      // for PostgREST to return the row right after a soft-delete update.
+      setReceipts(((data as any[]) || []).filter((r) => !r.deleted_at));
     }
     setLoading(false);
   }, [closerId, date]);
