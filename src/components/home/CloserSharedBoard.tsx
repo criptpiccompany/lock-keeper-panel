@@ -735,7 +735,8 @@ export function CloserSharedBoard() {
       valor_negociado: Number.isNaN(parsedValue) ? null : parsedValue,
       observacao: newObservation.trim() || null,
       apoios: bridgeItems.length ? bridgeItems : null,
-    });
+      assigned_to: newAssignedTo === "none" ? null : newAssignedTo,
+    } as never);
 
     setSaving(false);
     if (!error) {
@@ -745,6 +746,7 @@ export function CloserSharedBoard() {
       setNewValue("");
       setNewObservation("");
       setNewBridge("");
+      setNewAssignedTo("none");
       setDialogOpen(false);
       fetchCards();
     }
