@@ -1218,7 +1218,7 @@ export default function PlanilhamentoDiario({
                                   dayFilter === filter.id
                                     ? filter.id === "pending" && pendingCount > 0
                                       ? "border-[#d94b45] bg-[#d94b45] text-white"
-                                      : "border-[#242424] bg-[#242424] text-white"
+                                      : "border-[#4a4a4a] bg-[#4a4a4a] text-white"
                                     : filter.id === "pending" && pendingCount > 0
                                       ? "border-[#f1c4c1] bg-[#fff5f5] text-[#c73a34]"
                                       : "border-[#ececeb] bg-white text-[#676767]"
