@@ -1105,103 +1105,108 @@ export function CloserSharedBoard() {
             </div>
           ) : null}
 
-          <div
-            className="grid gap-1.5 border-b border-[#ecece8] px-1 pb-2 text-[10px] font-medium uppercase tracking-[0.12em] text-[#b0b0aa]"
-            style={{ gridTemplateColumns }}
-          >
-            {visibleColumns.map((column) => (
-              <div key={column.key}>
-                {column.sortable ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (sortField === column.key) {
-                        setSortDir((current) => (current === "asc" ? "desc" : "asc"));
-                      } else {
-                        setSortField(column.key as SortField);
-                        setSortDir("asc");
-                      }
-                    }}
-                    className="inline-flex items-center gap-1 transition-colors hover:text-[#7f7f79]"
-                  >
-                    {column.label || "✓"}
-                    {sortField === column.key ? <span className="text-[9px]">{sortDir === "asc" ? "↑" : "↓"}</span> : null}
-                  </button>
-                ) : (
-                  column.label || <span>✓</span>
-                )}
+          <div className="-mx-1 overflow-x-auto">
+            <div className="min-w-[640px] px-1">
+              <div
+                className="grid gap-1.5 border-b border-[#ecece8] px-1 pb-2 text-[10px] font-medium uppercase tracking-[0.12em] text-[#b0b0aa]"
+                style={{ gridTemplateColumns }}
+              >
+                {visibleColumns.map((column) => (
+                  <div key={column.key}>
+                    {column.sortable ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (sortField === column.key) {
+                            setSortDir((current) => (current === "asc" ? "desc" : "asc"));
+                          } else {
+                            setSortField(column.key as SortField);
+                            setSortDir("asc");
+                          }
+                        }}
+                        className="inline-flex items-center gap-1 transition-colors hover:text-[#7f7f79]"
+                      >
+                        {column.label || "✓"}
+                        {sortField === column.key ? <span className="text-[9px]">{sortDir === "asc" ? "↑" : "↓"}</span> : null}
+                      </button>
+                    ) : (
+                      column.label || <span>✓</span>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          <div className="space-y-4 px-1 pt-3">
-            {loading ? (
-              <div className="px-3 py-10 text-[12px] text-[#aaa9a4]">Carregando board compartilhado...</div>
-            ) : (
-              <>
-                {activeTab === "fechados" ? (
-                  <>
-                    {sections.closerGroups.length === 0 && sections.concorrencia.length === 0 ? (
-                      <div className="px-6 py-4 text-[12px] text-[#aaa9a4]">Nenhum influenciador fechado ainda.</div>
-                    ) : null}
-                    {sections.closerGroups.map((group) => (
-                      <SectionBlock
-                        key={group.closerId}
-                        title={group.closerId === user?.id ? `${group.closerName} (você)` : group.closerName}
-                        cards={group.cards}
-                        collapsed={collapsedClosers.has(group.closerId)}
-                        onToggle={() => toggleCloser(group.closerId)}
-                        visibleColumns={visibleColumns}
-                        gridTemplateColumns={gridTemplateColumns}
-                        onUpdate={updateCard}
-                        statusOptions={CLOSED_STATUSES as unknown as string[]}
-                        onCheckClick={openMarkModal}
-                        showCheck
-                      />
-                    ))}
-                    {sections.concorrencia.length > 0 ? (
-                      <SectionBlock
-                        title="Concorrência"
-                        cards={sections.concorrencia}
-                        visibleColumns={visibleColumns}
-                        gridTemplateColumns={gridTemplateColumns}
-                        onUpdate={updateCard}
-                        statusOptions={CLOSED_STATUSES as unknown as string[]}
-                        onCheckClick={openMarkModal}
-                        showCheck
-                      />
-                    ) : null}
-                  </>
+              <div className="space-y-4 px-1 pt-3">
+                {loading ? (
+                  <div className="px-3 py-10 text-[12px] text-[#aaa9a4]">Carregando board compartilhado...</div>
                 ) : (
                   <>
-                    <SectionBlock
-                      title="Para você"
-                      cards={sections.forYou}
-                      emptyMessage="Nenhum influenciador indicado diretamente para você no momento."
-                      visibleColumns={visibleColumns}
-                      gridTemplateColumns={gridTemplateColumns}
-                      onUpdate={updateCard}
-                      statusOptions={PROSPECT_STATUSES as unknown as string[]}
-                      onCheckClick={openMarkModal}
-                      showCheck
-                    />
-                    <SectionBlock
-                      title="Geral"
-                      cards={sections.general}
-                      emptyMessage="Nenhum influenciador aberto na visão geral no momento."
-                      visibleColumns={visibleColumns}
-                      gridTemplateColumns={gridTemplateColumns}
-                      onUpdate={updateCard}
-                      statusOptions={PROSPECT_STATUSES as unknown as string[]}
-                      onCheckClick={openMarkModal}
-                      showCheck
-                    />
+                    {activeTab === "fechados" ? (
+                      <>
+                        {sections.closerGroups.length === 0 && sections.concorrencia.length === 0 ? (
+                          <div className="px-6 py-4 text-[12px] text-[#aaa9a4]">Nenhum influenciador fechado ainda.</div>
+                        ) : null}
+                        {sections.closerGroups.map((group) => (
+                          <SectionBlock
+                            key={group.closerId}
+                            title={group.closerId === user?.id ? `${group.closerName} (você)` : group.closerName}
+                            cards={group.cards}
+                            collapsed={collapsedClosers.has(group.closerId)}
+                            onToggle={() => toggleCloser(group.closerId)}
+                            visibleColumns={visibleColumns}
+                            gridTemplateColumns={gridTemplateColumns}
+                            onUpdate={updateCard}
+                            statusOptions={CLOSED_STATUSES as unknown as string[]}
+                            onCheckClick={openMarkModal}
+                            showCheck
+                          />
+                        ))}
+                        {sections.concorrencia.length > 0 ? (
+                          <SectionBlock
+                            title="Concorrência"
+                            cards={sections.concorrencia}
+                            visibleColumns={visibleColumns}
+                            gridTemplateColumns={gridTemplateColumns}
+                            onUpdate={updateCard}
+                            statusOptions={CLOSED_STATUSES as unknown as string[]}
+                            onCheckClick={openMarkModal}
+                            showCheck
+                          />
+                        ) : null}
+                      </>
+                    ) : (
+                      <>
+                        <SectionBlock
+                          title="Para você"
+                          cards={sections.forYou}
+                          emptyMessage="Nenhum influenciador indicado diretamente para você no momento."
+                          visibleColumns={visibleColumns}
+                          gridTemplateColumns={gridTemplateColumns}
+                          onUpdate={updateCard}
+                          statusOptions={PROSPECT_STATUSES as unknown as string[]}
+                          onCheckClick={openMarkModal}
+                          showCheck
+                        />
+                        <SectionBlock
+                          title="Geral"
+                          cards={sections.general}
+                          emptyMessage="Nenhum influenciador aberto na visão geral no momento."
+                          visibleColumns={visibleColumns}
+                          gridTemplateColumns={gridTemplateColumns}
+                          onUpdate={updateCard}
+                          statusOptions={PROSPECT_STATUSES as unknown as string[]}
+                          onCheckClick={openMarkModal}
+                          showCheck
+                        />
+                      </>
+                    )}
                   </>
                 )}
-              </>
-            )}
 
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
 
