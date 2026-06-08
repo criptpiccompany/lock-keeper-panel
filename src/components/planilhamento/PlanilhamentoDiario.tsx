@@ -1249,8 +1249,7 @@ export default function PlanilhamentoDiario({
                             {!viewingOther && (
                               <Button
                                 onClick={() => openNewRecord(day)}
-                                className="h-12 rounded-full bg-white px-5 text-[#1f1f1f] shadow-none border border-[#ececeb] hover:bg-[#f8f8f5]"
-                                variant="outline"
+                                className="h-12 rounded-full bg-[#1f1f1f] px-5 text-white shadow-none hover:bg-[#000000]"
                               >
                                 <Plus className="mr-2 h-4 w-4" />
                                 Adicionar
