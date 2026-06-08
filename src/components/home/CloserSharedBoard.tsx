@@ -966,7 +966,7 @@ export function CloserSharedBoard() {
   };
 
   return (
-    <section className="overflow-hidden rounded-[30px] bg-white p-6 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.08)] ring-1 ring-black/[0.03] lg:p-7">
+    <section className="flex h-full flex-col overflow-hidden rounded-[30px] bg-white p-6 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.08)] ring-1 ring-black/[0.03] lg:p-7">
       <div className="mb-6">
         <div>
           <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#9a9a95]">Time</span>
@@ -977,8 +977,9 @@ export function CloserSharedBoard() {
         </div>
       </div>
 
-      <div className="pb-2">
-        <div className="w-full">
+      <div className="flex min-h-0 flex-1 flex-col pb-2">
+        <div className="flex min-h-0 w-full flex-1 flex-col">
+
           <div className="mb-3 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Button
@@ -1105,8 +1106,9 @@ export function CloserSharedBoard() {
             </div>
           ) : null}
 
-          <div className="-mx-1">
-            <div className="px-1">
+          <div className="-mx-1 flex min-h-0 flex-1 flex-col">
+            <div className="flex min-h-0 flex-1 flex-col px-1">
+
               <div
                 className="grid gap-1.5 border-b border-[#ecece8] px-1 pb-2 text-[10px] font-medium uppercase tracking-[0.12em] text-[#b0b0aa]"
                 style={{ gridTemplateColumns }}
@@ -1136,7 +1138,7 @@ export function CloserSharedBoard() {
                 ))}
               </div>
 
-              <div className="max-h-[720px] space-y-4 overflow-y-auto px-1 pt-3">
+              <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-1 pt-3">
                 {loading ? (
                   <div className="px-3 py-10 text-[12px] text-[#aaa9a4]">Carregando board compartilhado...</div>
                 ) : (
