@@ -315,25 +315,7 @@ function TableRow({
           case "apoios":
             return (
               <div key={column.key} className="min-w-0">
-                <InlineCell
-                  content={<BridgeEditor card={card} onUpdate={onUpdate} />}
-                  className="w-full"
-                >
-                  {card.apoios?.length ? (
-                    <div className="flex flex-wrap gap-1">
-                      {card.apoios.slice(0, 2).map((apoio) => (
-                        <span
-                          key={apoio}
-                          className="max-w-[84px] truncate rounded-[6px] bg-[#f2f2ef] px-1.5 py-0.5 text-[10px] text-[#6d6d69]"
-                        >
-                          {apoio}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-[#c0c0bc]">—</span>
-                  )}
-                </InlineCell>
+                <BridgeCell card={card} onUpdate={onUpdate} />
               </div>
             );
           case "valor_negociado":
