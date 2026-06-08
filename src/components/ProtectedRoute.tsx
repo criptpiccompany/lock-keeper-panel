@@ -30,7 +30,8 @@ export function ProtectedRoute({ children, requireAdmin = false, requireFinancei
     return <Navigate to="/aguardando-aprovacao" replace />;
   }
 
-  if (isFinanceiro && !location.pathname.startsWith('/financeiro/')) {
+  const financeiroPaths = ['/financeiro/comprovantes', '/financeiro/espelhamento'];
+  if (isFinanceiro && !financeiroPaths.some((path) => location.pathname.startsWith(path))) {
     return <Navigate to="/financeiro/comprovantes" replace />;
   }
 
