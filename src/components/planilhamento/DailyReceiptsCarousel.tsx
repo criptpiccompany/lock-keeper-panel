@@ -248,7 +248,16 @@ export default function DailyReceiptsCarousel({
               <div className="w-[68px] h-[68px] rounded-2xl overflow-hidden ring-1 ring-black/5 bg-white flex items-center justify-center">
                 <ComprovanteThumbnail
                   url={it.url}
-                  onClick={() => { setLightboxUrl(it.url); setLightboxOpen(true); }}
+                  onClick={async () => {
+                    const path = it.url.split("/comprovantes/")[1];
+                    if (path) {
+                      const { data } = await supabase.storage.from("comprovantes").createSignedUrl(path, 600);
+                      setLightboxUrl(data?.signedUrl || it.url);
+                    } else {
+                      setLightboxUrl(it.url);
+                    }
+                    setLightboxOpen(true);
+                  }}
                 />
               </div>
               {it.tagHandle && (
