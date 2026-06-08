@@ -201,16 +201,19 @@ function WorkflowStatusDropdown({
   value: string | null;
   onChange: (val: string | null) => void;
 }) {
+  const colorClass = value ? workflowBadgeClass(value, false) : "bg-white text-[#6e6e6e]";
   return (
     <Select value={value || "__none__"} onValueChange={(v) => onChange(v === "__none__" ? null : v)}>
-      <SelectTrigger className="h-9 text-[12px] w-[130px] rounded-full border-[#ececeb] bg-white font-medium tracking-[0.04em]">
+      <SelectTrigger className={cn("h-9 text-[12px] w-[130px] rounded-full border-transparent font-medium tracking-[0.04em]", colorClass)}>
         <SelectValue placeholder="Selecionar" />
       </SelectTrigger>
       <SelectContent className="bg-popover z-50">
         <SelectItem value="__none__" className="text-xs text-muted-foreground">— Sem ação</SelectItem>
         {WORKFLOW_STATUSES.map((s) => (
           <SelectItem key={s} value={s} className="text-xs font-medium tracking-[0.04em]">
-            {s}
+            <span className={cn("inline-flex items-center rounded-full px-2 py-0.5", workflowBadgeClass(s, false))}>
+              {s}
+            </span>
           </SelectItem>
         ))}
       </SelectContent>
