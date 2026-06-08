@@ -318,7 +318,10 @@ export function CommissionCardCarousel({
     if (!track) return;
     const slide = track.querySelector<HTMLElement>(`[data-slide-idx="${currentIdx}"]`);
     if (!slide) return;
-    const left = slide.offsetLeft - (track.clientWidth - slide.clientWidth) / 2;
+    const trackRect = track.getBoundingClientRect();
+    const slideRect = slide.getBoundingClientRect();
+    const slideLeftInTrack = slideRect.left - trackRect.left + track.scrollLeft;
+    const left = slideLeftInTrack - (track.clientWidth - slide.clientWidth) / 2;
     track.scrollTo({ left: Math.max(0, left), behavior });
   };
 
