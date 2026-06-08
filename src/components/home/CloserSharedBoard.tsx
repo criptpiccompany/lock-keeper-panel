@@ -1026,12 +1026,13 @@ export function CloserSharedBoard() {
 
                 <div className="space-y-2">
                   <label className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">Engajamento</label>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-5 gap-2">
                     {([
-                      { value: "none", label: "Nenhum", color: null as string | null },
-                      { value: "Fraca", label: "Fraca", color: "#dc2626" },
-                      { value: "Média", label: "Média", color: "#eab308" },
-                      { value: "Forte", label: "Forte", color: "#16a34a" },
+                      { value: "none", label: "Nenhum", color: null as string | null, fire: false },
+                      { value: "Fraca", label: "Fraca", color: "#dc2626", fire: false },
+                      { value: "Média", label: "Média", color: "#eab308", fire: false },
+                      { value: "Forte", label: "Forte", color: "#16a34a", fire: false },
+                      { value: "Prioridade", label: "Prioridade", color: "#f97316", fire: true },
                     ]).map((option) => {
                       const active = newEngagement === option.value;
                       return (
@@ -1046,7 +1047,14 @@ export function CloserSharedBoard() {
                               : "border-[#ececeb] bg-[#fafaf8] text-[#37352f] hover:border-[#d4d4cf]"
                           )}
                         >
-                          {option.color ? (
+                          {option.fire ? (
+                            <Flame
+                              className="h-3.5 w-3.5"
+                              fill={active ? "#f97316" : "#f97316"}
+                              stroke={active ? "#fed7aa" : "#9a3412"}
+                              strokeWidth={1.5}
+                            />
+                          ) : option.color ? (
                             <span
                               className="h-2.5 w-2.5 rounded-full"
                               style={{ backgroundColor: option.color }}
