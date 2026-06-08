@@ -911,42 +911,48 @@ export function CloserSharedBoard() {
               <div className="px-3 py-10 text-[12px] text-[#aaa9a4]">Carregando board compartilhado...</div>
             ) : (
               <>
-                <SectionBlock
-                  title="Fechando"
-                  cards={sections.closing}
-                  visibleColumns={visibleColumns}
-                  gridTemplateColumns={gridTemplateColumns}
-                  onUpdate={updateCard}
-                />
-                <SectionBlock
-                  title="Equipe Fechou"
-                  subtitle="Clique para ver"
-                  cards={sections.teamClosed}
-                  collapsed={teamClosedCollapsed}
-                  onToggle={() => setTeamClosedCollapsed((current) => !current)}
-                  emptyMessage="Nenhum influenciador fechado por outra pessoa no momento."
-                  visibleColumns={visibleColumns}
-                  gridTemplateColumns={gridTemplateColumns}
-                  onUpdate={updateCard}
-                />
-                <SectionBlock
-                  title="Para você"
-                  cards={sections.forYou}
-                  emptyMessage="Nenhum influenciador indicado diretamente para você no momento."
-                  visibleColumns={visibleColumns}
-                  gridTemplateColumns={gridTemplateColumns}
-                  onUpdate={updateCard}
-                />
-                <SectionBlock
-                  title="Geral"
-                  cards={sections.general}
-                  emptyMessage="Nenhum influenciador aberto na visão geral no momento."
-                  visibleColumns={visibleColumns}
-                  gridTemplateColumns={gridTemplateColumns}
-                  onUpdate={updateCard}
-                />
+                {activeTab === "forYou" && (
+                  <SectionBlock
+                    title="Para você"
+                    cards={sections.forYou}
+                    emptyMessage="Nenhum influenciador indicado diretamente para você no momento."
+                    visibleColumns={visibleColumns}
+                    gridTemplateColumns={gridTemplateColumns}
+                    onUpdate={updateCard}
+                  />
+                )}
+                {activeTab === "closing" && (
+                  <SectionBlock
+                    title="Fechando"
+                    cards={sections.closing}
+                    visibleColumns={visibleColumns}
+                    gridTemplateColumns={gridTemplateColumns}
+                    onUpdate={updateCard}
+                  />
+                )}
+                {activeTab === "teamClosed" && (
+                  <SectionBlock
+                    title="Equipe Fechou"
+                    cards={sections.teamClosed}
+                    emptyMessage="Nenhum influenciador fechado por outra pessoa no momento."
+                    visibleColumns={visibleColumns}
+                    gridTemplateColumns={gridTemplateColumns}
+                    onUpdate={updateCard}
+                  />
+                )}
+                {activeTab === "general" && (
+                  <SectionBlock
+                    title="Geral"
+                    cards={sections.general}
+                    emptyMessage="Nenhum influenciador aberto na visão geral no momento."
+                    visibleColumns={visibleColumns}
+                    gridTemplateColumns={gridTemplateColumns}
+                    onUpdate={updateCard}
+                  />
+                )}
               </>
             )}
+
           </div>
         </div>
       </div>
