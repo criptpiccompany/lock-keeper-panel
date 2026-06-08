@@ -39,8 +39,18 @@ export default function FinanceiroComprovantes() {
   }, []);
 
   const visibleClosers = useMemo(() => {
-    if (filterTeam === "all") return closers;
-    return closers.filter((c) => c.team_id === filterTeam);
+    const base = filterTeam === "all" ? closers : closers.filter((c) => c.team_id === filterTeam);
+    const priority = ["vanessa", "gabriel", "antonio", "antônio"];
+    const rank = (name: string) => {
+      const n = (name || "").trim().toLowerCase();
+      const idx = priority.findIndex((p) => n.startsWith(p));
+      return idx === -1 ? priority.length : idx;
+    };
+    return [...base].sort((a, b) => {
+      const ra = rank(a.nome), rb = rank(b.nome);
+      if (ra !== rb) return ra - rb;
+      return (a.nome || "").localeCompare(b.nome || "", "pt-BR");
+    });
   }, [closers, filterTeam]);
 
   if (loading || !user) {
