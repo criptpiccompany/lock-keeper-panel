@@ -97,18 +97,37 @@ function formatRelative(date: string) {
   return `${days}d`;
 }
 
-function EngagementDot({ value }: { value: string | null }) {
-  const option = CLASSIFICACAO_OPTIONS.find((item) => item.value === value);
-  if (!option) return <span className="text-[#c0c0bc]">—</span>;
+const ENGAGEMENT_META: Record<string, { color: string; percent: number }> = {
+  Fraca: { color: "#dc2626", percent: 33 },
+  Média: { color: "#eab308", percent: 66 },
+  Forte: { color: "#16a34a", percent: 100 },
+};
 
+function EngagementDot({ value }: { value: string | null }) {
+  const meta = value ? ENGAGEMENT_META[value] : null;
+  if (!meta) {
+    return (
+      <span
+        className="inline-block h-3.5 w-3.5 rounded-full border-2 border-dashed border-[#e0e0dc]"
+        title="Sem engajamento"
+      />
+    );
+  }
+
+  const angle = (meta.percent / 100) * 360;
   return (
     <span
-      className="inline-flex h-3.5 w-3.5 rounded-full border"
-      style={{ borderColor: option.text, boxShadow: `inset 0 0 0 3px ${option.bg}` }}
-      title={value}
+      className="inline-block h-3.5 w-3.5 rounded-full"
+      style={{
+        background: `conic-gradient(${meta.color} ${angle}deg, #ececea ${angle}deg 360deg)`,
+        WebkitMask: "radial-gradient(circle, transparent 38%, #000 40%)",
+        mask: "radial-gradient(circle, transparent 38%, #000 40%)",
+      }}
+      title={value!}
     />
   );
 }
+
 
 function StatusPill({ status }: { status: string }) {
   const meta = STATUS_META[status] ?? STATUS_META.Fechar;
