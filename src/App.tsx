@@ -23,6 +23,7 @@ import Notificacoes from "./pages/Notificacoes";
 import PendingApproval from "./pages/PendingApproval";
 import Financeiro from "./pages/Financeiro";
 import Home from "./pages/Home";
+import FinanceiroWorkspace from "./pages/FinanceiroWorkspace";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ function AppRoutes() {
   const DefaultRedirect = () => {
     if (loading) return null;
     if (!user) return <Navigate to="/login" replace />;
+    if (user.role === 'FINANCEIRO') return <Navigate to="/financeiro/comprovantes" replace />;
     return <Navigate to="/home" replace />;
   };
 
@@ -110,6 +112,22 @@ function AppRoutes() {
           element={
             <ProtectedRoute requireAdmin>
               <Admin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/financeiro/comprovantes"
+          element={
+            <ProtectedRoute requireFinanceiro>
+              <FinanceiroWorkspace initialTab="comprovantes" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/financeiro/espelhamento"
+          element={
+            <ProtectedRoute requireFinanceiro>
+              <FinanceiroWorkspace initialTab="espelhamento" />
             </ProtectedRoute>
           }
         />

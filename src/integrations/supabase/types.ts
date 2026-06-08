@@ -346,6 +346,87 @@ export type Database = {
           },
         ]
       }
+      daily_receipt_uploads: {
+        Row: {
+          closer_id: string
+          created_at: string
+          daily_record_id: string | null
+          date: string
+          deleted_at: string | null
+          deleted_by: string | null
+          file_type: string | null
+          file_url: string
+          id: string
+          team_id: string | null
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          closer_id: string
+          created_at?: string
+          daily_record_id?: string | null
+          date: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          team_id?: string | null
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          closer_id?: string
+          created_at?: string
+          daily_record_id?: string | null
+          date?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          team_id?: string | null
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_receipt_uploads_closer_id_fkey"
+            columns: ["closer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_receipt_uploads_daily_record_id_fkey"
+            columns: ["daily_record_id"]
+            isOneToOne: false
+            referencedRelation: "daily_influencer_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_receipt_uploads_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_receipt_uploads_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_receipt_uploads_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_record_shared_partners: {
         Row: {
           created_at: string
@@ -976,6 +1057,7 @@ export type Database = {
         Returns: boolean
       }
       is_approved: { Args: { _user_id: string }; Returns: boolean }
+      is_global_viewer: { Args: { _user_id: string }; Returns: boolean }
       is_same_team: {
         Args: { _user_id_a: string; _user_id_b: string }
         Returns: boolean
@@ -991,7 +1073,7 @@ export type Database = {
       validate_invite_token: { Args: { _token: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "CLOSER" | "ADMIN" | "SUBADMIN"
+      app_role: "CLOSER" | "ADMIN" | "SUBADMIN" | "FINANCEIRO"
       notification_review_status: "PENDENTE" | "REVISADO" | "SUSPEITO"
     }
     CompositeTypes: {
@@ -1120,7 +1202,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["CLOSER", "ADMIN", "SUBADMIN"],
+      app_role: ["CLOSER", "ADMIN", "SUBADMIN", "FINANCEIRO"],
       notification_review_status: ["PENDENTE", "REVISADO", "SUSPEITO"],
     },
   },
