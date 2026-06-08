@@ -780,7 +780,7 @@ export default function Home() {
                 ]}
               />
 
-              <SourceTrackCard title="Meta diária do time" current={resultado} target={progressTarget} />
+              <TeamDailyGoalCard teamId={user.teamId} isAdmin={isAdmin} />
 
               <SourceDualPanel title="Porcentagem Atual" actionLabel="Performance Club">
                 <CommissionCardCarousel
