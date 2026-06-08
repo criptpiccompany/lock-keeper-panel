@@ -1609,22 +1609,26 @@ export default function PlanilhamentoDiario({
                                     )}
                                   </div>
                                   <div className="flex items-center gap-1.5 shrink-0">
-                                    {record.comprovante_url ? (
-                                      <ComprovanteThumbnail
-                                        url={record.comprovante_url}
-                                        onClick={() => handleViewComprovante(record.comprovante_url)}
-                                      />
-                                    ) : (
-                                      <Badge variant="destructive" className="text-[10px] gap-0.5 px-1.5 py-0.5">
-                                        <AlertCircle className="h-3 w-3" />
-                                        Pendente
-                                      </Badge>
-                                    )}
-                                    {record.comprovante_url_2 && (
-                                      <ComprovanteThumbnail
-                                        url={record.comprovante_url_2}
-                                        onClick={() => handleViewComprovante(record.comprovante_url_2!)}
-                                      />
+                                    {!RECEIPTS_AS_CAROUSEL && (
+                                      <>
+                                        {record.comprovante_url ? (
+                                          <ComprovanteThumbnail
+                                            url={record.comprovante_url}
+                                            onClick={() => handleViewComprovante(record.comprovante_url)}
+                                          />
+                                        ) : (
+                                          <Badge variant="destructive" className="text-[10px] gap-0.5 px-1.5 py-0.5">
+                                            <AlertCircle className="h-3 w-3" />
+                                            Pendente
+                                          </Badge>
+                                        )}
+                                        {record.comprovante_url_2 && (
+                                          <ComprovanteThumbnail
+                                            url={record.comprovante_url_2}
+                                            onClick={() => handleViewComprovante(record.comprovante_url_2!)}
+                                          />
+                                        )}
+                                      </>
                                     )}
                                     {!viewingOther && (
                                       <button
