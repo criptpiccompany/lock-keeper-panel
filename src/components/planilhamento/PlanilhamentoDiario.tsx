@@ -1268,12 +1268,10 @@ export default function PlanilhamentoDiario({
                                   <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Faturamento</th>
                                   <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Resultado</th>
                                   <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Total no link</th>
-                                  <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Status</th>
                                   <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Comprovantes</th>
-                                  {!viewingOther && <th className="px-4 py-5 text-right text-[12px] font-medium text-[#6e6e6e]">Ações</th>}
                                 </tr>
                                 <tr>
-                                  <td colSpan={viewingOther ? 8 : 9} className="px-5">
+                                  <td colSpan={7} className="px-5">
                                     <div className="border-b border-dashed border-[#e6ddb0]" />
                                   </td>
                                 </tr>
@@ -1281,7 +1279,7 @@ export default function PlanilhamentoDiario({
                               <tbody>
                                 {visibleDayRecords.length === 0 ? (
                                   <tr>
-                                    <td colSpan={viewingOther ? 8 : 9} className="px-6 py-12 text-center text-sm text-muted-foreground">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-sm text-muted-foreground">
                                       Nenhum influenciador encontrado para esse dia.
                                     </td>
                                   </tr>
@@ -1291,6 +1289,7 @@ export default function PlanilhamentoDiario({
                                     const resultado = getStatusResultado(record.faturamento, record.valor_pago);
                                     const handle = getInfluencerHandle(record.influencer_id);
                                     const selected = selectedRecordId === record.id;
+                                    const canEdit = !viewingOther;
 
                                     return (
                                       <tr
@@ -1299,7 +1298,10 @@ export default function PlanilhamentoDiario({
                                           "cursor-pointer transition",
                                           selected ? "bg-[linear-gradient(180deg,#ffe27a_0%,#ffd75b_100%)]" : "hover:bg-[#fbfbf8]"
                                         )}
-                                        onClick={() => setSelectedRecordId(record.id)}
+                                        onClick={() => {
+                                          setSelectedRecordId(record.id);
+                                          if (canEdit) openEditRecord(record);
+                                        }}
                                       >
                                         <td className="px-5 py-5 align-middle">
                                           <Checkbox
@@ -1343,12 +1345,6 @@ export default function PlanilhamentoDiario({
                                           </div>
                                         </td>
                                         <td className="px-4 py-5">
-                                          <span className={cn("inline-flex items-center gap-2 rounded-full px-3 py-2 text-[14px] font-medium", workflowBadgeClass(record.status, !!record.comprovante_url))}>
-                                            <span className="h-2 w-2 rounded-full bg-current opacity-70" />
-                                            {!record.comprovante_url ? "Pendente" : record.status || "Gravando"}
-                                          </span>
-                                        </td>
-                                        <td className="px-4 py-5">
                                           <div className="flex items-center gap-2">
                                             {record.comprovante_url ? (
                                               <ComprovanteThumbnail
@@ -1366,21 +1362,6 @@ export default function PlanilhamentoDiario({
                                             ) : null}
                                           </div>
                                         </td>
-                                        {!viewingOther && (
-                                          <td className="px-4 py-5 text-right">
-                                            <Button
-                                              size="sm"
-                                              variant="outline"
-                                              className="h-10 rounded-full border-[#ececeb] bg-white px-4 text-[#1f1f1f] shadow-none"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                openEditRecord(record);
-                                              }}
-                                            >
-                                              Editar
-                                            </Button>
-                                          </td>
-                                        )}
                                       </tr>
                                     );
                                   })
