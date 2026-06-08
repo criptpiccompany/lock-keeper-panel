@@ -809,9 +809,9 @@ export default function PlanilhamentoDiario({
       }
 
       const payload: Record<string, unknown> = {
-        valor_pago: Number(formValorPago),
-        faturamento: formFaturamento ? Number(formFaturamento) : null,
-        acumulado: formAcumulado ? Number(formAcumulado) : null,
+        valor_pago: parseBRL(formValorPago),
+        faturamento: formFaturamento ? parseBRL(formFaturamento) : null,
+        acumulado: formAcumulado ? parseBRL(formAcumulado) : null,
         observacao: formObservacao || null,
         is_shared: formIsShared,
         shared_note: formIsShared ? (formSharedNote || null) : null,
