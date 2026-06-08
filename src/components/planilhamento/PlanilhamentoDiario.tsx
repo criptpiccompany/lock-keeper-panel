@@ -138,6 +138,26 @@ function formatPercent(val: number | null): string {
   return (val * 100).toFixed(1) + "%";
 }
 
+// BRL input mask: stores formatted string like "1.000,00" in state.
+function maskBRL(input: string): string {
+  const digits = (input ?? "").replace(/\D/g, "");
+  if (!digits) return "";
+  const cents = parseInt(digits, 10);
+  return (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function parseBRL(masked: string): number {
+  if (!masked) return 0;
+  const normalized = masked.replace(/\./g, "").replace(",", ".");
+  const n = parseFloat(normalized);
+  return isNaN(n) ? 0 : n;
+}
+
+function formatBRLFromNumber(val: number | null | undefined): string {
+  if (val === null || val === undefined) return "";
+  return Number(val).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function getHandleInitials(handle: string): string {
   return handle.replace("@", "").slice(0, 2).toUpperCase();
 }
@@ -648,9 +668,9 @@ export default function PlanilhamentoDiario({
     setEditRecord(record);
     setModalDate(record.date);
     setFormInfluencerId(record.influencer_id);
-    setFormValorPago(String(record.valor_pago));
-    setFormFaturamento(record.faturamento !== null ? String(record.faturamento) : "");
-    setFormAcumulado(record.acumulado !== null ? String(record.acumulado) : "");
+    setFormValorPago(formatBRLFromNumber(record.valor_pago));
+    setFormFaturamento(record.faturamento !== null ? formatBRLFromNumber(record.faturamento) : "");
+    setFormAcumulado(record.acumulado !== null ? formatBRLFromNumber(record.acumulado) : "");
     setFormObservacao(record.observacao || "");
     setFormFile1(null);
     setFormFile2(null);
@@ -695,8 +715,8 @@ export default function PlanilhamentoDiario({
     }
 
     const diffs: FieldDiff[] = [];
-    const newValorPago = Number(formValorPago);
-    const newFaturamento = formFaturamento ? Number(formFaturamento) : null;
+    const newValorPago = parseBRL(formValorPago);
+    const newFaturamento = formFaturamento ? parseBRL(formFaturamento) : null;
     const oldValorPago = Number(editRecord.valor_pago);
     const oldFaturamento = editRecord.faturamento != null ? Number(editRecord.faturamento) : null;
 
@@ -733,7 +753,7 @@ export default function PlanilhamentoDiario({
       toast.error("Selecione um influenciador");
       return;
     }
-    if (!formValorPago || Number(formValorPago) <= 0) {
+    if (!formValorPago || parseBRL(formValorPago) <= 0) {
       toast.error("Informe o valor pago");
       return;
     }
@@ -789,9 +809,9 @@ export default function PlanilhamentoDiario({
       }
 
       const payload: Record<string, unknown> = {
-        valor_pago: Number(formValorPago),
-        faturamento: formFaturamento ? Number(formFaturamento) : null,
-        acumulado: formAcumulado ? Number(formAcumulado) : null,
+        valor_pago: parseBRL(formValorPago),
+        faturamento: formFaturamento ? parseBRL(formFaturamento) : null,
+        acumulado: formAcumulado ? parseBRL(formAcumulado) : null,
         observacao: formObservacao || null,
         is_shared: formIsShared,
         shared_note: formIsShared ? (formSharedNote || null) : null,
@@ -914,7 +934,7 @@ export default function PlanilhamentoDiario({
               entity_id: savedRecordId,
               entity_type: "daily_influencer_records",
               edit_reason: editReason,
-              field_changes: { new_record: { before: null, after: { date: modalDate, valor_pago: Number(formValorPago), faturamento: formFaturamento ? Number(formFaturamento) : null } } },
+              field_changes: { new_record: { before: null, after: { date: modalDate, valor_pago: parseBRL(formValorPago), faturamento: formFaturamento ? parseBRL(formFaturamento) : null } } },
               influencer_handle: selectedInfForReason?.handle || formInfluencerId,
             },
           });
@@ -1843,12 +1863,11 @@ export default function PlanilhamentoDiario({
                     <div className="space-y-2">
                       <Label className="text-[12px] font-medium uppercase tracking-[0.16em] text-[#7a7a78]">Valor Pago (R$)</Label>
                       <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
+                        type="text"
+                        inputMode="numeric"
                         placeholder="0,00"
                         value={formValorPago}
-                        onChange={(e) => setFormValorPago(e.target.value)}
+                        onChange={(e) => setFormValorPago(maskBRL(e.target.value))}
                         className="h-14 rounded-[20px] border-[#ececeb] bg-[#fcfcf8] px-5 text-[16px] shadow-none"
                       />
                     </div>
@@ -1868,12 +1887,11 @@ export default function PlanilhamentoDiario({
                         </TooltipProvider>
                       </div>
                       <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
+                        type="text"
+                        inputMode="numeric"
                         placeholder="0,00"
                         value={formAcumulado}
-                        onChange={(e) => setFormAcumulado(e.target.value)}
+                        onChange={(e) => setFormAcumulado(maskBRL(e.target.value))}
                         className="h-14 rounded-[20px] border-[#ececeb] bg-[#f3f4f6] px-5 text-[16px] shadow-none"
                       />
                     </div>
@@ -1882,39 +1900,39 @@ export default function PlanilhamentoDiario({
                   <div className="space-y-2">
                     <Label className="text-[12px] font-medium uppercase tracking-[0.16em] text-[#7a7a78]">Faturamento (R$) <span className="normal-case tracking-normal text-[#8d8d92]">— pode preencher depois</span></Label>
                     <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
+                      type="text"
+                      inputMode="numeric"
                       placeholder="0,00"
                       value={formFaturamento}
-                      onChange={(e) => setFormFaturamento(e.target.value)}
+                      onChange={(e) => setFormFaturamento(maskBRL(e.target.value))}
                       className="h-14 rounded-[20px] border-[#ececeb] bg-[#fcfcf8] px-5 text-[16px] shadow-none"
                     />
                   </div>
 
                   {formValorPago && formFaturamento && (
-                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                      <div className="rounded-[22px] bg-[#f6f6f2] px-4 py-4">
-                        <div className="text-[11px] uppercase tracking-[0.16em] text-[#8a8a8a]">{DAILY_FEE_LABEL}</div>
-                        <div className="mt-2 text-[18px] font-semibold text-[#1f1f1f]">{formatCurrency(calcTaxaPlataforma(Number(formFaturamento)))}</div>
+                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                      <div className="min-w-0 rounded-[22px] bg-[#f6f6f2] px-4 py-3">
+                        <div className="text-[10px] uppercase tracking-[0.14em] text-[#8a8a8a] leading-tight line-clamp-2">{DAILY_FEE_LABEL}</div>
+                        <div className="mt-2 text-[15px] font-semibold text-[#1f1f1f] truncate">{formatCurrency(calcTaxaPlataforma(parseBRL(formFaturamento)))}</div>
                       </div>
-                      <div className="rounded-[22px] bg-[#f6f6f2] px-4 py-4">
-                        <div className="text-[11px] uppercase tracking-[0.16em] text-[#8a8a8a]">Lucro líquido</div>
-                        <div className={`mt-2 text-[18px] font-semibold ${calcLucroLiquido(Number(formFaturamento), Number(formValorPago)) >= 0 ? "text-emerald-700" : "text-red-600"}`}>
-                          {formatCurrency(calcLucroLiquido(Number(formFaturamento), Number(formValorPago)))}
+                      <div className="min-w-0 rounded-[22px] bg-[#f6f6f2] px-4 py-3">
+                        <div className="text-[10px] uppercase tracking-[0.14em] text-[#8a8a8a] leading-tight">Lucro líquido</div>
+                        <div className={`mt-2 text-[15px] font-semibold truncate ${calcLucroLiquido(parseBRL(formFaturamento), parseBRL(formValorPago)) >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                          {formatCurrency(calcLucroLiquido(parseBRL(formFaturamento), parseBRL(formValorPago)))}
                         </div>
                       </div>
-                      <div className="rounded-[22px] bg-[#f6f6f2] px-4 py-4">
-                        <div className="text-[11px] uppercase tracking-[0.16em] text-[#8a8a8a]">Margem</div>
-                        <div className="mt-2 text-[18px] font-semibold text-[#1f1f1f]">{formatPercent(calcMargem(Number(formFaturamento), Number(formValorPago)))}</div>
+                      <div className="min-w-0 rounded-[22px] bg-[#f6f6f2] px-4 py-3">
+                        <div className="text-[10px] uppercase tracking-[0.14em] text-[#8a8a8a] leading-tight">Margem</div>
+                        <div className="mt-2 text-[15px] font-semibold text-[#1f1f1f] truncate">{formatPercent(calcMargem(parseBRL(formFaturamento), parseBRL(formValorPago)))}</div>
                       </div>
-                      <div className="rounded-[22px] bg-[#f6f6f2] px-4 py-4">
-                        <div className="text-[11px] uppercase tracking-[0.16em] text-[#8a8a8a]">Status</div>
-                        <div className="mt-2"><ResultadoChip status={getStatusResultado(Number(formFaturamento), Number(formValorPago))} /></div>
+                      <div className="min-w-0 rounded-[22px] bg-[#f6f6f2] px-4 py-3">
+                        <div className="text-[10px] uppercase tracking-[0.14em] text-[#8a8a8a] leading-tight">Status</div>
+                        <div className="mt-2"><ResultadoChip status={getStatusResultado(parseBRL(formFaturamento), parseBRL(formValorPago))} /></div>
                       </div>
                     </div>
                   )}
                 </div>
+
 
                 <div className="h-full space-y-5 rounded-[28px] bg-white p-6 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
                   <div className="grid items-start gap-4 md:grid-cols-2">
