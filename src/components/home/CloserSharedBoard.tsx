@@ -909,17 +909,15 @@ export function CloserSharedBoard() {
               <div className="px-3 py-10 text-[12px] text-[#aaa9a4]">Carregando board compartilhado...</div>
             ) : (
               <>
-                {activeTab === "forYou" && (
-                  <SectionBlock
-                    title="Para você"
-                    cards={sections.forYou}
-                    emptyMessage="Nenhum influenciador indicado diretamente para você no momento."
-                    visibleColumns={visibleColumns}
-                    gridTemplateColumns={gridTemplateColumns}
-                    onUpdate={updateCard}
-                  />
-                )}
-                {activeTab === "closing" && (
+                <SectionBlock
+                  title="Para você"
+                  cards={sections.forYou}
+                  emptyMessage="Nenhum influenciador indicado diretamente para você no momento."
+                  visibleColumns={visibleColumns}
+                  gridTemplateColumns={gridTemplateColumns}
+                  onUpdate={updateCard}
+                />
+                {activeTab === "closing" ? (
                   <SectionBlock
                     title="Fechando"
                     cards={sections.closing}
@@ -927,8 +925,7 @@ export function CloserSharedBoard() {
                     gridTemplateColumns={gridTemplateColumns}
                     onUpdate={updateCard}
                   />
-                )}
-                {activeTab === "teamClosed" && (
+                ) : (
                   <SectionBlock
                     title="Equipe Fechou"
                     cards={sections.teamClosed}
@@ -938,16 +935,14 @@ export function CloserSharedBoard() {
                     onUpdate={updateCard}
                   />
                 )}
-                {activeTab === "general" && (
-                  <SectionBlock
-                    title="Geral"
-                    cards={sections.general}
-                    emptyMessage="Nenhum influenciador aberto na visão geral no momento."
-                    visibleColumns={visibleColumns}
-                    gridTemplateColumns={gridTemplateColumns}
-                    onUpdate={updateCard}
-                  />
-                )}
+                <SectionBlock
+                  title="Geral"
+                  cards={sections.general}
+                  emptyMessage="Nenhum influenciador aberto na visão geral no momento."
+                  visibleColumns={visibleColumns}
+                  gridTemplateColumns={gridTemplateColumns}
+                  onUpdate={updateCard}
+                />
               </>
             )}
 
