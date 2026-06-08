@@ -54,7 +54,7 @@ export default function FinanceiroEspelhamento() {
       </div>
 
       {closerId ? (
-        <PlanilhamentoDiario closerId={closerId} />
+        <PlanilhamentoDiario closerId={closerId} editAsCloser />
       ) : (
         <div className="rounded-2xl bg-white border p-12 text-center text-sm text-muted-foreground">
           Selecione um closer para espelhar o Planilhamento dele em tempo real.
