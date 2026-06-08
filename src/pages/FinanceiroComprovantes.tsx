@@ -106,7 +106,7 @@ export default function FinanceiroComprovantes() {
           <p className="text-[13.5px] text-[#676767]">Nenhum closer encontrado para este filtro.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="flex flex-col gap-4">
           {visibleClosers.map((c) => {
             const teamName = teams.find((t) => t.id === c.team_id)?.name || "—";
             const initial = c.nome?.charAt(0)?.toUpperCase() ?? "?";
