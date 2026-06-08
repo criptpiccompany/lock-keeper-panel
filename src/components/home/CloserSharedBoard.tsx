@@ -698,7 +698,7 @@ export function CloserSharedBoard() {
         return;
       }
 
-      if (card.closer_id === user?.id && ["Fechar", "Negociando", "Abordado"].includes(card.status)) {
+      if (card.assigned_to === user?.id) {
         forYou.push(card);
         return;
       }
