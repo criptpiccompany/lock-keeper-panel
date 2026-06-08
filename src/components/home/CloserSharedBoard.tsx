@@ -932,15 +932,7 @@ export function CloserSharedBoard() {
               <div className="px-3 py-10 text-[12px] text-[#aaa9a4]">Carregando board compartilhado...</div>
             ) : (
               <>
-                <SectionBlock
-                  title="Para você"
-                  cards={sections.forYou}
-                  emptyMessage="Nenhum influenciador indicado diretamente para você no momento."
-                  visibleColumns={visibleColumns}
-                  gridTemplateColumns={gridTemplateColumns}
-                  onUpdate={updateCard}
-                />
-                {activeTab === "fechados" && (
+                {activeTab === "fechados" ? (
                   <>
                     <SectionBlock
                       title="Fechando"
@@ -958,15 +950,26 @@ export function CloserSharedBoard() {
                       onUpdate={updateCard}
                     />
                   </>
+                ) : (
+                  <>
+                    <SectionBlock
+                      title="Para você"
+                      cards={sections.forYou}
+                      emptyMessage="Nenhum influenciador indicado diretamente para você no momento."
+                      visibleColumns={visibleColumns}
+                      gridTemplateColumns={gridTemplateColumns}
+                      onUpdate={updateCard}
+                    />
+                    <SectionBlock
+                      title="Geral"
+                      cards={sections.general}
+                      emptyMessage="Nenhum influenciador aberto na visão geral no momento."
+                      visibleColumns={visibleColumns}
+                      gridTemplateColumns={gridTemplateColumns}
+                      onUpdate={updateCard}
+                    />
+                  </>
                 )}
-                <SectionBlock
-                  title="Geral"
-                  cards={sections.general}
-                  emptyMessage="Nenhum influenciador aberto na visão geral no momento."
-                  visibleColumns={visibleColumns}
-                  gridTemplateColumns={gridTemplateColumns}
-                  onUpdate={updateCard}
-                />
               </>
             )}
 
