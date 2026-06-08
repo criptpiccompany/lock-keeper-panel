@@ -211,14 +211,24 @@ export default function DailyReceiptsCarousel({
   }, [receipts, legacyReceipts, influencerLines]);
 
   return (
-    <div ref={carouselRef} className={cn("rounded-2xl border bg-white/60 backdrop-blur-sm px-4 py-3", compact ? "" : "mt-4")}>
+    <div
+      ref={carouselRef}
+      tabIndex={requireFocus ? 0 : -1}
+      className={cn(
+        "rounded-2xl border bg-white/60 backdrop-blur-sm px-4 py-3 outline-none",
+        compact ? "" : "mt-4",
+        requireFocus && "focus-within:border-[#6ea93d] focus-within:bg-white"
+      )}
+    >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <h4 className="text-[13px] font-semibold tracking-[-0.01em] text-[#2c2c2c]">Comprovantes do dia</h4>
           <span className="text-[11px] text-muted-foreground">{allItems.length}</span>
         </div>
         {canEdit && (
-          <p className="hidden sm:block text-[11px] text-muted-foreground">Arraste, cole (Ctrl+V) ou clique em +</p>
+          <p className="hidden sm:block text-[11px] text-muted-foreground">
+            {requireFocus ? "Clique aqui e cole (Ctrl+V), arraste ou use +" : "Arraste, cole (Ctrl+V) ou clique em +"}
+          </p>
         )}
       </div>
 
