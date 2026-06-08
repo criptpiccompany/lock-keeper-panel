@@ -82,7 +82,7 @@ function SidebarLink({
 export function WorkspaceLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAdmin, isSubAdmin, signOut, realRole, viewAsRole, setViewAsRole, isImpersonating } = useAuth();
+  const { user, isAdmin, isSubAdmin, isFinanceiro, signOut, realRole, viewAsRole, setViewAsRole, isImpersonating } = useAuth();
   const actualRole = realRole;
   const effectiveRole = viewAsRole ?? realRole;
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
@@ -111,14 +111,20 @@ export function WorkspaceLayout() {
   const handleSelectViewRole = (role: string) => {
     if (role === actualRole) {
       setViewAsRole(null);
+      navigate(role === 'FINANCEIRO' ? '/financeiro/comprovantes' : '/home');
     } else {
       setViewAsRole(role as any);
-      navigate('/home');
+      navigate(role === 'FINANCEIRO' ? '/financeiro/comprovantes' : '/home');
     }
   };
 
 
-  const primaryNav: NavItem[] = isManagementView
+  const primaryNav: NavItem[] = isFinanceiro
+    ? [
+        { path: "/financeiro/comprovantes", label: "Comprovantes", icon: FileText },
+        { path: "/financeiro/espelhamento", label: "Espelhamento", icon: LayoutGrid },
+      ]
+    : isManagementView
     ? [
         { path: "/home", label: "Home", icon: HomeIcon },
         { path: "/financeiro", label: "Financeiro", icon: DollarSign },
@@ -141,7 +147,12 @@ export function WorkspaceLayout() {
     { path: "/painel", label: "Painel de Consulta", icon: LayoutGrid },
   ];
 
-  const topNavItems = isManagementView
+  const topNavItems = isFinanceiro
+    ? [
+        { label: "Comprovantes", path: "/financeiro/comprovantes" },
+        { label: "Espelhamento", path: "/financeiro/espelhamento" },
+      ]
+    : isManagementView
     ? [
         { label: "Home", path: "/home" },
         { label: "Financeiro", path: "/financeiro" },
