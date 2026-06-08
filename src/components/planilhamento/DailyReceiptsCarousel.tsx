@@ -206,16 +206,18 @@ export default function DailyReceiptsCarousel({
   };
 
   const allItems = useMemo(() => {
-    const items: Array<{ kind: "receipt" | "legacy"; id: string; url: string; tagHandle?: string; receiptId?: string }> = [];
+    const items: Array<{ kind: "receipt" | "legacy"; id: string; url: string; tagHandle?: string; receiptId?: string; parsedData?: any; parseStatus?: string | null }> = [];
     receipts.forEach((r) => {
       const linked = influencerLines.find((l) => l.recordId === r.daily_record_id);
-      items.push({ kind: "receipt", id: r.id, url: r.file_url, tagHandle: linked?.handle, receiptId: r.id });
+      items.push({ kind: "receipt", id: r.id, url: r.file_url, tagHandle: linked?.handle, receiptId: r.id, parsedData: r.parsed_data, parseStatus: r.parse_status });
     });
     legacyReceipts.forEach((l) => {
       items.push({ kind: "legacy", id: `legacy-${l.id}`, url: l.file_url, tagHandle: l.handle });
     });
     return items;
   }, [receipts, legacyReceipts, influencerLines]);
+
+  const [lightboxParsed, setLightboxParsed] = useState<any>(null);
 
   return (
     <div
