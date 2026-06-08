@@ -726,6 +726,31 @@ export default function Home() {
     };
 
     fetchData();
+
+    if (!user?.id) return;
+
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleRefetch = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => fetchData(), 500);
+    };
+
+    const filter = isManagementView ? undefined : `closer_id=eq.${user.id}`;
+    const channel = supabase
+      .channel(`home-sync-${user.id}-${month}`)
+      .on(
+        "postgres_changes",
+        filter
+          ? { event: "*", schema: "public", table: "daily_influencer_records", filter }
+          : { event: "*", schema: "public", table: "daily_influencer_records" },
+        scheduleRefetch
+      )
+      .subscribe();
+
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      supabase.removeChannel(channel);
+    };
   }, [user?.id, user?.teamId, month, feeRate, isManagementView, isAdmin]);
 
   if (!user) return null;
@@ -764,15 +789,15 @@ export default function Home() {
           <div className="grid gap-6 xl:grid-cols-[560px_minmax(0,1fr)]">
             <div className="flex w-full flex-col gap-[18px]">
               <SourceTopBalanceCard
-                heading="Patrimônio Total"
-                value={formatCurrency(closerData.result)}
+                heading="Comissão Total"
+                value={formatCurrency(closerData.estimatedCommission)}
                 delta={closerData.result >= 0 ? "↑ ritmo positivo" : "↓ atenção"}
                 deltaNote="no mês atual"
                 topPill={monthLabel}
                 miniCards={[
                   { title: "Receita", value: formatCompactCurrency(closerData.revenue), note: "Faturamento acumulado", status: "Active" },
                   { title: "Gasto", value: formatCompactCurrency(closerData.invested), note: "Investimento no período", status: "Active" },
-                  { title: "Comissão", value: formatCompactCurrency(closerData.estimatedCommission), note: "Estimativa atual", status: "Projected" },
+                  { title: "Taxas", value: formatCompactCurrency(closerData.fee), note: "Taxa operacional do mês", status: "Projected" },
                 ]}
               />
 
