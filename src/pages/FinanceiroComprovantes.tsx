@@ -135,6 +135,7 @@ export default function FinanceiroComprovantes() {
                   teamId={c.team_id}
                   canEdit
                   compact
+                  requireFocus
                 />
               </article>
             );
