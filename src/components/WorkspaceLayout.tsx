@@ -97,8 +97,8 @@ export function WorkspaceLayout() {
       ]
     : [
         { path: "/home", label: "Home", icon: HomeIcon },
-        { path: "/registro", label: "Planilhamento", icon: FileText },
         { path: "/meu", label: "Minha Lista", icon: User },
+        { path: "/registro", label: "Planilhamento", icon: FileText },
         { path: "/painel", label: "Meu Painel", icon: Lock },
         { path: "/gestao-influenciadores", label: "Gestão de Influs", icon: Users },
       ];
@@ -121,8 +121,8 @@ export function WorkspaceLayout() {
       ]
     : [
         { label: "Home", path: "/home" },
-        { label: "Planilhamento", path: "/registro" },
         { label: "Minha Lista", path: "/meu" },
+        { label: "Planilhamento", path: "/registro" },
         { label: "Painel", path: "/painel" },
         { label: "Gestão", path: "/gestao-influenciadores" },
       ];
