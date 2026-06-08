@@ -737,10 +737,6 @@ export default function Home() {
     <>
       <div className="mb-2">
             <div className="max-w-[62rem]">
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#ececeb] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#676767]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#1f1f1f]" />
-                {isManagementView ? "Visão Executiva" : "Meu Painel"}
-              </div>
               <h1 className="max-w-4xl text-[42px] leading-[1.02] tracking-[-0.06em] text-slate-950 font-medium sm:text-5xl">
                 {greeting}, {firstName}
               </h1>
