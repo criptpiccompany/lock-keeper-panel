@@ -648,6 +648,12 @@ export function CloserSharedBoard() {
   const [sortField, setSortField] = useState<SortField>("status");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [visibleCols, setVisibleCols] = useState<Set<ColumnKey>>(new Set(COLUMN_DEFS.map((column) => column.key)));
+  const [collapsedClosers, setCollapsedClosers] = useState<Set<string>>(new Set());
+  const toggleCloser = (id: string) => setCollapsedClosers((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
   const [teamClosedCollapsed, setTeamClosedCollapsed] = useState(true);
   const [activeTab, setActiveTab] = useState<"prospectar" | "fechados">("prospectar");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -1143,6 +1149,8 @@ export function CloserSharedBoard() {
                         key={group.closerId}
                         title={group.closerId === user?.id ? `${group.closerName} (você)` : group.closerName}
                         cards={group.cards}
+                        collapsed={collapsedClosers.has(group.closerId)}
+                        onToggle={() => toggleCloser(group.closerId)}
                         visibleColumns={visibleColumns}
                         gridTemplateColumns={gridTemplateColumns}
                         onUpdate={updateCard}
