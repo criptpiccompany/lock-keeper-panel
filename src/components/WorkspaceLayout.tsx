@@ -82,19 +82,41 @@ function SidebarLink({
 export function WorkspaceLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAdmin, isSubAdmin, signOut, realRole, viewAsRole, setViewAsRole } = useAuth();
+  const { user, isAdmin, isSubAdmin, signOut, realRole, viewAsRole, setViewAsRole, isImpersonating } = useAuth();
   const actualRole = realRole;
   const effectiveRole = viewAsRole ?? realRole;
-  const previewRole = viewAsRole;
-  const setPreviewRole = setViewAsRole;
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   if (!user) return null;
 
   const isManagementView = isAdmin || isSubAdmin;
   const firstName = user.nome.split(/\s+/)[0];
-  const isPreviewingCloser = previewRole === 'CLOSER' && effectiveRole === 'CLOSER' && actualRole !== 'CLOSER';
-  const canToggleCloserPreview = actualRole === 'ADMIN' || actualRole === 'SUBADMIN';
+  const canImpersonate = actualRole === 'ADMIN' || actualRole === 'SUBADMIN' || actualRole === 'FINANCEIRO';
+
+  const roleLabels: Record<string, string> = {
+    ADMIN: 'Admin',
+    SUBADMIN: 'Sub-admin',
+    FINANCEIRO: 'Financeiro',
+    CLOSER: 'Closer',
+  };
+
+  const viewRolesByActual: Record<string, string[]> = {
+    ADMIN: ['ADMIN', 'FINANCEIRO', 'CLOSER'],
+    FINANCEIRO: ['FINANCEIRO', 'CLOSER'],
+    SUBADMIN: ['SUBADMIN', 'CLOSER'],
+    CLOSER: ['CLOSER'],
+  };
+  const availableViewRoles = viewRolesByActual[actualRole ?? 'CLOSER'] ?? ['CLOSER'];
+
+  const handleSelectViewRole = (role: string) => {
+    if (role === actualRole) {
+      setViewAsRole(null);
+    } else {
+      setViewAsRole(role as any);
+      navigate('/home');
+    }
+  };
+
 
   const primaryNav: NavItem[] = isManagementView
     ? [
