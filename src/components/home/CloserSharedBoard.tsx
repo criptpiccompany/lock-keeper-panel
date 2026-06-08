@@ -685,7 +685,8 @@ export function CloserSharedBoard() {
     const rawRows = (data || []) as Array<Record<string, unknown>>;
     const creatorIds = [...new Set(rawRows.map((r) => r.created_by as string).filter(Boolean))];
     const assignedIds = [...new Set(rawRows.map((r) => r.assigned_to as string).filter(Boolean))];
-    const idsToFetch = [...new Set([...creatorIds, ...assignedIds])];
+    const closedIds = [...new Set(rawRows.map((r) => r.closed_by as string).filter(Boolean))];
+    const idsToFetch = [...new Set([...creatorIds, ...assignedIds, ...closedIds])];
     let names = new Map<string, string>();
 
     if (idsToFetch.length) {
@@ -700,6 +701,8 @@ export function CloserSharedBoard() {
         closerName: names.get(row.created_by as string) || "Closer",
         assigned_to: (row.assigned_to as string | null) ?? null,
         assignedName: row.assigned_to ? names.get(row.assigned_to as string) || null : null,
+        closed_by: (row.closed_by as string | null) ?? null,
+        closedByName: row.closed_by ? names.get(row.closed_by as string) || null : null,
       }))
     );
     setLoading(false);
