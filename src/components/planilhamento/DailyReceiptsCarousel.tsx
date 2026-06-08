@@ -121,11 +121,16 @@ export default function DailyReceiptsCarousel({
         if (upErr) throw upErr;
         const { data: urlData } = supabase.storage.from("comprovantes").getPublicUrl(path);
         const fileType = file.type === "application/pdf" ? "pdf" : "image";
-        const { error: insErr } = await supabase.from("daily_receipt_uploads").insert({
+        const { data: inserted, error: insErr } = await supabase.from("daily_receipt_uploads").insert({
           date, closer_id: closerId, daily_record_id: null,
           file_url: urlData.publicUrl, file_type: fileType, uploaded_by: user.id,
-        } as any);
+        } as any).select("id").single();
         if (insErr) throw insErr;
+        // Fire-and-forget IA parse
+        if (inserted?.id && fileType === "image") {
+          supabase.functions.invoke("parse-receipt", { body: { receiptId: inserted.id } })
+            .catch((e) => console.warn("parse-receipt invoke fail:", e));
+        }
       }
       toast.success(list.length > 1 ? `${list.length} comprovantes enviados` : "Comprovante enviado");
       fetchReceipts();
