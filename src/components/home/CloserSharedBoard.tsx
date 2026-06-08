@@ -28,6 +28,8 @@ type TeamBoardCard = KanbanCard & {
   closerName: string;
   assigned_to?: string | null;
   assignedName?: string | null;
+  closed_by?: string | null;
+  closedByName?: string | null;
 };
 
 type TeamMember = { id: string; nome: string };
@@ -45,6 +47,9 @@ type ColumnKey =
   | "valor_negociado"
   | "last_moved_at";
 
+const PROSPECT_STATUSES = ["Fechar", "Abordado", "Negociando"] as const;
+const CLOSED_STATUSES = ["Positivo", "Empatando / Negociar", "Pausado", "Concorrência", "Não posta mais"] as const;
+
 const STATUS_META: Record<string, { bg: string; text: string; dot: string }> = {
   Fechar: { bg: "#f3e8ff", text: "#7c3aed", dot: "#7c3aed" },
   Abordado: { bg: "#ffedd5", text: "#c2410c", dot: "#c2410c" },
@@ -54,6 +59,7 @@ const STATUS_META: Record<string, { bg: string; text: string; dot: string }> = {
   Pausado: { bg: "#fee7e6", text: "#db3a34", dot: "#db3a34" },
   "Com a equipe": { bg: "#e8f8ec", text: "#23a455", dot: "#23a455" },
   "Não posta mais": { bg: "#edf0f3", text: "#617184", dot: "#617184" },
+  Concorrência: { bg: "#fde2e7", text: "#be185d", dot: "#be185d" },
   Golpe: { bg: "#ffe1df", text: "#dc2626", dot: "#dc2626" },
 };
 
@@ -62,10 +68,11 @@ const STATUS_ORDER: Record<string, number> = {
   "Empatando / Negociar": 1,
   Pausado: 2,
   "Com a equipe": 3,
-  "Não posta mais": 4,
-  Negociando: 5,
-  Abordado: 6,
-  Fechar: 7,
+  Concorrência: 4,
+  "Não posta mais": 5,
+  Negociando: 6,
+  Abordado: 7,
+  Fechar: 8,
   Golpe: 99,
 };
 
