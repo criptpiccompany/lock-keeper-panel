@@ -14,6 +14,7 @@ import {
 
 import { TAX_TOTAL } from "@/components/financeiro/financeiroHelpers";
 import { CloserSharedBoard } from "@/components/home/CloserSharedBoard";
+import { TeamDailyGoalCard } from "@/components/home/TeamDailyGoalCard";
 import { CommissionCardCarousel } from "@/components/home/CommissionCard";
 import { getEstimatedCommission } from "@/lib/commissionCalc";
 import { getTeamThermometerSnapshots, type ThermometerSnapshot } from "@/lib/thermometerSnapshot";
@@ -779,7 +780,7 @@ export default function Home() {
                 ]}
               />
 
-              <SourceTrackCard title="Meta diária do time" current={resultado} target={progressTarget} />
+              <TeamDailyGoalCard teamId={user.teamId} isAdmin={isAdmin} />
 
               <SourceDualPanel title="Porcentagem Atual" actionLabel="Performance Club">
                 <CommissionCardCarousel
