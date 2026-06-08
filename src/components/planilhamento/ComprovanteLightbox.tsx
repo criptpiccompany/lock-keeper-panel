@@ -96,34 +96,53 @@ export default function ComprovanteLightbox({ open, onClose, url, parsedData }: 
           </div>
         </div>
 
-        {/* Content */}
-        <div
-          ref={containerRef}
-          className="flex-1 overflow-hidden flex items-center justify-center bg-muted/30 min-h-[400px]"
-          onWheel={handleWheel}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          style={{ cursor: !isPdf && zoom > 1 ? (dragging ? "grabbing" : "grab") : "default" }}
-        >
-          {isPdf ? (
-            <iframe
-              src={url}
-              className="w-full h-[78vh] border-0"
-              title="Comprovante PDF"
-            />
-          ) : (
-            <img
-              src={url}
-              alt="Comprovante"
-              className="max-w-full max-h-[78vh] object-contain rounded select-none"
-              draggable={false}
-              style={{
-                transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
-                transition: dragging ? "none" : "transform 0.15s ease",
-              }}
-            />
+        {/* Content + side panel */}
+        <div className="flex-1 flex overflow-hidden">
+          <div
+            ref={containerRef}
+            className="flex-1 overflow-hidden flex items-center justify-center bg-muted/30 min-h-[400px]"
+            onWheel={handleWheel}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            style={{ cursor: !isPdf && zoom > 1 ? (dragging ? "grabbing" : "grab") : "default" }}
+          >
+            {isPdf ? (
+              <iframe
+                src={url}
+                className="w-full h-[78vh] border-0"
+                title="Comprovante PDF"
+              />
+            ) : (
+              <img
+                src={url}
+                alt="Comprovante"
+                className="max-w-full max-h-[78vh] object-contain rounded select-none"
+                draggable={false}
+                style={{
+                  transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
+                  transition: dragging ? "none" : "transform 0.15s ease",
+                }}
+              />
+            )}
+          </div>
+          {parsedData && (
+            <div className="w-[280px] border-l border-border/40 overflow-y-auto p-5 bg-white">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-3 font-medium">Dados extraídos pela IA</p>
+              <div className="space-y-3 text-sm">
+                {parsedData.valor && <Field label="Valor" value={`R$ ${parsedData.valor}`} highlight />}
+                {parsedData.destinatario && <Field label="Destinatário" value={parsedData.destinatario} />}
+                {parsedData.cpf_cnpj && <Field label="CPF/CNPJ" value={parsedData.cpf_cnpj} />}
+                {parsedData.banco && <Field label="Banco" value={parsedData.banco} />}
+                {parsedData.tipo && <Field label="Tipo" value={parsedData.tipo} />}
+                {parsedData.data && <Field label="Data" value={parsedData.data + (parsedData.hora ? ` ${parsedData.hora}` : "")} />}
+                {parsedData.id_transacao && <Field label="ID transação" value={parsedData.id_transacao} mono />}
+                {parsedData.raw && (
+                  <pre className="text-[10px] text-muted-foreground whitespace-pre-wrap">{parsedData.raw}</pre>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </DialogContent>
