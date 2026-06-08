@@ -13,6 +13,7 @@ import { useTeamFeeRate } from "@/hooks/useTeamFeeRate";
 import { getEstimatedCommission } from "@/lib/commissionCalc";
 import { useCommissionTier } from "@/hooks/useCommissionTier";
 import UnifiedThermometerWidget from "@/components/home/UnifiedThermometerWidget";
+import { CommissionCardCarousel } from "@/components/home/CommissionCard";
 import { cn } from "@/lib/utils";
 
 interface DailyRecord {
