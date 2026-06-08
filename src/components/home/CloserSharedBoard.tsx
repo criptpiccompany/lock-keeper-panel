@@ -783,12 +783,13 @@ export function CloserSharedBoard() {
               </Button>
               <div className="ml-1 flex items-center gap-0.5 rounded-md border border-[#e7e7e3] bg-white p-0.5">
                 {([
+                  { key: "prospectar", label: "Prospectar", count: sections.forYou.length + sections.general.length },
                   { key: "fechados", label: "Fechados", count: sections.closing.length + sections.teamClosed.length },
                 ] as const).map((tab) => (
                   <button
                     key={tab.key}
                     type="button"
-                    onClick={() => setActiveTab((prev) => (prev === tab.key ? null : tab.key))}
+                    onClick={() => setActiveTab(tab.key)}
                     className={cn(
                       "h-7 rounded-[6px] px-2.5 text-[11px] font-medium transition-colors",
                       activeTab === tab.key
