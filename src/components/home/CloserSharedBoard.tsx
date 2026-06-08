@@ -518,6 +518,8 @@ export function CloserSharedBoard() {
   const [newValue, setNewValue] = useState("");
   const [newObservation, setNewObservation] = useState("");
   const [newBridge, setNewBridge] = useState("");
+  const [newAssignedTo, setNewAssignedTo] = useState<string>("none");
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
 
   const fetchCards = async () => {
     if (!user?.teamId) {
