@@ -1424,7 +1424,18 @@ export function CloserSharedBoard() {
           <div className="space-y-4 px-7 pb-4 pt-2">
             <div className="space-y-2">
               <label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">Closer que fechou</label>
-              <Select value={markCloserId} onValueChange={setMarkCloserId} disabled={markStatus === "Concorrência"}>
+              <Select
+                value={markStatus === "Concorrência" ? "__concorrencia__" : markCloserId}
+                onValueChange={(value) => {
+                  if (value === "__concorrencia__") {
+                    setMarkStatus("Concorrência");
+                    setMarkCloserId("");
+                  } else {
+                    setMarkCloserId(value);
+                    if (markStatus === "Concorrência") setMarkStatus("Positivo");
+                  }
+                }}
+              >
                 <SelectTrigger className="h-11 rounded-[12px] border-[#ececeb] bg-[#fafaf8] text-[14px]">
                   <SelectValue placeholder="Selecione o closer" />
                 </SelectTrigger>
@@ -1434,10 +1445,16 @@ export function CloserSharedBoard() {
                       {member.nome}{member.id === user?.id ? " (você)" : ""}
                     </SelectItem>
                   ))}
+                  <SelectItem
+                    value="__concorrencia__"
+                    className="cursor-pointer rounded-[10px] pl-8 pr-3 py-2 text-[13px] font-medium text-red-600 focus:bg-red-50 focus:text-red-700"
+                  >
+                    Concorrência
+                  </SelectItem>
                 </SelectContent>
               </Select>
               {markStatus === "Concorrência" ? (
-                <p className="text-[11px] text-[#9a9a96]">Concorrência não exige closer.</p>
+                <p className="text-[11px] text-red-600">Marcado como concorrência — sem closer atribuído.</p>
               ) : null}
             </div>
 
