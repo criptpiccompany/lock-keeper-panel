@@ -198,13 +198,20 @@ function TableRow({
   visibleColumns,
   gridTemplateColumns,
   onUpdate,
+  statusOptions,
+  onCheckClick,
+  showCheck,
 }: {
   card: TeamBoardCard;
   visibleColumns: Array<{ key: ColumnKey; label: string; width: string; sortable?: boolean }>;
   gridTemplateColumns: string;
   onUpdate?: (cardId: string, fields: Partial<KanbanCard>) => Promise<void>;
+  statusOptions: string[];
+  onCheckClick?: (card: TeamBoardCard) => void;
+  showCheck?: boolean;
 }) {
   const [historyOpen, setHistoryOpen] = useState(false);
+  const isClosed = !!card.closed_by;
 
   return (
     <div
@@ -216,7 +223,24 @@ function TableRow({
           case "check":
             return (
               <div key={column.key} className="grid place-items-center">
-                <span className="h-3.5 w-3.5 rounded-full border border-[#d8d8d3] bg-white" />
+                {showCheck ? (
+                  <button
+                    type="button"
+                    onClick={() => onCheckClick?.(card)}
+                    className={cn(
+                      "grid h-4 w-4 place-items-center rounded-[4px] border transition-colors",
+                      isClosed
+                        ? "border-emerald-500 bg-emerald-500 text-white"
+                        : "border-[#d8d8d3] bg-white hover:border-[#1f1f1f]"
+                    )}
+                    title={isClosed ? "Marcado como fechado" : "Marcar como fechado"}
+                    aria-label="Marcar como fechado"
+                  >
+                    {isClosed ? <Check className="h-3 w-3" strokeWidth={3} /> : null}
+                  </button>
+                ) : (
+                  <span className="h-3.5 w-3.5 rounded-full border border-[#d8d8d3] bg-white" />
+                )}
               </div>
             );
           case "status":
@@ -225,7 +249,7 @@ function TableRow({
                 <InlineCell
                   content={
                     <div className="space-y-0.5">
-                      {Object.keys(STATUS_META).filter((status) => status !== "Golpe").map((status) => (
+                      {statusOptions.map((status) => (
                         <button
                           key={status}
                           type="button"
@@ -235,7 +259,7 @@ function TableRow({
                             card.status === status && "bg-[#f7f7f5]"
                           )}
                         >
-                          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: STATUS_META[status].dot }} />
+                          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: (STATUS_META[status] ?? STATUS_META.Fechar).dot }} />
                           {status}
                         </button>
                       ))}
