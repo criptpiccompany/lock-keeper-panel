@@ -315,25 +315,7 @@ function TableRow({
           case "apoios":
             return (
               <div key={column.key} className="min-w-0">
-                <InlineCell
-                  content={<BridgeEditor card={card} onUpdate={onUpdate} />}
-                  className="w-full"
-                >
-                  {card.apoios?.length ? (
-                    <div className="flex flex-wrap gap-1">
-                      {card.apoios.slice(0, 2).map((apoio) => (
-                        <span
-                          key={apoio}
-                          className="max-w-[84px] truncate rounded-[6px] bg-[#f2f2ef] px-1.5 py-0.5 text-[10px] text-[#6d6d69]"
-                        >
-                          {apoio}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-[#c0c0bc]">—</span>
-                  )}
-                </InlineCell>
+                <BridgeCell card={card} onUpdate={onUpdate} />
               </div>
             );
           case "valor_negociado":
@@ -404,47 +386,141 @@ function ValueEditor({
   );
 }
 
-function BridgeEditor({
+function parseApoio(raw: string): { handle: string; url: string } {
+  const trimmed = raw.trim();
+  const igMatch = trimmed.match(/instagram\.com\/([^/?#\s]+)/i);
+  if (igMatch) {
+    const handle = igMatch[1].replace(/^@/, "");
+    return { handle, url: trimmed.startsWith("http") ? trimmed : `https://${trimmed}` };
+  }
+  const handle = trimmed.replace(/^@/, "");
+  return { handle, url: `https://www.instagram.com/${handle}` };
+}
+
+function BridgeCell({
   card,
   onUpdate,
 }: {
   card: TeamBoardCard;
   onUpdate?: (cardId: string, fields: Partial<KanbanCard>) => Promise<void>;
 }) {
-  const [value, setValue] = useState((card.apoios || []).join(", "));
+  const [open, setOpen] = useState(false);
+  const apoios = card.apoios ?? [];
 
   return (
-    <div className="space-y-1">
-      <Input
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            const next = value
-              .split(/[,\n]+/)
-              .map((item) => item.trim().replace(/^@/, ""))
-              .filter(Boolean);
-            onUpdate?.(card.id, { apoios: next.length ? next : null });
-          }
-        }}
-        className="h-9 border-[#e5e5e2] text-[12px]"
-        placeholder="@apoio1, @apoio2"
-      />
-      <div className="flex justify-end">
-        <Button
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
           type="button"
-          size="sm"
-          className="h-8 rounded-full bg-[#242424] px-3 text-[11px] text-white hover:bg-[#181818]"
-          onClick={() => {
-            const next = value
-              .split(/[,\n]+/)
-              .map((item) => item.trim().replace(/^@/, ""))
-              .filter(Boolean);
-            onUpdate?.(card.id, { apoios: next.length ? next : null });
-          }}
+          className="block w-full rounded-md px-1 py-1 text-left transition-colors hover:bg-[#f7f7f5]"
         >
-          Salvar
-        </Button>
+          {apoios.length ? (
+            <div className="flex gap-1 overflow-x-auto whitespace-nowrap scrollbar-none [&::-webkit-scrollbar]:hidden">
+              {apoios.map((apoio, i) => {
+                const { handle } = parseApoio(apoio);
+                return (
+                  <span
+                    key={`${apoio}-${i}`}
+                    className="shrink-0 max-w-[120px] truncate rounded-[6px] bg-[#f2f2ef] px-1.5 py-0.5 text-[10px] text-[#6d6d69]"
+                  >
+                    @{handle}
+                  </span>
+                );
+              })}
+            </div>
+          ) : (
+            <span className="text-[#c0c0bc]">—</span>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        className="w-[240px] rounded-[14px] border-[#e7e7e3] p-0 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.22)]"
+      >
+        <BridgeEditor card={card} onUpdate={onUpdate} onClose={() => setOpen(false)} />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function BridgeEditor({
+  card,
+  onUpdate,
+  onClose,
+}: {
+  card: TeamBoardCard;
+  onUpdate?: (cardId: string, fields: Partial<KanbanCard>) => Promise<void>;
+  onClose?: () => void;
+}) {
+  const [input, setInput] = useState("");
+  const apoios = card.apoios ?? [];
+
+  const addApoio = () => {
+    const raw = input.trim();
+    if (!raw) return;
+    const { handle, url } = parseApoio(raw);
+    if (!handle) return;
+    // Store the URL form so click navigates to the right profile
+    const next = [...apoios, url];
+    onUpdate?.(card.id, { apoios: next });
+    setInput("");
+  };
+
+  const removeApoio = (index: number) => {
+    const next = apoios.filter((_, i) => i !== index);
+    onUpdate?.(card.id, { apoios: next.length ? next : null });
+  };
+
+  return (
+    <div className="flex flex-col">
+      <div className="border-b border-[#ececea] p-2">
+        <Input
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              addApoio();
+            }
+          }}
+          autoFocus
+          className="h-9 border-0 px-1 text-[13px] shadow-none focus-visible:ring-0"
+          placeholder="@username..."
+        />
+      </div>
+      <div className="max-h-[220px] overflow-y-auto py-1">
+        {apoios.length === 0 ? (
+          <div className="px-3 py-3 text-center text-[11px] text-[#a4a49e]">
+            Nenhuma ponte adicionada
+          </div>
+        ) : (
+          apoios.map((apoio, i) => {
+            const { handle, url } = parseApoio(apoio);
+            return (
+              <div
+                key={`${apoio}-${i}`}
+                className="group flex items-center justify-between gap-2 px-3 py-1.5 hover:bg-[#f7f7f5]"
+              >
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="min-w-0 flex-1 truncate text-[13px] text-[#1f1f1f] hover:underline"
+                >
+                  @{handle}
+                </a>
+                <button
+                  type="button"
+                  onClick={() => removeApoio(i)}
+                  className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] text-[#a4a49e] opacity-0 transition-opacity hover:bg-[#ececea] hover:text-[#3d3d39] group-hover:opacity-100"
+                  aria-label="Remover"
+                >
+                  ×
+                </button>
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );
