@@ -30,7 +30,7 @@ interface Props {
   isAdmin?: boolean;
 }
 
-export function TeamDailyGoalCard({ teamId, isAdmin }: Props) {
+export function TeamDailyGoalCard(_props: { teamId?: string | null; isAdmin?: boolean } = {}) {
   const [range, setRange] = useState<DateRange | undefined>(() => {
     const y = yesterday();
     return { from: y, to: y };
@@ -45,23 +45,41 @@ export function TeamDailyGoalCard({ teamId, isAdmin }: Props) {
   useEffect(() => {
     if (!from || !to) return;
     let cancelled = false;
+
+    const fetchSum = async () => {
+      const { data, error } = await (supabase.rpc as any)("get_global_daily_revenue", {
+        _start: dateToStr(from),
+        _end: dateToStr(to),
+      });
+      if (cancelled) return;
+      if (!error) setRevenue(Number(data) || 0);
+    };
+
     const run = async () => {
       setLoading(true);
-      let query = supabase
-        .from("daily_influencer_records")
-        .select("faturamento, team_id")
-        .gte("date", dateToStr(from))
-        .lte("date", dateToStr(to))
-        .is("deleted_at", null);
-      if (!isAdmin && teamId) query = query.eq("team_id", teamId);
-      const { data } = await query;
-      if (cancelled) return;
-      const sum = (data || []).reduce((s: number, r: any) => s + (Number(r.faturamento) || 0), 0);
-      setRevenue(sum);
-      setLoading(false);
+      await fetchSum();
+      if (!cancelled) setLoading(false);
     };
     run();
-  }, [from?.getTime(), to?.getTime(), teamId, isAdmin]);
+
+    // Live updates: realtime on own team (instant) + polling for cross-team (every 20s)
+    const channel = supabase
+      .channel("team_daily_goal:global")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "daily_influencer_records" },
+        () => { fetchSum(); }
+      )
+      .subscribe();
+
+    const poll = setInterval(fetchSum, 20000);
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+      clearInterval(poll);
+    };
+  }, [from?.getTime(), to?.getTime()]);
 
   const days = useMemo(() => {
     if (!from || !to) return 1;
