@@ -503,7 +503,7 @@ export function CloserSharedBoard() {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [visibleCols, setVisibleCols] = useState<Set<ColumnKey>>(new Set(COLUMN_DEFS.map((column) => column.key)));
   const [teamClosedCollapsed, setTeamClosedCollapsed] = useState(true);
-  const [activeTab, setActiveTab] = useState<"closing" | "teamClosed">("closing");
+  const [activeTab, setActiveTab] = useState<"closing" | "teamClosed" | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newInfluencer, setNewInfluencer] = useState("");
   const [saving, setSaving] = useState(false);
@@ -768,7 +768,7 @@ export function CloserSharedBoard() {
                   <button
                     key={tab.key}
                     type="button"
-                    onClick={() => setActiveTab(tab.key)}
+                    onClick={() => setActiveTab((prev) => (prev === tab.key ? null : tab.key))}
                     className={cn(
                       "h-7 rounded-[6px] px-2.5 text-[11px] font-medium transition-colors",
                       activeTab === tab.key
@@ -917,7 +917,7 @@ export function CloserSharedBoard() {
                   gridTemplateColumns={gridTemplateColumns}
                   onUpdate={updateCard}
                 />
-                {activeTab === "closing" ? (
+                {activeTab === "closing" && (
                   <SectionBlock
                     title="Fechando"
                     cards={sections.closing}
@@ -925,7 +925,8 @@ export function CloserSharedBoard() {
                     gridTemplateColumns={gridTemplateColumns}
                     onUpdate={updateCard}
                   />
-                ) : (
+                )}
+                {activeTab === "teamClosed" && (
                   <SectionBlock
                     title="Equipe Fechou"
                     cards={sections.teamClosed}
