@@ -283,7 +283,10 @@ export function CommissionCard({
 }
 
 // ----------------- Carousel export -----------------
-const CAROUSEL_LEVELS: Level[] = ["SILVER", "GOLD", "PLATINUM", "BLACK", "DIAMOND"];
+const LEVEL_SEQUENCE: Level[] = ["SILVER", "GOLD", "PLATINUM", "BLACK", "DIAMOND", "OBSIDIAN"];
+function levelForIndex(i: number): Level {
+  return LEVEL_SEQUENCE[Math.min(i, LEVEL_SEQUENCE.length - 1)];
+}
 
 export function CommissionCardCarousel({
   employeeName,
@@ -295,41 +298,107 @@ export function CommissionCardCarousel({
   const { tiers, currentTierOrder, currentPercentage, nextThreshold, amountMissing, progressInTier } =
     useCommissionTier(resultado);
 
-  const currentLevel = levelFromTierOrder(currentTierOrder);
-  const nextLevel = currentTierOrder > 0 ? levelFromTierOrder(currentTierOrder + 1) : "GOLD";
+  // Find current tier INDEX inside tiers array (not tier_order, which may start at 0)
+  const currentIdx = useMemo(() => {
+    if (tiers.length === 0) return 0;
+    const idx = tiers.findIndex((t) => t.tier_order === currentTierOrder);
+    return idx >= 0 ? idx : 0;
+  }, [tiers, currentTierOrder]);
+
+  const currentLevel = levelForIndex(currentIdx);
+  const nextLevel = levelForIndex(Math.min(currentIdx + 1, tiers.length - 1));
   const progressPct = Math.round(progressInTier * 100);
-  const currentIdx = Math.max(0, Math.min(currentTierOrder - 1, CAROUSEL_LEVELS.length - 1));
 
   const trackRef = useRef<HTMLDivElement>(null);
+  const snapTimer = useRef<number | null>(null);
+  const userInteracting = useRef(false);
 
-  // Always center the current level on mount / when data resolves
-  useEffect(() => {
+  const scrollToCurrent = (behavior: ScrollBehavior = "smooth") => {
     const track = trackRef.current;
     if (!track) return;
     const slide = track.querySelector<HTMLElement>(`[data-slide-idx="${currentIdx}"]`);
     if (!slide) return;
     const left = slide.offsetLeft - (track.clientWidth - slide.clientWidth) / 2;
-    track.scrollTo({ left: Math.max(0, left), behavior: "auto" });
+    track.scrollTo({ left: Math.max(0, left), behavior });
+  };
+
+  // Center current tier on mount / data change
+  useEffect(() => {
+    scrollToCurrent("auto");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIdx, tiers.length]);
+
+  // Snap back to current card after user stops interacting
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    const markInteracting = () => {
+      userInteracting.current = true;
+    };
+    const scheduleSnap = () => {
+      if (snapTimer.current) window.clearTimeout(snapTimer.current);
+      snapTimer.current = window.setTimeout(() => {
+        userInteracting.current = false;
+        scrollToCurrent("smooth");
+      }, 900);
+    };
+
+    const onScroll = () => {
+      if (!userInteracting.current) return;
+      scheduleSnap();
+    };
+    const onPointerDown = () => {
+      markInteracting();
+      if (snapTimer.current) window.clearTimeout(snapTimer.current);
+    };
+    const onPointerUp = () => scheduleSnap();
+    const onWheel = () => {
+      markInteracting();
+      scheduleSnap();
+    };
+    const onTouchStart = () => onPointerDown();
+    const onTouchEnd = () => scheduleSnap();
+
+    track.addEventListener("scroll", onScroll, { passive: true });
+    track.addEventListener("pointerdown", onPointerDown);
+    track.addEventListener("pointerup", onPointerUp);
+    track.addEventListener("pointercancel", onPointerUp);
+    track.addEventListener("wheel", onWheel, { passive: true });
+    track.addEventListener("touchstart", onTouchStart, { passive: true });
+    track.addEventListener("touchend", onTouchEnd);
+
+    return () => {
+      track.removeEventListener("scroll", onScroll);
+      track.removeEventListener("pointerdown", onPointerDown);
+      track.removeEventListener("pointerup", onPointerUp);
+      track.removeEventListener("pointercancel", onPointerUp);
+      track.removeEventListener("wheel", onWheel);
+      track.removeEventListener("touchstart", onTouchStart);
+      track.removeEventListener("touchend", onTouchEnd);
+      if (snapTimer.current) window.clearTimeout(snapTimer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIdx, tiers.length]);
 
   return (
     <div className="cpic-carousel-wrap">
       <div className="cpic-carousel" ref={trackRef}>
-        {CAROUSEL_LEVELS.map((lvl, i) => {
-          const tier = tiers.find((t) => t.tier_order === i + 1);
-          const pct = tier?.percentage ?? 0;
+        {tiers.map((tier, i) => {
+          const lvl = levelForIndex(i);
           const isCurrent = i === currentIdx;
+          const nextTier = tiers[i + 1];
           const target = isCurrent
             ? nextThreshold ?? Math.max(revenue, resultado, 1)
-            : tiers.find((t) => t.tier_order === i + 2)?.threshold_result ?? tier?.threshold_result ?? 0;
+            : nextTier?.threshold_result ?? tier.threshold_result;
           return (
-            <div key={lvl} className="cpic-carousel-slide" data-slide-idx={i}>
+            <div key={`${lvl}-${tier.tier_order}`} className="cpic-carousel-slide" data-slide-idx={i}>
               <CardFace
                 brand={brand}
                 employeeName={employeeName}
                 level={lvl}
-                percentage={pct || currentPercentage}
-                revenue={isCurrent ? revenue : tier?.threshold_result ?? 0}
+                percentage={tier.percentage}
+                revenue={isCurrent ? revenue : tier.threshold_result}
                 target={target}
                 currency={currency}
                 progressPct={isCurrent ? progressPct : 0}
@@ -352,8 +421,11 @@ export function CommissionCardCarousel({
             </span>
           )}
         </div>
-        <div className="cpic-caption-sub">Tier atual · {currentLevel}</div>
+        <div className="cpic-caption-sub">
+          Tier atual · {currentLevel} · {currentPercentage}%
+        </div>
       </div>
     </div>
   );
 }
+
