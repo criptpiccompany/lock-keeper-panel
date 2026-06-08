@@ -126,6 +126,7 @@ export function AddInfluencerUnifiedModal({ open, onOpenChange, onSuccess }: Pro
     }
 
     toast.success("Influenciador adicionado!", { description: `${handle} foi adicionado ao seu painel.` });
+    await syncToSharedBoard(handle, user.id);
     setSingleInput("");
     setSingleError("");
     setSingleSubmitting(false);
