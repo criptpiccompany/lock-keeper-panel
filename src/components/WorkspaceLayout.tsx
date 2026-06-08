@@ -112,6 +112,7 @@ export function WorkspaceLayout() {
 
   const topNavItems = isManagementView
     ? [
+        { label: "Home", path: "/home" },
         { label: "Financeiro", path: "/financeiro" },
         { label: "Diretório", path: "/diretorio" },
         { label: "Auditoria", path: "/auditoria" },
@@ -261,13 +262,6 @@ export function WorkspaceLayout() {
               ))}
             </div>
 
-            {isManagementView ? (
-              <div className="flex flex-wrap gap-3 lg:mt-3 lg:flex-col lg:items-center">
-                {operationsNav.map((item) => (
-                  <SidebarLink key={item.path} item={item} active={location.pathname === item.path} expanded={sidebarExpanded} />
-                ))}
-              </div>
-            ) : null}
           </div>
 
           <div className="mt-8 lg:flex lg:min-h-[180px] lg:flex-col lg:justify-end">
