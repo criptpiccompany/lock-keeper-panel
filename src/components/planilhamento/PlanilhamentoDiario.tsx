@@ -39,6 +39,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { useAuth } from "@/hooks/useAuth";
+import { CommissionCardCarousel } from "@/components/home/CommissionCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
