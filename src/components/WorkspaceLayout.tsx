@@ -185,19 +185,6 @@ export function WorkspaceLayout() {
           </div>
 
           <div className="flex items-center justify-start gap-3 lg:justify-end">
-            {canToggleCloserPreview ? (
-              <button
-                type="button"
-                onClick={handleToggleCloserPreview}
-                className={cn(
-                  "rounded-full px-4 py-2 text-[12px] font-medium tracking-[-0.01em] shadow-[0_12px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]",
-                  isPreviewingCloser ? "bg-[#242424] text-white" : "bg-white text-[#676767]"
-                )}
-              >
-                {isPreviewingCloser ? "Sair do modo closer" : "Ver como closer"}
-              </button>
-            ) : null}
-
             <div className="flex items-center gap-2 rounded-[20px] bg-white p-[6px] shadow-[0_12px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
               <button type="button" className="grid h-[34px] w-[34px] place-items-center rounded-full text-slate-700 transition hover:bg-black/[0.03] hover:text-slate-900">
                 <Search className="h-4 w-4" />
@@ -207,21 +194,56 @@ export function WorkspaceLayout() {
               </button>
             </div>
 
-            <div className="hidden min-w-[178px] items-center gap-[10px] rounded-[20px] bg-white px-3 py-2 shadow-[0_12px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03] sm:flex">
-              <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[linear-gradient(180deg,#f2d7c4_0%,#b47f59_100%)] text-[12px] font-semibold text-white">
-                {firstName.charAt(0).toUpperCase()}
-              </div>
-              <div className="min-w-0">
-                <div className="truncate text-[13px] font-medium tracking-[-0.01em] text-slate-900">{user.nome}</div>
-                <div className="mt-0.5 truncate text-[11px] text-slate-400">
-                  {isPreviewingCloser ? "Visualizando como CLOSER" : user.email}
-                </div>
-              </div>
-              <span className="ml-auto text-slate-400">•••</span>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="hidden min-w-[178px] items-center gap-[10px] rounded-[20px] bg-white px-3 py-2 text-left shadow-[0_12px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03] transition hover:bg-black/[0.02] sm:flex"
+                >
+                  <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[linear-gradient(180deg,#f2d7c4_0%,#b47f59_100%)] text-[12px] font-semibold text-white">
+                    {firstName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="truncate text-[13px] font-medium tracking-[-0.01em] text-slate-900">{user.nome}</div>
+                    <div className="mt-0.5 truncate text-[11px] text-slate-400">
+                      {isImpersonating ? `Visualizando como ${effectiveRole}` : user.email}
+                    </div>
+                  </div>
+                  <MoreHorizontal className="ml-auto h-4 w-4 text-slate-400" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {canImpersonate ? (
+                  <>
+                    <DropdownMenuLabel className="text-[11px] uppercase tracking-wider text-slate-400">
+                      Visualizar como
+                    </DropdownMenuLabel>
+                    {availableViewRoles.map((role) => {
+                      const selected = (viewAsRole ?? actualRole) === role;
+                      return (
+                        <DropdownMenuItem
+                          key={role}
+                          onClick={() => handleSelectViewRole(role)}
+                          className="flex items-center justify-between"
+                        >
+                          <span>{roleLabels[role]}</span>
+                          {selected ? <Check className="h-4 w-4 text-slate-700" /> : null}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                    <DropdownMenuSeparator />
+                  </>
+                ) : null}
+                <DropdownMenuItem onClick={handleSignOut} className="text-red-600 focus:text-red-600">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
+
 
       <div className="grid min-h-[calc(100vh-98px)] lg:grid-cols-[56px_minmax(0,1fr)] lg:gap-6 lg:px-6">
         <aside className="relative border-b border-black/[0.04] bg-transparent px-5 pb-4 pt-4 lg:sticky lg:top-[92px] lg:h-[calc(100vh-120px)] lg:border-b-0 lg:px-0 lg:pt-[18px]">
