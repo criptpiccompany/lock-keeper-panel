@@ -12,7 +12,7 @@ import { Loader2, TrendingUp, TrendingDown, DollarSign, Percent, Receipt, Wallet
 import { useTeamFeeRate } from "@/hooks/useTeamFeeRate";
 import { getEstimatedCommission } from "@/lib/commissionCalc";
 import { useCommissionTier } from "@/hooks/useCommissionTier";
-import UnifiedThermometerWidget from "@/components/home/UnifiedThermometerWidget";
+import { CommissionCardCarousel } from "@/components/home/CommissionCard";
 import { cn } from "@/lib/utils";
 
 interface DailyRecord {
@@ -276,14 +276,18 @@ export default function Balanco({ closerId }: { closerId?: string }) {
             <div className="rounded-[28px] bg-white p-6 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
               <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <div className="text-[12px] uppercase tracking-[0.18em] text-[#999999]">Termômetro</div>
+                  <div className="text-[12px] uppercase tracking-[0.18em] text-[#999999]">Porcentagem Atual</div>
                   <div className="mt-1 text-[28px] font-medium tracking-[-0.04em] text-[#1f1f1f]">Performance do mês</div>
                 </div>
                 <div className="rounded-full bg-[#f3f3ef] px-3 py-2 text-[12px] font-medium text-[#676767]">
                   {records.length} registros
                 </div>
               </div>
-              <UnifiedThermometerWidget resultado={totals.profit} month={selectedMonth} />
+              <CommissionCardCarousel
+                employeeName={currentCloser?.nome || user.nome}
+                resultado={totals.profit}
+                revenue={totals.revenue}
+              />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">

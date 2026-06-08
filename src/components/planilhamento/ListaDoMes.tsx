@@ -13,7 +13,7 @@ import { Loader2, ListChecks, DollarSign, TrendingUp, TrendingDown, Receipt, Per
 import { useTeamFeeRate } from "@/hooks/useTeamFeeRate";
 import { toast } from "sonner";
 import SharedPartnersPopover, { type SharedPartner } from "./SharedPartnersPopover";
-import UnifiedThermometerWidget from "@/components/home/UnifiedThermometerWidget";
+import { CommissionCardCarousel } from "@/components/home/CommissionCard";
 import { useCommissionTier } from "@/hooks/useCommissionTier";
 import { getEstimatedCommission } from "@/lib/commissionCalc";
 import { cn } from "@/lib/utils";
@@ -469,14 +469,18 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
               <div className="rounded-[28px] bg-white p-6 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
-                    <div className="text-[12px] uppercase tracking-[0.18em] text-[#999999]">Termômetro</div>
+                    <div className="text-[12px] uppercase tracking-[0.18em] text-[#999999]">Porcentagem Atual</div>
                     <div className="mt-1 text-[28px] font-medium tracking-[-0.04em] text-[#1f1f1f]">Performance do mês</div>
                   </div>
                   <div className="rounded-full bg-[#f3f3ef] px-3 py-2 text-[12px] font-medium text-[#676767]">
                     {rows.length} influenciadores
                   </div>
                 </div>
-                <UnifiedThermometerWidget resultado={summary.resultado} month={selectedMonth} />
+                <CommissionCardCarousel
+                  employeeName={closers.find((c) => c.id === selectedCloserId)?.nome || user?.nome || ""}
+                  resultado={summary.resultado}
+                  revenue={summary.faturado}
+                />
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
