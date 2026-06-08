@@ -106,9 +106,20 @@ const ENGAGEMENT_META: Record<string, { color: string; percent: number }> = {
   Fraca: { color: "#dc2626", percent: 33 },
   Média: { color: "#eab308", percent: 66 },
   Forte: { color: "#16a34a", percent: 100 },
+  Prioridade: { color: "#f97316", percent: 100 },
 };
 
 function EngagementDot({ value }: { value: string | null }) {
+  if (value === "Prioridade") {
+    return (
+      <Flame
+        className="h-3.5 w-3.5"
+        fill="#f97316"
+        stroke="#9a3412"
+        strokeWidth={1.5}
+      />
+    );
+  }
   const meta = value ? ENGAGEMENT_META[value] : null;
   if (!meta) {
     return (
