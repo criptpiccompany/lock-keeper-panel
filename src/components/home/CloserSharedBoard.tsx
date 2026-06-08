@@ -112,12 +112,7 @@ const ENGAGEMENT_META: Record<string, { color: string; percent: number }> = {
 function EngagementDot({ value }: { value: string | null }) {
   if (value === "Prioridade") {
     return (
-      <Flame
-        className="h-3.5 w-3.5"
-        fill="#f97316"
-        stroke="#9a3412"
-        strokeWidth={1.5}
-      />
+      <span className="text-[14px] leading-none" title="Prioridade">🔥</span>
     );
   }
   const meta = value ? ENGAGEMENT_META[value] : null;
