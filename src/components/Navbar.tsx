@@ -32,7 +32,7 @@ import { useState } from "react";
 export function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut, isAdmin, isSubAdmin } = useAuth();
+  const { user, signOut, isAdmin, isSubAdmin, isFinanceiro } = useAuth();
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isHome = location.pathname === "/home";
@@ -78,10 +78,18 @@ export function Navbar() {
     { path: "/painel", label: "Painel de Consulta", icon: LayoutGrid },
   ];
 
-  const navItems = isAdmin ? adminItems : isSubAdmin ? subAdminMainItems : closerItems;
+  const financeiroItems = [
+    { path: "/financeiro/comprovantes", label: "Comprovantes", icon: FileText },
+    { path: "/financeiro/espelhamento", label: "Espelhamento", icon: LayoutGrid },
+    { path: "/notificacoes", label: "Notificações", icon: Bell },
+  ];
+
+  const navItems = isFinanceiro ? financeiroItems : isAdmin ? adminItems : isSubAdmin ? subAdminMainItems : closerItems;
 
   // All navigable items for mobile menu
-  const allMobileItems = isAdmin
+  const allMobileItems = isFinanceiro
+    ? financeiroItems
+    : isAdmin
     ? [...adminItems, ...adminOperationItems]
     : isSubAdmin
     ? [...subAdminMainItems, ...subAdminDropdownItems]

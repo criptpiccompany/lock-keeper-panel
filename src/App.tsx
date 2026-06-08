@@ -34,6 +34,7 @@ function AppRoutes() {
   const DefaultRedirect = () => {
     if (loading) return null;
     if (!user) return <Navigate to="/login" replace />;
+    if (user.role === 'FINANCEIRO') return <Navigate to="/financeiro/comprovantes" replace />;
     return <Navigate to="/home" replace />;
   };
 
@@ -111,6 +112,22 @@ function AppRoutes() {
           element={
             <ProtectedRoute requireAdmin>
               <Admin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/financeiro/comprovantes"
+          element={
+            <ProtectedRoute requireFinanceiro>
+              <FinanceiroWorkspace initialTab="comprovantes" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/financeiro/espelhamento"
+          element={
+            <ProtectedRoute requireFinanceiro>
+              <FinanceiroWorkspace initialTab="espelhamento" />
             </ProtectedRoute>
           }
         />
