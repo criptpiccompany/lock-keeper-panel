@@ -934,7 +934,7 @@ export default function PlanilhamentoDiario({
               entity_id: savedRecordId,
               entity_type: "daily_influencer_records",
               edit_reason: editReason,
-              field_changes: { new_record: { before: null, after: { date: modalDate, valor_pago: Number(formValorPago), faturamento: formFaturamento ? Number(formFaturamento) : null } } },
+              field_changes: { new_record: { before: null, after: { date: modalDate, valor_pago: parseBRL(formValorPago), faturamento: formFaturamento ? parseBRL(formFaturamento) : null } } },
               influencer_handle: selectedInfForReason?.handle || formInfluencerId,
             },
           });
