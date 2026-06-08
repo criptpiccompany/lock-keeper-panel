@@ -772,12 +772,12 @@ export function CloserSharedBoard() {
                     className={cn(
                       "h-7 rounded-[6px] px-2.5 text-[11px] font-medium transition-colors",
                       activeTab === tab.key
-                        ? "bg-[#f1f1ee] text-[#37352f]"
-                        : "text-[#9a9a95] hover:bg-[#fafaf8] hover:text-[#54544f]"
+                        ? "bg-white text-black shadow-sm"
+                        : "text-[#9a9a95] hover:bg-white hover:text-black"
                     )}
                   >
                     {tab.label}
-                    <span className="ml-1 text-[10px] text-[#b4b4b0]">({tab.count})</span>
+                    <span className={cn("ml-1 text-[10px]", activeTab === tab.key ? "text-black/50" : "text-[#b4b4b0]")}>({tab.count})</span>
                   </button>
                 ))}
               </div>
