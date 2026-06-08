@@ -1149,6 +1149,8 @@ export function CloserSharedBoard() {
                         key={group.closerId}
                         title={group.closerId === user?.id ? `${group.closerName} (você)` : group.closerName}
                         cards={group.cards}
+                        collapsed={collapsedClosers.has(group.closerId)}
+                        onToggle={() => toggleCloser(group.closerId)}
                         visibleColumns={visibleColumns}
                         gridTemplateColumns={gridTemplateColumns}
                         onUpdate={updateCard}
