@@ -25,7 +25,11 @@ import { CLASSIFICACAO_OPTIONS, type KanbanCard } from "@/components/kanban/type
 
 type TeamBoardCard = KanbanCard & {
   closerName: string;
+  assigned_to?: string | null;
+  assignedName?: string | null;
 };
+
+type TeamMember = { id: string; nome: string };
 
 type SortField = "status" | "display_name" | "classificacao" | "closerName" | "valor_negociado" | "last_moved_at";
 type SortDir = "asc" | "desc";
@@ -514,6 +518,8 @@ export function CloserSharedBoard() {
   const [newValue, setNewValue] = useState("");
   const [newObservation, setNewObservation] = useState("");
   const [newBridge, setNewBridge] = useState("");
+  const [newAssignedTo, setNewAssignedTo] = useState<string>("none");
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
 
   const fetchCards = async () => {
     if (!user?.teamId) {
@@ -537,10 +543,12 @@ export function CloserSharedBoard() {
 
     const rawRows = (data || []) as Array<Record<string, unknown>>;
     const creatorIds = [...new Set(rawRows.map((r) => r.created_by as string).filter(Boolean))];
+    const assignedIds = [...new Set(rawRows.map((r) => r.assigned_to as string).filter(Boolean))];
+    const idsToFetch = [...new Set([...creatorIds, ...assignedIds])];
     let names = new Map<string, string>();
 
-    if (creatorIds.length) {
-      const { data: profiles } = await supabase.from("profiles").select("id, nome").in("id", creatorIds);
+    if (idsToFetch.length) {
+      const { data: profiles } = await supabase.from("profiles").select("id, nome").in("id", idsToFetch);
       names = new Map((profiles || []).map((profile: { id: string; nome: string | null }) => [profile.id, profile.nome || "Closer"]));
     }
 
@@ -549,6 +557,8 @@ export function CloserSharedBoard() {
         ...(row as unknown as KanbanCard),
         closer_id: row.created_by as string,
         closerName: names.get(row.created_by as string) || "Closer",
+        assigned_to: (row.assigned_to as string | null) ?? null,
+        assignedName: row.assigned_to ? names.get(row.assigned_to as string) || null : null,
       }))
     );
     setLoading(false);
@@ -556,6 +566,17 @@ export function CloserSharedBoard() {
 
   useEffect(() => {
     fetchCards();
+  }, [user?.teamId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.rpc("get_approved_closers");
+      if (!cancelled && Array.isArray(data)) {
+        setTeamMembers(data.filter((m): m is TeamMember => !!m && !!m.id && !!m.nome));
+      }
+    })();
+    return () => { cancelled = true; };
   }, [user?.teamId]);
 
   const updateCard = async (cardId: string, fields: Partial<KanbanCard>) => {
@@ -677,7 +698,7 @@ export function CloserSharedBoard() {
         return;
       }
 
-      if (card.closer_id === user?.id && ["Fechar", "Negociando", "Abordado"].includes(card.status)) {
+      if (card.assigned_to === user?.id) {
         forYou.push(card);
         return;
       }
@@ -714,7 +735,8 @@ export function CloserSharedBoard() {
       valor_negociado: Number.isNaN(parsedValue) ? null : parsedValue,
       observacao: newObservation.trim() || null,
       apoios: bridgeItems.length ? bridgeItems : null,
-    });
+      assigned_to: newAssignedTo === "none" ? null : newAssignedTo,
+    } as never);
 
     setSaving(false);
     if (!error) {
@@ -724,6 +746,7 @@ export function CloserSharedBoard() {
       setNewValue("");
       setNewObservation("");
       setNewBridge("");
+      setNewAssignedTo("none");
       setDialogOpen(false);
       fetchCards();
     }
@@ -1095,6 +1118,28 @@ export function CloserSharedBoard() {
                       );
                     })}
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">
+                    <AtSign className="h-3 w-3" /> Direcionar para
+                  </label>
+                  <Select value={newAssignedTo} onValueChange={setNewAssignedTo}>
+                    <SelectTrigger className="h-12 rounded-[12px] border-[#ececeb] bg-[#fafaf8] px-4 text-[14px] text-[#1f1f1f] shadow-none focus:ring-0 focus:ring-offset-0">
+                      <SelectValue placeholder="Ninguém — fica no Geral" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-[14px] border-[#ececeb] bg-white p-1 shadow-[0_16px_40px_-20px_rgba(15,23,42,0.25)]">
+                      <SelectItem value="none" className="cursor-pointer rounded-[10px] px-3 py-2 text-[13px] text-[#6e6e73] focus:bg-[#f3f3ef]">
+                        Ninguém — fica no Geral
+                      </SelectItem>
+                      {teamMembers.map((member) => (
+                        <SelectItem key={member.id} value={member.id} className="cursor-pointer rounded-[10px] px-3 py-2 text-[13px] text-[#1f1f1f] focus:bg-[#f3f3ef]">
+                          {member.nome}{member.id === user?.id ? " (você)" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[11px] text-[#9a9a96]">A pessoa direcionada verá esse influenciador na seção "Para você".</p>
                 </div>
 
                 <div className="space-y-2">
