@@ -61,7 +61,7 @@ function AppRoutes() {
       >
         <Route path="/home" element={<Home />} />
         <Route path="/meu" element={<MeuPainel />} />
-        <Route path="/gestao-influenciadores" element={<GestaoInfluenciadores />} />
+        
         <Route path="/painel" element={<PainelGeral />} />
         <Route path="/registro" element={<RegistroDiario />} />
 
