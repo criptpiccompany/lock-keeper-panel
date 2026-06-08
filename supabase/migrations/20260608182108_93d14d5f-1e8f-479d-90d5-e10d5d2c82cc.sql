@@ -1,0 +1,2 @@
+UPDATE public.profiles SET team_id = '55b831e0-5101-41a9-8f38-110330249345' WHERE team_id IS NULL;
+UPDATE public.team_shared_board SET team_id = (SELECT team_id FROM public.profiles WHERE id = team_shared_board.created_by) WHERE team_id IS NULL;
