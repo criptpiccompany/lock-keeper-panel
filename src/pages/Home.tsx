@@ -781,7 +781,7 @@ export default function Home() {
 
               <SourceTrackCard title="Meta diária do time" current={resultado} target={progressTarget} />
 
-              <SourceDualPanel title="Meu Espaço" actionLabel="Performance Club">
+              <SourceDualPanel title="Porcentagem Atual" actionLabel="Performance Club">
                 <CommissionCardCarousel
                   employeeName={user.nome}
                   resultado={resultado}
