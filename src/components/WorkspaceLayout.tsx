@@ -4,6 +4,7 @@ import {
   Bell,
   BookOpen,
   CalendarDays,
+  Check,
   ChevronRight,
   DollarSign,
   FileText,
@@ -12,6 +13,7 @@ import {
   LayoutGrid,
   Lock,
   LogOut,
+  MoreHorizontal,
   Search,
   Settings,
   Shield,
@@ -21,6 +23,14 @@ import {
 
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type NavItem = {
   path: string;
