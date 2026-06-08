@@ -65,9 +65,14 @@ import {
 import ComprovanteThumbnail from "./ComprovanteThumbnail";
 import ComprovanteLightbox from "./ComprovanteLightbox";
 import ProofUploader from "./ProofUploader";
+import DailyReceiptsCarousel from "./DailyReceiptsCarousel";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import EditReasonModal, { formatFieldLabel, type FieldDiff } from "./EditReasonModal";
 import SharedPartnersPopover, { type SharedPartner } from "./SharedPartnersPopover";
+
+// Feature flag: receipts now live in a horizontal carousel at the end of each day
+// instead of per-row inside the influencer table. Kept as a flag for easy rollback.
+const RECEIPTS_AS_CAROUSEL = true;
 
 // --- Types ---
 
@@ -321,14 +326,21 @@ export default function PlanilhamentoDiario({
   externalMonth,
   focusedDate,
   compact = false,
+  editAsCloser = false,
 }: {
   closerId?: string;
   externalMonth?: string;
   focusedDate?: string;
   compact?: boolean;
+  /** When true, treats the spreadsheet as fully editable on behalf of `closerId`
+   *  (used by FINANCEIRO Espelhamento). Disables read-only "viewingOther" mode. */
+  editAsCloser?: boolean;
 }) {
-  const { user, isAdmin } = useAuth();
-  const viewingOther = !!closerId && closerId !== user?.id;
+  const { user, isAdmin, isFinanceiro } = useAuth();
+  // viewingOther = read-only mirror. When editAsCloser is on we still write,
+  // but as the target closer (closerId), not the authenticated user.
+  const viewingOther = !!closerId && closerId !== user?.id && !editAsCloser;
+  const effectiveCloserId = (editAsCloser && closerId) ? closerId : user?.id;
   const now = new Date();
   const [internalYear, setInternalYear] = useState(now.getFullYear());
   const [internalMonth, setInternalMonth] = useState(now.getMonth());
@@ -559,7 +571,7 @@ export default function PlanilhamentoDiario({
       const { error } = await supabase.from("daily_sheets").insert({
         date: targetDate,
         month: monthKey,
-        closer_id: user.id,
+        closer_id: effectiveCloserId,
       } as any);
 
       if (error) {
@@ -594,7 +606,7 @@ export default function PlanilhamentoDiario({
       const { error } = await supabase.from("daily_sheets").insert({
         date: dateStr,
         month: monthKey,
-        closer_id: user.id,
+        closer_id: effectiveCloserId,
       } as any);
 
       if (error) {
@@ -633,7 +645,7 @@ export default function PlanilhamentoDiario({
     const toInsert = missingDays.map((d) => ({
       date: d,
       month: monthKey,
-      closer_id: user.id,
+      closer_id: effectiveCloserId,
     }));
 
     const { error } = await supabase.from("daily_sheets").insert(toInsert as any);
@@ -858,7 +870,7 @@ export default function PlanilhamentoDiario({
       } else {
         payload.date = modalDate;
         payload.influencer_id = formInfluencerId;
-        payload.closer_id = user.id;
+        payload.closer_id = effectiveCloserId;
         payload.comprovante_url = comprovanteUrl || null;
         payload.comprovante_url_2 = comprovanteUrl2 || null;
         const { data: insertData, error } = await supabase
@@ -1208,7 +1220,7 @@ export default function PlanilhamentoDiario({
                       <Badge variant="secondary" className="text-xs whitespace-nowrap shrink-0">
                         {dayRecords.length} {dayRecords.length === 1 ? "registro" : "registros"}
                       </Badge>
-                      {pendingCount > 0 && (
+                      {!RECEIPTS_AS_CAROUSEL && pendingCount > 0 && (
                         <Badge variant="destructive" className="text-xs gap-1 whitespace-nowrap shrink-0 hidden sm:inline-flex">
                           <AlertCircle className="h-3 w-3" />
                           {pendingCount} sem comprovante
@@ -1274,10 +1286,12 @@ export default function PlanilhamentoDiario({
                                   <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Resultado</th>
                                   <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Total no link</th>
                                   <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Ação</th>
-                                  <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Comprovantes</th>
+                                  {!RECEIPTS_AS_CAROUSEL && (
+                                    <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Comprovantes</th>
+                                  )}
                                 </tr>
                                 <tr>
-                                  <td colSpan={8} className="px-5">
+                                  <td colSpan={RECEIPTS_AS_CAROUSEL ? 7 : 8} className="px-5">
                                     <div className="border-b border-dashed border-[#e6ddb0]" />
                                   </td>
                                 </tr>
@@ -1285,7 +1299,7 @@ export default function PlanilhamentoDiario({
                               <tbody>
                                 {visibleDayRecords.length === 0 ? (
                                   <tr>
-                                    <td colSpan={8} className="px-6 py-12 text-center text-sm text-muted-foreground">
+                                    <td colSpan={RECEIPTS_AS_CAROUSEL ? 7 : 8} className="px-6 py-12 text-center text-sm text-muted-foreground">
                                       Nenhum influenciador encontrado para esse dia.
                                     </td>
                                   </tr>
@@ -1363,25 +1377,26 @@ export default function PlanilhamentoDiario({
                                             />
                                           )}
                                         </td>
-                                        <td className="px-4 py-5">
-
-                                          <div className="flex items-center gap-2">
-                                            {record.comprovante_url ? (
-                                              <ComprovanteThumbnail
-                                                url={record.comprovante_url}
-                                                onClick={() => handleViewComprovante(record.comprovante_url)}
-                                              />
-                                            ) : (
-                                              <span className="text-[13px] text-[#9a9a97]">—</span>
-                                            )}
-                                            {record.comprovante_url_2 ? (
-                                              <ComprovanteThumbnail
-                                                url={record.comprovante_url_2}
-                                                onClick={() => handleViewComprovante(record.comprovante_url_2!)}
-                                              />
-                                            ) : null}
-                                          </div>
-                                        </td>
+                                        {!RECEIPTS_AS_CAROUSEL && (
+                                          <td className="px-4 py-5">
+                                            <div className="flex items-center gap-2">
+                                              {record.comprovante_url ? (
+                                                <ComprovanteThumbnail
+                                                  url={record.comprovante_url}
+                                                  onClick={() => handleViewComprovante(record.comprovante_url)}
+                                                />
+                                              ) : (
+                                                <span className="text-[13px] text-[#9a9a97]">—</span>
+                                              )}
+                                              {record.comprovante_url_2 ? (
+                                                <ComprovanteThumbnail
+                                                  url={record.comprovante_url_2}
+                                                  onClick={() => handleViewComprovante(record.comprovante_url_2!)}
+                                                />
+                                              ) : null}
+                                            </div>
+                                          </td>
+                                        )}
                                       </tr>
                                     );
                                   })
@@ -1457,7 +1472,7 @@ export default function PlanilhamentoDiario({
                               </span>
                             </th>
                             <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-left">Status</th>
-                            <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-center">📎</th>
+                            {!RECEIPTS_AS_CAROUSEL && <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-center">📎</th>}
                             {!viewingOther && <th className="text-xs font-semibold text-foreground/70 uppercase tracking-wider py-2.5 px-4 text-right">Ações</th>}
                           </tr>
                         </thead>
@@ -1528,28 +1543,30 @@ export default function PlanilhamentoDiario({
                                       />
                                     )}
                                   </td>
-                                  <td className="py-2.5 px-4 text-center">
-                                    <div className="flex items-center justify-center gap-1">
-                                      {record.comprovante_url ? (
-                                        <ComprovanteThumbnail
-                                          url={record.comprovante_url}
-                                          onClick={() => handleViewComprovante(record.comprovante_url)}
-                                        />
-                                      ) : null}
-                                      {record.comprovante_url_2 ? (
-                                        <ComprovanteThumbnail
-                                          url={record.comprovante_url_2}
-                                          onClick={() => handleViewComprovante(record.comprovante_url_2!)}
-                                        />
-                                      ) : null}
-                                      {!record.comprovante_url && (
-                                        <div className="flex flex-col items-center gap-1">
-                                          <AlertCircle className="h-4 w-4 text-destructive" />
-                                          <span className="text-[10px] text-destructive font-medium leading-tight">Pendente</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </td>
+                                  {!RECEIPTS_AS_CAROUSEL && (
+                                    <td className="py-2.5 px-4 text-center">
+                                      <div className="flex items-center justify-center gap-1">
+                                        {record.comprovante_url ? (
+                                          <ComprovanteThumbnail
+                                            url={record.comprovante_url}
+                                            onClick={() => handleViewComprovante(record.comprovante_url)}
+                                          />
+                                        ) : null}
+                                        {record.comprovante_url_2 ? (
+                                          <ComprovanteThumbnail
+                                            url={record.comprovante_url_2}
+                                            onClick={() => handleViewComprovante(record.comprovante_url_2!)}
+                                          />
+                                        ) : null}
+                                        {!record.comprovante_url && (
+                                          <div className="flex flex-col items-center gap-1">
+                                            <AlertCircle className="h-4 w-4 text-destructive" />
+                                            <span className="text-[10px] text-destructive font-medium leading-tight">Pendente</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </td>
+                                  )}
                                   {!viewingOther && (
                                     <td className="py-2.5 px-4 text-right">
                                       <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => openEditRecord(record)}>
@@ -1592,22 +1609,26 @@ export default function PlanilhamentoDiario({
                                     )}
                                   </div>
                                   <div className="flex items-center gap-1.5 shrink-0">
-                                    {record.comprovante_url ? (
-                                      <ComprovanteThumbnail
-                                        url={record.comprovante_url}
-                                        onClick={() => handleViewComprovante(record.comprovante_url)}
-                                      />
-                                    ) : (
-                                      <Badge variant="destructive" className="text-[10px] gap-0.5 px-1.5 py-0.5">
-                                        <AlertCircle className="h-3 w-3" />
-                                        Pendente
-                                      </Badge>
-                                    )}
-                                    {record.comprovante_url_2 && (
-                                      <ComprovanteThumbnail
-                                        url={record.comprovante_url_2}
-                                        onClick={() => handleViewComprovante(record.comprovante_url_2!)}
-                                      />
+                                    {!RECEIPTS_AS_CAROUSEL && (
+                                      <>
+                                        {record.comprovante_url ? (
+                                          <ComprovanteThumbnail
+                                            url={record.comprovante_url}
+                                            onClick={() => handleViewComprovante(record.comprovante_url)}
+                                          />
+                                        ) : (
+                                          <Badge variant="destructive" className="text-[10px] gap-0.5 px-1.5 py-0.5">
+                                            <AlertCircle className="h-3 w-3" />
+                                            Pendente
+                                          </Badge>
+                                        )}
+                                        {record.comprovante_url_2 && (
+                                          <ComprovanteThumbnail
+                                            url={record.comprovante_url_2}
+                                            onClick={() => handleViewComprovante(record.comprovante_url_2!)}
+                                          />
+                                        )}
+                                      </>
                                     )}
                                     {!viewingOther && (
                                       <button
@@ -1697,6 +1718,27 @@ export default function PlanilhamentoDiario({
                           <Plus className="mr-1 h-3.5 w-3.5" />
                           Adicionar influenciador
                         </Button>
+                      </div>
+                    )}
+
+                    {/* Receipts carousel (story-style) — replaces per-row Comprovantes column */}
+                    {RECEIPTS_AS_CAROUSEL && effectiveCloserId && (
+                      <div className="border-t border-border/30 px-4 py-3 bg-[#fcfcf8]">
+                        <DailyReceiptsCarousel
+                          date={day}
+                          closerId={effectiveCloserId}
+                          canEdit={!viewingOther}
+                          influencerLines={dayRecords.map((r) => ({
+                            recordId: r.id,
+                            handle: getInfluencerHandle(r.influencer_id),
+                          }))}
+                          legacyReceipts={dayRecords.flatMap((r) => {
+                            const items: { id: string; file_url: string; daily_record_id: string; handle?: string }[] = [];
+                            if (r.comprovante_url) items.push({ id: `legacy-${r.id}-1`, file_url: r.comprovante_url, daily_record_id: r.id, handle: getInfluencerHandle(r.influencer_id) });
+                            if (r.comprovante_url_2) items.push({ id: `legacy-${r.id}-2`, file_url: r.comprovante_url_2, daily_record_id: r.id, handle: getInfluencerHandle(r.influencer_id) });
+                            return items;
+                          })}
+                        />
                       </div>
                     )}
                   </div>
