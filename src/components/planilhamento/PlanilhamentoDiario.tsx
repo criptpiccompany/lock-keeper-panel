@@ -1218,7 +1218,7 @@ export default function PlanilhamentoDiario({
                                   dayFilter === filter.id
                                     ? filter.id === "pending" && pendingCount > 0
                                       ? "border-[#d94b45] bg-[#d94b45] text-white"
-                                      : "border-[#242424] bg-[#242424] text-white"
+                                      : "border-[#4a4a4a] bg-[#4a4a4a] text-white"
                                     : filter.id === "pending" && pendingCount > 0
                                       ? "border-[#f1c4c1] bg-[#fff5f5] text-[#c73a34]"
                                       : "border-[#ececeb] bg-white text-[#676767]"
@@ -1233,7 +1233,7 @@ export default function PlanilhamentoDiario({
                             <Button
                               type="button"
                               onClick={() => setDayListOpen(true)}
-                              className="h-12 rounded-full bg-[#242424] px-5 text-white shadow-none hover:bg-[#1b1b1b]"
+                              className="h-12 rounded-full bg-[#4a4a4a] px-5 text-white shadow-none hover:bg-[#3a3a3a]"
                             >
                               Lista do dia
                             </Button>
@@ -1249,8 +1249,7 @@ export default function PlanilhamentoDiario({
                             {!viewingOther && (
                               <Button
                                 onClick={() => openNewRecord(day)}
-                                className="h-12 rounded-full bg-white px-5 text-[#1f1f1f] shadow-none border border-[#ececeb] hover:bg-[#f8f8f5]"
-                                variant="outline"
+                                className="h-12 rounded-full bg-[#1f1f1f] px-5 text-white shadow-none hover:bg-[#000000]"
                               >
                                 <Plus className="mr-2 h-4 w-4" />
                                 Adicionar
