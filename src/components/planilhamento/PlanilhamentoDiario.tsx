@@ -668,9 +668,9 @@ export default function PlanilhamentoDiario({
     setEditRecord(record);
     setModalDate(record.date);
     setFormInfluencerId(record.influencer_id);
-    setFormValorPago(String(record.valor_pago));
-    setFormFaturamento(record.faturamento !== null ? String(record.faturamento) : "");
-    setFormAcumulado(record.acumulado !== null ? String(record.acumulado) : "");
+    setFormValorPago(formatBRLFromNumber(record.valor_pago));
+    setFormFaturamento(record.faturamento !== null ? formatBRLFromNumber(record.faturamento) : "");
+    setFormAcumulado(record.acumulado !== null ? formatBRLFromNumber(record.acumulado) : "");
     setFormObservacao(record.observacao || "");
     setFormFile1(null);
     setFormFile2(null);
