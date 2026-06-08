@@ -715,8 +715,8 @@ export default function PlanilhamentoDiario({
     }
 
     const diffs: FieldDiff[] = [];
-    const newValorPago = Number(formValorPago);
-    const newFaturamento = formFaturamento ? Number(formFaturamento) : null;
+    const newValorPago = parseBRL(formValorPago);
+    const newFaturamento = formFaturamento ? parseBRL(formFaturamento) : null;
     const oldValorPago = Number(editRecord.valor_pago);
     const oldFaturamento = editRecord.faturamento != null ? Number(editRecord.faturamento) : null;
 
