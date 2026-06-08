@@ -215,6 +215,7 @@ export function AddInfluencerUnifiedModal({ open, onOpenChange, onSuccess }: Pro
           feito_em: now,
           acao: "FECHAMENTO",
         });
+        await syncToSharedBoard(item.handle, user.id);
         ok++;
       } else {
         const { error: insErr } = await supabase.from("influencers").insert({
@@ -224,6 +225,7 @@ export function AddInfluencerUnifiedModal({ open, onOpenChange, onSuccess }: Pro
           ativo: true,
         });
         if (insErr) { err++; continue; }
+        await syncToSharedBoard(item.handle, user.id);
         ok++;
       }
     }
