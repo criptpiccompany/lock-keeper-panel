@@ -70,7 +70,6 @@ export function Navbar() {
   const subAdminDropdownItems = [
     { path: "/meu", label: "Minha Lista", icon: User },
     { path: "/registro", label: "Planilhamento", icon: FileText },
-    { path: "/gestao-influenciadores", label: "Gestão de Influs", icon: Users },
   ];
 
   const adminOperationItems = [
