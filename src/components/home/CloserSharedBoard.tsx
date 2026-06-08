@@ -977,7 +977,7 @@ export function CloserSharedBoard() {
               <div className="ml-1 flex items-center gap-0.5 rounded-md border border-[#e7e7e3] bg-white p-0.5">
                 {([
                   { key: "prospectar", label: "Prospectar", count: sections.forYou.length + sections.general.length },
-                  { key: "fechados", label: "Fechados", count: sections.closing.length + sections.teamClosed.length },
+                  { key: "fechados", label: "Fechados", count: sections.closerGroups.reduce((acc, g) => acc + g.cards.length, 0) + sections.concorrencia.length },
                 ] as const).map((tab) => (
                   <button
                     key={tab.key}
