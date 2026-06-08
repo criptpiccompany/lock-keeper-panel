@@ -68,49 +68,37 @@ export default function FinanceiroComprovantes() {
           </p>
         </div>
 
-        <div className="inline-flex items-center gap-2 rounded-full border border-[#ececeb] bg-white px-3.5 py-1.5 text-[11.5px] font-medium text-[#676767]">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#6ea93d]" />
-          {visibleClosers.length} closer{visibleClosers.length === 1 ? "" : "s"} visíveis
-        </div>
-      </header>
-
-      {/* Toolbar */}
-      <div className="rounded-[18px] bg-white px-5 py-4 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
-          <label className="flex items-center gap-3">
-            <Calendar className="h-4 w-4 text-[#999999]" />
-            <div className="flex flex-col">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#999999]">Data</span>
-              <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="bg-transparent text-[14px] font-medium tracking-[-0.01em] text-[#1f1f1f] outline-none"
-                />
-                <span className="hidden text-[12px] capitalize text-[#999999] sm:inline">· {formatPtDate(date)}</span>
-              </div>
-            </div>
-          </label>
-
-          <div className="h-8 w-px bg-[#ececeb]" />
-
-          <label className="flex items-center gap-3">
-            <Users className="h-4 w-4 text-[#999999]" />
-            <div className="flex flex-col">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#999999]">Time</span>
+        {/* Controls — top right */}
+        <div className="flex flex-col items-end gap-2">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#ececeb] bg-white px-3.5 py-1.5 text-[11.5px] font-medium text-[#676767]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#6ea93d]" />
+            {visibleClosers.length} closer{visibleClosers.length === 1 ? "" : "s"} visíveis
+          </div>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <label className="inline-flex items-center gap-2 rounded-full border border-[#ececeb] bg-white px-3.5 py-2">
+              <Calendar className="h-3.5 w-3.5 text-[#999999]" />
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-[120px] bg-transparent text-[13px] font-medium tracking-[-0.01em] text-[#1f1f1f] outline-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+              />
+            </label>
+            <label className="inline-flex items-center gap-2 rounded-full border border-[#ececeb] bg-white px-3.5 py-2">
+              <Users className="h-3.5 w-3.5 text-[#999999]" />
               <select
                 value={filterTeam}
                 onChange={(e) => setFilterTeam(e.target.value)}
-                className="bg-transparent text-[14px] font-medium tracking-[-0.01em] text-[#1f1f1f] outline-none"
+                className="max-w-[160px] bg-transparent text-[13px] font-medium tracking-[-0.01em] text-[#1f1f1f] outline-none"
               >
                 <option value="all">Todos os times</option>
                 {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
-            </div>
-          </label>
+            </label>
+          </div>
         </div>
-      </div>
+      </header>
+
 
       {/* Grid */}
       {visibleClosers.length === 0 ? (
