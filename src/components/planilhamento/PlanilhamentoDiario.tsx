@@ -1203,31 +1203,8 @@ export default function PlanilhamentoDiario({
                     {focusedDate ? (
                       <div className="space-y-5 bg-[#fcfcf8] p-4 md:p-5">
                         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                          <div className="flex flex-wrap items-center gap-2">
-                            {[
-                              { id: "all", label: "Todos" },
-                              { id: "proof", label: "Com comprovante" },
-                              { id: "pending", label: `Pendentes${pendingCount > 0 ? ` (${pendingCount})` : ""}` },
-                            ].map((filter) => (
-                              <button
-                                key={filter.id}
-                                type="button"
-                                onClick={() => setDayFilter(filter.id as typeof dayFilter)}
-                                className={cn(
-                                  "rounded-full border px-4 py-2 text-[13px] font-medium transition",
-                                  dayFilter === filter.id
-                                    ? filter.id === "pending" && pendingCount > 0
-                                      ? "border-[#d94b45] bg-[#d94b45] text-white"
-                                      : "border-[#4a4a4a] bg-[#4a4a4a] text-white"
-                                    : filter.id === "pending" && pendingCount > 0
-                                      ? "border-[#f1c4c1] bg-[#fff5f5] text-[#c73a34]"
-                                      : "border-[#ececeb] bg-white text-[#676767]"
-                                )}
-                              >
-                                {filter.label}
-                              </button>
-                            ))}
-                          </div>
+                          <div className="flex flex-wrap items-center gap-2" />
+
 
                           <div className="flex flex-col gap-3 md:flex-row md:items-center">
                             <Button
