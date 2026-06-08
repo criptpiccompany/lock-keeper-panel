@@ -1720,6 +1720,27 @@ export default function PlanilhamentoDiario({
                         </Button>
                       </div>
                     )}
+
+                    {/* Receipts carousel (story-style) — replaces per-row Comprovantes column */}
+                    {RECEIPTS_AS_CAROUSEL && effectiveCloserId && (
+                      <div className="border-t border-border/30 px-4 py-3 bg-[#fcfcf8]">
+                        <DailyReceiptsCarousel
+                          date={day}
+                          closerId={effectiveCloserId}
+                          canEdit={!viewingOther}
+                          influencerLines={dayRecords.map((r) => ({
+                            recordId: r.id,
+                            handle: getInfluencerHandle(r.influencer_id),
+                          }))}
+                          legacyReceipts={dayRecords.flatMap((r) => {
+                            const items: { id: string; file_url: string; daily_record_id: string; handle?: string }[] = [];
+                            if (r.comprovante_url) items.push({ id: `legacy-${r.id}-1`, file_url: r.comprovante_url, daily_record_id: r.id, handle: getInfluencerHandle(r.influencer_id) });
+                            if (r.comprovante_url_2) items.push({ id: `legacy-${r.id}-2`, file_url: r.comprovante_url_2, daily_record_id: r.id, handle: getInfluencerHandle(r.influencer_id) });
+                            return items;
+                          })}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
