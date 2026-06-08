@@ -1543,28 +1543,30 @@ export default function PlanilhamentoDiario({
                                       />
                                     )}
                                   </td>
-                                  <td className="py-2.5 px-4 text-center">
-                                    <div className="flex items-center justify-center gap-1">
-                                      {record.comprovante_url ? (
-                                        <ComprovanteThumbnail
-                                          url={record.comprovante_url}
-                                          onClick={() => handleViewComprovante(record.comprovante_url)}
-                                        />
-                                      ) : null}
-                                      {record.comprovante_url_2 ? (
-                                        <ComprovanteThumbnail
-                                          url={record.comprovante_url_2}
-                                          onClick={() => handleViewComprovante(record.comprovante_url_2!)}
-                                        />
-                                      ) : null}
-                                      {!record.comprovante_url && (
-                                        <div className="flex flex-col items-center gap-1">
-                                          <AlertCircle className="h-4 w-4 text-destructive" />
-                                          <span className="text-[10px] text-destructive font-medium leading-tight">Pendente</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </td>
+                                  {!RECEIPTS_AS_CAROUSEL && (
+                                    <td className="py-2.5 px-4 text-center">
+                                      <div className="flex items-center justify-center gap-1">
+                                        {record.comprovante_url ? (
+                                          <ComprovanteThumbnail
+                                            url={record.comprovante_url}
+                                            onClick={() => handleViewComprovante(record.comprovante_url)}
+                                          />
+                                        ) : null}
+                                        {record.comprovante_url_2 ? (
+                                          <ComprovanteThumbnail
+                                            url={record.comprovante_url_2}
+                                            onClick={() => handleViewComprovante(record.comprovante_url_2!)}
+                                          />
+                                        ) : null}
+                                        {!record.comprovante_url && (
+                                          <div className="flex flex-col items-center gap-1">
+                                            <AlertCircle className="h-4 w-4 text-destructive" />
+                                            <span className="text-[10px] text-destructive font-medium leading-tight">Pendente</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </td>
+                                  )}
                                   {!viewingOther && (
                                     <td className="py-2.5 px-4 text-right">
                                       <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => openEditRecord(record)}>
