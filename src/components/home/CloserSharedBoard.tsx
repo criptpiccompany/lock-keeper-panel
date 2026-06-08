@@ -515,7 +515,7 @@ export function CloserSharedBoard() {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [visibleCols, setVisibleCols] = useState<Set<ColumnKey>>(new Set(COLUMN_DEFS.map((column) => column.key)));
   const [teamClosedCollapsed, setTeamClosedCollapsed] = useState(true);
-  const [activeTab, setActiveTab] = useState<"closing" | "teamClosed" | null>(null);
+  const [activeTab, setActiveTab] = useState<"fechados" | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newInfluencer, setNewInfluencer] = useState("");
   const [saving, setSaving] = useState(false);
@@ -786,8 +786,7 @@ export function CloserSharedBoard() {
               </Button>
               <div className="ml-1 flex items-center gap-0.5 rounded-md border border-[#e7e7e3] bg-white p-0.5">
                 {([
-                  { key: "closing", label: "Fechando", count: sections.closing.length },
-                  { key: "teamClosed", label: "Equipe Fechou", count: sections.teamClosed.length },
+                  { key: "fechados", label: "Fechados", count: sections.closing.length + sections.teamClosed.length },
                 ] as const).map((tab) => (
                   <button
                     key={tab.key}
@@ -941,24 +940,24 @@ export function CloserSharedBoard() {
                   gridTemplateColumns={gridTemplateColumns}
                   onUpdate={updateCard}
                 />
-                {activeTab === "closing" && (
-                  <SectionBlock
-                    title="Fechando"
-                    cards={sections.closing}
-                    visibleColumns={visibleColumns}
-                    gridTemplateColumns={gridTemplateColumns}
-                    onUpdate={updateCard}
-                  />
-                )}
-                {activeTab === "teamClosed" && (
-                  <SectionBlock
-                    title="Equipe Fechou"
-                    cards={sections.teamClosed}
-                    emptyMessage="Nenhum influenciador fechado por outra pessoa no momento."
-                    visibleColumns={visibleColumns}
-                    gridTemplateColumns={gridTemplateColumns}
-                    onUpdate={updateCard}
-                  />
+                {activeTab === "fechados" && (
+                  <>
+                    <SectionBlock
+                      title="Fechando"
+                      cards={sections.closing}
+                      visibleColumns={visibleColumns}
+                      gridTemplateColumns={gridTemplateColumns}
+                      onUpdate={updateCard}
+                    />
+                    <SectionBlock
+                      title="Equipe Fechou"
+                      cards={sections.teamClosed}
+                      emptyMessage="Nenhum influenciador fechado por outra pessoa no momento."
+                      visibleColumns={visibleColumns}
+                      gridTemplateColumns={gridTemplateColumns}
+                      onUpdate={updateCard}
+                    />
+                  </>
                 )}
                 <SectionBlock
                   title="Geral"
