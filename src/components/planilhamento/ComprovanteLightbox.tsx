@@ -66,7 +66,7 @@ export default function ComprovanteLightbox({ open, onClose, url, parsedData }: 
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-3xl max-h-[92vh] flex flex-col p-0 gap-0 overflow-hidden">
+      <DialogContent className={`${parsedData ? "sm:max-w-5xl" : "sm:max-w-3xl"} max-h-[92vh] flex flex-col p-0 gap-0 overflow-hidden`}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-border/40">
           <DialogHeader className="p-0 space-y-0">
