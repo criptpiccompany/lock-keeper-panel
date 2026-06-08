@@ -326,14 +326,21 @@ export default function PlanilhamentoDiario({
   externalMonth,
   focusedDate,
   compact = false,
+  editAsCloser = false,
 }: {
   closerId?: string;
   externalMonth?: string;
   focusedDate?: string;
   compact?: boolean;
+  /** When true, treats the spreadsheet as fully editable on behalf of `closerId`
+   *  (used by FINANCEIRO Espelhamento). Disables read-only "viewingOther" mode. */
+  editAsCloser?: boolean;
 }) {
-  const { user, isAdmin } = useAuth();
-  const viewingOther = !!closerId && closerId !== user?.id;
+  const { user, isAdmin, isFinanceiro } = useAuth();
+  // viewingOther = read-only mirror. When editAsCloser is on we still write,
+  // but as the target closer (closerId), not the authenticated user.
+  const viewingOther = !!closerId && closerId !== user?.id && !editAsCloser;
+  const effectiveCloserId = (editAsCloser && closerId) ? closerId : user?.id;
   const now = new Date();
   const [internalYear, setInternalYear] = useState(now.getFullYear());
   const [internalMonth, setInternalMonth] = useState(now.getMonth());
