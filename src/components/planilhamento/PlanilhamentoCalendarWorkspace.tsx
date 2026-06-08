@@ -256,6 +256,9 @@ export default function PlanilhamentoCalendarWorkspace({ closerId }: { closerId?
   const selectedSummary = summaries.get(selectedDateKey);
 
   useEffect(() => {
+    let active = true;
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
     const fetchSummaries = async () => {
       if (!user) return;
 
@@ -274,6 +277,7 @@ export default function PlanilhamentoCalendarWorkspace({ closerId }: { closerId?
       }
 
       const { data } = await query;
+      if (!active) return;
       const nextMap = new Map<string, DailySummary>();
 
       for (const row of data || []) {
@@ -294,6 +298,22 @@ export default function PlanilhamentoCalendarWorkspace({ closerId }: { closerId?
     };
 
     fetchSummaries();
+
+    // Realtime: refetch on any change to daily records
+    const scheduleRefetch = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(fetchSummaries, 400);
+    };
+    const channel = supabase
+      .channel(`calendar-workspace-${closerId || user?.id || "all"}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "daily_influencer_records" }, scheduleRefetch)
+      .subscribe();
+
+    return () => {
+      active = false;
+      if (debounceTimer) clearTimeout(debounceTimer);
+      supabase.removeChannel(channel);
+    };
   }, [user, closerId, isAdmin, range.start, range.end]);
 
   const totalSummary = useMemo(() => {
