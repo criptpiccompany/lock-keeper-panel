@@ -195,9 +195,6 @@ export function WorkspaceLayout() {
               <button type="button" className="grid h-[34px] w-[34px] place-items-center rounded-full text-slate-700 transition hover:bg-black/[0.03] hover:text-slate-900">
                 <Bell className="h-4 w-4" />
               </button>
-              <button type="button" className="grid h-[34px] w-[34px] place-items-center rounded-full text-slate-700 transition hover:bg-black/[0.03] hover:text-slate-900">
-                <Info className="h-4 w-4" />
-              </button>
             </div>
 
             <div className="hidden min-w-[178px] items-center gap-[10px] rounded-[20px] bg-white px-3 py-2 shadow-[0_12px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03] sm:flex">
