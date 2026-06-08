@@ -1403,6 +1403,85 @@ export function CloserSharedBoard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Mark-as-closed modal */}
+      <Dialog open={markModalOpen} onOpenChange={setMarkModalOpen}>
+        <DialogContent className="max-w-md gap-0 overflow-hidden rounded-[24px] border-none bg-white p-0 shadow-[0_30px_80px_-30px_rgba(15,23,42,0.35)]">
+          <div className="px-7 pt-7 pb-2">
+            <DialogHeader>
+              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              </div>
+              <DialogTitle className="text-[22px] font-medium tracking-[-0.03em] text-[#1f1f1f]">
+                Esse influenciador foi fechado?
+              </DialogTitle>
+              <DialogDescription className="text-[13px] text-[#6e6e73]">
+                {markCard ? <>Confirme o fechamento de <span className="font-medium text-[#1f1f1f]">@{markCard.instagram_username}</span> e indique quem foi o closer responsável.</> : null}
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          <div className="space-y-4 px-7 pb-4 pt-2">
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">Closer que fechou</label>
+              <Select value={markCloserId} onValueChange={setMarkCloserId} disabled={markStatus === "Concorrência"}>
+                <SelectTrigger className="h-11 rounded-[12px] border-[#ececeb] bg-[#fafaf8] text-[14px]">
+                  <SelectValue placeholder="Selecione o closer" />
+                </SelectTrigger>
+                <SelectContent className="rounded-[14px] border-[#ececeb] bg-white p-1">
+                  {teamMembers.map((member) => (
+                    <SelectItem key={member.id} value={member.id} className="cursor-pointer rounded-[10px] pl-8 pr-3 py-2 text-[13px]">
+                      {member.nome}{member.id === user?.id ? " (você)" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {markStatus === "Concorrência" ? (
+                <p className="text-[11px] text-[#9a9a96]">Concorrência não exige closer.</p>
+              ) : null}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">Status do fechamento</label>
+              <Select value={markStatus} onValueChange={setMarkStatus}>
+                <SelectTrigger className="h-11 rounded-[12px] border-[#ececeb] bg-[#fafaf8] text-[14px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-[14px] border-[#ececeb] bg-white p-1">
+                  {CLOSED_STATUSES.map((option) => {
+                    const meta = STATUS_META[option];
+                    return (
+                      <SelectItem key={option} value={option} className="cursor-pointer rounded-[10px] pl-8 pr-3 py-2 text-[13px]">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: meta.dot }} />
+                          {option}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 border-t border-black/[0.06] bg-[#fafaf8] px-7 py-4">
+            <Button
+              variant="outline"
+              onClick={() => setMarkModalOpen(false)}
+              className="h-10 rounded-full border-[#ececeb] bg-white px-5 text-[13px]"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={confirmMarkClosed}
+              disabled={markSaving || (markStatus !== "Concorrência" && !markCloserId)}
+              className="h-10 rounded-full bg-emerald-600 px-5 text-[13px] font-medium text-white hover:bg-emerald-700"
+            >
+              {markSaving ? "Salvando..." : "Confirmar fechamento"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
