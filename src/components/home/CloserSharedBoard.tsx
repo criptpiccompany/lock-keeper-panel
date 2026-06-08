@@ -266,26 +266,27 @@ function TableRow({
                           !card.classificacao && "bg-[#f7f7f5]"
                         )}
                       >
-                        <span className="text-[#c0c0bc]">—</span>
+                        <EngagementDot value={null} />
                         Nenhum
                       </button>
-                      {CLASSIFICACAO_OPTIONS.map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => onUpdate?.(card.id, { classificacao: option.value })}
-                          className={cn(
-                            "flex w-full items-center gap-2 rounded-[8px] px-2 py-1.5 text-[12px] text-[#3d3d39] hover:bg-[#f7f7f5]",
-                            card.classificacao === option.value && "bg-[#f7f7f5]"
-                          )}
-                        >
-                          <span
-                            className="inline-flex h-3.5 w-3.5 rounded-full border"
-                            style={{ borderColor: option.text, boxShadow: `inset 0 0 0 3px ${option.bg}` }}
-                          />
-                          {option.value}
-                        </button>
-                      ))}
+                      {CLASSIFICACAO_OPTIONS.map((option) => {
+                        const meta = ENGAGEMENT_META[option.value];
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => onUpdate?.(card.id, { classificacao: option.value })}
+                            className={cn(
+                              "flex w-full items-center gap-2 rounded-[8px] px-2 py-1.5 text-[12px] font-medium hover:bg-[#f7f7f5]",
+                              card.classificacao === option.value && "bg-[#f7f7f5]"
+                            )}
+                            style={{ color: meta?.color ?? "#3d3d39" }}
+                          >
+                            <EngagementDot value={option.value} />
+                            {option.value}
+                          </button>
+                        );
+                      })}
                     </div>
                   }
                 >
