@@ -804,6 +804,7 @@ export type Database = {
           archived_from_status: string | null
           assigned_to: string | null
           classificacao: string | null
+          closed_by: string | null
           created_at: string
           created_by: string
           display_name: string
@@ -824,6 +825,7 @@ export type Database = {
           archived_from_status?: string | null
           assigned_to?: string | null
           classificacao?: string | null
+          closed_by?: string | null
           created_at?: string
           created_by: string
           display_name: string
@@ -844,6 +846,7 @@ export type Database = {
           archived_from_status?: string | null
           assigned_to?: string | null
           classificacao?: string | null
+          closed_by?: string | null
           created_at?: string
           created_by?: string
           display_name?: string
@@ -861,6 +864,13 @@ export type Database = {
           {
             foreignKeyName: "team_shared_board_assigned_to_fkey"
             columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_shared_board_closed_by_fkey"
+            columns: ["closed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

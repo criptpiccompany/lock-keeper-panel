@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowUpDown, AtSign, ChevronDown, ChevronRight, Clock3, ExternalLink, FileText, Link as LinkIcon, MoreHorizontal, Plus, Search, SlidersHorizontal, Tag, Wallet, Zap } from "lucide-react";
+import { ArrowUpDown, AtSign, Check, CheckCircle2, ChevronDown, ChevronRight, Clock3, ExternalLink, FileText, Link as LinkIcon, MoreHorizontal, Plus, Search, SlidersHorizontal, Tag, Wallet, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -28,6 +28,8 @@ type TeamBoardCard = KanbanCard & {
   closerName: string;
   assigned_to?: string | null;
   assignedName?: string | null;
+  closed_by?: string | null;
+  closedByName?: string | null;
 };
 
 type TeamMember = { id: string; nome: string };
@@ -45,6 +47,9 @@ type ColumnKey =
   | "valor_negociado"
   | "last_moved_at";
 
+const PROSPECT_STATUSES = ["Fechar", "Abordado", "Negociando"] as const;
+const CLOSED_STATUSES = ["Positivo", "Empatando / Negociar", "Pausado", "Concorrência", "Não posta mais"] as const;
+
 const STATUS_META: Record<string, { bg: string; text: string; dot: string }> = {
   Fechar: { bg: "#f3e8ff", text: "#7c3aed", dot: "#7c3aed" },
   Abordado: { bg: "#ffedd5", text: "#c2410c", dot: "#c2410c" },
@@ -54,6 +59,7 @@ const STATUS_META: Record<string, { bg: string; text: string; dot: string }> = {
   Pausado: { bg: "#fee7e6", text: "#db3a34", dot: "#db3a34" },
   "Com a equipe": { bg: "#e8f8ec", text: "#23a455", dot: "#23a455" },
   "Não posta mais": { bg: "#edf0f3", text: "#617184", dot: "#617184" },
+  Concorrência: { bg: "#fde2e7", text: "#be185d", dot: "#be185d" },
   Golpe: { bg: "#ffe1df", text: "#dc2626", dot: "#dc2626" },
 };
 
@@ -62,10 +68,11 @@ const STATUS_ORDER: Record<string, number> = {
   "Empatando / Negociar": 1,
   Pausado: 2,
   "Com a equipe": 3,
-  "Não posta mais": 4,
-  Negociando: 5,
-  Abordado: 6,
-  Fechar: 7,
+  Concorrência: 4,
+  "Não posta mais": 5,
+  Negociando: 6,
+  Abordado: 7,
+  Fechar: 8,
   Golpe: 99,
 };
 
@@ -191,13 +198,20 @@ function TableRow({
   visibleColumns,
   gridTemplateColumns,
   onUpdate,
+  statusOptions,
+  onCheckClick,
+  showCheck,
 }: {
   card: TeamBoardCard;
   visibleColumns: Array<{ key: ColumnKey; label: string; width: string; sortable?: boolean }>;
   gridTemplateColumns: string;
   onUpdate?: (cardId: string, fields: Partial<KanbanCard>) => Promise<void>;
+  statusOptions: string[];
+  onCheckClick?: (card: TeamBoardCard) => void;
+  showCheck?: boolean;
 }) {
   const [historyOpen, setHistoryOpen] = useState(false);
+  const isClosed = !!card.closed_by;
 
   return (
     <div
@@ -209,7 +223,24 @@ function TableRow({
           case "check":
             return (
               <div key={column.key} className="grid place-items-center">
-                <span className="h-3.5 w-3.5 rounded-full border border-[#d8d8d3] bg-white" />
+                {showCheck ? (
+                  <button
+                    type="button"
+                    onClick={() => onCheckClick?.(card)}
+                    className={cn(
+                      "grid h-4 w-4 place-items-center rounded-[4px] border transition-colors",
+                      isClosed
+                        ? "border-emerald-500 bg-emerald-500 text-white"
+                        : "border-[#d8d8d3] bg-white hover:border-[#1f1f1f]"
+                    )}
+                    title={isClosed ? "Marcado como fechado" : "Marcar como fechado"}
+                    aria-label="Marcar como fechado"
+                  >
+                    {isClosed ? <Check className="h-3 w-3" strokeWidth={3} /> : null}
+                  </button>
+                ) : (
+                  <span className="h-3.5 w-3.5 rounded-full border border-[#d8d8d3] bg-white" />
+                )}
               </div>
             );
           case "status":
@@ -218,7 +249,7 @@ function TableRow({
                 <InlineCell
                   content={
                     <div className="space-y-0.5">
-                      {Object.keys(STATUS_META).filter((status) => status !== "Golpe").map((status) => (
+                      {statusOptions.map((status) => (
                         <button
                           key={status}
                           type="button"
@@ -228,7 +259,7 @@ function TableRow({
                             card.status === status && "bg-[#f7f7f5]"
                           )}
                         >
-                          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: STATUS_META[status].dot }} />
+                          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: (STATUS_META[status] ?? STATUS_META.Fechar).dot }} />
                           {status}
                         </button>
                       ))}
@@ -554,6 +585,9 @@ function SectionBlock({
   visibleColumns,
   gridTemplateColumns,
   onUpdate,
+  statusOptions,
+  onCheckClick,
+  showCheck,
 }: {
   title: string;
   subtitle?: string;
@@ -564,6 +598,9 @@ function SectionBlock({
   visibleColumns: Array<{ key: ColumnKey; label: string; width: string; sortable?: boolean }>;
   gridTemplateColumns: string;
   onUpdate?: (cardId: string, fields: Partial<KanbanCard>) => Promise<void>;
+  statusOptions: string[];
+  onCheckClick?: (card: TeamBoardCard) => void;
+  showCheck?: boolean;
 }) {
   return (
     <section>
@@ -589,6 +626,9 @@ function SectionBlock({
                 visibleColumns={visibleColumns}
                 gridTemplateColumns={gridTemplateColumns}
                 onUpdate={onUpdate}
+                statusOptions={statusOptions}
+                onCheckClick={onCheckClick}
+                showCheck={showCheck}
               />
             ))}
           </div>
@@ -645,7 +685,8 @@ export function CloserSharedBoard() {
     const rawRows = (data || []) as Array<Record<string, unknown>>;
     const creatorIds = [...new Set(rawRows.map((r) => r.created_by as string).filter(Boolean))];
     const assignedIds = [...new Set(rawRows.map((r) => r.assigned_to as string).filter(Boolean))];
-    const idsToFetch = [...new Set([...creatorIds, ...assignedIds])];
+    const closedIds = [...new Set(rawRows.map((r) => r.closed_by as string).filter(Boolean))];
+    const idsToFetch = [...new Set([...creatorIds, ...assignedIds, ...closedIds])];
     let names = new Map<string, string>();
 
     if (idsToFetch.length) {
@@ -660,6 +701,8 @@ export function CloserSharedBoard() {
         closerName: names.get(row.created_by as string) || "Closer",
         assigned_to: (row.assigned_to as string | null) ?? null,
         assignedName: row.assigned_to ? names.get(row.assigned_to as string) || null : null,
+        closed_by: (row.closed_by as string | null) ?? null,
+        closedByName: row.closed_by ? names.get(row.closed_by as string) || null : null,
       }))
     );
     setLoading(false);
@@ -755,9 +798,15 @@ export function CloserSharedBoard() {
     });
   }, [cards, query, sortDir, sortField]);
 
-  const visibleColumns = useMemo(
+  const baseVisibleColumns = useMemo(
     () => COLUMN_DEFS.filter((column) => visibleCols.has(column.key)),
     [visibleCols]
+  );
+
+  // Prepend the "check" column for the to-do behavior (always present in this board).
+  const visibleColumns = useMemo(
+    () => [{ key: "check" as ColumnKey, label: "", width: "28px" }, ...baseVisibleColumns],
+    [baseVisibleColumns]
   );
 
   const dynamicInfluencerWidth = useMemo(() => {
@@ -797,29 +846,71 @@ export function CloserSharedBoard() {
   };
 
   const sections = useMemo(() => {
-    const closing: TeamBoardCard[] = [];
-    const teamClosed: TeamBoardCard[] = [];
     const forYou: TeamBoardCard[] = [];
     const general: TeamBoardCard[] = [];
-
-    const PROSPECT_STATUSES = ["Fechar", "Abordado", "Negociando"];
-    const CLOSED_STATUSES = ["Positivo", "Empatando / Negociar", "Pausado", "Com a equipe", "Não posta mais"];
+    const closedByCloser = new Map<string, { closerId: string; closerName: string; cards: TeamBoardCard[] }>();
+    const concorrencia: TeamBoardCard[] = [];
 
     filteredCards.forEach((card) => {
-      if (CLOSED_STATUSES.includes(card.status)) {
-        if (card.closer_id === user?.id) closing.push(card);
-        else teamClosed.push(card);
+      // Concorrência sempre vai pro grupo "Concorrência", independente de quem fechou
+      if (card.status === "Concorrência") {
+        concorrencia.push(card);
         return;
       }
 
-      if (PROSPECT_STATUSES.includes(card.status)) {
+      if ((CLOSED_STATUSES as readonly string[]).includes(card.status)) {
+        const closerId = card.closed_by || card.closer_id;
+        const closerName = card.closed_by ? card.closedByName || "Closer" : card.closerName || "Closer";
+        if (!closedByCloser.has(closerId)) {
+          closedByCloser.set(closerId, { closerId, closerName, cards: [] });
+        }
+        closedByCloser.get(closerId)!.cards.push(card);
+        return;
+      }
+
+      if ((PROSPECT_STATUSES as readonly string[]).includes(card.status)) {
         if (card.assigned_to === user?.id) forYou.push(card);
         else general.push(card);
       }
     });
 
-    return { closing, teamClosed, forYou, general };
+    const closerGroups = Array.from(closedByCloser.values()).sort((a, b) => {
+      // current user first, then alphabetical
+      if (a.closerId === user?.id) return -1;
+      if (b.closerId === user?.id) return 1;
+      return a.closerName.localeCompare(b.closerName, "pt-BR", { sensitivity: "base" });
+    });
+
+    return { forYou, general, closerGroups, concorrencia };
   }, [filteredCards, user?.id]);
+
+  // Mark-as-closed modal state
+  const [markModalOpen, setMarkModalOpen] = useState(false);
+  const [markCard, setMarkCard] = useState<TeamBoardCard | null>(null);
+  const [markCloserId, setMarkCloserId] = useState<string>("");
+  const [markStatus, setMarkStatus] = useState<string>("Positivo");
+  const [markSaving, setMarkSaving] = useState(false);
+
+  const openMarkModal = (card: TeamBoardCard) => {
+    setMarkCard(card);
+    setMarkCloserId(card.closed_by || user?.id || "");
+    setMarkStatus(card.status && (CLOSED_STATUSES as readonly string[]).includes(card.status) ? card.status : "Positivo");
+    setMarkModalOpen(true);
+  };
+
+  const confirmMarkClosed = async () => {
+    if (!markCard) return;
+    setMarkSaving(true);
+    const isConcorrencia = markStatus === "Concorrência";
+    await updateCard(markCard.id, {
+      status: markStatus,
+      // @ts-expect-error closed_by exists in DB but not in KanbanCard type
+      closed_by: isConcorrencia ? null : markCloserId || null,
+    });
+    setMarkSaving(false);
+    setMarkModalOpen(false);
+    setMarkCard(null);
+  };
 
   const handleQuickAdd = async () => {
     const normalized = newInfluencer
@@ -892,7 +983,7 @@ export function CloserSharedBoard() {
               <div className="ml-1 flex items-center gap-0.5 rounded-md border border-[#e7e7e3] bg-white p-0.5">
                 {([
                   { key: "prospectar", label: "Prospectar", count: sections.forYou.length + sections.general.length },
-                  { key: "fechados", label: "Fechados", count: sections.closing.length + sections.teamClosed.length },
+                  { key: "fechados", label: "Fechados", count: sections.closerGroups.reduce((acc, g) => acc + g.cards.length, 0) + sections.concorrencia.length },
                 ] as const).map((tab) => (
                   <button
                     key={tab.key}
@@ -1040,21 +1131,34 @@ export function CloserSharedBoard() {
               <>
                 {activeTab === "fechados" ? (
                   <>
-                    <SectionBlock
-                      title="Fechando"
-                      cards={sections.closing}
-                      visibleColumns={visibleColumns}
-                      gridTemplateColumns={gridTemplateColumns}
-                      onUpdate={updateCard}
-                    />
-                    <SectionBlock
-                      title="Equipe Fechou"
-                      cards={sections.teamClosed}
-                      emptyMessage="Nenhum influenciador fechado por outra pessoa no momento."
-                      visibleColumns={visibleColumns}
-                      gridTemplateColumns={gridTemplateColumns}
-                      onUpdate={updateCard}
-                    />
+                    {sections.closerGroups.length === 0 && sections.concorrencia.length === 0 ? (
+                      <div className="px-6 py-4 text-[12px] text-[#aaa9a4]">Nenhum influenciador fechado ainda.</div>
+                    ) : null}
+                    {sections.closerGroups.map((group) => (
+                      <SectionBlock
+                        key={group.closerId}
+                        title={group.closerId === user?.id ? `${group.closerName} (você)` : group.closerName}
+                        cards={group.cards}
+                        visibleColumns={visibleColumns}
+                        gridTemplateColumns={gridTemplateColumns}
+                        onUpdate={updateCard}
+                        statusOptions={CLOSED_STATUSES as unknown as string[]}
+                        onCheckClick={openMarkModal}
+                        showCheck
+                      />
+                    ))}
+                    {sections.concorrencia.length > 0 ? (
+                      <SectionBlock
+                        title="Concorrência"
+                        cards={sections.concorrencia}
+                        visibleColumns={visibleColumns}
+                        gridTemplateColumns={gridTemplateColumns}
+                        onUpdate={updateCard}
+                        statusOptions={CLOSED_STATUSES as unknown as string[]}
+                        onCheckClick={openMarkModal}
+                        showCheck
+                      />
+                    ) : null}
                   </>
                 ) : (
                   <>
@@ -1065,6 +1169,9 @@ export function CloserSharedBoard() {
                       visibleColumns={visibleColumns}
                       gridTemplateColumns={gridTemplateColumns}
                       onUpdate={updateCard}
+                      statusOptions={PROSPECT_STATUSES as unknown as string[]}
+                      onCheckClick={openMarkModal}
+                      showCheck
                     />
                     <SectionBlock
                       title="Geral"
@@ -1073,6 +1180,9 @@ export function CloserSharedBoard() {
                       visibleColumns={visibleColumns}
                       gridTemplateColumns={gridTemplateColumns}
                       onUpdate={updateCard}
+                      statusOptions={PROSPECT_STATUSES as unknown as string[]}
+                      onCheckClick={openMarkModal}
+                      showCheck
                     />
                   </>
                 )}
@@ -1289,6 +1399,85 @@ export function CloserSharedBoard() {
               className="h-11 rounded-full bg-[#1f1f1f] px-6 text-[13px] font-medium text-white hover:bg-[#111111]"
             >
               {saving ? "Adicionando..." : "Adicionar influenciador"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mark-as-closed modal */}
+      <Dialog open={markModalOpen} onOpenChange={setMarkModalOpen}>
+        <DialogContent className="max-w-md gap-0 overflow-hidden rounded-[24px] border-none bg-white p-0 shadow-[0_30px_80px_-30px_rgba(15,23,42,0.35)]">
+          <div className="px-7 pt-7 pb-2">
+            <DialogHeader>
+              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              </div>
+              <DialogTitle className="text-[22px] font-medium tracking-[-0.03em] text-[#1f1f1f]">
+                Esse influenciador foi fechado?
+              </DialogTitle>
+              <DialogDescription className="text-[13px] text-[#6e6e73]">
+                {markCard ? <>Confirme o fechamento de <span className="font-medium text-[#1f1f1f]">@{markCard.instagram_username}</span> e indique quem foi o closer responsável.</> : null}
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          <div className="space-y-4 px-7 pb-4 pt-2">
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">Closer que fechou</label>
+              <Select value={markCloserId} onValueChange={setMarkCloserId} disabled={markStatus === "Concorrência"}>
+                <SelectTrigger className="h-11 rounded-[12px] border-[#ececeb] bg-[#fafaf8] text-[14px]">
+                  <SelectValue placeholder="Selecione o closer" />
+                </SelectTrigger>
+                <SelectContent className="rounded-[14px] border-[#ececeb] bg-white p-1">
+                  {teamMembers.map((member) => (
+                    <SelectItem key={member.id} value={member.id} className="cursor-pointer rounded-[10px] pl-8 pr-3 py-2 text-[13px]">
+                      {member.nome}{member.id === user?.id ? " (você)" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {markStatus === "Concorrência" ? (
+                <p className="text-[11px] text-[#9a9a96]">Concorrência não exige closer.</p>
+              ) : null}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">Status do fechamento</label>
+              <Select value={markStatus} onValueChange={setMarkStatus}>
+                <SelectTrigger className="h-11 rounded-[12px] border-[#ececeb] bg-[#fafaf8] text-[14px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-[14px] border-[#ececeb] bg-white p-1">
+                  {CLOSED_STATUSES.map((option) => {
+                    const meta = STATUS_META[option];
+                    return (
+                      <SelectItem key={option} value={option} className="cursor-pointer rounded-[10px] pl-8 pr-3 py-2 text-[13px]">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: meta.dot }} />
+                          {option}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 border-t border-black/[0.06] bg-[#fafaf8] px-7 py-4">
+            <Button
+              variant="outline"
+              onClick={() => setMarkModalOpen(false)}
+              className="h-10 rounded-full border-[#ececeb] bg-white px-5 text-[13px]"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={confirmMarkClosed}
+              disabled={markSaving || (markStatus !== "Concorrência" && !markCloserId)}
+              className="h-10 rounded-full bg-emerald-600 px-5 text-[13px] font-medium text-white hover:bg-emerald-700"
+            >
+              {markSaving ? "Salvando..." : "Confirmar fechamento"}
             </Button>
           </div>
         </DialogContent>
