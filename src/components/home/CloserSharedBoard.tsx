@@ -740,8 +740,8 @@ export function CloserSharedBoard() {
         </div>
       </div>
 
-      <div className="overflow-x-auto overflow-y-hidden pb-2">
-        <div className="min-w-[920px]">
+      <div className="pb-2">
+        <div className="w-full">
           <div className="mb-3 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Button
