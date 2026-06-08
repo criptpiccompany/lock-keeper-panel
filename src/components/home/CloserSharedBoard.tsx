@@ -515,7 +515,7 @@ export function CloserSharedBoard() {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [visibleCols, setVisibleCols] = useState<Set<ColumnKey>>(new Set(COLUMN_DEFS.map((column) => column.key)));
   const [teamClosedCollapsed, setTeamClosedCollapsed] = useState(true);
-  const [activeTab, setActiveTab] = useState<"fechados" | null>(null);
+  const [activeTab, setActiveTab] = useState<"prospectar" | "fechados">("prospectar");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newInfluencer, setNewInfluencer] = useState("");
   const [saving, setSaving] = useState(false);
