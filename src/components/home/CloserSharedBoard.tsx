@@ -615,7 +615,6 @@ export function CloserSharedBoard() {
         });
 
     return [...list].sort((a, b) => {
-    return [...list].sort((a, b) => {
       // Prioridade sempre vai para o topo
       const priorityA = a.classificacao === "Prioridade" ? 0 : 1;
       const priorityB = b.classificacao === "Prioridade" ? 0 : 1;
