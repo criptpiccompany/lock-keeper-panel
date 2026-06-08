@@ -123,7 +123,7 @@ export function WorkspaceLayout() {
         { label: "Minha Lista", path: "/meu" },
         { label: "Planilhamento", path: "/registro" },
         { label: "Painel", path: "/painel" },
-        { label: "Gestão", path: "/gestao-influenciadores" },
+        
       ];
 
   const handleSignOut = async () => {
