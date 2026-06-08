@@ -30,7 +30,7 @@ interface UserWithRole {
   id: string;
   nome: string;
   email: string;
-  role: 'CLOSER' | 'ADMIN' | 'SUBADMIN';
+  role: 'CLOSER' | 'ADMIN' | 'SUBADMIN' | 'FINANCEIRO';
   commission_rate: number;
   team_id: string | null;
 }
@@ -140,7 +140,7 @@ export default function Admin() {
           id: profile.id,
           nome: profile.nome,
           email: '',
-          role: (userRole?.role as 'CLOSER' | 'ADMIN' | 'SUBADMIN') || 'CLOSER',
+          role: (userRole?.role as 'CLOSER' | 'ADMIN' | 'SUBADMIN' | 'FINANCEIRO') || 'CLOSER',
           commission_rate: profile.commission_rate ?? 0.1,
           team_id: profile.team_id,
         };
@@ -251,10 +251,9 @@ export default function Admin() {
     }
   };
 
-  const handleToggleRole = async (userId: string, currentRole: string) => {
+  const handleSetRole = async (userId: string, newRole: UserWithRole['role']) => {
     if (userId === user?.id) { toast.error('Você não pode alterar seu próprio papel'); return; }
     setUpdatingRole(userId);
-    const newRole = currentRole === 'ADMIN' ? 'CLOSER' : 'ADMIN';
     try {
       const { error } = await supabase.from('user_roles').update({ role: newRole }).eq('user_id', userId);
       if (error) throw error;
