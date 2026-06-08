@@ -344,9 +344,14 @@
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  padding: 6px 8% 14px;
+  padding: 6px 0 14px;
   scroll-padding-inline: 8%;
   -webkit-overflow-scrolling: touch;
+}
+.cpic-carousel::before,
+.cpic-carousel::after {
+  content: "";
+  flex: 0 0 8%;
 }
 .cpic-carousel::-webkit-scrollbar { display: none; }
 .cpic-carousel-slide {
@@ -355,7 +360,9 @@
   min-width: 0;
 }
 @media (max-width: 640px) {
-  .cpic-carousel { padding-inline: 6%; scroll-padding-inline: 6%; }
+  .cpic-carousel { scroll-padding-inline: 6%; }
+  .cpic-carousel::before,
+  .cpic-carousel::after { flex-basis: 6%; }
   .cpic-carousel-slide { flex-basis: 88%; }
 }
 
