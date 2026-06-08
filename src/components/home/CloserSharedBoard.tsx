@@ -768,7 +768,7 @@ export function CloserSharedBoard() {
                   <button
                     key={tab.key}
                     type="button"
-                    onClick={() => setActiveTab(tab.key)}
+                    onClick={() => setActiveTab((prev) => (prev === tab.key ? null : tab.key))}
                     className={cn(
                       "h-7 rounded-[6px] px-2.5 text-[11px] font-medium transition-colors",
                       activeTab === tab.key
