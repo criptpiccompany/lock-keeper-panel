@@ -42,10 +42,11 @@ interface Props {
   influencerLines?: InfluencerLine[];      // for "marcar influenciador"
   legacyReceipts?: LegacyReceipt[];         // old comprovante_url from daily_influencer_records
   compact?: boolean;
+  requireFocus?: boolean;                   // when true, paste only triggers if this carousel is focused
 }
 
 export default function DailyReceiptsCarousel({
-  date, closerId, teamId, canEdit = true, influencerLines = [], legacyReceipts = [], compact = false,
+  date, closerId, teamId, canEdit = true, influencerLines = [], legacyReceipts = [], compact = false, requireFocus = false,
 }: Props) {
   const { user } = useAuth();
   const [receipts, setReceipts] = useState<ReceiptRow[]>([]);
@@ -139,14 +140,19 @@ export default function DailyReceiptsCarousel({
     e.target.value = "";
   };
 
-  // Paste support when carousel is in viewport
+  // Paste support when carousel is in viewport (and focused, if scoped)
   useEffect(() => {
     if (!canEdit) return;
     const handler = (e: ClipboardEvent) => {
       if (!carouselRef.current) return;
-      const rect = carouselRef.current.getBoundingClientRect();
-      const inView = rect.top < window.innerHeight && rect.bottom > 0;
-      if (!inView) return;
+      if (requireFocus) {
+        const active = document.activeElement;
+        if (!active || !carouselRef.current.contains(active)) return;
+      } else {
+        const rect = carouselRef.current.getBoundingClientRect();
+        const inView = rect.top < window.innerHeight && rect.bottom > 0;
+        if (!inView) return;
+      }
       const items = e.clipboardData?.items;
       if (!items) return;
       const files: File[] = [];
@@ -161,7 +167,7 @@ export default function DailyReceiptsCarousel({
     };
     document.addEventListener("paste", handler);
     return () => document.removeEventListener("paste", handler);
-  }, [canEdit, closerId, date]);
+  }, [canEdit, closerId, date, requireFocus]);
 
   const handleDelete = async (id: string) => {
     if (!user) return;
@@ -205,14 +211,24 @@ export default function DailyReceiptsCarousel({
   }, [receipts, legacyReceipts, influencerLines]);
 
   return (
-    <div ref={carouselRef} className={cn("rounded-2xl border bg-white/60 backdrop-blur-sm px-4 py-3", compact ? "" : "mt-4")}>
+    <div
+      ref={carouselRef}
+      tabIndex={requireFocus ? 0 : -1}
+      className={cn(
+        "rounded-2xl border bg-white/60 backdrop-blur-sm px-4 py-3 outline-none",
+        compact ? "" : "mt-4",
+        requireFocus && "focus-within:border-[#6ea93d] focus-within:bg-white"
+      )}
+    >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <h4 className="text-[13px] font-semibold tracking-[-0.01em] text-[#2c2c2c]">Comprovantes do dia</h4>
           <span className="text-[11px] text-muted-foreground">{allItems.length}</span>
         </div>
         {canEdit && (
-          <p className="hidden sm:block text-[11px] text-muted-foreground">Arraste, cole (Ctrl+V) ou clique em +</p>
+          <p className="hidden sm:block text-[11px] text-muted-foreground">
+            {requireFocus ? "Clique aqui e cole (Ctrl+V), arraste ou use +" : "Arraste, cole (Ctrl+V) ou clique em +"}
+          </p>
         )}
       </div>
 
