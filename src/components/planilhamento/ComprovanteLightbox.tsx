@@ -149,3 +149,14 @@ export default function ComprovanteLightbox({ open, onClose, url, parsedData }: 
     </Dialog>
   );
 }
+
+function Field({ label, value, highlight, mono }: { label: string; value: string; highlight?: boolean; mono?: boolean }) {
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{label}</p>
+      <p className={`${highlight ? "text-base font-semibold text-[#2c2c2c]" : "text-[13px] text-foreground"} ${mono ? "font-mono text-[11px] break-all" : "break-words"}`}>
+        {value}
+      </p>
+    </div>
+  );
+}
