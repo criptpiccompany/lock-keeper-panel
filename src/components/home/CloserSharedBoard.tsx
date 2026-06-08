@@ -684,8 +684,7 @@ export function CloserSharedBoard() {
     let names = new Map<string, string>();
 
     if (idsToFetch.size) {
-      // @ts-expect-error rpc name not in generated types yet
-      const { data: profiles } = await supabase.rpc("get_shared_board_users");
+      const { data: profiles } = await (supabase.rpc as any)("get_shared_board_users");
       if (Array.isArray(profiles)) {
         names = new Map(
           (profiles as Array<{ id: string; nome: string | null }>)
