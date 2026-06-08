@@ -357,6 +357,9 @@ export type Database = {
           file_type: string | null
           file_url: string
           id: string
+          parse_status: string | null
+          parsed_at: string | null
+          parsed_data: Json | null
           team_id: string | null
           updated_at: string
           uploaded_by: string
@@ -371,6 +374,9 @@ export type Database = {
           file_type?: string | null
           file_url: string
           id?: string
+          parse_status?: string | null
+          parsed_at?: string | null
+          parsed_data?: Json | null
           team_id?: string | null
           updated_at?: string
           uploaded_by: string
@@ -385,6 +391,9 @@ export type Database = {
           file_type?: string | null
           file_url?: string
           id?: string
+          parse_status?: string | null
+          parsed_at?: string | null
+          parsed_data?: Json | null
           team_id?: string | null
           updated_at?: string
           uploaded_by?: string
