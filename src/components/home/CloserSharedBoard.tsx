@@ -1105,8 +1105,8 @@ export function CloserSharedBoard() {
             </div>
           ) : null}
 
-          <div className="-mx-1 overflow-x-auto">
-            <div className="min-w-[640px] px-1">
+          <div className="-mx-1">
+            <div className="px-1">
               <div
                 className="grid gap-1.5 border-b border-[#ecece8] px-1 pb-2 text-[10px] font-medium uppercase tracking-[0.12em] text-[#b0b0aa]"
                 style={{ gridTemplateColumns }}
@@ -1136,7 +1136,7 @@ export function CloserSharedBoard() {
                 ))}
               </div>
 
-              <div className="space-y-4 px-1 pt-3">
+              <div className="max-h-[720px] space-y-4 overflow-y-auto px-1 pt-3">
                 {loading ? (
                   <div className="px-3 py-10 text-[12px] text-[#aaa9a4]">Carregando board compartilhado...</div>
                 ) : (
