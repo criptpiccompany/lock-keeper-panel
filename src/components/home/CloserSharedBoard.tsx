@@ -515,7 +515,7 @@ export function CloserSharedBoard() {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [visibleCols, setVisibleCols] = useState<Set<ColumnKey>>(new Set(COLUMN_DEFS.map((column) => column.key)));
   const [teamClosedCollapsed, setTeamClosedCollapsed] = useState(true);
-  const [activeTab, setActiveTab] = useState<"fechados" | null>(null);
+  const [activeTab, setActiveTab] = useState<"prospectar" | "fechados">("prospectar");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newInfluencer, setNewInfluencer] = useState("");
   const [saving, setSaving] = useState(false);
@@ -694,23 +694,20 @@ export function CloserSharedBoard() {
     const forYou: TeamBoardCard[] = [];
     const general: TeamBoardCard[] = [];
 
+    const PROSPECT_STATUSES = ["Fechar", "Abordado", "Negociando"];
+    const CLOSED_STATUSES = ["Positivo", "Empatando / Negociar", "Pausado", "Com a equipe", "Não posta mais"];
+
     filteredCards.forEach((card) => {
-      if (["Positivo", "Empatando / Negociar"].includes(card.status)) {
-        closing.push(card);
+      if (CLOSED_STATUSES.includes(card.status)) {
+        if (card.closer_id === user?.id) closing.push(card);
+        else teamClosed.push(card);
         return;
       }
 
-      if (card.status === "Com a equipe") {
-        teamClosed.push(card);
-        return;
+      if (PROSPECT_STATUSES.includes(card.status)) {
+        if (card.assigned_to === user?.id) forYou.push(card);
+        else general.push(card);
       }
-
-      if (card.assigned_to === user?.id) {
-        forYou.push(card);
-        return;
-      }
-
-      general.push(card);
     });
 
     return { closing, teamClosed, forYou, general };
@@ -786,12 +783,13 @@ export function CloserSharedBoard() {
               </Button>
               <div className="ml-1 flex items-center gap-0.5 rounded-md border border-[#e7e7e3] bg-white p-0.5">
                 {([
+                  { key: "prospectar", label: "Prospectar", count: sections.forYou.length + sections.general.length },
                   { key: "fechados", label: "Fechados", count: sections.closing.length + sections.teamClosed.length },
                 ] as const).map((tab) => (
                   <button
                     key={tab.key}
                     type="button"
-                    onClick={() => setActiveTab((prev) => (prev === tab.key ? null : tab.key))}
+                    onClick={() => setActiveTab(tab.key)}
                     className={cn(
                       "h-7 rounded-[6px] px-2.5 text-[11px] font-medium transition-colors",
                       activeTab === tab.key
