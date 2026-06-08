@@ -138,6 +138,26 @@ function formatPercent(val: number | null): string {
   return (val * 100).toFixed(1) + "%";
 }
 
+// BRL input mask: stores formatted string like "1.000,00" in state.
+function maskBRL(input: string): string {
+  const digits = (input ?? "").replace(/\D/g, "");
+  if (!digits) return "";
+  const cents = parseInt(digits, 10);
+  return (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function parseBRL(masked: string): number {
+  if (!masked) return 0;
+  const normalized = masked.replace(/\./g, "").replace(",", ".");
+  const n = parseFloat(normalized);
+  return isNaN(n) ? 0 : n;
+}
+
+function formatBRLFromNumber(val: number | null | undefined): string {
+  if (val === null || val === undefined) return "";
+  return Number(val).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function getHandleInitials(handle: string): string {
   return handle.replace("@", "").slice(0, 2).toUpperCase();
 }
