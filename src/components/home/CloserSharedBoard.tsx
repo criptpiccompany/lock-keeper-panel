@@ -196,6 +196,8 @@ function TableRow({
   gridTemplateColumns: string;
   onUpdate?: (cardId: string, fields: Partial<KanbanCard>) => Promise<void>;
 }) {
+  const [historyOpen, setHistoryOpen] = useState(false);
+
   return (
     <div
       className="grid items-center gap-1.5 border-b border-[#efefec] px-4 py-2.5 text-[12px] text-[#52524f]"
@@ -253,6 +255,21 @@ function TableRow({
                       <ExternalLink className="h-3.5 w-3.5" />
                     </a>
                   ) : null}
+                  <button
+                    type="button"
+                    onClick={() => setHistoryOpen(true)}
+                    className="shrink-0 text-[#b2b2ad] transition-colors hover:text-[#71716c]"
+                    title="Ver histórico"
+                    aria-label="Ver histórico"
+                  >
+                    <Clock3 className="h-3.5 w-3.5" />
+                  </button>
+                  <CardHistorySheet
+                    cardId={card.id}
+                    cardName={card.display_name}
+                    open={historyOpen}
+                    onOpenChange={setHistoryOpen}
+                  />
                 </div>
               </div>
             );
