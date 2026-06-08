@@ -966,7 +966,7 @@ export function CloserSharedBoard() {
   };
 
   return (
-    <section className="overflow-hidden rounded-[30px] bg-white p-6 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.08)] ring-1 ring-black/[0.03] lg:p-7">
+    <section className="flex h-full flex-col overflow-hidden rounded-[30px] bg-white p-6 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.08)] ring-1 ring-black/[0.03] lg:p-7">
       <div className="mb-6">
         <div>
           <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#9a9a95]">Time</span>
