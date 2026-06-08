@@ -41,18 +41,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [viewAsRole, setViewAsRoleState] = useState<UserRole | null>(() => {
-    try {
-      const v = localStorage.getItem('viewAsRole');
-      return v === 'CLOSER' || v === 'ADMIN' || v === 'SUBADMIN' || v === 'FINANCEIRO' ? (v as UserRole) : null;
-    } catch { return null; }
-  });
+  const [viewAsRole, setViewAsRoleState] = useState<UserRole | null>(null);
 
   const setViewAsRole = (role: UserRole | null) => {
     setViewAsRoleState(role);
     try {
-      if (role) localStorage.setItem('viewAsRole', role);
-      else localStorage.removeItem('viewAsRole');
+      localStorage.removeItem('viewAsRole');
     } catch {}
   };
 
@@ -108,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setLoading(false);
           }, 0);
         } else {
+          setViewAsRole(null);
           setUser(null);
           setLoading(false);
         }
