@@ -952,6 +952,13 @@ export type Database = {
           owner_nome: string
         }[]
       }
+      get_shared_board_users: {
+        Args: never
+        Returns: {
+          id: string
+          nome: string
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
