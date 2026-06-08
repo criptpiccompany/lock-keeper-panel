@@ -917,7 +917,7 @@ export function CloserSharedBoard() {
                   gridTemplateColumns={gridTemplateColumns}
                   onUpdate={updateCard}
                 />
-                {activeTab === "closing" ? (
+                {activeTab === "closing" && (
                   <SectionBlock
                     title="Fechando"
                     cards={sections.closing}
@@ -925,7 +925,8 @@ export function CloserSharedBoard() {
                     gridTemplateColumns={gridTemplateColumns}
                     onUpdate={updateCard}
                   />
-                ) : (
+                )}
+                {activeTab === "teamClosed" && (
                   <SectionBlock
                     title="Equipe Fechou"
                     cards={sections.teamClosed}
