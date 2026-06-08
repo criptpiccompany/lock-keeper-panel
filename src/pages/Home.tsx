@@ -791,7 +791,7 @@ export default function Home() {
               </SourceDualPanel>
             </div>
 
-            <div className="min-w-0">
+            <div className="flex h-full min-w-0 flex-col">
               <CloserSharedBoard />
             </div>
           </div>
