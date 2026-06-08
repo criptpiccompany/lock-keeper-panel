@@ -870,7 +870,7 @@ export default function PlanilhamentoDiario({
       } else {
         payload.date = modalDate;
         payload.influencer_id = formInfluencerId;
-        payload.closer_id = user.id;
+        payload.closer_id = effectiveCloserId;
         payload.comprovante_url = comprovanteUrl || null;
         payload.comprovante_url_2 = comprovanteUrl2 || null;
         const { data: insertData, error } = await supabase
