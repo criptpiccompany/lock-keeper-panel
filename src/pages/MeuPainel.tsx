@@ -249,6 +249,7 @@ export default function MeuPainel() {
                 </tbody>
               </table>
             </div>
+            )}
           </div>
         )}
       </div>
