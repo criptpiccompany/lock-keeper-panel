@@ -3,7 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-type UserRole = 'CLOSER' | 'ADMIN' | 'SUBADMIN';
+type UserRole = 'CLOSER' | 'ADMIN' | 'SUBADMIN' | 'FINANCEIRO';
 
 type AccountStatus = 'pending' | 'approved' | 'rejected' | 'blocked';
 
@@ -27,6 +27,8 @@ interface AuthContextType {
   isAdmin: boolean;
   isSubAdmin: boolean;
   isCloser: boolean;
+  isFinanceiro: boolean;
+  isGlobalViewer: boolean;
   realRole: UserRole | null;
   viewAsRole: UserRole | null;
   setViewAsRole: (role: UserRole | null) => void;
@@ -42,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [viewAsRole, setViewAsRoleState] = useState<UserRole | null>(() => {
     try {
       const v = localStorage.getItem('viewAsRole');
-      return v === 'CLOSER' || v === 'ADMIN' || v === 'SUBADMIN' ? (v as UserRole) : null;
+      return v === 'CLOSER' || v === 'ADMIN' || v === 'SUBADMIN' || v === 'FINANCEIRO' ? (v as UserRole) : null;
     } catch { return null; }
   });
 
@@ -56,7 +58,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
     try {
-      // Fetch profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('nome, status, rejection_reason, team_id')
@@ -68,7 +69,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
-      // Fetch role
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
@@ -98,13 +98,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         setSession(currentSession);
-        
         if (currentSession?.user) {
-          // Use setTimeout to avoid blocking the auth state change
           setTimeout(async () => {
             const userProfile = await fetchUserProfile(currentSession.user.id);
             setUser(userProfile);
@@ -117,7 +114,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       if (currentSession?.user) {
@@ -130,23 +126,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => { subscription.unsubscribe(); };
   }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         toast.error('Erro ao fazer login', { description: error.message });
         return { error };
       }
-      
       toast.success('Login realizado com sucesso!');
       return { error: null };
     } catch (error) {
@@ -157,27 +146,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, nome: string, inviteToken?: string) => {
     try {
       const metadata: Record<string, string> = { nome };
-      if (inviteToken) {
-        metadata.invite_token = inviteToken;
-      }
-      
+      if (inviteToken) metadata.invite_token = inviteToken;
       const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: metadata,
-        },
+        email, password,
+        options: { emailRedirectTo: window.location.origin, data: metadata },
       });
-      
       if (error) {
         toast.error('Erro ao criar conta', { description: error.message });
         return { error };
       }
-      
-      toast.success('Conta criada com sucesso!', { 
-        description: 'Você já pode fazer login.' 
-      });
+      toast.success('Conta criada com sucesso!', { description: 'Você já pode fazer login.' });
       return { error: null };
     } catch (error) {
       return { error: error as Error };
@@ -192,21 +170,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const realRole = user?.role ?? null;
-  // Only admins/subadmins may impersonate; closers cannot escalate.
-  const canImpersonate = realRole === 'ADMIN' || realRole === 'SUBADMIN';
+  const canImpersonate = realRole === 'ADMIN' || realRole === 'SUBADMIN' || realRole === 'FINANCEIRO';
   const effectiveRole: UserRole | null = canImpersonate && viewAsRole ? viewAsRole : realRole;
   const isImpersonating = !!(canImpersonate && viewAsRole && viewAsRole !== realRole);
 
   const value: AuthContextType = {
-    user,
-    session,
-    loading,
-    signIn,
-    signUp,
-    signOut,
+    user, session, loading, signIn, signUp, signOut,
     isAdmin: effectiveRole === 'ADMIN',
     isSubAdmin: effectiveRole === 'SUBADMIN',
     isCloser: effectiveRole === 'CLOSER',
+    isFinanceiro: effectiveRole === 'FINANCEIRO',
+    isGlobalViewer: effectiveRole === 'ADMIN' || effectiveRole === 'FINANCEIRO',
     realRole,
     viewAsRole: canImpersonate ? viewAsRole : null,
     setViewAsRole,
@@ -218,8 +192,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (context === undefined) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 }

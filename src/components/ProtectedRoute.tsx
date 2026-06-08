@@ -5,9 +5,10 @@ import { Loader2 } from 'lucide-react';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAdmin?: boolean;
+  requireFinanceiro?: boolean;
 }
 
-export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, requireAdmin = false, requireFinanceiro = false }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const location = useLocation();
 
@@ -23,11 +24,18 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (user.status !== 'approved' && user.role !== 'ADMIN' && user.role !== 'SUBADMIN') {
+  const elevated = user.role === 'ADMIN' || user.role === 'SUBADMIN' || user.role === 'FINANCEIRO';
+
+  if (user.status !== 'approved' && !elevated) {
     return <Navigate to="/aguardando-aprovacao" replace />;
   }
 
   if (requireAdmin && user.role !== 'ADMIN' && user.role !== 'SUBADMIN') {
+    if (user.role === 'FINANCEIRO') return <Navigate to="/financeiro/comprovantes" replace />;
+    return <Navigate to="/meu" replace />;
+  }
+
+  if (requireFinanceiro && user.role !== 'ADMIN' && user.role !== 'FINANCEIRO') {
     return <Navigate to="/meu" replace />;
   }
 
