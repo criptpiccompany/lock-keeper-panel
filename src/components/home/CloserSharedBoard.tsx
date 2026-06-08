@@ -645,15 +645,8 @@ export function CloserSharedBoard() {
   }, [filteredCards]);
 
   const gridTemplateColumns = useMemo(
-    () =>
-      visibleColumns
-        .map((column) => {
-          if (column.key === "display_name") return `${dynamicInfluencerWidth}px`;
-          if (column.key === "apoios") return `${dynamicBridgeWidth}px`;
-          return column.width;
-        })
-        .join(" "),
-    [dynamicBridgeWidth, dynamicInfluencerWidth, visibleColumns]
+    () => visibleColumns.map((column) => column.width).join(" "),
+    [visibleColumns]
   );
 
   const toggleColumn = (key: ColumnKey) => {
