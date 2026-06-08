@@ -852,15 +852,14 @@ export function CloserSharedBoard() {
     const concorrencia: TeamBoardCard[] = [];
 
     filteredCards.forEach((card) => {
-      // Concorrência sempre vai pro grupo "Concorrência", independente de quem fechou
-      if (card.status === "Concorrência") {
-        concorrencia.push(card);
-        return;
-      }
-
-      if ((CLOSED_STATUSES as readonly string[]).includes(card.status)) {
-        const closerId = card.closed_by || card.closer_id;
-        const closerName = card.closed_by ? card.closedByName || "Closer" : card.closerName || "Closer";
+      // Só vai para a aba "Fechados" quando o to-do estiver marcado (closed_by definido)
+      if (card.closed_by) {
+        if (card.status === "Concorrência") {
+          concorrencia.push(card);
+          return;
+        }
+        const closerId = card.closed_by;
+        const closerName = card.closedByName || "Closer";
         if (!closedByCloser.has(closerId)) {
           closedByCloser.set(closerId, { closerId, closerName, cards: [] });
         }
@@ -868,10 +867,9 @@ export function CloserSharedBoard() {
         return;
       }
 
-      if ((PROSPECT_STATUSES as readonly string[]).includes(card.status)) {
-        if (card.assigned_to === user?.id) forYou.push(card);
-        else general.push(card);
-      }
+      // Sem to-do marcado → aba "Prospectar"
+      if (card.assigned_to === user?.id) forYou.push(card);
+      else general.push(card);
     });
 
     const closerGroups = Array.from(closedByCloser.values()).sort((a, b) => {
