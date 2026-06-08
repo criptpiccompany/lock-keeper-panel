@@ -119,7 +119,7 @@ export default function MeuPainel() {
           </div>
 
           <div className="flex flex-col gap-3 lg:items-end">
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               <div className="inline-flex items-center rounded-full bg-white px-4 py-2 text-[12px] font-medium text-[#6e6e73] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
                 Ativos: <span className="ml-1 text-[#1f1f1f]">{influencers.length}</span>
               </div>
@@ -131,9 +131,6 @@ export default function MeuPainel() {
                   Liberando em breve: <span className="ml-1 text-[#7c5712]">{expiringLocksCount}</span>
                 </div>
               )}
-            </div>
-
-            <div className="flex flex-wrap gap-2">
               <Button
                 className="h-11 rounded-full bg-[#1f1f1f] px-5 text-[13px] font-medium text-white hover:bg-[#111111]"
                 onClick={() => setAddModalOpen(true)}
