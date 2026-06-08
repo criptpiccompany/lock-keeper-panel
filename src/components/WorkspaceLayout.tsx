@@ -100,7 +100,6 @@ export function WorkspaceLayout() {
         { path: "/meu", label: "Minha Lista", icon: User },
         { path: "/registro", label: "Planilhamento", icon: FileText },
         { path: "/painel", label: "Meu Painel", icon: Lock },
-        { path: "/gestao-influenciadores", label: "Gestão de Influs", icon: Users },
       ];
 
   const operationsNav: NavItem[] = [
