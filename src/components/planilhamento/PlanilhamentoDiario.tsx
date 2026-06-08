@@ -1270,10 +1270,11 @@ export default function PlanilhamentoDiario({
                                   <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Faturamento</th>
                                   <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Resultado</th>
                                   <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Total no link</th>
+                                  <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Ação</th>
                                   <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Comprovantes</th>
                                 </tr>
                                 <tr>
-                                  <td colSpan={7} className="px-5">
+                                  <td colSpan={8} className="px-5">
                                     <div className="border-b border-dashed border-[#e6ddb0]" />
                                   </td>
                                 </tr>
@@ -1281,7 +1282,7 @@ export default function PlanilhamentoDiario({
                               <tbody>
                                 {visibleDayRecords.length === 0 ? (
                                   <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-sm text-muted-foreground">
+                                    <td colSpan={8} className="px-6 py-12 text-center text-sm text-muted-foreground">
                                       Nenhum influenciador encontrado para esse dia.
                                     </td>
                                   </tr>
