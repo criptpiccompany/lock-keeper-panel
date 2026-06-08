@@ -447,21 +447,23 @@ export default function Admin() {
                             <Key className="h-4 w-4" />
                           </Button>
                           {isAdmin && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleToggleRole(u.id, u.role)}
-                            disabled={updatingRole === u.id || u.id === user?.id}
-                          >
-                            {updatingRole === u.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                            updatingRole === u.id ? (
+                              <Button variant="outline" size="sm" disabled>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              </Button>
                             ) : (
-                              <>
-                                <Shield className="h-4 w-4 mr-1" />
-                                {u.role === 'ADMIN' ? 'Tornar Closer' : 'Tornar Admin'}
-                              </>
-                            )}
-                          </Button>
+                              <Select value={u.role} onValueChange={(role) => handleSetRole(u.id, role as UserWithRole['role'])} disabled={u.id === user?.id}>
+                                <SelectTrigger className="h-9 w-[150px] text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="CLOSER">CLOSER</SelectItem>
+                                  <SelectItem value="FINANCEIRO">FINANCEIRO</SelectItem>
+                                  <SelectItem value="SUBADMIN">SUBADMIN</SelectItem>
+                                  <SelectItem value="ADMIN">ADMIN</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )
                           )}
                           <Button 
                             variant="outline" 
