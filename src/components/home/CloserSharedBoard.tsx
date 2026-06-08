@@ -755,7 +755,7 @@ export function CloserSharedBoard() {
                 type="button"
                 variant="ghost"
                 onClick={() => setDialogOpen(true)}
-                className="h-8 rounded-md border border-[#e7e7e3] bg-white px-3 text-[12px] font-medium text-[#9a9a95] shadow-none hover:bg-[#fafaf8] hover:text-[#3d3d39]"
+                className="h-8 rounded-md bg-black px-3 text-[12px] font-medium text-white shadow-none hover:bg-black/90 hover:text-white"
               >
                 <Plus className="mr-1.5 h-3.5 w-3.5" />
                 Novo influenciador
@@ -772,12 +772,12 @@ export function CloserSharedBoard() {
                     className={cn(
                       "h-7 rounded-[6px] px-2.5 text-[11px] font-medium transition-colors",
                       activeTab === tab.key
-                        ? "bg-[#f1f1ee] text-[#37352f]"
-                        : "text-[#9a9a95] hover:bg-[#fafaf8] hover:text-[#54544f]"
+                        ? "bg-white text-black shadow-sm"
+                        : "text-[#9a9a95] hover:bg-white hover:text-black"
                     )}
                   >
                     {tab.label}
-                    <span className="ml-1 text-[10px] text-[#b4b4b0]">({tab.count})</span>
+                    <span className={cn("ml-1 text-[10px]", activeTab === tab.key ? "text-black/50" : "text-[#b4b4b0]")}>({tab.count})</span>
                   </button>
                 ))}
               </div>
