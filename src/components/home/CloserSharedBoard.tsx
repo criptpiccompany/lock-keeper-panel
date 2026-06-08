@@ -1122,6 +1122,28 @@ export function CloserSharedBoard() {
 
                 <div className="space-y-2">
                   <label className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">
+                    <AtSign className="h-3 w-3" /> Direcionar para
+                  </label>
+                  <Select value={newAssignedTo} onValueChange={setNewAssignedTo}>
+                    <SelectTrigger className="h-12 rounded-[12px] border-[#ececeb] bg-[#fafaf8] px-4 text-[14px] text-[#1f1f1f] shadow-none focus:ring-0 focus:ring-offset-0">
+                      <SelectValue placeholder="Ninguém — fica no Geral" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-[14px] border-[#ececeb] bg-white p-1 shadow-[0_16px_40px_-20px_rgba(15,23,42,0.25)]">
+                      <SelectItem value="none" className="cursor-pointer rounded-[10px] px-3 py-2 text-[13px] text-[#6e6e73] focus:bg-[#f3f3ef]">
+                        Ninguém — fica no Geral
+                      </SelectItem>
+                      {teamMembers.map((member) => (
+                        <SelectItem key={member.id} value={member.id} className="cursor-pointer rounded-[10px] px-3 py-2 text-[13px] text-[#1f1f1f] focus:bg-[#f3f3ef]">
+                          {member.nome}{member.id === user?.id ? " (você)" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[11px] text-[#9a9a96]">A pessoa direcionada verá esse influenciador na seção "Para você".</p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#6e6e73]">
                     <FileText className="h-3 w-3" /> Observação
                   </label>
                   <Textarea
