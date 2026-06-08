@@ -1138,7 +1138,7 @@ export function CloserSharedBoard() {
                 ))}
               </div>
 
-              <div className="space-y-4 overflow-y-auto px-1 pt-3" style={{ maxHeight: "calc(100vh - 320px)" }}>
+              <div className="min-h-0 max-h-[640px] flex-1 space-y-4 overflow-y-auto px-1 pt-3 xl:max-h-none">
                 {loading ? (
                   <div className="px-3 py-10 text-[12px] text-[#aaa9a4]">Carregando board compartilhado...</div>
                 ) : (
