@@ -273,7 +273,21 @@ export default function Balanco({ closerId }: { closerId?: string }) {
         </div>
       ) : (
         <>
+          {!isAdmin && user?.nome && (
+            <div className="rounded-[28px] bg-white p-6 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
+              <div className="mb-4">
+                <div className="text-[12px] uppercase tracking-[0.18em] text-[#999999]">Porcentagem Atual</div>
+                <div className="mt-1 text-[28px] font-medium tracking-[-0.04em] text-[#1f1f1f]">Performance Club</div>
+              </div>
+              <CommissionCardCarousel
+                employeeName={user.nome}
+                resultado={totals.profit}
+                revenue={totals.revenue}
+              />
+            </div>
+          )}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+
               <SummaryCard label="Faturamento" value={totals.revenue} icon={TrendingUp} />
               <SummaryCard label="Investido" value={totals.invested} icon={DollarSign} />
               <SummaryCard label={feeLabel} value={totals.fee} icon={Percent} variant="muted" />
