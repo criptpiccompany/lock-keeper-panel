@@ -1347,7 +1347,21 @@ export default function PlanilhamentoDiario({
                                             {record.acumulado !== null ? formatCurrency(record.acumulado) : "—"}
                                           </div>
                                         </td>
+                                        <td className="px-4 py-5" onClick={(e) => e.stopPropagation()}>
+                                          {viewingOther ? (
+                                            <span className={cn("inline-flex items-center gap-2 rounded-full px-3 py-2 text-[12px] font-medium tracking-[0.04em]", workflowBadgeClass(record.status, !!record.comprovante_url))}>
+                                              <span className="h-2 w-2 rounded-full bg-current opacity-70" />
+                                              {record.status || "—"}
+                                            </span>
+                                          ) : (
+                                            <WorkflowStatusDropdown
+                                              value={record.status}
+                                              onChange={(val) => handleStatusChange(record.id, val)}
+                                            />
+                                          )}
+                                        </td>
                                         <td className="px-4 py-5">
+
                                           <div className="flex items-center gap-2">
                                             {record.comprovante_url ? (
                                               <ComprovanteThumbnail
