@@ -1136,7 +1136,7 @@ export function CloserSharedBoard() {
                 ))}
               </div>
 
-              <div className="space-y-4 px-1 pt-3">
+              <div className="max-h-[720px] space-y-4 overflow-y-auto px-1 pt-3">
                 {loading ? (
                   <div className="px-3 py-10 text-[12px] text-[#aaa9a4]">Carregando board compartilhado...</div>
                 ) : (
