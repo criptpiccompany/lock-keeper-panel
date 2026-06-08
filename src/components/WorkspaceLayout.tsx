@@ -163,16 +163,6 @@ export function WorkspaceLayout() {
     navigate("/login");
   };
 
-  const handleToggleCloserPreview = () => {
-    if (!canToggleCloserPreview) return;
-
-    if (isPreviewingCloser) {
-      setPreviewRole(null);
-    } else {
-      setPreviewRole('CLOSER');
-      navigate('/home');
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[#f3f3ef] text-slate-950">
