@@ -543,10 +543,12 @@ export function CloserSharedBoard() {
 
     const rawRows = (data || []) as Array<Record<string, unknown>>;
     const creatorIds = [...new Set(rawRows.map((r) => r.created_by as string).filter(Boolean))];
+    const assignedIds = [...new Set(rawRows.map((r) => r.assigned_to as string).filter(Boolean))];
+    const idsToFetch = [...new Set([...creatorIds, ...assignedIds])];
     let names = new Map<string, string>();
 
-    if (creatorIds.length) {
-      const { data: profiles } = await supabase.from("profiles").select("id, nome").in("id", creatorIds);
+    if (idsToFetch.length) {
+      const { data: profiles } = await supabase.from("profiles").select("id, nome").in("id", idsToFetch);
       names = new Map((profiles || []).map((profile: { id: string; nome: string | null }) => [profile.id, profile.nome || "Closer"]));
     }
 
@@ -555,6 +557,8 @@ export function CloserSharedBoard() {
         ...(row as unknown as KanbanCard),
         closer_id: row.created_by as string,
         closerName: names.get(row.created_by as string) || "Closer",
+        assigned_to: (row.assigned_to as string | null) ?? null,
+        assignedName: row.assigned_to ? names.get(row.assigned_to as string) || null : null,
       }))
     );
     setLoading(false);
