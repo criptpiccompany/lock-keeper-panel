@@ -6,10 +6,13 @@ import {
   FileText,
   LayoutGrid,
   Lock,
+  Plus,
   Search,
   Shield,
   Trophy,
+  UserPlus,
   Users,
+  CalendarCheck,
 } from "lucide-react";
 
 import { TAX_TOTAL } from "@/components/financeiro/financeiroHelpers";
@@ -23,6 +26,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCommissionTier } from "@/hooks/useCommissionTier";
 import { useTeamFeeRate } from "@/hooks/useTeamFeeRate";
 import { supabase } from "@/integrations/supabase/client";
+import { AddInfluencerUnifiedModal } from "@/components/AddInfluencerUnifiedModal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import PlanilhamentoDiario from "@/components/planilhamento/PlanilhamentoDiario";
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 function getCurrentMonth() {
   const now = new Date();
@@ -547,6 +558,12 @@ export default function Home() {
   const [closerData, setCloserData] = useState<CloserHomeData | null>(null);
   const [adminData, setAdminData] = useState<AdminHomeData | null>(null);
 
+  // Closer shortcuts (top-right of the page header)
+  const [addInfluencerOpen, setAddInfluencerOpen] = useState(false);
+  const [planAddOpen, setPlanAddOpen] = useState(false);
+  const [planViewOpen, setPlanViewOpen] = useState(false);
+  const today = useMemo(() => todayStr(), []);
+
   const { feeRate } = useTeamFeeRate(user?.teamId);
   const { currentPercentage, nextThreshold, amountMissing } = useCommissionTier(resultado);
 
@@ -760,7 +777,7 @@ export default function Home() {
 
   return (
     <>
-      <div className="mb-2">
+      <div className="mb-2 flex items-start justify-between gap-6">
             <div className="max-w-[62rem]">
               <h1 className="max-w-4xl text-[42px] leading-[1.02] tracking-[-0.06em] text-slate-950 font-medium sm:text-5xl">
                 {greeting}, {firstName}
@@ -771,6 +788,38 @@ export default function Home() {
                   : "Acompanhe sua comissão, seu ritmo operacional e os movimentos do mês em uma leitura mais clara."}
               </p>
             </div>
+
+            {!isManagementView && (
+              <div className="hidden md:flex shrink-0 items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setAddInfluencerOpen(true)}
+                  className="inline-flex h-10 items-center gap-2 rounded-full border border-[#ececeb] bg-white px-4 text-[13px] font-medium text-[#1f1f1f] shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition hover:bg-[#f7f7f4]"
+                  title="Adicionar influenciador na Minha Lista"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Add à Minha Lista
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPlanAddOpen(true)}
+                  className="inline-flex h-10 items-center gap-2 rounded-full border border-[#ececeb] bg-white px-4 text-[13px] font-medium text-[#1f1f1f] shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition hover:bg-[#f7f7f4]"
+                  title="Registrar fechamento de hoje no Planilhamento"
+                >
+                  <Plus className="h-4 w-4" />
+                  Registrar hoje
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPlanViewOpen(true)}
+                  className="inline-flex h-10 items-center gap-2 rounded-full bg-[#1f1f1f] px-4 text-[13px] font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)] transition hover:bg-[#111]"
+                  title="Ver/editar o planilhamento de hoje"
+                >
+                  <CalendarCheck className="h-4 w-4" />
+                  Planilhamento de hoje
+                </button>
+              </div>
+            )}
           </div>
 
       {loading ? (
@@ -896,6 +945,42 @@ export default function Home() {
           </div>
         </div>
       ) : null}
+
+      {/* Closer shortcuts — modals */}
+      {!isManagementView && (
+        <>
+          <AddInfluencerUnifiedModal
+            open={addInfluencerOpen}
+            onOpenChange={setAddInfluencerOpen}
+          />
+
+          <Dialog open={planAddOpen} onOpenChange={setPlanAddOpen}>
+            <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto p-0">
+              <DialogHeader className="px-6 pt-6">
+                <DialogTitle>Registrar fechamento de hoje</DialogTitle>
+              </DialogHeader>
+              <div className="px-2 pb-4">
+                {planAddOpen && (
+                  <PlanilhamentoDiario focusedDate={today} autoOpenAdd compact />
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={planViewOpen} onOpenChange={setPlanViewOpen}>
+            <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto p-0">
+              <DialogHeader className="px-6 pt-6">
+                <DialogTitle>Planilhamento de hoje</DialogTitle>
+              </DialogHeader>
+              <div className="px-2 pb-4">
+                {planViewOpen && (
+                  <PlanilhamentoDiario focusedDate={today} compact />
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
     </>
   );
 }

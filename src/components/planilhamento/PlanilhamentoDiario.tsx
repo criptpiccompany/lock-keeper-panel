@@ -329,6 +329,7 @@ export default function PlanilhamentoDiario({
   focusedDate,
   compact = false,
   editAsCloser = false,
+  autoOpenAdd = false,
 }: {
   closerId?: string;
   externalMonth?: string;
@@ -337,6 +338,8 @@ export default function PlanilhamentoDiario({
   /** When true, treats the spreadsheet as fully editable on behalf of `closerId`
    *  (used by FINANCEIRO Espelhamento). Disables read-only "viewingOther" mode. */
   editAsCloser?: boolean;
+  /** Quando true, abre automaticamente o modal de adição na data focada. */
+  autoOpenAdd?: boolean;
 }) {
   const { user, isAdmin, isFinanceiro } = useAuth();
   // viewingOther = read-only mirror. When editAsCloser is on we still write,
@@ -762,6 +765,18 @@ export default function PlanilhamentoDiario({
     setFormPartnerAmounts({});
     setModalOpen(true);
   };
+
+  // Auto-open add modal when requested by parent (e.g. Home shortcut).
+  const autoOpenFiredRef = useRef(false);
+  useEffect(() => {
+    if (!autoOpenAdd || autoOpenFiredRef.current) return;
+    if (loading) return;
+    const target = focusedDate || getLocalTodayStr();
+    autoOpenFiredRef.current = true;
+    openNewRecord(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenAdd, loading, focusedDate]);
+
 
   const openEditRecord = (record: DailyRecord) => {
     setEditRecord(record);
