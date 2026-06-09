@@ -253,14 +253,14 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
         {/* Influencer */}
         <div className="col-span-6 md:col-span-3">
           <label className="text-[11.5px] font-semibold uppercase tracking-[0.18em] text-[#1f1f1f]/70 mb-2 block">Influenciador</label>
-          <div className="flex h-[52px] w-full items-center gap-1 rounded-2xl border border-[#ececeb] bg-white px-3.5 focus-within:border-[#1f1f1f]/40 transition-colors">
-            <span className="text-[#999] text-[14px]">@</span>
+          <div className="flex h-[52px] w-full items-center gap-1.5 rounded-2xl border border-[#ececeb] bg-white px-3.5 focus-within:border-[#1f1f1f]/40 transition-colors">
+            <span className="text-[#999] text-[15px]">@</span>
             <input
               value={influencer}
               onChange={(e) => setInfluencer(e.target.value.replace(/^@+/, ""))}
               onKeyDown={(e) => { if (e.key === "Enter") handleConfirm(); }}
               placeholder="handle"
-              className="flex-1 min-w-0 bg-transparent text-[13.5px] font-medium tracking-[-0.01em] text-[#1f1f1f] outline-none placeholder:text-[#bbb]"
+              className="flex-1 min-w-0 bg-transparent text-[14px] font-medium tracking-[-0.01em] text-[#1f1f1f] outline-none placeholder:text-[#bbb]"
             />
           </div>
         </div>
