@@ -385,8 +385,8 @@ export default function Admin() {
             </div>
             )}
 
-            <div className="rounded-lg border">
-              <table className="w-full">
+            <div className={brandTableWrapClass}>
+              <table className="table-minimal">
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="text-left p-3 font-medium">Nome</th>
@@ -594,8 +594,8 @@ export default function Admin() {
         {isAdmin && (
         <BrandCard title="Comissão por closer" description="Defina a taxa de comissão individual (ex: 0.10 = 10%)" icon={Percent}>
           <div>
-            <div className="rounded-lg border">
-              <table className="w-full">
+            <div className={brandTableWrapClass}>
+              <table className="table-minimal">
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="text-left p-3 font-medium text-sm">Closer</th>
