@@ -24,15 +24,41 @@ export interface DayAggregate {
 }
 
 export interface EmployeeDayData {
-  costToday: number;
-  revToday: number;
-  countToday: number;
-  costYesterday: number;
-  revYesterday: number;
-  countYesterday: number;
+  costCurrent: number;
+  revCurrent: number;
+  countCurrent: number;
+  costPrevious: number;
+  revPrevious: number;
+  countPrevious: number;
 }
 
 export type PeriodPreset = "today" | "yesterday" | "7d" | "30d" | "custom";
+
+/* ─── Net profit formula ───
+ * Resultado = Faturamento − Investido − Taxas (5%)
+ * Fonte de verdade para a visão Admin/CFO.
+ */
+export function computeNet(revenue: number, cost: number) {
+  const taxes = revenue * TAX_TOTAL;
+  return revenue - cost - taxes;
+}
+
+/* ─── Period date helpers ─── */
+export function diffDaysInclusive(start: string, end: string) {
+  const s = new Date(start + "T12:00:00").getTime();
+  const e = new Date(end + "T12:00:00").getTime();
+  return Math.max(1, Math.round((e - s) / 86400000) + 1);
+}
+
+export function shiftDateStr(d: string, deltaDays: number) {
+  const dt = new Date(d + "T12:00:00");
+  dt.setDate(dt.getDate() + deltaDays);
+  return dateToStr(dt);
+}
+
+export function minDateStr(a: string, b: string) {
+  return a < b ? a : b;
+}
 
 /* ─── Formatting ─── */
 export function formatBRL(v: number) {
