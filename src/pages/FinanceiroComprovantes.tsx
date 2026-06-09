@@ -165,6 +165,14 @@ export default function FinanceiroComprovantes() {
           })}
         </div>
       )}
+
+      <QuickAddReceiptModal
+        open={quickOpen}
+        onClose={() => setQuickOpen(false)}
+        closers={closers}
+        date={date}
+        onCreated={() => setRefreshKey((k) => k + 1)}
+      />
     </div>
   );
 }
