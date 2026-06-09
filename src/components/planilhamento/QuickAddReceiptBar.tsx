@@ -120,57 +120,60 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
         </p>
       </div>
 
-      <div className="grid grid-cols-12 gap-3 items-stretch">
+      <div className="grid grid-cols-12 gap-3 items-end">
         {/* Drop area */}
-        <div
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer?.files?.[0]; if (f) setFile(f); }}
-          onClick={() => !file && fileRef.current?.click()}
-          className="col-span-12 md:col-span-4 group relative rounded-2xl border-2 border-dashed border-[#e5e3dd] bg-[#fafaf8] hover:border-[#1f1f1f]/40 hover:bg-white transition-all min-h-[100px] flex items-center justify-center cursor-pointer overflow-hidden"
-        >
-          {preview && preview !== "pdf" ? (
-            <>
-              <img src={preview} alt="preview" className="max-h-[96px] object-contain" />
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); setFile(null); }}
-                className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-white/90 border border-[#ececeb] flex items-center justify-center hover:bg-white"
-                title="Remover"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </>
-          ) : preview === "pdf" ? (
-            <div className="flex items-center gap-2 px-3">
-              <FileText className="h-5 w-5 text-[#676767]" />
-              <span className="text-[12.5px] font-medium text-[#1f1f1f] truncate max-w-[160px]">{file?.name}</span>
-              <button type="button" onClick={(e) => { e.stopPropagation(); setFile(null); }} className="text-[10px] text-[#999] underline ml-1">remover</button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2.5 text-[#676767]">
-              <div className="grid h-8 w-8 place-items-center rounded-full bg-[#1f1f1f] text-white shadow-sm group-hover:scale-105 transition-transform">
-                <Upload className="h-3.5 w-3.5" />
+        <div className="col-span-12 md:col-span-4">
+          <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#999] mb-1.5 block">Comprovante</label>
+          <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer?.files?.[0]; if (f) setFile(f); }}
+            onClick={() => !file && fileRef.current?.click()}
+            className="group relative rounded-2xl border-2 border-dashed border-[#e5e3dd] bg-[#fafaf8] hover:border-[#1f1f1f]/40 hover:bg-white transition-all h-[52px] flex items-center justify-center cursor-pointer overflow-hidden"
+          >
+            {preview && preview !== "pdf" ? (
+              <>
+                <img src={preview} alt="preview" className="max-h-[48px] object-contain" />
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setFile(null); }}
+                  className="absolute top-1 right-1 h-5 w-5 rounded-full bg-white/90 border border-[#ececeb] flex items-center justify-center hover:bg-white"
+                  title="Remover"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </>
+            ) : preview === "pdf" ? (
+              <div className="flex items-center gap-2 px-3">
+                <FileText className="h-4 w-4 text-[#676767]" />
+                <span className="text-[12.5px] font-medium text-[#1f1f1f] truncate max-w-[160px]">{file?.name}</span>
+                <button type="button" onClick={(e) => { e.stopPropagation(); setFile(null); }} className="text-[10px] text-[#999] underline ml-1">remover</button>
               </div>
-              <div className="flex flex-col leading-tight">
-                <p className="text-[12.5px] font-semibold tracking-[-0.01em] text-[#1f1f1f]">Cole, arraste ou clique</p>
-                <p className="text-[10.5px] text-[#999]">PNG · JPG · WEBP · PDF</p>
+            ) : (
+              <div className="flex items-center gap-2.5 text-[#676767]">
+                <div className="grid h-7 w-7 place-items-center rounded-full bg-[#1f1f1f] text-white shadow-sm group-hover:scale-105 transition-transform">
+                  <Upload className="h-3.5 w-3.5" />
+                </div>
+                <div className="flex flex-col leading-tight">
+                  <p className="text-[12px] font-semibold tracking-[-0.01em] text-[#1f1f1f]">Cole, arraste ou clique</p>
+                  <p className="text-[10px] text-[#999]">PNG · JPG · WEBP · PDF</p>
+                </div>
               </div>
-            </div>
-          )}
-          <input
-            ref={fileRef}
-            type="file"
-            accept={ACCEPTED}
-            className="hidden"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) setFile(f); e.target.value = ""; }}
-          />
+            )}
+            <input
+              ref={fileRef}
+              type="file"
+              accept={ACCEPTED}
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) setFile(f); e.target.value = ""; }}
+            />
+          </div>
         </div>
 
         {/* Closer */}
         <div className="col-span-6 md:col-span-3">
           <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#999] mb-1.5 block">Closer</label>
-          <div className="inline-flex w-full items-center gap-2 rounded-2xl border border-[#ececeb] bg-white px-3.5 py-3 focus-within:border-[#1f1f1f]/40 transition-colors">
-            <UserIcon className="h-4 w-4 text-[#999]" />
+          <div className="flex h-[52px] w-full items-center gap-2 rounded-2xl border border-[#ececeb] bg-white px-3.5 focus-within:border-[#1f1f1f]/40 transition-colors">
+            <UserIcon className="h-4 w-4 text-[#999] shrink-0" />
             <select
               value={closerId}
               onChange={(e) => setCloserId(e.target.value)}
@@ -185,7 +188,7 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
         {/* Influencer */}
         <div className="col-span-6 md:col-span-3">
           <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#999] mb-1.5 block">Influenciador</label>
-          <div className="inline-flex w-full items-center gap-1 rounded-2xl border border-[#ececeb] bg-white px-3.5 py-3 focus-within:border-[#1f1f1f]/40 transition-colors">
+          <div className="flex h-[52px] w-full items-center gap-1 rounded-2xl border border-[#ececeb] bg-white px-3.5 focus-within:border-[#1f1f1f]/40 transition-colors">
             <span className="text-[#999] text-[14px]">@</span>
             <input
               value={influencer}
@@ -198,11 +201,11 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
         </div>
 
         {/* Confirm */}
-        <div className="col-span-12 md:col-span-2 flex md:items-end">
+        <div className="col-span-12 md:col-span-2">
           <Button
             onClick={handleConfirm}
             disabled={saving || !file || !closerId || !influencer.trim()}
-            className="w-full rounded-2xl h-[48px] mt-0 md:mt-[22px] text-[13px] font-semibold tracking-[-0.01em] bg-[linear-gradient(180deg,#1f1f1f_0%,#0d0d0d_100%)] text-white hover:opacity-95 disabled:bg-[#e5e3dd] disabled:bg-none disabled:text-[#bbb] shadow-[0_6px_14px_rgba(15,23,42,0.18)] disabled:shadow-none"
+            className="w-full rounded-2xl h-[52px] text-[13px] font-semibold tracking-[-0.01em] bg-[linear-gradient(180deg,#1f1f1f_0%,#0d0d0d_100%)] text-white hover:opacity-95 disabled:bg-[#e5e3dd] disabled:bg-none disabled:text-[#bbb] shadow-[0_6px_14px_rgba(15,23,42,0.18)] disabled:shadow-none"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmar"}
           </Button>
