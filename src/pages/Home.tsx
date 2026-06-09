@@ -6,10 +6,13 @@ import {
   FileText,
   LayoutGrid,
   Lock,
+  Plus,
   Search,
   Shield,
   Trophy,
+  UserPlus,
   Users,
+  CalendarCheck,
 } from "lucide-react";
 
 import { TAX_TOTAL } from "@/components/financeiro/financeiroHelpers";
@@ -23,6 +26,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCommissionTier } from "@/hooks/useCommissionTier";
 import { useTeamFeeRate } from "@/hooks/useTeamFeeRate";
 import { supabase } from "@/integrations/supabase/client";
+import { AddInfluencerUnifiedModal } from "@/components/AddInfluencerUnifiedModal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import PlanilhamentoDiario from "@/components/planilhamento/PlanilhamentoDiario";
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 function getCurrentMonth() {
   const now = new Date();
