@@ -62,6 +62,7 @@ import {
   ArrowDown,
   ArrowUp,
   Info,
+  RefreshCw,
 } from "lucide-react";
 import ComprovanteThumbnail from "./ComprovanteThumbnail";
 import ComprovanteLightbox from "./ComprovanteLightbox";
