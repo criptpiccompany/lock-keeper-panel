@@ -114,6 +114,14 @@ export default function FinanceiroComprovantes() {
         </div>
       </header>
 
+      {/* Quick-add bar (fixo no topo do conteúdo) */}
+      <div className="sticky top-2 z-30">
+        <QuickAddReceiptBar
+          closers={closers}
+          date={date}
+          onCreated={() => setRefreshKey((k) => k + 1)}
+        />
+      </div>
 
       {/* Grid */}
       {visibleClosers.length === 0 ? (
@@ -157,12 +165,6 @@ export default function FinanceiroComprovantes() {
           })}
         </div>
       )}
-
-      <QuickAddReceiptBar
-        closers={closers}
-        date={date}
-        onCreated={() => setRefreshKey((k) => k + 1)}
-      />
     </div>
   );
 }
