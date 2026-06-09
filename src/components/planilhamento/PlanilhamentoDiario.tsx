@@ -1447,17 +1447,37 @@ export default function PlanilhamentoDiario({
                                           </div>
                                         </td>
                                         <td className="px-4 py-5" onClick={(e) => e.stopPropagation()}>
-                                          {viewingOther ? (
-                                            <span className={cn("inline-flex items-center gap-2 rounded-full px-3 py-2 text-[12px] font-medium tracking-[0.04em]", workflowBadgeClass(record.status, !!record.comprovante_url))}>
-                                              <span className="h-2 w-2 rounded-full bg-current opacity-70" />
-                                              {record.status || "—"}
-                                            </span>
-                                          ) : (
-                                            <WorkflowStatusDropdown
-                                              value={record.status}
-                                              onChange={(val) => handleStatusChange(record.id, val)}
-                                            />
-                                          )}
+                                          <div className="flex items-center gap-2">
+                                            {viewingOther ? (
+                                              <span className={cn("inline-flex items-center gap-2 rounded-full px-3 py-2 text-[12px] font-medium tracking-[0.04em]", workflowBadgeClass(record.status, !!record.comprovante_url))}>
+                                                <span className="h-2 w-2 rounded-full bg-current opacity-70" />
+                                                {record.status || "—"}
+                                              </span>
+                                            ) : (
+                                              <WorkflowStatusDropdown
+                                                value={record.status}
+                                                onChange={(val) => handleStatusChange(record.id, val)}
+                                              />
+                                            )}
+                                            {!viewingOther && record.date !== getLocalTodayStr() && (
+                                              <TooltipProvider delayDuration={150}>
+                                                <Tooltip>
+                                                  <TooltipTrigger asChild>
+                                                    <Button
+                                                      type="button"
+                                                      size="icon"
+                                                      variant="ghost"
+                                                      className="h-9 w-9 rounded-full border border-[#ececeb] bg-white hover:bg-[#f3f3f0]"
+                                                      onClick={(e) => { e.stopPropagation(); setRenewTarget(record); }}
+                                                    >
+                                                      <RefreshCw className="h-4 w-4 text-[#2c2c2c]" />
+                                                    </Button>
+                                                  </TooltipTrigger>
+                                                  <TooltipContent side="top">Renovar para hoje</TooltipContent>
+                                                </Tooltip>
+                                              </TooltipProvider>
+                                            )}
+                                          </div>
                                         </td>
                                         {!RECEIPTS_AS_CAROUSEL && (
                                           <td className="px-4 py-5">
