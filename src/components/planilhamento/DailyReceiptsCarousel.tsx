@@ -269,9 +269,9 @@ export default function DailyReceiptsCarousel({
           <span className="text-xs text-muted-foreground px-2">Nenhum comprovante</span>
         ) : (
           allItems.map((it) => (
-            <div key={it.id} className="shrink-0 flex flex-col items-center gap-1">
+            <div key={it.id} className="shrink-0 flex flex-col items-center gap-1.5">
               <div className="relative group">
-                <div className="w-[68px] h-[68px] rounded-2xl overflow-hidden ring-1 ring-black/5 bg-white flex items-center justify-center">
+                <div className="w-[104px] h-[104px] rounded-2xl overflow-hidden ring-1 ring-black/5 bg-white flex items-center justify-center">
                   <ComprovanteThumbnail
                     url={it.url}
                     onClick={async () => {
