@@ -75,6 +75,11 @@ export default function Admin() {
   const [commissionInput, setCommissionInput] = useState("");
   const [savingCommission, setSavingCommission] = useState(false);
 
+  // Deactivate user
+  const [deactivateUser, setDeactivateUser] = useState<UserWithRole | null>(null);
+  const [deactivating, setDeactivating] = useState(false);
+
+
   // Export
   const [exportMonth, setExportMonth] = useState(() => {
     const now = new Date();
