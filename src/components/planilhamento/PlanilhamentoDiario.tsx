@@ -329,6 +329,7 @@ export default function PlanilhamentoDiario({
   focusedDate,
   compact = false,
   editAsCloser = false,
+  autoOpenAdd = false,
 }: {
   closerId?: string;
   externalMonth?: string;
@@ -337,6 +338,8 @@ export default function PlanilhamentoDiario({
   /** When true, treats the spreadsheet as fully editable on behalf of `closerId`
    *  (used by FINANCEIRO Espelhamento). Disables read-only "viewingOther" mode. */
   editAsCloser?: boolean;
+  /** Quando true, abre automaticamente o modal de adição na data focada. */
+  autoOpenAdd?: boolean;
 }) {
   const { user, isAdmin, isFinanceiro } = useAuth();
   // viewingOther = read-only mirror. When editAsCloser is on we still write,
