@@ -8,7 +8,44 @@ export function ConnectionStatus() {
   const [status, setStatus] = useState<Status>("online");
 
   useEffect(() => {
+    // Debounce: only flip to "server-down" after 2 consecutive failed checks
+    // to avoid flashing the banner on transient network blips.
+    let consecutiveFailures = 0;
+
+    const checkServer = async () => {
+      if (!navigator.onLine) {
+        setStatus("offline");
+        return;
+      }
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/auth/v1/health`;
+        const res = await fetch(url, {
+          method: "GET",
+          headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        if (res) {
+          consecutiveFailures = 0;
+          setStatus((prev) => (prev === "online" ? prev : "online"));
+        } else {
+          consecutiveFailures += 1;
+          if (consecutiveFailures >= 2) setStatus("server-down");
+        }
+      } catch {
+        if (!navigator.onLine) {
+          setStatus("offline");
+          return;
+        }
+        consecutiveFailures += 1;
+        if (consecutiveFailures >= 2) setStatus("server-down");
+      }
+    };
+
     const handleOnline = () => {
+      consecutiveFailures = 0;
       setStatus("online");
       checkServer();
     };
@@ -19,31 +56,9 @@ export function ConnectionStatus() {
 
     if (!navigator.onLine) setStatus("offline");
 
-    const checkServer = async () => {
-      if (!navigator.onLine) {
-        setStatus("offline");
-        return;
-      }
-      try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 5000);
-        const url = `${import.meta.env.VITE_SUPABASE_URL}/auth/v1/health`;
-        const res = await fetch(url, {
-          method: "GET",
-          headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
-          signal: controller.signal,
-        });
-        clearTimeout(timeout);
-        // Any HTTP response (even 401) means the server is reachable
-        setStatus(res ? "online" : "server-down");
-      } catch {
-        setStatus(navigator.onLine ? "server-down" : "offline");
-      }
-    };
-
-    // Initial check + periodic poll
+    // Initial check + slower poll (120s) — avoids visible flicker every 30s.
     checkServer();
-    const interval = setInterval(checkServer, 30000);
+    const interval = setInterval(checkServer, 120000);
 
     return () => {
       window.removeEventListener("online", handleOnline);

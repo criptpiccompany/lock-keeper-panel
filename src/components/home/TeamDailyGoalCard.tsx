@@ -62,7 +62,9 @@ export function TeamDailyGoalCard(_props: { teamId?: string | null; isAdmin?: bo
     };
     run();
 
-    // Live updates: realtime on own team (instant) + polling for cross-team (every 20s)
+    // Live updates: realtime covers own team instantly. Polling kept as a
+    // slow fallback (every 5 min) for cross-team writes — 20s was causing
+    // the progress bar to visibly re-animate constantly.
     const channel = supabase
       .channel("team_daily_goal:global")
       .on(
@@ -72,7 +74,7 @@ export function TeamDailyGoalCard(_props: { teamId?: string | null; isAdmin?: bo
       )
       .subscribe();
 
-    const poll = setInterval(fetchSum, 20000);
+    const poll = setInterval(fetchSum, 300000);
 
     return () => {
       cancelled = true;
