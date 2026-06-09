@@ -15,6 +15,7 @@ import FinanceiroEmployeeSection from "@/components/financeiro/FinanceiroEmploye
 import FinanceiroDeltaStrip from "@/components/financeiro/FinanceiroDeltaStrip";
 import FinanceiroHistory from "@/components/financeiro/FinanceiroHistory";
 import TeamThermometersSection from "@/components/painel/TeamThermometersSection";
+import { PageHeader, brandTabsListClass, brandTabsTriggerClass } from "@/components/PageHeader";
 import {
   todayStr, yesterdayStr, daysAgoStr, dateToStr,
   type DailyRecord, type CloserProfile, type DayAggregate, type EmployeeDayData, type PeriodPreset,
