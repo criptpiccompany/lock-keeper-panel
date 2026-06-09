@@ -320,9 +320,29 @@ export default function Admin() {
     }
   };
 
+  const handleConfirmDeactivate = async () => {
+    if (!deactivateUser) return;
+    setDeactivating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-update-user', {
+        body: { userId: deactivateUser.id, action: 'deactivate_user' }
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Conta de ${deactivateUser.nome} desativada`);
+      setDeactivateUser(null);
+      fetchUsers();
+    } catch (error: any) {
+      toast.error('Erro ao desativar conta', { description: error.message });
+    } finally {
+      setDeactivating(false);
+    }
+  };
+
   if (loading) {
     return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
   }
+
 
   const totalUsers = users.length;
   const totalClosers = users.filter(u => u.role === 'CLOSER').length;
