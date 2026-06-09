@@ -25,6 +25,8 @@ export default function FinanceiroComprovantes() {
   const [date, setDate] = useState<string>(todayStr());
   const [loading, setLoading] = useState(true);
   const [filterTeam, setFilterTeam] = useState<string>("all");
+  const [quickOpen, setQuickOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const load = async () => {
