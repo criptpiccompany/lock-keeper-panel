@@ -184,6 +184,8 @@ export default function Notificacoes() {
   useEffect(() => { setPage(0); }, [filterStatus, filterActor, filterActionType, dateFrom, dateTo, search]);
 
   const pendingCount = teamFilteredNotifications.filter((n) => n.review_status === "PENDENTE").length;
+  const reviewedCount = teamFilteredNotifications.filter((n) => n.review_status === "REVISADO").length;
+  const suspectCount = teamFilteredNotifications.filter((n) => n.review_status === "SUSPEITO").length;
 
   const updateStatus = async (id: string, status: "PENDENTE" | "REVISADO" | "SUSPEITO") => {
     setUpdating(true);
