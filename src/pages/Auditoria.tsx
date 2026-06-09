@@ -387,7 +387,7 @@ function AuditTable({
       </div>
 
       {/* Table */}
-      <div className="bg-card rounded-xl border border-border/40 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-black/5 shadow-[0_1px_0_rgba(0,0,0,0.02)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

@@ -322,7 +322,7 @@ export default function Notificacoes() {
               return (
                 <div
                   key={n.id}
-                  className="bg-card rounded-xl border border-border/40 p-4 hover:border-border/80 transition-colors cursor-pointer"
+                  className="bg-white rounded-2xl border border-black/5 shadow-[0_1px_0_rgba(0,0,0,0.02)] p-4 sm:p-5 hover:border-slate-200 hover:shadow-[0_4px_16px_-8px_rgba(0,0,0,0.08)] transition-all cursor-pointer"
                   onClick={() => setDetailNotif(n)}
                 >
                   <div className="flex items-start justify-between gap-4">
