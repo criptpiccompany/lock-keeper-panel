@@ -320,27 +320,26 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="border-b">
-        <div className="container py-8">
-          <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
-            <Settings className="h-6 w-6" />Painel Admin
-          </h1>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#F6F4F0]">
+      <PageHeader
+        eyebrow="Painel Admin"
+        icon={Settings}
+        title="Gestão de usuários e acessos"
+        subtitle="Administre membros, convites, aprovações e órfãos do sistema. Todas as ações ficam registradas na trilha de auditoria."
+      />
        <div className="container py-6 space-y-6">
-        <Alert className="border-amber-200 bg-amber-50">
+        <Alert className="border-amber-200 bg-amber-50/80 rounded-2xl">
           <AlertTriangle className="h-4 w-4 text-amber-600" />
           <AlertTitle className="text-amber-800">Atenção</AlertTitle>
           <AlertDescription className="text-amber-700">Todas as ações são registradas no log de auditoria.</AlertDescription>
         </Alert>
 
         <Tabs defaultValue="gestao" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="gestao"><Users className="h-4 w-4 mr-1.5" />Gestão</TabsTrigger>
-            <TabsTrigger value="convites"><UserPlus className="h-4 w-4 mr-1.5" />Convites</TabsTrigger>
-            {isAdmin && <TabsTrigger value="aprovacoes"><UserCheck className="h-4 w-4 mr-1.5" />Aprovações</TabsTrigger>}
-            {isAdmin && <TabsTrigger value="orfaos"><UserX className="h-4 w-4 mr-1.5" />Órfãos</TabsTrigger>}
+          <TabsList className={brandTabsListClass}>
+            <TabsTrigger value="gestao" className={brandTabsTriggerClass}><Users className="h-4 w-4 mr-1.5" />Gestão</TabsTrigger>
+            <TabsTrigger value="convites" className={brandTabsTriggerClass}><UserPlus className="h-4 w-4 mr-1.5" />Convites</TabsTrigger>
+            {isAdmin && <TabsTrigger value="aprovacoes" className={brandTabsTriggerClass}><UserCheck className="h-4 w-4 mr-1.5" />Aprovações</TabsTrigger>}
+            {isAdmin && <TabsTrigger value="orfaos" className={brandTabsTriggerClass}><UserX className="h-4 w-4 mr-1.5" />Órfãos</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="gestao" className="space-y-6">
