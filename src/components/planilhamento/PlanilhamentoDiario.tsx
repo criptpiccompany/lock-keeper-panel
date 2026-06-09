@@ -766,6 +766,18 @@ export default function PlanilhamentoDiario({
     setModalOpen(true);
   };
 
+  // Auto-open add modal when requested by parent (e.g. Home shortcut).
+  const autoOpenFiredRef = useRef(false);
+  useEffect(() => {
+    if (!autoOpenAdd || autoOpenFiredRef.current) return;
+    if (loading) return;
+    const target = focusedDate || getLocalTodayStr();
+    autoOpenFiredRef.current = true;
+    openNewRecord(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenAdd, loading, focusedDate]);
+
+
   const openEditRecord = (record: DailyRecord) => {
     setEditRecord(record);
     setModalDate(record.date);
