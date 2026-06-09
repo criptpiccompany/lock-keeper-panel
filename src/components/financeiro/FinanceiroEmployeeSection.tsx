@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { ArrowDown, ArrowUp, Trophy } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { brandTabsListClass, brandTabsTriggerClass, brandTableWrapClass } from "@/components/PageHeader";
 import { formatBRL, TAX_TOTAL, type CloserProfile, type EmployeeDayData } from "./financeiroHelpers";
 
 type SortKey = "cost" | "rev" | "net" | "margin" | "roi" | "count";
@@ -16,7 +17,7 @@ interface Props {
 function SortHeader({ label, active, dir, onClick }: { label: string; active: boolean; dir: SortDir; onClick: () => void }) {
   return (
     <button onClick={onClick} className="inline-flex items-center gap-1 group">
-      <span className={active ? "text-foreground" : ""}>{label}</span>
+      <span className={active ? "text-slate-950" : ""}>{label}</span>
       {active ? (
         dir === "desc" ? <ArrowDown className="h-3 w-3" /> : <ArrowUp className="h-3 w-3" />
       ) : (
@@ -26,6 +27,9 @@ function SortHeader({ label, active, dir, onClick }: { label: string; active: bo
   );
 }
 
+const TH_CLS = "text-left py-3 px-5 font-medium text-[10px] uppercase tracking-[0.14em] text-slate-500 bg-[#FAF9F6]";
+const TD_CLS = "py-3 px-5 text-[13px]";
+
 export default function FinanceiroEmployeeSection({ byCloser, closers, onSelectCloser }: Props) {
   const [todaySortKey, setTodaySortKey] = useState<SortKey>("cost");
   const [todaySortDir, setTodaySortDir] = useState<SortDir>("desc");
@@ -33,12 +37,8 @@ export default function FinanceiroEmployeeSection({ byCloser, closers, onSelectC
   const [yestSortDir, setYestSortDir] = useState<SortDir>("desc");
 
   const toggleSort = useCallback((current: SortKey, dir: SortDir, key: SortKey, setKey: (k: SortKey) => void, setDir: (d: SortDir) => void) => {
-    if (current === key) {
-      setDir(dir === "desc" ? "asc" : "desc");
-    } else {
-      setKey(key);
-      setDir("desc");
-    }
+    if (current === key) setDir(dir === "desc" ? "asc" : "desc");
+    else { setKey(key); setDir("desc"); }
   }, []);
 
   const todayRows = useMemo(() => {
@@ -72,15 +72,10 @@ export default function FinanceiroEmployeeSection({ byCloser, closers, onSelectC
         diff = b.net - a.net;
         if (diff === 0) diff = b.data.revYesterday - a.data.revYesterday;
         if (diff === 0) diff = a.data.costYesterday - b.data.costYesterday;
-      } else if (key === "rev") {
-        diff = b.data.revYesterday - a.data.revYesterday;
-      } else if (key === "margin") {
-        diff = b.margin - a.margin;
-      } else if (key === "roi") {
-        diff = b.roi - a.roi;
-      } else if (key === "cost") {
-        diff = b.data.costYesterday - a.data.costYesterday;
-      }
+      } else if (key === "rev") diff = b.data.revYesterday - a.data.revYesterday;
+      else if (key === "margin") diff = b.margin - a.margin;
+      else if (key === "roi") diff = b.roi - a.roi;
+      else if (key === "cost") diff = b.data.costYesterday - a.data.costYesterday;
       return yestSortDir === "asc" ? -diff : diff;
     });
     return rows;
@@ -91,53 +86,53 @@ export default function FinanceiroEmployeeSection({ byCloser, closers, onSelectC
   const resetToday = () => { setTodaySortKey("cost"); setTodaySortDir("desc"); };
   const resetYesterday = () => { setYestSortKey("net"); setYestSortDir("desc"); };
 
-  const sortLabel = yestSortKey === "net" ? "Resultado Líquido" : yestSortKey === "rev" ? "Faturamento" : yestSortKey === "margin" ? "Margem" : yestSortKey === "roi" ? "ROI" : "Custo";
+  const sortLabel = yestSortKey === "net" ? "Resultado líquido" : yestSortKey === "rev" ? "Faturamento" : yestSortKey === "margin" ? "Margem" : yestSortKey === "roi" ? "ROI" : "Custo";
 
   return (
-    <div>
-      <h2 className="text-lg font-semibold mb-3">Por Funcionário</h2>
+    <div className="space-y-4">
+      <div className="flex items-end justify-between">
+        <h2 className="text-[20px] font-medium tracking-[-0.02em] text-slate-950">Por funcionário</h2>
+      </div>
       <Tabs defaultValue="today" className="w-full" onValueChange={() => { resetToday(); resetYesterday(); }}>
-        <TabsList className="mb-3">
-          <TabsTrigger value="today">Hoje (Custo)</TabsTrigger>
-          <TabsTrigger value="yesterday">Ontem (Resultado)</TabsTrigger>
+        <TabsList className={brandTabsListClass}>
+          <TabsTrigger value="today" className={brandTabsTriggerClass}>Hoje (custo)</TabsTrigger>
+          <TabsTrigger value="yesterday" className={brandTabsTriggerClass}>Ontem (resultado)</TabsTrigger>
         </TabsList>
 
-        {/* ── TODAY ── */}
-        <TabsContent value="today">
-          <div className="bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
+        <TabsContent value="today" className="mt-4">
+          <div className={brandTableWrapClass}>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full">
                 <thead>
-                  <tr className="border-b border-border/60 text-foreground" style={{ backgroundColor: "#E9E9EA" }}>
-                    <th className="text-left py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Funcionário</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
-                      <SortHeader label="Custo Hoje" active={todaySortKey === "cost"} dir={todaySortDir}
+                  <tr className="border-b border-black/5">
+                    <th className={TH_CLS}>Funcionário</th>
+                    <th className={TH_CLS + " text-right"}>
+                      <SortHeader label="Custo hoje" active={todaySortKey === "cost"} dir={todaySortDir}
                         onClick={() => toggleSort(todaySortKey, todaySortDir, "cost", setTodaySortKey, setTodaySortDir)} />
                     </th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
+                    <th className={TH_CLS + " text-right"}>
                       <SortHeader label="Registros" active={todaySortKey === "count"} dir={todaySortDir}
                         onClick={() => toggleSort(todaySortKey, todaySortDir, "count", setTodaySortKey, setTodaySortDir)} />
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {todayRows.map(({ id, data }, idx) => {
+                  {todayRows.map(({ id, data }) => {
                     const closer = closers.find((c) => c.id === id);
-                    const zebraClass = idx % 2 === 1 ? "bg-muted/30" : "";
                     return (
-                      <tr key={id} className={`border-b border-border/20 ${zebraClass}`}>
-                        <td className="py-2.5 px-4">
-                          <button onClick={() => closer && onSelectCloser(closer)} className="text-sm font-medium text-primary hover:underline text-left">
+                      <tr key={id} className="border-b border-black/5 last:border-0 hover:bg-[#FAF9F6]/70 transition-colors">
+                        <td className={TD_CLS}>
+                          <button onClick={() => closer && onSelectCloser(closer)} className="font-medium text-slate-950 hover:underline underline-offset-4 text-left">
                             {closer?.nome || "—"}
                           </button>
                         </td>
-                        <td className="py-2.5 px-4 text-xs text-right tabular-nums font-medium">{formatBRL(data.costToday)}</td>
-                        <td className="py-2.5 px-4 text-xs text-right tabular-nums text-muted-foreground">{data.countToday}</td>
+                        <td className={TD_CLS + " text-right tabular-nums font-medium text-slate-950"}>{formatBRL(data.costToday)}</td>
+                        <td className={TD_CLS + " text-right tabular-nums text-slate-500"}>{data.countToday}</td>
                       </tr>
                     );
                   })}
                   {todayRows.length === 0 && (
-                    <tr><td colSpan={3} className="py-8 text-center text-muted-foreground text-sm">Nenhum registro hoje.</td></tr>
+                    <tr><td colSpan={3} className="py-16 text-center text-[13px] text-slate-500">Nenhum registro hoje.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -145,72 +140,69 @@ export default function FinanceiroEmployeeSection({ byCloser, closers, onSelectC
           </div>
         </TabsContent>
 
-        {/* ── YESTERDAY ── */}
-        <TabsContent value="yesterday">
-          <div className="mb-2 text-[11px] text-muted-foreground">
-            Ordenado por: <span className="font-medium text-foreground">{sortLabel}</span> ({yestSortDir === "desc" ? "maior → menor" : "menor → maior"})
+        <TabsContent value="yesterday" className="mt-4">
+          <div className="mb-3 text-[11px] uppercase tracking-[0.14em] text-slate-500">
+            Ordenado por <span className="font-medium text-slate-950">{sortLabel}</span> ({yestSortDir === "desc" ? "maior → menor" : "menor → maior"})
           </div>
-          <div className="bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
+          <div className={brandTableWrapClass}>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full">
                 <thead>
-                  <tr className="border-b border-border/60 text-foreground" style={{ backgroundColor: "#E9E9EA" }}>
-                    <th className="text-left py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Funcionário</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
-                      <SortHeader label="Fat. Bruto" active={yestSortKey === "rev"} dir={yestSortDir}
+                  <tr className="border-b border-black/5">
+                    <th className={TH_CLS}>Funcionário</th>
+                    <th className={TH_CLS + " text-right"}>
+                      <SortHeader label="Fat. bruto" active={yestSortKey === "rev"} dir={yestSortDir}
                         onClick={() => toggleSort(yestSortKey, yestSortDir, "rev", setYestSortKey, setYestSortDir)} />
                     </th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">Taxas (5%)</th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
+                    <th className={TH_CLS + " text-right"}>Taxas (5%)</th>
+                    <th className={TH_CLS + " text-right"}>
                       <SortHeader label="Líquido" active={yestSortKey === "net"} dir={yestSortDir}
                         onClick={() => toggleSort(yestSortKey, yestSortDir, "net", setYestSortKey, setYestSortDir)} />
                     </th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
+                    <th className={TH_CLS + " text-right"}>
                       <SortHeader label="Margem" active={yestSortKey === "margin"} dir={yestSortDir}
                         onClick={() => toggleSort(yestSortKey, yestSortDir, "margin", setYestSortKey, setYestSortDir)} />
                     </th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-xs tracking-wide uppercase">
+                    <th className={TH_CLS + " text-right"}>
                       <SortHeader label="ROI" active={yestSortKey === "roi"} dir={yestSortDir}
                         onClick={() => toggleSort(yestSortKey, yestSortDir, "roi", setYestSortKey, setYestSortDir)} />
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {yesterdayRows.map(({ id, data, taxes, net, margin, roi }, idx) => {
+                  {yesterdayRows.map(({ id, data, taxes, net, margin, roi }) => {
                     const closer = closers.find((c) => c.id === id);
                     const isTop = id === topYesterdayId;
-                    const zebraClass = idx % 2 === 1 ? "bg-muted/30" : "";
-                    const topClass = "bg-emerald-50/60 dark:bg-emerald-950/20";
                     return (
-                      <tr key={id} className={`border-b border-border/20 ${isTop ? topClass : zebraClass}`}>
-                        <td className="py-2.5 px-4">
+                      <tr key={id} className={`border-b border-black/5 last:border-0 transition-colors ${isTop ? "bg-emerald-50/40" : "hover:bg-[#FAF9F6]/70"}`}>
+                        <td className={TD_CLS}>
                           <div className="flex items-center gap-2">
-                            <button onClick={() => closer && onSelectCloser(closer)} className="text-sm font-medium text-primary hover:underline text-left">
+                            <button onClick={() => closer && onSelectCloser(closer)} className="font-medium text-slate-950 hover:underline underline-offset-4 text-left">
                               {closer?.nome || "—"}
                             </button>
                             {isTop && (
-                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 gap-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-0">
+                              <Badge variant="secondary" className="text-[10px] px-2 py-0 gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60">
                                 <Trophy className="h-3 w-3" /> TOP
                               </Badge>
                             )}
                           </div>
                         </td>
-                        <td className="py-2.5 px-4 text-xs text-right tabular-nums">{formatBRL(data.revYesterday)}</td>
-                        <td className="py-2.5 px-4 text-xs text-right tabular-nums text-muted-foreground">{formatBRL(taxes)}</td>
-                        <td className={`py-2.5 px-4 text-xs text-right tabular-nums font-medium ${net >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                        <td className={TD_CLS + " text-right tabular-nums text-slate-950"}>{formatBRL(data.revYesterday)}</td>
+                        <td className={TD_CLS + " text-right tabular-nums text-slate-500"}>{formatBRL(taxes)}</td>
+                        <td className={`${TD_CLS} text-right tabular-nums font-medium ${net >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
                           {formatBRL(net)}
                         </td>
-                        <td className={`py-2.5 px-4 text-xs text-right tabular-nums font-medium ${margin >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                        <td className={`${TD_CLS} text-right tabular-nums font-medium ${margin >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
                           {margin.toFixed(1)}%
                         </td>
-                        <td className={`py-2.5 px-4 text-xs text-right tabular-nums font-medium ${roi >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                        <td className={`${TD_CLS} text-right tabular-nums font-medium ${roi >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
                           {roi.toFixed(2)}x
                         </td>
                       </tr>
                     );
                   })}
                   {yesterdayRows.length === 0 && (
-                    <tr><td colSpan={6} className="py-8 text-center text-muted-foreground text-sm">Nenhum registro ontem.</td></tr>
+                    <tr><td colSpan={6} className="py-16 text-center text-[13px] text-slate-500">Nenhum registro ontem.</td></tr>
                   )}
                 </tbody>
               </table>

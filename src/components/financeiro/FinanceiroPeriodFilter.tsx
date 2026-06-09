@@ -29,33 +29,37 @@ export default function FinanceiroPeriodFilter({ preset, customStart, customEnd,
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-xs font-medium text-muted-foreground mr-1">Período:</span>
-      {presets.map((p) => (
-        <Button
-          key={p.value}
-          size="sm"
-          variant={preset === p.value ? "default" : "outline"}
-          className="h-7 text-xs px-3"
-          onClick={() => {
-            onPresetChange(p.value);
-            if (p.value !== "custom") onCustomRange(undefined, undefined);
-          }}
-        >
-          {p.label}
-        </Button>
-      ))}
+      <div className="inline-flex items-center gap-1 rounded-full border border-black/5 bg-white p-1 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
+        {presets.map((p) => (
+          <button
+            key={p.value}
+            onClick={() => {
+              onPresetChange(p.value);
+              if (p.value !== "custom") onCustomRange(undefined, undefined);
+            }}
+            className={cn(
+              "rounded-full px-3 py-1 text-[12px] font-medium transition-colors whitespace-nowrap",
+              preset === p.value
+                ? "bg-slate-950 text-white shadow-sm"
+                : "text-slate-500 hover:text-slate-950"
+            )}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
 
       {preset === "custom" && (
         <Popover open={calOpen} onOpenChange={setCalOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
+            <Button variant="outline" size="sm" className="h-8 text-[12px] gap-1.5 rounded-full border-black/5 bg-white">
               <CalendarIcon className="h-3.5 w-3.5" />
               {customStart && customEnd
                 ? `${format(customStart, "dd/MM", { locale: ptBR })} – ${format(customEnd, "dd/MM", { locale: ptBR })}`
                 : "Selecionar datas"}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0" align="end">
             <Calendar
               mode="range"
               selected={customStart && customEnd ? { from: customStart, to: customEnd } : undefined}
