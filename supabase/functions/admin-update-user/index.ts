@@ -8,10 +8,11 @@ const corsHeaders = {
 
 interface UpdateUserRequest {
   userId: string;
-  action: "update_password" | "update_name";
+  action: "update_password" | "update_name" | "deactivate_user";
   newPassword?: string;
   newName?: string;
 }
+
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -168,10 +169,64 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    if (action === "deactivate_user") {
+      if (!isAdmin) {
+        return new Response(JSON.stringify({ error: "Apenas ADMIN pode desativar contas" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (userId === callerUser.id) {
+        return new Response(JSON.stringify({ error: "Você não pode desativar sua própria conta" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // 1) Marca o perfil como desativado (bloqueia RLS via is_approved)
+      const { error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .update({ status: "disabled" })
+        .eq("id", userId);
+
+      if (profileError) {
+        console.error("Deactivate profile error:", profileError);
+        return new Response(JSON.stringify({ error: profileError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // 2) Bane o usuário no auth (impede novos logins). Ban longo = desativação efetiva.
+      const { error: banError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+        ban_duration: "876000h",
+      } as any);
+
+      if (banError) {
+        console.error("Ban user error:", banError);
+        return new Response(JSON.stringify({ error: banError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      console.log(`User ${userId} deactivated by admin ${callerUser.email}`);
+
+      return new Response(
+        JSON.stringify({ success: true, message: "Conta desativada com sucesso" }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     return new Response(JSON.stringify({ error: "Ação inválida" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+
 
   } catch (error: any) {
     console.error("Error in admin-update-user:", error);

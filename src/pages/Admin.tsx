@@ -5,6 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
 import { StatusBadge } from "@/components/StatusBadge";
 import { ApprovalsTab } from "@/components/admin/ApprovalsTab";
 import { InviteManagement } from "@/components/admin/InviteManagement";
@@ -72,6 +74,11 @@ export default function Admin() {
   const [editingCommission, setEditingCommission] = useState<string | null>(null);
   const [commissionInput, setCommissionInput] = useState("");
   const [savingCommission, setSavingCommission] = useState(false);
+
+  // Deactivate user
+  const [deactivateUser, setDeactivateUser] = useState<UserWithRole | null>(null);
+  const [deactivating, setDeactivating] = useState(false);
+
 
   // Export
   const [exportMonth, setExportMonth] = useState(() => {
@@ -313,9 +320,29 @@ export default function Admin() {
     }
   };
 
+  const handleConfirmDeactivate = async () => {
+    if (!deactivateUser) return;
+    setDeactivating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-update-user', {
+        body: { userId: deactivateUser.id, action: 'deactivate_user' }
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Conta de ${deactivateUser.nome} desativada`);
+      setDeactivateUser(null);
+      fetchUsers();
+    } catch (error: any) {
+      toast.error('Erro ao desativar conta', { description: error.message });
+    } finally {
+      setDeactivating(false);
+    }
+  };
+
   if (loading) {
     return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
   }
+
 
   const totalUsers = users.length;
   const totalClosers = users.filter(u => u.role === 'CLOSER').length;
@@ -490,7 +517,20 @@ export default function Admin() {
                               </>
                             )}
                           </Button>
+                          {isAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Desativar conta"
+                              onClick={() => setDeactivateUser(u)}
+                              disabled={u.id === user?.id}
+                              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                            >
+                              <UserX className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
+
                       </td>
                     </tr>
                   ))}
@@ -697,6 +737,30 @@ export default function Admin() {
         actionLabel="Confirmar"
         onConfirm={handleArchiveConfirm}
       />
+
+      {/* Deactivate User Confirmation */}
+      <AlertDialog open={!!deactivateUser} onOpenChange={(v) => !v && setDeactivateUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desativar conta de {deactivateUser?.nome}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O usuário será bloqueado e não poderá mais acessar o sistema. O histórico permanece intacto para auditoria. Esta ação pode ser revertida manualmente no banco.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deactivating}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleConfirmDeactivate(); }}
+              disabled={deactivating}
+              className="bg-rose-600 hover:bg-rose-700"
+            >
+              {deactivating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Desativar conta
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       {/* Edit Name Modal */}
       <Dialog open={editNameModalOpen} onOpenChange={setEditNameModalOpen}>
