@@ -1,0 +1,2 @@
+UPDATE public.user_roles SET role = 'FINANCEIRO' WHERE user_id = 'f583e404-5920-4fd1-a515-8b404384f462';
+UPDATE public.profiles SET status = 'approved' WHERE id = 'f583e404-5920-4fd1-a515-8b404384f462';
