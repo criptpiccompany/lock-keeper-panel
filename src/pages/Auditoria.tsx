@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageHeader, brandTabsListClass, brandTabsTriggerClass } from "@/components/PageHeader";
+import { PageHeader, brandTabsListClass, brandTabsTriggerClass, BrandStat, brandTableWrapClass } from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDateTime } from "@/lib/helpers";
