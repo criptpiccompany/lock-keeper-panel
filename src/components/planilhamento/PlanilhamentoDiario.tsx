@@ -2274,6 +2274,50 @@ export default function PlanilhamentoDiario({
         diffs={pendingDiffs}
         submitting={submitting}
       />
+
+      {/* Confirm renew to today */}
+      <Dialog open={!!renewTarget} onOpenChange={(o) => { if (!o && !renewing) setRenewTarget(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Renovar para hoje?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>
+              Vamos adicionar{" "}
+              <span className="font-medium text-foreground">
+                {renewTarget ? getInfluencerHandle(renewTarget.influencer_id) : ""}
+              </span>{" "}
+              na lista de <span className="font-medium text-foreground">hoje</span> com o
+              mesmo Valor Pago de{" "}
+              <span className="font-medium text-foreground">
+                {renewTarget ? formatCurrency(Number(renewTarget.valor_pago)) : ""}
+              </span>.
+            </p>
+            <p>Faturamento e demais campos ficam em branco para serem preenchidos depois.</p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="ghost"
+              className="rounded-full"
+              onClick={() => setRenewTarget(null)}
+              disabled={renewing}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="rounded-full bg-[#242424] text-white hover:bg-[#1b1b1b]"
+              onClick={handleRenewToToday}
+              disabled={renewing}
+            >
+              {renewing ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adicionando…</>
+              ) : (
+                <><RefreshCw className="mr-2 h-4 w-4" /> Adicionar a hoje</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
