@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Loader2, Upload, X, FileText, User as UserIcon } from "lucide-react";
+import { Loader2, Upload, X, FileText, User as UserIcon, ClipboardPaste } from "lucide-react";
 
 interface Closer { id: string; nome: string; team_id: string | null }
 
@@ -57,6 +57,32 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
   }, []);
 
   const reset = () => { setFile(null); setInfluencer(""); };
+
+  const handlePasteClick = async () => {
+    try {
+      // @ts-ignore
+      if (!navigator.clipboard?.read) {
+        toast.error("Navegador não suporta colar imagem", { description: "Use Ctrl+V" });
+        return;
+      }
+      // @ts-ignore
+      const items = await navigator.clipboard.read();
+      for (const item of items) {
+        const imgType = item.types.find((t: string) => t.startsWith("image/") || t === "application/pdf");
+        if (imgType) {
+          const blob = await item.getType(imgType);
+          const ext = imgType.split("/")[1] || "png";
+          const f = new File([blob], `colado-${Date.now()}.${ext}`, { type: imgType });
+          setFile(f);
+          toast.success("Imagem colada");
+          return;
+        }
+      }
+      toast.error("Nenhuma imagem na área de transferência");
+    } catch (err: any) {
+      toast.error("Não foi possível colar", { description: err?.message || "Permita o acesso à área de transferência" });
+    }
+  };
 
   const handleConfirm = async () => {
     if (!user) return;
@@ -124,50 +150,62 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
         {/* Drop area */}
         <div className="col-span-12 md:col-span-4">
           <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#999] mb-1.5 block">Comprovante</label>
-          <div
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer?.files?.[0]; if (f) setFile(f); }}
-            onClick={() => !file && fileRef.current?.click()}
-            className="group relative rounded-2xl border-2 border-dashed border-[#e5e3dd] bg-[#fafaf8] hover:border-[#1f1f1f]/40 hover:bg-white transition-all h-[52px] flex items-center justify-center cursor-pointer overflow-hidden"
-          >
-            {preview && preview !== "pdf" ? (
-              <>
-                <img src={preview} alt="preview" className="max-h-[48px] object-contain" />
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setFile(null); }}
-                  className="absolute top-1 right-1 h-5 w-5 rounded-full bg-white/90 border border-[#ececeb] flex items-center justify-center hover:bg-white"
-                  title="Remover"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </>
-            ) : preview === "pdf" ? (
-              <div className="flex items-center gap-2 px-3">
-                <FileText className="h-4 w-4 text-[#676767]" />
-                <span className="text-[12.5px] font-medium text-[#1f1f1f] truncate max-w-[160px]">{file?.name}</span>
-                <button type="button" onClick={(e) => { e.stopPropagation(); setFile(null); }} className="text-[10px] text-[#999] underline ml-1">remover</button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2.5 text-[#676767]">
-                <div className="grid h-7 w-7 place-items-center rounded-full bg-[#1f1f1f] text-white shadow-sm group-hover:scale-105 transition-transform">
-                  <Upload className="h-3.5 w-3.5" />
+          <div className="flex items-stretch gap-2">
+            <div
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer?.files?.[0]; if (f) setFile(f); }}
+              onClick={() => !file && fileRef.current?.click()}
+              className="flex-1 group relative rounded-2xl border-2 border-dashed border-[#e5e3dd] bg-[#fafaf8] hover:border-[#1f1f1f]/40 hover:bg-white transition-all h-[52px] flex items-center justify-center cursor-pointer overflow-hidden"
+            >
+              {preview && preview !== "pdf" ? (
+                <>
+                  <img src={preview} alt="preview" className="max-h-[48px] object-contain" />
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setFile(null); }}
+                    className="absolute top-1 right-1 h-5 w-5 rounded-full bg-white/90 border border-[#ececeb] flex items-center justify-center hover:bg-white"
+                    title="Remover"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </>
+              ) : preview === "pdf" ? (
+                <div className="flex items-center gap-2 px-3">
+                  <FileText className="h-4 w-4 text-[#676767]" />
+                  <span className="text-[12.5px] font-medium text-[#1f1f1f] truncate max-w-[140px]">{file?.name}</span>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); setFile(null); }} className="text-[10px] text-[#999] underline ml-1">remover</button>
                 </div>
-                <div className="flex flex-col leading-tight">
-                  <p className="text-[12px] font-semibold tracking-[-0.01em] text-[#1f1f1f]">Cole, arraste ou clique</p>
-                  <p className="text-[10px] text-[#999]">PNG · JPG · WEBP · PDF</p>
+              ) : (
+                <div className="flex items-center gap-2.5 text-[#676767] px-2">
+                  <div className="grid h-7 w-7 place-items-center rounded-full bg-[#1f1f1f] text-white shadow-sm group-hover:scale-105 transition-transform shrink-0">
+                    <Upload className="h-3.5 w-3.5" />
+                  </div>
+                  <div className="flex flex-col leading-tight">
+                    <p className="text-[12px] font-semibold tracking-[-0.01em] text-[#1f1f1f]">Arraste ou clique</p>
+                    <p className="text-[10px] text-[#999]">PNG · JPG · WEBP · PDF</p>
+                  </div>
                 </div>
-              </div>
-            )}
-            <input
-              ref={fileRef}
-              type="file"
-              accept={ACCEPTED}
-              className="hidden"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) setFile(f); e.target.value = ""; }}
-            />
+              )}
+              <input
+                ref={fileRef}
+                type="file"
+                accept={ACCEPTED}
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) setFile(f); e.target.value = ""; }}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handlePasteClick}
+              title="Colar imagem da área de transferência"
+              className="shrink-0 h-[52px] px-3 rounded-2xl border border-[#ececeb] bg-white hover:bg-[#fafaf8] hover:border-[#1f1f1f]/40 transition-colors flex items-center gap-1.5 text-[#1f1f1f]"
+            >
+              <ClipboardPaste className="h-4 w-4" />
+              <span className="text-[11.5px] font-semibold uppercase tracking-[0.12em]">Colar</span>
+            </button>
           </div>
         </div>
+
 
         {/* Closer */}
         <div className="col-span-6 md:col-span-3">
