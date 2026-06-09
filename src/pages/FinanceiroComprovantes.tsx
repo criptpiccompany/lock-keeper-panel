@@ -88,15 +88,8 @@ export default function FinanceiroComprovantes() {
               <span className="h-1.5 w-1.5 rounded-full bg-[#6ea93d]" />
               {visibleClosers.length} closer{visibleClosers.length === 1 ? "" : "s"} visíveis
             </div>
-            <button
-              type="button"
-              onClick={() => setQuickOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#1f1f1f] text-white px-3.5 py-1.5 text-[11.5px] font-medium hover:bg-[#0d0d0d] transition-colors"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Adicionar comprovante
-            </button>
           </div>
+
           <div className="flex flex-wrap items-center justify-end gap-2">
             <label className="inline-flex items-center gap-2 rounded-full border border-[#ececeb] bg-white px-3.5 py-2">
               <Calendar className="h-3.5 w-3.5 text-[#999999]" />
