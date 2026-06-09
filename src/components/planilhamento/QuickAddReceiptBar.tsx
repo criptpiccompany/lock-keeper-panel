@@ -150,7 +150,7 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
       <div className="grid grid-cols-12 gap-3 items-end">
         {/* Drop area */}
         <div className="col-span-12 md:col-span-4">
-          <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#999] mb-1.5 block">Comprovante</label>
+          <label className="text-[11.5px] font-semibold uppercase tracking-[0.18em] text-[#1f1f1f]/70 mb-2 block">Comprovante</label>
           <div className="flex items-stretch gap-2">
             <div
               onDragOver={(e) => e.preventDefault()}
@@ -210,7 +210,7 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
 
         {/* Closer */}
         <div className="col-span-6 md:col-span-3">
-          <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#999] mb-1.5 block">Closer</label>
+          <label className="text-[11.5px] font-semibold uppercase tracking-[0.18em] text-[#1f1f1f]/70 mb-2 block">Closer</label>
           <div className="flex h-[52px] w-full items-center gap-2 rounded-2xl border border-[#ececeb] bg-white px-3.5 focus-within:border-[#1f1f1f]/40 transition-colors">
             <UserIcon className="h-4 w-4 text-[#999] shrink-0" />
             <select
@@ -226,7 +226,7 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
 
         {/* Influencer */}
         <div className="col-span-6 md:col-span-3">
-          <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#999] mb-1.5 block">Influenciador</label>
+          <label className="text-[11.5px] font-semibold uppercase tracking-[0.18em] text-[#1f1f1f]/70 mb-2 block">Influenciador</label>
           <div className="flex h-[52px] w-full items-center gap-1 rounded-2xl border border-[#ececeb] bg-white px-3.5 focus-within:border-[#1f1f1f]/40 transition-colors">
             <span className="text-[#999] text-[14px]">@</span>
             <input
