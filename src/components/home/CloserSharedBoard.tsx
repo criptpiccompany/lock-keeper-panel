@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { CLASSIFICACAO_OPTIONS, type KanbanCard } from "@/components/kanban/types";
 import { CardHistorySheet } from "@/components/home/CardHistorySheet";
