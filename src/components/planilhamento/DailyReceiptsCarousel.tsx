@@ -224,7 +224,7 @@ export default function DailyReceiptsCarousel({
       ref={carouselRef}
       tabIndex={requireFocus ? 0 : -1}
       className={cn(
-        "rounded-2xl border bg-white/60 backdrop-blur-sm px-4 py-3 outline-none",
+        "rounded-2xl border bg-white/60 backdrop-blur-sm px-4 pt-4 pb-5 outline-none",
         compact ? "" : "mt-4",
         requireFocus && "focus-within:border-[#6ea93d] focus-within:bg-white"
       )}
@@ -242,7 +242,7 @@ export default function DailyReceiptsCarousel({
       </div>
 
       <div
-        className="flex items-center gap-3 overflow-x-auto pb-1 -mx-1 px-1 scroll-smooth"
+        className="flex items-start gap-4 overflow-x-auto pt-3 pb-2 -mx-1 px-1 scroll-smooth"
         onDragOver={(e) => { if (canEdit) { e.preventDefault(); } }}
         onDrop={(e) => {
           if (!canEdit) return;
@@ -255,11 +255,11 @@ export default function DailyReceiptsCarousel({
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={uploading}
-            className="shrink-0 inline-flex flex-col items-center justify-center w-[68px] h-[68px] rounded-2xl border-2 border-dashed border-[#d8d6cf] bg-white hover:border-primary/50 hover:bg-primary/5 transition-colors disabled:opacity-50"
+            className="shrink-0 inline-flex flex-col items-center justify-center w-[104px] h-[104px] rounded-2xl border-2 border-dashed border-[#d8d6cf] bg-white hover:border-primary/50 hover:bg-primary/5 transition-colors disabled:opacity-50"
             title="Adicionar comprovante"
           >
-            {uploading ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : <Plus className="h-5 w-5 text-muted-foreground" />}
-            <span className="text-[9px] text-muted-foreground mt-0.5">Adicionar</span>
+            {uploading ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : <Plus className="h-6 w-6 text-muted-foreground" />}
+            <span className="text-[11px] text-muted-foreground mt-1">Adicionar</span>
           </button>
         )}
 
@@ -269,9 +269,9 @@ export default function DailyReceiptsCarousel({
           <span className="text-xs text-muted-foreground px-2">Nenhum comprovante</span>
         ) : (
           allItems.map((it) => (
-            <div key={it.id} className="shrink-0 flex flex-col items-center gap-1">
+            <div key={it.id} className="shrink-0 flex flex-col items-center gap-1.5">
               <div className="relative group">
-                <div className="w-[68px] h-[68px] rounded-2xl overflow-hidden ring-1 ring-black/5 bg-white flex items-center justify-center">
+                <div className="w-[104px] h-[104px] rounded-2xl overflow-hidden ring-1 ring-black/5 bg-white flex items-center justify-center">
                   <ComprovanteThumbnail
                     url={it.url}
                     onClick={async () => {
@@ -338,29 +338,29 @@ export default function DailyReceiptsCarousel({
               </div>
               {/* Dados extraídos pela IA */}
               {it.kind === "receipt" && (
-                <div className="w-[120px] text-center leading-tight mt-0.5">
+                <div className="w-[140px] text-center leading-tight mt-1">
                   {it.parseStatus === "processing" || (!it.parsedData && it.parseStatus !== "error" && it.parseStatus !== "unsupported" && it.parseStatus !== "done") ? (
-                    <span className="text-[9px] text-muted-foreground inline-flex items-center gap-1">
-                      <Loader2 className="h-2.5 w-2.5 animate-spin" /> lendo…
+                    <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+                      <Loader2 className="h-3 w-3 animate-spin" /> lendo…
                     </span>
                   ) : it.parsedData ? (
-                    <div className="text-[9px] text-foreground space-y-0.5">
+                    <div className="space-y-0.5">
                       {it.parsedData.manual_influencer && (
-                        <div className="font-semibold text-[10px] text-[#1f1f1f] truncate" title={it.parsedData.manual_influencer}>
+                        <div className="font-semibold text-[13px] tracking-[-0.01em] text-[#1f1f1f] truncate" title={it.parsedData.manual_influencer}>
                           {it.parsedData.manual_influencer}
                         </div>
                       )}
                       {it.parsedData.valor && (
-                        <div className="font-semibold text-[10px] text-[#2c2c2c]">R$ {it.parsedData.valor}</div>
+                        <div className="font-semibold text-[12.5px] text-[#2c2c2c]">R$ {it.parsedData.valor}</div>
                       )}
                       {it.parsedData.destinatario && (
-                        <div className="truncate text-muted-foreground" title={it.parsedData.destinatario}>
+                        <div className="truncate text-[11px] text-muted-foreground" title={it.parsedData.destinatario}>
                           {it.parsedData.destinatario}
                         </div>
                       )}
                     </div>
                   ) : it.parseStatus === "error" ? (
-                    <span className="text-[9px] text-red-500/70">falha leitura</span>
+                    <span className="text-[11px] text-red-500/70">falha leitura</span>
                   ) : null}
                 </div>
               )}
