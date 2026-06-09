@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { brandTableWrapClass } from "@/components/PageHeader";
-import { formatBRL, fmtDate, TAX_TOTAL, type DayAggregate } from "./financeiroHelpers";
+import { formatBRL, fmtDate, computeNet, TAX_TOTAL, type DayAggregate } from "./financeiroHelpers";
 
 interface Props {
   byDate: Map<string, DayAggregate>;
@@ -26,7 +26,7 @@ export default function FinanceiroHistory({ byDate, today, yesterday, filterStar
       .filter(([d]) => d !== today && d >= filterStart && d <= filterEnd)
       .map(([date, { cost, revenue }]) => {
         const taxes = revenue * TAX_TOTAL;
-        const net = revenue - taxes;
+        const net = computeNet(revenue, cost);
         const margin = revenue > 0 ? (net / revenue) * 100 : 0;
         return { date, cost, revenue, taxes, net, margin };
       });

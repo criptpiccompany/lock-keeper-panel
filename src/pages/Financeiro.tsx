@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, DollarSign, X, User, Trophy } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import FinanceiroEmployeeDrawerContent from "@/components/financeiro/FinanceiroEmployeeDrawerContent";
 import FinanceiroPeriodFilter from "@/components/financeiro/FinanceiroPeriodFilter";
@@ -17,7 +17,7 @@ import FinanceiroHistory from "@/components/financeiro/FinanceiroHistory";
 import TeamThermometersSection from "@/components/painel/TeamThermometersSection";
 import { PageHeader, brandTabsListClass, brandTabsTriggerClass } from "@/components/PageHeader";
 import {
-  todayStr, yesterdayStr, daysAgoStr, dateToStr,
+  todayStr, yesterdayStr, daysAgoStr, dateToStr, shiftDateStr, diffDaysInclusive, minDateStr,
   type DailyRecord, type CloserProfile, type DayAggregate, type EmployeeDayData, type PeriodPreset,
 } from "@/components/financeiro/financeiroHelpers";
 
@@ -25,6 +25,8 @@ interface Team {
   id: string;
   name: string;
 }
+
+const EMPTY_AGG: DayAggregate = { cost: 0, revenue: 0, count: 0 };
 
 export default function Financeiro() {
   const { isAdmin } = useAuth();
@@ -62,15 +64,44 @@ export default function Financeiro() {
     return today;
   }, [preset, customEnd, today, yesterday]);
 
+  // Period meta — labels, previous window, partial flag
+  const periodMeta = useMemo(() => {
+    const lenDays = diffDaysInclusive(filterStart, filterEnd);
+    const previousEnd = shiftDateStr(filterStart, -1);
+    const previousStart = shiftDateStr(previousEnd, -(lenDays - 1));
+    const partial = filterEnd >= today;
+
+    let currentLabel = "Período atual";
+    let previousLabel = "Período anterior";
+    let showDeltaBase = false;
+    if (preset === "today") {
+      currentLabel = "Hoje";
+      previousLabel = "Ontem";
+      showDeltaBase = true;
+    } else if (preset === "yesterday") {
+      currentLabel = "Ontem";
+      previousLabel = "Anteontem";
+      showDeltaBase = true;
+    } else {
+      currentLabel = `Atual (${lenDays}d)`;
+      previousLabel = `Anterior (${lenDays}d)`;
+    }
+    return { lenDays, previousStart, previousEnd, partial, currentLabel, previousLabel, showDeltaBase };
+  }, [filterStart, filterEnd, preset, today]);
+
   useEffect(() => {
     const fetchData = async () => {
-      const since = daysAgoStr(90);
+      // Adaptive window: cobre o período selecionado + comparação + mínimo 90d para histórico
+      const baseline = daysAgoStr(90);
+      const since = minDateStr(baseline, periodMeta.previousStart);
+      const until = filterEnd > today ? filterEnd : today;
+
       const [recRes, closerRes, teamsRes] = await Promise.all([
         supabase
           .from("daily_influencer_records")
           .select("id, date, closer_id, valor_pago, faturamento, team_id")
           .gte("date", since)
-          .lte("date", today)
+          .lte("date", until)
           .is("deleted_at", null)
           .order("date", { ascending: false }),
         supabase
@@ -88,15 +119,15 @@ export default function Financeiro() {
       setClosers(fetchedClosers);
       setTeams(fetchedTeams);
 
-      // Default to first team
-      if (fetchedTeams.length > 0) {
+      if (fetchedTeams.length > 0 && !selectedTeamId) {
         setSelectedTeamId(fetchedTeams[0].id);
       }
 
       setLoading(false);
     };
     fetchData();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [periodMeta.previousStart, filterEnd, today]);
 
   // Filter records by selected team (ADMIN only)
   const teamRecords = useMemo(() => {
@@ -104,13 +135,12 @@ export default function Financeiro() {
     return records.filter(r => r.team_id === selectedTeamId);
   }, [records, isAdmin, selectedTeamId]);
 
-  // Filter closers by selected team (ADMIN only)
   const teamClosers = useMemo(() => {
     if (!isAdmin || !selectedTeamId) return closers;
     return closers.filter(c => c.team_id === selectedTeamId);
   }, [closers, isAdmin, selectedTeamId]);
 
-  // Aggregate by date
+  // Aggregate by date (used by chart/history/delta)
   const byDate = useMemo(() => {
     const map = new Map<string, DayAggregate>();
     teamRecords.forEach((r) => {
@@ -123,31 +153,53 @@ export default function Financeiro() {
     return map;
   }, [teamRecords]);
 
-  const todayData = byDate.get(today) || { cost: 0, revenue: 0, count: 0 };
-  const yesterdayData = byDate.get(yesterday) || { cost: 0, revenue: 0, count: 0 };
-  const dayBeforeYesterday = daysAgoStr(2);
-  const dayBeforeData = byDate.get(dayBeforeYesterday) || { cost: 0, revenue: 0, count: 0 };
+  // Aggregate for selected period + previous comparison
+  const { currentData, previousData, previousDeltaBase } = useMemo(() => {
+    const cur: DayAggregate = { cost: 0, revenue: 0, count: 0 };
+    const prev: DayAggregate = { cost: 0, revenue: 0, count: 0 };
+    byDate.forEach((agg, date) => {
+      if (date >= filterStart && date <= filterEnd) {
+        cur.cost += agg.cost; cur.revenue += agg.revenue; cur.count += agg.count;
+      }
+      if (date >= periodMeta.previousStart && date <= periodMeta.previousEnd) {
+        prev.cost += agg.cost; prev.revenue += agg.revenue; prev.count += agg.count;
+      }
+    });
 
-  // Aggregate by closer
+    // Para presets today/yesterday: deltabase = dia anterior ao "previousLabel"
+    let base: DayAggregate | null = null;
+    if (periodMeta.showDeltaBase) {
+      const baseDate = shiftDateStr(periodMeta.previousStart, -1);
+      base = byDate.get(baseDate) || null;
+    }
+    return { currentData: cur, previousData: prev, previousDeltaBase: base };
+  }, [byDate, filterStart, filterEnd, periodMeta]);
+
+  // Aggregate by closer over current + previous periods
   const byCloser = useMemo(() => {
     const map = new Map<string, EmployeeDayData>();
     teamRecords.forEach((r) => {
-      if (r.date !== today && r.date !== yesterday) return;
-      const e = map.get(r.closer_id) || { costToday: 0, revToday: 0, countToday: 0, costYesterday: 0, revYesterday: 0, countYesterday: 0 };
-      if (r.date === today) {
-        e.costToday += Number(r.valor_pago) || 0;
-        e.revToday += Number(r.faturamento) || 0;
-        e.countToday += 1;
+      const inCurrent = r.date >= filterStart && r.date <= filterEnd;
+      const inPrevious = r.date >= periodMeta.previousStart && r.date <= periodMeta.previousEnd;
+      if (!inCurrent && !inPrevious) return;
+      const e = map.get(r.closer_id) || {
+        costCurrent: 0, revCurrent: 0, countCurrent: 0,
+        costPrevious: 0, revPrevious: 0, countPrevious: 0,
+      };
+      if (inCurrent) {
+        e.costCurrent += Number(r.valor_pago) || 0;
+        e.revCurrent += Number(r.faturamento) || 0;
+        e.countCurrent += 1;
       }
-      if (r.date === yesterday) {
-        e.costYesterday += Number(r.valor_pago) || 0;
-        e.revYesterday += Number(r.faturamento) || 0;
-        e.countYesterday += 1;
+      if (inPrevious) {
+        e.costPrevious += Number(r.valor_pago) || 0;
+        e.revPrevious += Number(r.faturamento) || 0;
+        e.countPrevious += 1;
       }
       map.set(r.closer_id, e);
     });
     return map;
-  }, [teamRecords, today, yesterday]);
+  }, [teamRecords, filterStart, filterEnd, periodMeta.previousStart, periodMeta.previousEnd]);
 
   if (loading) {
     return (
@@ -159,15 +211,33 @@ export default function Financeiro() {
 
   const financeiroContent = (
     <>
-      {/* Summary Cards */}
-      <FinanceiroSummaryCards todayData={todayData} yesterdayData={yesterdayData} />
+      <FinanceiroSummaryCards
+        currentData={currentData}
+        currentLabel={periodMeta.currentLabel}
+        partial={periodMeta.partial}
+        previousData={previousData}
+        previousLabel={periodMeta.previousLabel}
+      />
 
-      {/* Content */}
       <div className="space-y-6 mt-6">
         <FinanceiroDeltaStrip byDate={byDate} today={today} filterStart={filterStart} filterEnd={filterEnd} />
-        <FinanceiroDetailBlocks todayData={todayData} yesterdayData={yesterdayData} dayBeforeData={dayBeforeData} />
+        <FinanceiroDetailBlocks
+          currentData={currentData}
+          currentLabel={periodMeta.currentLabel}
+          partial={periodMeta.partial}
+          previousData={previousData}
+          previousLabel={periodMeta.previousLabel}
+          previousDeltaBase={previousDeltaBase}
+          previousDeltaBaseLabel={periodMeta.showDeltaBase ? (preset === "today" ? "anteontem" : "dia anterior") : undefined}
+        />
         <FinanceiroChart byDate={byDate} today={today} filterStart={filterStart} filterEnd={filterEnd} />
-        <FinanceiroEmployeeSection byCloser={byCloser} closers={teamClosers} onSelectCloser={setSelectedCloser} />
+        <FinanceiroEmployeeSection
+          byCloser={byCloser}
+          closers={teamClosers}
+          onSelectCloser={setSelectedCloser}
+          currentLabel={periodMeta.currentLabel}
+          previousLabel={periodMeta.previousLabel}
+        />
         <FinanceiroHistory byDate={byDate} today={today} yesterday={yesterday} filterStart={filterStart} filterEnd={filterEnd} />
         <TeamThermometersSection />
       </div>
@@ -213,7 +283,6 @@ export default function Financeiro() {
         )}
       </PageHeader>
 
-      {/* Content */}
       <div className="container px-4 sm:px-6 lg:px-8 py-6">
         {financeiroContent}
       </div>
@@ -241,9 +310,9 @@ export default function Financeiro() {
             const empData = byCloser.get(selectedCloser.id);
             if (!empData) return null;
             const items = [
-              { label: "Custo Hoje", value: empData.costToday },
-              { label: "Fat. Ontem", value: empData.revYesterday },
-              { label: "Custo Ontem", value: empData.costYesterday },
+              { label: `Custo ${periodMeta.currentLabel}`, value: empData.costCurrent },
+              { label: `Fat. ${periodMeta.previousLabel}`, value: empData.revPrevious },
+              { label: `Custo ${periodMeta.previousLabel}`, value: empData.costPrevious },
             ];
             return (
               <div className="grid grid-cols-3 gap-px bg-border/40">

@@ -3,7 +3,7 @@ import { ArrowDown, ArrowUp, Trophy } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { brandTabsListClass, brandTabsTriggerClass, brandTableWrapClass } from "@/components/PageHeader";
-import { formatBRL, TAX_TOTAL, type CloserProfile, type EmployeeDayData } from "./financeiroHelpers";
+import { formatBRL, computeNet, TAX_TOTAL, type CloserProfile, type EmployeeDayData } from "./financeiroHelpers";
 
 type SortKey = "cost" | "rev" | "net" | "margin" | "roi" | "count";
 type SortDir = "asc" | "desc";
@@ -12,6 +12,8 @@ interface Props {
   byCloser: Map<string, EmployeeDayData>;
   closers: CloserProfile[];
   onSelectCloser: (closer: CloserProfile) => void;
+  currentLabel: string;
+  previousLabel: string;
 }
 
 function SortHeader({ label, active, dir, onClick }: { label: string; active: boolean; dir: SortDir; onClick: () => void }) {
@@ -30,76 +32,77 @@ function SortHeader({ label, active, dir, onClick }: { label: string; active: bo
 const TH_CLS = "text-left py-3 px-5 font-medium text-[10px] uppercase tracking-[0.14em] text-slate-500 bg-[#FAF9F6]";
 const TD_CLS = "py-3 px-5 text-[13px]";
 
-export default function FinanceiroEmployeeSection({ byCloser, closers, onSelectCloser }: Props) {
-  const [todaySortKey, setTodaySortKey] = useState<SortKey>("cost");
-  const [todaySortDir, setTodaySortDir] = useState<SortDir>("desc");
-  const [yestSortKey, setYestSortKey] = useState<SortKey>("net");
-  const [yestSortDir, setYestSortDir] = useState<SortDir>("desc");
+export default function FinanceiroEmployeeSection({ byCloser, closers, onSelectCloser, currentLabel, previousLabel }: Props) {
+  const [currentSortKey, setCurrentSortKey] = useState<SortKey>("cost");
+  const [currentSortDir, setCurrentSortDir] = useState<SortDir>("desc");
+  const [prevSortKey, setPrevSortKey] = useState<SortKey>("net");
+  const [prevSortDir, setPrevSortDir] = useState<SortDir>("desc");
 
   const toggleSort = useCallback((current: SortKey, dir: SortDir, key: SortKey, setKey: (k: SortKey) => void, setDir: (d: SortDir) => void) => {
     if (current === key) setDir(dir === "desc" ? "asc" : "desc");
     else { setKey(key); setDir("desc"); }
   }, []);
 
-  const todayRows = useMemo(() => {
+  const currentRows = useMemo(() => {
     const rows = Array.from(byCloser.entries())
-      .filter(([, d]) => d.costToday > 0 || d.countToday > 0)
+      .filter(([, d]) => d.costCurrent > 0 || d.countCurrent > 0)
       .map(([id, data]) => ({ id, data }));
 
     rows.sort((a, b) => {
-      const valA = todaySortKey === "cost" ? a.data.costToday : a.data.countToday;
-      const valB = todaySortKey === "cost" ? b.data.costToday : b.data.countToday;
-      return todaySortDir === "desc" ? valB - valA : valA - valB;
+      const valA = currentSortKey === "cost" ? a.data.costCurrent : a.data.countCurrent;
+      const valB = currentSortKey === "cost" ? b.data.costCurrent : b.data.countCurrent;
+      return currentSortDir === "desc" ? valB - valA : valA - valB;
     });
     return rows;
-  }, [byCloser, todaySortKey, todaySortDir]);
+  }, [byCloser, currentSortKey, currentSortDir]);
 
-  const yesterdayRows = useMemo(() => {
+  const previousRows = useMemo(() => {
     const rows = Array.from(byCloser.entries())
-      .filter(([, d]) => d.revYesterday > 0 || d.costYesterday > 0)
+      .filter(([, d]) => d.revPrevious > 0 || d.costPrevious > 0)
       .map(([id, data]) => {
-        const taxes = data.revYesterday * TAX_TOTAL;
-        const net = data.revYesterday - taxes;
-        const margin = data.revYesterday > 0 ? (net / data.revYesterday) * 100 : 0;
-        const roi = data.costYesterday > 0 ? (net / data.costYesterday) : 0;
+        const taxes = data.revPrevious * TAX_TOTAL;
+        const net = computeNet(data.revPrevious, data.costPrevious);
+        const margin = data.revPrevious > 0 ? (net / data.revPrevious) * 100 : 0;
+        // ROI verdadeiro: lucro líquido sobre investimento
+        const roi = data.costPrevious > 0 ? (net / data.costPrevious) : 0;
         return { id, data, taxes, net, margin, roi };
       });
 
     rows.sort((a, b) => {
       let diff = 0;
-      const key = yestSortKey;
+      const key = prevSortKey;
       if (key === "net") {
         diff = b.net - a.net;
-        if (diff === 0) diff = b.data.revYesterday - a.data.revYesterday;
-        if (diff === 0) diff = a.data.costYesterday - b.data.costYesterday;
-      } else if (key === "rev") diff = b.data.revYesterday - a.data.revYesterday;
+        if (diff === 0) diff = b.data.revPrevious - a.data.revPrevious;
+        if (diff === 0) diff = a.data.costPrevious - b.data.costPrevious;
+      } else if (key === "rev") diff = b.data.revPrevious - a.data.revPrevious;
       else if (key === "margin") diff = b.margin - a.margin;
       else if (key === "roi") diff = b.roi - a.roi;
-      else if (key === "cost") diff = b.data.costYesterday - a.data.costYesterday;
-      return yestSortDir === "asc" ? -diff : diff;
+      else if (key === "cost") diff = b.data.costPrevious - a.data.costPrevious;
+      return prevSortDir === "asc" ? -diff : diff;
     });
     return rows;
-  }, [byCloser, yestSortKey, yestSortDir]);
+  }, [byCloser, prevSortKey, prevSortDir]);
 
-  const topYesterdayId = yesterdayRows.length > 0 && yesterdayRows[0].net > 0 ? yesterdayRows[0].id : null;
+  const topPrevId = previousRows.length > 0 && previousRows[0].net > 0 ? previousRows[0].id : null;
 
-  const resetToday = () => { setTodaySortKey("cost"); setTodaySortDir("desc"); };
-  const resetYesterday = () => { setYestSortKey("net"); setYestSortDir("desc"); };
+  const resetCurrent = () => { setCurrentSortKey("cost"); setCurrentSortDir("desc"); };
+  const resetPrev = () => { setPrevSortKey("net"); setPrevSortDir("desc"); };
 
-  const sortLabel = yestSortKey === "net" ? "Resultado líquido" : yestSortKey === "rev" ? "Faturamento" : yestSortKey === "margin" ? "Margem" : yestSortKey === "roi" ? "ROI" : "Custo";
+  const sortLabel = prevSortKey === "net" ? "Resultado líquido" : prevSortKey === "rev" ? "Faturamento" : prevSortKey === "margin" ? "Margem" : prevSortKey === "roi" ? "ROI" : "Custo";
 
   return (
     <div className="space-y-4">
       <div className="flex items-end justify-between">
         <h2 className="text-[20px] font-medium tracking-[-0.02em] text-slate-950">Por funcionário</h2>
       </div>
-      <Tabs defaultValue="today" className="w-full" onValueChange={() => { resetToday(); resetYesterday(); }}>
+      <Tabs defaultValue="current" className="w-full" onValueChange={() => { resetCurrent(); resetPrev(); }}>
         <TabsList className={brandTabsListClass}>
-          <TabsTrigger value="today" className={brandTabsTriggerClass}>Hoje (custo)</TabsTrigger>
-          <TabsTrigger value="yesterday" className={brandTabsTriggerClass}>Ontem (resultado)</TabsTrigger>
+          <TabsTrigger value="current" className={brandTabsTriggerClass}>{currentLabel} (custo)</TabsTrigger>
+          <TabsTrigger value="previous" className={brandTabsTriggerClass}>{previousLabel} (resultado)</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="today" className="mt-4">
+        <TabsContent value="current" className="mt-4">
           <div className={brandTableWrapClass}>
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -107,17 +110,17 @@ export default function FinanceiroEmployeeSection({ byCloser, closers, onSelectC
                   <tr className="border-b border-black/5">
                     <th className={TH_CLS}>Funcionário</th>
                     <th className={TH_CLS + " text-right"}>
-                      <SortHeader label="Custo hoje" active={todaySortKey === "cost"} dir={todaySortDir}
-                        onClick={() => toggleSort(todaySortKey, todaySortDir, "cost", setTodaySortKey, setTodaySortDir)} />
+                      <SortHeader label={`Custo — ${currentLabel.toLowerCase()}`} active={currentSortKey === "cost"} dir={currentSortDir}
+                        onClick={() => toggleSort(currentSortKey, currentSortDir, "cost", setCurrentSortKey, setCurrentSortDir)} />
                     </th>
                     <th className={TH_CLS + " text-right"}>
-                      <SortHeader label="Registros" active={todaySortKey === "count"} dir={todaySortDir}
-                        onClick={() => toggleSort(todaySortKey, todaySortDir, "count", setTodaySortKey, setTodaySortDir)} />
+                      <SortHeader label="Registros" active={currentSortKey === "count"} dir={currentSortDir}
+                        onClick={() => toggleSort(currentSortKey, currentSortDir, "count", setCurrentSortKey, setCurrentSortDir)} />
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {todayRows.map(({ id, data }) => {
+                  {currentRows.map(({ id, data }) => {
                     const closer = closers.find((c) => c.id === id);
                     return (
                       <tr key={id} className="border-b border-black/5 last:border-0 hover:bg-[#FAF9F6]/70 transition-colors">
@@ -126,13 +129,13 @@ export default function FinanceiroEmployeeSection({ byCloser, closers, onSelectC
                             {closer?.nome || "—"}
                           </button>
                         </td>
-                        <td className={TD_CLS + " text-right tabular-nums font-medium text-slate-950"}>{formatBRL(data.costToday)}</td>
-                        <td className={TD_CLS + " text-right tabular-nums text-slate-500"}>{data.countToday}</td>
+                        <td className={TD_CLS + " text-right tabular-nums font-medium text-slate-950"}>{formatBRL(data.costCurrent)}</td>
+                        <td className={TD_CLS + " text-right tabular-nums text-slate-500"}>{data.countCurrent}</td>
                       </tr>
                     );
                   })}
-                  {todayRows.length === 0 && (
-                    <tr><td colSpan={3} className="py-16 text-center text-[13px] text-slate-500">Nenhum registro hoje.</td></tr>
+                  {currentRows.length === 0 && (
+                    <tr><td colSpan={3} className="py-16 text-center text-[13px] text-slate-500">Nenhum registro no período.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -140,9 +143,9 @@ export default function FinanceiroEmployeeSection({ byCloser, closers, onSelectC
           </div>
         </TabsContent>
 
-        <TabsContent value="yesterday" className="mt-4">
+        <TabsContent value="previous" className="mt-4">
           <div className="mb-3 text-[11px] uppercase tracking-[0.14em] text-slate-500">
-            Ordenado por <span className="font-medium text-slate-950">{sortLabel}</span> ({yestSortDir === "desc" ? "maior → menor" : "menor → maior"})
+            Ordenado por <span className="font-medium text-slate-950">{sortLabel}</span> ({prevSortDir === "desc" ? "maior → menor" : "menor → maior"}) · Líquido = Fat − Custo − Taxas
           </div>
           <div className={brandTableWrapClass}>
             <div className="overflow-x-auto">
@@ -151,28 +154,32 @@ export default function FinanceiroEmployeeSection({ byCloser, closers, onSelectC
                   <tr className="border-b border-black/5">
                     <th className={TH_CLS}>Funcionário</th>
                     <th className={TH_CLS + " text-right"}>
-                      <SortHeader label="Fat. bruto" active={yestSortKey === "rev"} dir={yestSortDir}
-                        onClick={() => toggleSort(yestSortKey, yestSortDir, "rev", setYestSortKey, setYestSortDir)} />
+                      <SortHeader label="Custo" active={prevSortKey === "cost"} dir={prevSortDir}
+                        onClick={() => toggleSort(prevSortKey, prevSortDir, "cost", setPrevSortKey, setPrevSortDir)} />
+                    </th>
+                    <th className={TH_CLS + " text-right"}>
+                      <SortHeader label="Fat. bruto" active={prevSortKey === "rev"} dir={prevSortDir}
+                        onClick={() => toggleSort(prevSortKey, prevSortDir, "rev", setPrevSortKey, setPrevSortDir)} />
                     </th>
                     <th className={TH_CLS + " text-right"}>Taxas (5%)</th>
                     <th className={TH_CLS + " text-right"}>
-                      <SortHeader label="Líquido" active={yestSortKey === "net"} dir={yestSortDir}
-                        onClick={() => toggleSort(yestSortKey, yestSortDir, "net", setYestSortKey, setYestSortDir)} />
+                      <SortHeader label="Líquido" active={prevSortKey === "net"} dir={prevSortDir}
+                        onClick={() => toggleSort(prevSortKey, prevSortDir, "net", setPrevSortKey, setPrevSortDir)} />
                     </th>
                     <th className={TH_CLS + " text-right"}>
-                      <SortHeader label="Margem" active={yestSortKey === "margin"} dir={yestSortDir}
-                        onClick={() => toggleSort(yestSortKey, yestSortDir, "margin", setYestSortKey, setYestSortDir)} />
+                      <SortHeader label="Margem" active={prevSortKey === "margin"} dir={prevSortDir}
+                        onClick={() => toggleSort(prevSortKey, prevSortDir, "margin", setPrevSortKey, setPrevSortDir)} />
                     </th>
                     <th className={TH_CLS + " text-right"}>
-                      <SortHeader label="ROI" active={yestSortKey === "roi"} dir={yestSortDir}
-                        onClick={() => toggleSort(yestSortKey, yestSortDir, "roi", setYestSortKey, setYestSortDir)} />
+                      <SortHeader label="ROI" active={prevSortKey === "roi"} dir={prevSortDir}
+                        onClick={() => toggleSort(prevSortKey, prevSortDir, "roi", setPrevSortKey, setPrevSortDir)} />
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {yesterdayRows.map(({ id, data, taxes, net, margin, roi }) => {
+                  {previousRows.map(({ id, data, taxes, net, margin, roi }) => {
                     const closer = closers.find((c) => c.id === id);
-                    const isTop = id === topYesterdayId;
+                    const isTop = id === topPrevId;
                     return (
                       <tr key={id} className={`border-b border-black/5 last:border-0 transition-colors ${isTop ? "bg-emerald-50/40" : "hover:bg-[#FAF9F6]/70"}`}>
                         <td className={TD_CLS}>
@@ -187,7 +194,8 @@ export default function FinanceiroEmployeeSection({ byCloser, closers, onSelectC
                             )}
                           </div>
                         </td>
-                        <td className={TD_CLS + " text-right tabular-nums text-slate-950"}>{formatBRL(data.revYesterday)}</td>
+                        <td className={TD_CLS + " text-right tabular-nums text-slate-700"}>{formatBRL(data.costPrevious)}</td>
+                        <td className={TD_CLS + " text-right tabular-nums text-slate-950"}>{formatBRL(data.revPrevious)}</td>
                         <td className={TD_CLS + " text-right tabular-nums text-slate-500"}>{formatBRL(taxes)}</td>
                         <td className={`${TD_CLS} text-right tabular-nums font-medium ${net >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
                           {formatBRL(net)}
@@ -201,8 +209,8 @@ export default function FinanceiroEmployeeSection({ byCloser, closers, onSelectC
                       </tr>
                     );
                   })}
-                  {yesterdayRows.length === 0 && (
-                    <tr><td colSpan={6} className="py-16 text-center text-[13px] text-slate-500">Nenhum registro ontem.</td></tr>
+                  {previousRows.length === 0 && (
+                    <tr><td colSpan={7} className="py-16 text-center text-[13px] text-slate-500">Nenhum registro em {previousLabel.toLowerCase()}.</td></tr>
                   )}
                 </tbody>
               </table>
