@@ -37,16 +37,26 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const VIEW_AS_KEY = 'viewAsRole';
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [viewAsRole, setViewAsRoleState] = useState<UserRole | null>(null);
+  const [viewAsRole, setViewAsRoleState] = useState<UserRole | null>(() => {
+    try {
+      const v = sessionStorage.getItem(VIEW_AS_KEY);
+      return (v as UserRole | null) || null;
+    } catch {
+      return null;
+    }
+  });
 
   const setViewAsRole = (role: UserRole | null) => {
     setViewAsRoleState(role);
     try {
-      localStorage.removeItem('viewAsRole');
+      if (role) sessionStorage.setItem(VIEW_AS_KEY, role);
+      else sessionStorage.removeItem(VIEW_AS_KEY);
     } catch {}
   };
 
@@ -90,14 +100,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Track the last loaded profile id so token refresh / focus events
-    // do NOT trigger a full profile refetch (which re-creates the `user`
-    // object and cascades re-renders across the app — visible as flicker).
     let lastLoadedUserId: string | null = null;
+    let lastAccessToken: string | null = null;
     let cancelled = false;
 
     const loadProfile = (userId: string, email: string) => {
-      // Fire-and-forget — never await inside onAuthStateChange.
       fetchUserProfile(userId, email).then((userProfile) => {
         if (cancelled) return;
         if (userProfile) lastLoadedUserId = userId;
@@ -106,23 +113,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     };
 
+    const applySession = (currentSession: Session | null) => {
+      const token = currentSession?.access_token ?? null;
+      // Only update session state when the actual token changes — prevents
+      // re-render cascades on TOKEN_REFRESHED echoes or INITIAL_SESSION on
+      // tab-focus that carry the same token.
+      if (token !== lastAccessToken) {
+        lastAccessToken = token;
+        setSession(currentSession);
+      }
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
-        setSession(currentSession);
         const sessionUserId = currentSession?.user?.id ?? null;
 
-        if (!sessionUserId) {
+        // Explicit sign-out: clear everything including impersonation.
+        if (event === 'SIGNED_OUT') {
           lastLoadedUserId = null;
+          lastAccessToken = null;
           setViewAsRole(null);
+          setSession(null);
           setUser(null);
           setLoading(false);
           return;
         }
 
-        // Only (re)fetch profile when the user identity actually changes
-        // or on explicit USER_UPDATED. Ignore TOKEN_REFRESHED / SIGNED_IN
-        // on the same user — they fire on tab focus and were causing the
-        // whole tree to re-render as if reloading.
+        applySession(currentSession);
+
+        if (!sessionUserId) {
+          setLoading(false);
+          return;
+        }
+
         const userChanged = sessionUserId !== lastLoadedUserId;
         if (userChanged || event === 'USER_UPDATED') {
           loadProfile(sessionUserId, currentSession!.user.email || '');
@@ -132,9 +155,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       if (cancelled) return;
-      setSession(currentSession);
+      applySession(currentSession);
       if (currentSession?.user) {
-        loadProfile(currentSession.user.id, currentSession.user.email || '');
+        if (currentSession.user.id !== lastLoadedUserId) {
+          loadProfile(currentSession.user.id, currentSession.user.email || '');
+        }
       } else {
         setLoading(false);
       }
