@@ -234,56 +234,46 @@ export default function Auditoria() {
       </PageHeader>
 
 
-      {/* Sub-tabs */}
-      <div className="border-b bg-card">
-        <div className="container">
-          <nav className="flex gap-1 overflow-x-auto scrollbar-none">
+      {/* Sub-tabs — pill premium */}
+      <div className="bg-[#F6F4F0]">
+        <div className="container px-4 sm:px-6 lg:px-8 pt-6">
+          <nav className={`${brandTabsListClass} max-w-full overflow-x-auto scrollbar-none`}>
             <button
               onClick={() => handleTabClick("ALL")}
-              className={`
-                flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap
-                ${activeTab === "ALL"
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground/80"
-                }
-              `}
+              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors whitespace-nowrap ${
+                activeTab === "ALL"
+                  ? "bg-slate-950 text-white shadow-sm"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
             >
-              <Users className="h-4 w-4" />
+              <Users className="h-3.5 w-3.5" />
               Geral
-              {activeTab === "ALL" && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-full" />
-              )}
             </button>
             {userTabs.map(([userId, nome]) => {
               const isActive = activeTab === userId;
               const level = unseenLevel(userId);
               const dotColor = level === "sensitive"
-                ? { ping: "bg-red-400", dot: "bg-red-500" }
+                ? { ping: "bg-rose-400", dot: "bg-rose-500" }
                 : level === "common"
-                  ? { ping: "bg-orange-400", dot: "bg-orange-500" }
+                  ? { ping: "bg-amber-400", dot: "bg-amber-500" }
                   : null;
               return (
                 <button
                   key={userId}
                   onClick={() => handleTabClick(userId)}
-                  className={`
-                    flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap
-                    ${isActive
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground/80"
-                    }
-                  `}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors whitespace-nowrap ${
+                    isActive
+                      ? "bg-slate-950 text-white shadow-sm"
+                      : "text-slate-500 hover:text-slate-900"
+                  }`}
                 >
-                  <User className="h-4 w-4" />
+                  <User className="h-3.5 w-3.5" />
                   {nome}
                   {dotColor && !isActive && (
-                    <span className="relative flex h-2.5 w-2.5">
+                    <span className="relative flex h-2 w-2">
                       <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${dotColor.ping} opacity-75`} />
-                      <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${dotColor.dot}`} />
+                      <span className={`relative inline-flex rounded-full h-2 w-2 ${dotColor.dot}`} />
                     </span>
-                  )}
-                  {isActive && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-full" />
                   )}
                 </button>
               );
@@ -305,6 +295,7 @@ export default function Auditoria() {
     </div>
   );
 }
+
 
 // --- Filterable table (shared between Geral and per-user) ---
 
