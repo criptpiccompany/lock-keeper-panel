@@ -392,6 +392,7 @@ export default function PlanilhamentoDiario({
 
   // Persistent days from DB
   const [persistedDays, setPersistedDays] = useState<string[]>([]);
+  const [receiptDays, setReceiptDays] = useState<string[]>([]);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [creatingAllDays, setCreatingAllDays] = useState(false);
   const [daySearch, setDaySearch] = useState("");
