@@ -298,6 +298,17 @@ function TableRow({
                   >
                     <Clock3 className="h-3.5 w-3.5" />
                   </button>
+                  {onArchive ? (
+                    <button
+                      type="button"
+                      onClick={() => onArchive(card)}
+                      className="shrink-0 text-[#b2b2ad] transition-colors hover:text-[#c2410c]"
+                      title="Arquivar influenciador"
+                      aria-label="Arquivar influenciador"
+                    >
+                      <Archive className="h-3.5 w-3.5" />
+                    </button>
+                  ) : null}
                   <CardHistorySheet
                     cardId={card.id}
                     cardName={card.display_name}
