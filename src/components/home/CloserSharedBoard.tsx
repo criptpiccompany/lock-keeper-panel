@@ -768,6 +768,20 @@ export function CloserSharedBoard() {
     }
   };
 
+  const handleArchive = async (card: TeamBoardCard) => {
+    if (!window.confirm(`Arquivar @${card.instagram_username}? Você poderá restaurá-lo depois pela aba "Arquivados" no Kanban.`)) return;
+    const { error } = await supabase
+      .from("team_shared_board")
+      .update({ archived: true, archived_at: new Date().toISOString(), archived_from_status: card.status } as never)
+      .eq("id", card.id);
+    if (error) {
+      toast.error("Erro ao arquivar influenciador");
+      return;
+    }
+    setCards((current) => current.filter((c) => c.id !== card.id));
+    toast.success("Influenciador arquivado");
+  };
+
   const filteredCards = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const list = !needle
