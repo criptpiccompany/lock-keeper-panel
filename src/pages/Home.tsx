@@ -955,11 +955,11 @@ export default function Home() {
           />
 
           <Dialog open={planAddOpen} onOpenChange={setPlanAddOpen}>
-            <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto p-0">
+            <DialogContent className="max-w-[98vw] w-[98vw] sm:max-w-[95vw] sm:w-[95vw] max-h-[92vh] overflow-y-auto overflow-x-auto p-0">
               <DialogHeader className="px-6 pt-6">
                 <DialogTitle>Registrar fechamento de hoje</DialogTitle>
               </DialogHeader>
-              <div className="px-2 pb-4">
+              <div className="px-4 pb-4">
                 {planAddOpen && (
                   <PlanilhamentoDiario focusedDate={today} autoOpenAdd compact />
                 )}
@@ -968,11 +968,11 @@ export default function Home() {
           </Dialog>
 
           <Dialog open={planViewOpen} onOpenChange={setPlanViewOpen}>
-            <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto p-0">
+            <DialogContent className="max-w-[98vw] w-[98vw] sm:max-w-[95vw] sm:w-[95vw] max-h-[92vh] overflow-y-auto overflow-x-auto p-0">
               <DialogHeader className="px-6 pt-6">
                 <DialogTitle>Planilhamento de hoje</DialogTitle>
               </DialogHeader>
-              <div className="px-2 pb-4">
+              <div className="px-4 pb-4">
                 {planViewOpen && (
                   <PlanilhamentoDiario focusedDate={today} compact />
                 )}
