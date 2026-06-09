@@ -1671,9 +1671,23 @@ export default function PlanilhamentoDiario({
                                   )}
                                   {!viewingOther && (
                                     <td className="py-2.5 px-4 text-right">
-                                      <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => openEditRecord(record)}>
-                                        Editar
-                                      </Button>
+                                      <div className="inline-flex items-center gap-1">
+                                        {record.date !== getLocalTodayStr() && (
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-7 px-2 text-xs gap-1"
+                                            title="Renovar para hoje"
+                                            onClick={(e) => { e.stopPropagation(); setRenewTarget(record); }}
+                                          >
+                                            <RefreshCw className="h-3.5 w-3.5" />
+                                            Renovar
+                                          </Button>
+                                        )}
+                                        <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => openEditRecord(record)}>
+                                          Editar
+                                        </Button>
+                                      </div>
                                     </td>
                                   )}
                                 </tr>
