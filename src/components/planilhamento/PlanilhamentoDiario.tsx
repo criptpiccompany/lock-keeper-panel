@@ -402,6 +402,11 @@ export default function PlanilhamentoDiario({
   const [dayListOpen, setDayListOpen] = useState(false);
   const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
 
+  // Renew to today (re-add same influencer in today's list with same valor_pago)
+  const [renewTarget, setRenewTarget] = useState<DailyRecord | null>(null);
+  const [renewing, setRenewing] = useState(false);
+
+
   const monthKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}`;
   const monthDays = useMemo(() => getMonthDays(selectedYear, selectedMonth), [selectedYear, selectedMonth]);
 
