@@ -174,47 +174,43 @@ export default function Financeiro() {
   );
 
   return (
-    <div className="min-h-screen bg-muted/20">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="container px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight flex items-center gap-2">
-              <DollarSign className="h-5 w-5 sm:h-6 sm:w-6" />
-              Financeiro
-            </h1>
-            <FinanceiroPeriodFilter
-              preset={preset}
-              customStart={customStart}
-              customEnd={customEnd}
-              onPresetChange={setPreset}
-              onCustomRange={(s, e) => { setCustomStart(s); setCustomEnd(e); }}
-            />
+    <div className="min-h-screen bg-[#F6F4F0]">
+      <PageHeader
+        eyebrow="Financeiro"
+        icon={DollarSign}
+        title="Operação financeira"
+        subtitle="Acompanhe receita, investimento e resultado por closer e por time, com leitura executiva do período."
+        right={
+          <FinanceiroPeriodFilter
+            preset={preset}
+            customStart={customStart}
+            customEnd={customEnd}
+            onPresetChange={setPreset}
+            onCustomRange={(s, e) => { setCustomStart(s); setCustomEnd(e); }}
+          />
+        }
+      >
+        {isAdmin && teams.length > 1 && (
+          <div className="flex flex-wrap items-center gap-3">
+            <Tabs value={selectedTeamId} onValueChange={setSelectedTeamId}>
+              <TabsList className={brandTabsListClass + " w-full sm:w-auto overflow-x-auto"}>
+                {teams.map(t => (
+                  <TabsTrigger key={t.id} value={t.id} className={brandTabsTriggerClass}>{t.name}</TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+
+            <Button
+              size="sm"
+              className="h-9 gap-1.5 rounded-full font-semibold bg-amber-500 hover:bg-amber-600 text-white shadow-sm"
+              onClick={() => navigate("/registro?tab=ranking")}
+            >
+              <Trophy className="h-4 w-4" />
+              Ranking
+            </Button>
           </div>
-
-          {/* ADMIN: Team tabs + Ranking button */}
-          {isAdmin && teams.length > 1 && (
-            <div className="flex flex-wrap items-center gap-3">
-              <Tabs value={selectedTeamId} onValueChange={setSelectedTeamId}>
-                <TabsList className="w-full sm:w-auto overflow-x-auto">
-                  {teams.map(t => (
-                    <TabsTrigger key={t.id} value={t.id}>{t.name}</TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-
-              <Button
-                size="sm"
-                className="h-9 gap-1.5 rounded-full font-semibold bg-amber-500 hover:bg-amber-600 text-white shadow-sm"
-                onClick={() => navigate("/registro?tab=ranking")}
-              >
-                <Trophy className="h-4 w-4" />
-                Ranking
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
+        )}
+      </PageHeader>
 
       {/* Content */}
       <div className="container px-4 sm:px-6 lg:px-8 py-6">
