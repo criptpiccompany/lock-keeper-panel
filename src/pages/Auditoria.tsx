@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageHeader, brandTabsListClass, brandTabsTriggerClass } from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDateTime } from "@/lib/helpers";
@@ -197,32 +198,23 @@ export default function Auditoria() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <div className="border-b border-border/40">
-        <div className="container py-8 space-y-4">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
-              <ShieldAlert className="h-6 w-6" />
-              Auditoria
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Histórico de ações da equipe — {teamFilteredLogs.length} eventos registrados
-            </p>
-          </div>
-
-          {/* ADMIN: Team tabs */}
-          {isAdmin && teams.length > 1 && (
-            <Tabs value={selectedTeamId} onValueChange={setSelectedTeamId}>
-              <TabsList>
-                {teams.map(t => (
-                  <TabsTrigger key={t.id} value={t.id}>{t.name}</TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-          )}
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#F6F4F0]">
+      <PageHeader
+        eyebrow="Auditoria"
+        icon={ShieldAlert}
+        title="Trilha de auditoria"
+        subtitle={`Histórico imutável de ações da equipe — ${teamFilteredLogs.length} eventos registrados no escopo atual.`}
+      >
+        {isAdmin && teams.length > 1 && (
+          <Tabs value={selectedTeamId} onValueChange={setSelectedTeamId}>
+            <TabsList className={brandTabsListClass}>
+              {teams.map(t => (
+                <TabsTrigger key={t.id} value={t.id} className={brandTabsTriggerClass}>{t.name}</TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        )}
+      </PageHeader>
 
       {/* Sub-tabs */}
       <div className="border-b bg-card">

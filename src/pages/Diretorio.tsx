@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { enrichInfluencer, formatDate, LockInfo } from "@/lib/helpers";
 import { InfluencerWithStatus } from "@/types";
 import { Search, Book, Loader2, Lock, Unlock, Archive } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 
 export default function Diretorio() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -59,53 +60,52 @@ export default function Diretorio() {
   };
 
   return (
-    <div className="min-h-screen">
-      <div className="border-b">
-        <div className="container px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight flex items-center gap-2 mb-6">
-            <Book className="h-5 w-5 sm:h-6 sm:w-6" />Diretório
-          </h1>
-
-          {/* KPI Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
-            <div className="bg-card rounded-xl border p-3 sm:p-4">
-              <p className="text-xs sm:text-sm text-muted-foreground">Total</p>
-              <p className="text-xl sm:text-2xl font-semibold">{stats.total}</p>
-            </div>
-            <div className="bg-card rounded-xl border border-amber-200/50 p-3 sm:p-4">
-              <p className="text-xs sm:text-sm text-amber-700 flex items-center gap-1"><Lock className="h-3 w-3"/>Travados</p>
-              <p className="text-xl sm:text-2xl font-semibold text-amber-700">{stats.locked}</p>
-            </div>
-            <div className="bg-card rounded-xl border border-emerald-200/50 p-3 sm:p-4">
-              <p className="text-xs sm:text-sm text-emerald-700 flex items-center gap-1"><Unlock className="h-3 w-3"/>Liberados</p>
-              <p className="text-xl sm:text-2xl font-semibold text-emerald-700">{stats.released}</p>
-            </div>
-            <div className="bg-card rounded-xl border p-3 sm:p-4">
-              <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1"><Archive className="h-3 w-3"/>Arquivados</p>
-              <p className="text-xl sm:text-2xl font-semibold">{stats.archived}</p>
-            </div>
+    <div className="min-h-screen bg-[#F6F4F0]">
+      <PageHeader
+        eyebrow="Diretório"
+        icon={Book}
+        title="Diretório de influenciadores"
+        subtitle="Base unificada de todos os perfis com status, responsável e último fechamento."
+      >
+        {/* KPI Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-white rounded-2xl border border-black/5 p-4 sm:p-5 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
+            <p className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Total</p>
+            <p className="mt-2 text-3xl font-medium tracking-[-0.02em] text-slate-950">{stats.total}</p>
           </div>
+          <div className="bg-white rounded-2xl border border-amber-200/60 p-4 sm:p-5">
+            <p className="text-[11px] uppercase tracking-[0.14em] text-amber-700 flex items-center gap-1"><Lock className="h-3 w-3"/>Travados</p>
+            <p className="mt-2 text-3xl font-medium tracking-[-0.02em] text-amber-700">{stats.locked}</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-emerald-200/60 p-4 sm:p-5">
+            <p className="text-[11px] uppercase tracking-[0.14em] text-emerald-700 flex items-center gap-1"><Unlock className="h-3 w-3"/>Liberados</p>
+            <p className="mt-2 text-3xl font-medium tracking-[-0.02em] text-emerald-700">{stats.released}</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-black/5 p-4 sm:p-5">
+            <p className="text-[11px] uppercase tracking-[0.14em] text-slate-500 flex items-center gap-1"><Archive className="h-3 w-3"/>Arquivados</p>
+            <p className="mt-2 text-3xl font-medium tracking-[-0.02em] text-slate-950">{stats.archived}</p>
+          </div>
+        </div>
 
-          <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 sm:items-center">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 sm:items-center">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 rounded-full bg-white border-black/10" />
+          </div>
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Switch id="show-archived" checked={showArchived} onCheckedChange={setShowArchived} />
+              <Label htmlFor="show-archived" className="text-sm">Mostrar arquivados</Label>
             </div>
-            <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex items-center gap-2">
-                <Switch id="show-archived" checked={showArchived} onCheckedChange={setShowArchived} />
-                <Label htmlFor="show-archived" className="text-sm">Mostrar arquivados</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch id="show-deleted" checked={showDeleted} onCheckedChange={setShowDeleted} />
-                <Label htmlFor="show-deleted" className="text-sm text-destructive">Mostrar excluídos</Label>
-              </div>
+            <div className="flex items-center gap-2">
+              <Switch id="show-deleted" checked={showDeleted} onCheckedChange={setShowDeleted} />
+              <Label htmlFor="show-deleted" className="text-sm text-destructive">Mostrar excluídos</Label>
             </div>
           </div>
         </div>
-      </div>
+      </PageHeader>
       <div className="container px-4 sm:px-6 lg:px-8 py-6">
-        <div className="bg-card rounded-xl border overflow-hidden">
+        <div className="bg-white rounded-2xl border border-black/5 overflow-hidden shadow-[0_1px_0_rgba(0,0,0,0.02)]">
           <div className="overflow-x-auto">
             <table className="table-minimal">
               <thead><tr><th>Handle</th><th>Responsável</th><th>Último Fechamento</th><th>Status</th></tr></thead>
