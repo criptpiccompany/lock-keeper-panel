@@ -518,10 +518,11 @@ export default function PlanilhamentoDiario({
     const days = new Set<string>();
     for (const d of recordsByDate.keys()) days.add(d);
     for (const d of persistedDays) days.add(d);
+    for (const d of receiptDays) days.add(d);
     const today = new Date().toISOString().split("T")[0];
     if (monthDays.includes(today)) days.add(today);
     return monthDays.filter((d) => days.has(d));
-  }, [recordsByDate, persistedDays, monthDays, focusedDate]);
+  }, [recordsByDate, persistedDays, receiptDays, monthDays, focusedDate]);
 
   const getInfluencerHandle = (id: string) => {
     return influencers.find((i) => i.id === id)?.handle || id;
