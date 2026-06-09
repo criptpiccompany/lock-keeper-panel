@@ -138,13 +138,13 @@ export default function FinanceiroComprovantes() {
                 key={c.id}
                 className="rounded-[18px] bg-white p-5 shadow-[0_8px_24px_rgba(0,0,0,0.04)] transition hover:shadow-[0_14px_30px_rgba(15,23,42,0.06)]"
               >
-                <header className="mb-4 flex items-center gap-3 border-b border-[#ececeb] pb-4">
-                  <div className="grid h-10 w-10 place-items-center rounded-full bg-[linear-gradient(180deg,#1f1f1f_0%,#0d0d0d_100%)] text-[13px] font-semibold text-white">
+                <header className="mb-5 flex items-center gap-4 border-b border-[#ececeb] pb-5">
+                  <div className="grid h-14 w-14 place-items-center rounded-full bg-[linear-gradient(180deg,#1f1f1f_0%,#0d0d0d_100%)] text-[20px] font-semibold text-white shadow-[0_6px_14px_rgba(15,23,42,0.18)]">
                     {initial}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[14px] font-semibold tracking-[-0.01em] text-[#1f1f1f]">{c.nome}</p>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#999999]">{teamName}</p>
+                    <p className="truncate text-[26px] leading-[1.05] font-semibold tracking-[-0.03em] text-[#1f1f1f] capitalize">{c.nome}</p>
+                    <p className="mt-1 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-[#999999]">{teamName}</p>
                   </div>
                   <div className="inline-flex items-center gap-1 rounded-full border border-[#ececeb] px-2.5 py-1 text-[10.5px] font-medium uppercase tracking-[0.1em] text-[#676767]">
                     <User className="h-3 w-3" />
