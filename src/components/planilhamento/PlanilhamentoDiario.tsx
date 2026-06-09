@@ -682,6 +682,67 @@ export default function PlanilhamentoDiario({
     setCreatingAllDays(false);
   };
 
+  // --- Renew: re-add this influencer in TODAY's list with same valor_pago ---
+  const handleRenewToToday = async () => {
+    if (!renewTarget || !user) return;
+    setRenewing(true);
+    const today = getLocalTodayStr();
+    const targetCloserId = renewTarget.closer_id;
+
+    try {
+      // Already exists for today? avoid duplicates.
+      const { data: existing } = await supabase
+        .from("daily_influencer_records")
+        .select("id")
+        .eq("date", today)
+        .eq("influencer_id", renewTarget.influencer_id)
+        .eq("closer_id", targetCloserId)
+        .is("deleted_at", null)
+        .maybeSingle();
+
+      if (existing) {
+        toast.info("Este influenciador já está na lista de hoje");
+        setRenewTarget(null);
+        setRenewing(false);
+        return;
+      }
+
+      // Ensure daily_sheets row exists for today (best-effort, ignore dup error)
+      const todayMonth = today.slice(0, 7);
+      await supabase
+        .from("daily_sheets")
+        .insert({ date: today, month: todayMonth, closer_id: targetCloserId } as any)
+        .then(() => {}, () => {});
+
+      const { error } = await supabase.from("daily_influencer_records").insert({
+        date: today,
+        influencer_id: renewTarget.influencer_id,
+        closer_id: targetCloserId,
+        valor_pago: Number(renewTarget.valor_pago),
+        faturamento: null,
+        acumulado: null,
+        observacao: null,
+        is_shared: false,
+      } as any);
+
+      if (error) throw error;
+
+      toast.success("Influenciador adicionado à lista de hoje");
+
+      if (monthDays.includes(today)) {
+        await fetchData();
+        setExpandedDays((prev) => new Set([...prev, today]));
+      }
+    } catch (err: any) {
+      console.error("Renew error:", err);
+      toast.error("Erro ao renovar", { description: err?.message });
+    } finally {
+      setRenewing(false);
+      setRenewTarget(null);
+    }
+  };
+
+
   // --- Add row ---
   const openNewRecord = (date: string) => {
     setEditRecord(null);
