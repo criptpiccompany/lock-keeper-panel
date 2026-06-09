@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { enrichInfluencer, formatDate, LockInfo } from "@/lib/helpers";
 import { InfluencerWithStatus } from "@/types";
 import { Search, Book, Loader2, Lock, Unlock, Archive } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 
 export default function Diretorio() {
   const [searchQuery, setSearchQuery] = useState("");
