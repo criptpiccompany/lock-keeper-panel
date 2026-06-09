@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Button } from "@/components/ui/button";
+import { BrandCard } from "@/components/PageHeader";
+import { cn } from "@/lib/utils";
 import { formatBRL, fmtShortDate, TAX_TOTAL, type DayAggregate } from "./financeiroHelpers";
 
 type Metric = "cost" | "revenue" | "net";
@@ -14,8 +15,8 @@ interface Props {
 
 const metricLabels: Record<Metric, string> = {
   cost: "Custo",
-  revenue: "Faturamento Bruto",
-  net: "Resultado Líquido",
+  revenue: "Faturamento bruto",
+  net: "Resultado líquido",
 };
 
 export default function FinanceiroChart({ byDate, today, filterStart, filterEnd }: Props) {
@@ -41,33 +42,43 @@ export default function FinanceiroChart({ byDate, today, filterStart, filterEnd 
 
   if (data.length < 2) {
     return (
-      <div className="rounded-xl border border-border/40 bg-card p-5 shadow-sm">
-        <p className="text-sm text-muted-foreground text-center py-8">
+      <BrandCard title="Evolução no período">
+        <p className="text-[13px] text-slate-500 text-center py-8">
           Dados insuficientes para gráfico (mínimo 2 dias).
         </p>
-      </div>
+      </BrandCard>
     );
   }
 
   return (
-    <div className="rounded-xl border border-border/40 bg-card p-5 shadow-sm space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold">Evolução no Período</h3>
-        <div className="flex gap-1">
+    <BrandCard
+      title="Evolução no período"
+      action={
+        <div className="inline-flex items-center gap-1 rounded-full border border-black/5 bg-white p-1 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
           {(Object.entries(metricLabels) as [Metric, string][]).map(([key, label]) => (
-            <Button key={key} size="sm" variant={metric === key ? "default" : "outline"} className="h-7 text-xs px-3" onClick={() => setMetric(key)}>
+            <button
+              key={key}
+              onClick={() => setMetric(key)}
+              className={cn(
+                "rounded-full px-3 py-1 text-[12px] font-medium transition-colors",
+                metric === key
+                  ? "bg-slate-950 text-white shadow-sm"
+                  : "text-slate-500 hover:text-slate-950"
+              )}
+            >
               {label}
-            </Button>
+            </button>
           ))}
         </div>
-      </div>
-
+      }
+    >
       <ResponsiveContainer width="100%" height={260}>
         <LineChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
-          <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-          <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+          <CartesianGrid strokeDasharray="3 3" className="stroke-black/5" />
+          <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#64748b" }} stroke="#e2e8f0" />
+          <YAxis tick={{ fontSize: 11, fill: "#64748b" }} stroke="#e2e8f0" tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
           <Tooltip
+            contentStyle={{ borderRadius: 12, border: "1px solid rgba(0,0,0,0.06)", fontSize: 12 }}
             formatter={(v: number) => formatBRL(v)}
             labelFormatter={(_, payload) => {
               if (payload?.[0]?.payload?.date) {
@@ -77,18 +88,18 @@ export default function FinanceiroChart({ byDate, today, filterStart, filterEnd 
               return "";
             }}
           />
-          <Legend />
+          <Legend wrapperStyle={{ fontSize: 12 }} />
           <Line
             type="monotone"
             dataKey={metric}
             name={metricLabels[metric]}
-            stroke="hsl(var(--primary))"
+            stroke="#0f172a"
             strokeWidth={2}
-            dot={{ r: 3 }}
+            dot={{ r: 3, fill: "#0f172a" }}
             activeDot={{ r: 5 }}
           />
         </LineChart>
       </ResponsiveContainer>
-    </div>
+    </BrandCard>
   );
 }

@@ -21,35 +21,34 @@ export default function FinanceiroDetailBlocks({ todayData, yesterdayData, dayBe
   const yNet = yesterdayData.revenue - yTaxTotal;
   const yMargin = yesterdayData.revenue > 0 ? (yNet / yesterdayData.revenue) * 100 : 0;
 
-  // Day before yesterday for delta
   const dbTaxTotal = dayBeforeData.revenue * TAX_TOTAL;
   const dbNet = dayBeforeData.revenue - dbTaxTotal;
 
   const deltaCost = formatDelta(todayData.cost, yesterdayData.cost);
   const deltaRev = tHasRevenue ? formatDelta(todayData.revenue, yesterdayData.revenue) : null;
   const deltaNet = tHasRevenue ? formatDelta(tNet, yNet) : null;
-
-  // Delta for yesterday vs day before
   const yDeltaNet = formatDelta(yNet, dbNet);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* TODAY */}
-      <div className="rounded-xl border border-border/40 bg-card p-5 space-y-3 shadow-sm">
+      <div className="rounded-2xl border border-black/5 bg-white p-5 sm:p-6 space-y-4 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 font-semibold text-sm">
-            <Clock className="h-4 w-4 text-amber-600" />
-            Hoje
+          <div className="flex items-center gap-2">
+            <div className="grid h-7 w-7 place-items-center rounded-full bg-amber-50">
+              <Clock className="h-3.5 w-3.5 text-amber-600" />
+            </div>
+            <span className="text-[15px] font-semibold tracking-[-0.01em] text-slate-950">Hoje</span>
           </div>
-          <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded">PARCIAL</span>
+          <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-amber-700 bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-full">Parcial</span>
         </div>
-        <div className="space-y-1.5 text-sm">
+        <div className="space-y-1.5 text-[13px]">
           <Row label="Custo operacional" value={formatBRL(todayData.cost)} delta={deltaCost} />
           <Row label="Faturamento bruto" value={tHasRevenue ? formatBRL(todayData.revenue) : "Aguardando"} muted={!tHasRevenue} delta={deltaRev} />
           <Row label="Taxa dev (2%)" value={tHasRevenue ? formatBRL(tTaxDev) : "—"} muted />
           <Row label="Taxa gateway (3%)" value={tHasRevenue ? formatBRL(tTaxGw) : "—"} muted />
           <Row label="Taxas totais (5%)" value={tHasRevenue ? formatBRL(tTaxTotal) : "—"} muted />
-          <div className="border-t border-border/30 pt-1.5">
+          <div className="border-t border-black/5 pt-2 mt-2">
             <Row label="Resultado líquido" value={tHasRevenue ? formatBRL(tNet) : "—"} highlight={tHasRevenue ? (tNet >= 0 ? "positive" : "negative") : undefined} delta={deltaNet} />
             <Row label="Margem" value={tHasRevenue ? `${tMargin.toFixed(1)}%` : "—"} highlight={tHasRevenue ? (tMargin >= 0 ? "positive" : "negative") : undefined} />
           </div>
@@ -57,24 +56,26 @@ export default function FinanceiroDetailBlocks({ todayData, yesterdayData, dayBe
       </div>
 
       {/* YESTERDAY */}
-      <div className="rounded-xl border border-border/40 bg-muted/30 p-5 space-y-3 shadow-sm">
+      <div className="rounded-2xl border border-emerald-200/60 bg-white p-5 sm:p-6 space-y-4 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
         <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-2 font-semibold text-sm">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              Ontem
+          <div className="flex items-center gap-2">
+            <div className="grid h-7 w-7 place-items-center rounded-full bg-emerald-50">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
             </div>
-            <span className="text-[10px] text-muted-foreground ml-6">Base para decisões</span>
+            <div className="flex flex-col">
+              <span className="text-[15px] font-semibold tracking-[-0.01em] text-slate-950">Ontem</span>
+              <span className="text-[11px] text-slate-500/90">Base para decisões</span>
+            </div>
           </div>
-          <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">FECHADO</span>
+          <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full">Fechado</span>
         </div>
-        <div className="space-y-1.5 text-sm">
+        <div className="space-y-1.5 text-[13px]">
           <Row label="Custo operacional" value={formatBRL(yesterdayData.cost)} />
           <Row label="Faturamento bruto" value={formatBRL(yesterdayData.revenue)} />
           <Row label="Taxa dev (2%)" value={formatBRL(yTaxDev)} muted />
           <Row label="Taxa gateway (3%)" value={formatBRL(yTaxGw)} muted />
           <Row label="Taxas totais (5%)" value={formatBRL(yTaxTotal)} muted />
-          <div className="border-t border-border/30 pt-1.5">
+          <div className="border-t border-black/5 pt-2 mt-2">
             <Row label="Resultado líquido" value={formatBRL(yNet)} highlight={yNet >= 0 ? "positive" : "negative"} delta={yDeltaNet} deltaLabel="vs dia anterior" />
             <Row label="Margem" value={`${yMargin.toFixed(1)}%`} highlight={yMargin >= 0 ? "positive" : "negative"} />
           </div>
@@ -102,18 +103,18 @@ function Row({
   const valCls = highlight === "positive"
     ? "text-emerald-700 font-semibold"
     : highlight === "negative"
-    ? "text-red-600 font-semibold"
+    ? "text-rose-600 font-semibold"
     : muted
-    ? "text-muted-foreground"
-    : "font-medium";
+    ? "text-slate-500"
+    : "font-medium text-slate-950";
 
   return (
     <div className="flex items-center justify-between">
-      <span className={muted ? "text-muted-foreground" : ""}>{label}</span>
+      <span className={muted ? "text-slate-500" : "text-slate-600"}>{label}</span>
       <div className="flex items-center gap-2">
         <span className={`tabular-nums ${valCls}`}>{value}</span>
         {delta && delta.positive !== null && (
-          <span className={`text-[10px] tabular-nums font-medium ${delta.positive ? "text-emerald-600" : "text-red-500"}`}>
+          <span className={`text-[10px] tabular-nums font-medium ${delta.positive ? "text-emerald-600" : "text-rose-500"}`}>
             {delta.positive ? "▲" : "▼"} {delta.text}{deltaLabel ? ` ${deltaLabel}` : ""}
           </span>
         )}
