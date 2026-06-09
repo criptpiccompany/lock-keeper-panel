@@ -189,14 +189,6 @@ export default function Auditoria() {
     ? null
     : userTabs.find(([id]) => id === activeTab)?.[1] || "Usuário";
 
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
   const statsCounts = useMemo(() => {
     const c = { total: teamFilteredLogs.length, insert: 0, update: 0, del: 0 };
     teamFilteredLogs.forEach(l => {
@@ -206,6 +198,15 @@ export default function Auditoria() {
     });
     return c;
   }, [teamFilteredLogs]);
+
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen bg-[#F6F4F0]">
