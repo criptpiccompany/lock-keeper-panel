@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Calendar, FileText, Loader2, User, Users } from "lucide-react";
+import { Calendar, FileText, Loader2, Plus, User, Users } from "lucide-react";
 import DailyReceiptsCarousel from "@/components/planilhamento/DailyReceiptsCarousel";
+import QuickAddReceiptModal from "@/components/planilhamento/QuickAddReceiptModal";
 
 interface Closer { id: string; nome: string; team_id: string | null }
 interface Team { id: string; name: string }
