@@ -777,7 +777,7 @@ export default function Home() {
 
   return (
     <>
-      <div className="mb-2">
+      <div className="mb-2 flex items-start justify-between gap-6">
             <div className="max-w-[62rem]">
               <h1 className="max-w-4xl text-[42px] leading-[1.02] tracking-[-0.06em] text-slate-950 font-medium sm:text-5xl">
                 {greeting}, {firstName}
@@ -788,6 +788,38 @@ export default function Home() {
                   : "Acompanhe sua comissão, seu ritmo operacional e os movimentos do mês em uma leitura mais clara."}
               </p>
             </div>
+
+            {!isManagementView && (
+              <div className="hidden md:flex shrink-0 items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setAddInfluencerOpen(true)}
+                  className="inline-flex h-10 items-center gap-2 rounded-full border border-[#ececeb] bg-white px-4 text-[13px] font-medium text-[#1f1f1f] shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition hover:bg-[#f7f7f4]"
+                  title="Adicionar influenciador na Minha Lista"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Add à Minha Lista
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPlanAddOpen(true)}
+                  className="inline-flex h-10 items-center gap-2 rounded-full border border-[#ececeb] bg-white px-4 text-[13px] font-medium text-[#1f1f1f] shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition hover:bg-[#f7f7f4]"
+                  title="Registrar fechamento de hoje no Planilhamento"
+                >
+                  <Plus className="h-4 w-4" />
+                  Registrar hoje
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPlanViewOpen(true)}
+                  className="inline-flex h-10 items-center gap-2 rounded-full bg-[#1f1f1f] px-4 text-[13px] font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)] transition hover:bg-[#111]"
+                  title="Ver/editar o planilhamento de hoje"
+                >
+                  <CalendarCheck className="h-4 w-4" />
+                  Planilhamento de hoje
+                </button>
+              </div>
+            )}
           </div>
 
       {loading ? (
