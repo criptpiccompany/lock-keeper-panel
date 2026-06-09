@@ -392,6 +392,7 @@ export default function PlanilhamentoDiario({
 
   // Persistent days from DB
   const [persistedDays, setPersistedDays] = useState<string[]>([]);
+  const [receiptDays, setReceiptDays] = useState<string[]>([]);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [creatingAllDays, setCreatingAllDays] = useState(false);
   const [daySearch, setDaySearch] = useState("");
@@ -436,21 +437,33 @@ export default function PlanilhamentoDiario({
       sheetsQuery = sheetsQuery.eq("closer_id", targetId);
     }
 
+    let receiptsDaysQuery = supabase
+      .from("daily_receipt_uploads")
+      .select("date")
+      .gte("date", startDate)
+      .lte("date", endDate)
+      .is("deleted_at", null);
+    if (targetId) {
+      receiptsDaysQuery = receiptsDaysQuery.eq("closer_id", targetId);
+    }
+
     let infQuery = supabase.from("influencers").select("id, handle, last_closed_at").eq("ativo", true);
     if (targetId) {
       infQuery = infQuery.eq("owner_id", targetId);
     }
 
-    const [recordsRes, infRes, sheetsRes] = await Promise.all([
+    const [recordsRes, infRes, sheetsRes, receiptsDaysRes] = await Promise.all([
       recordsQuery,
       infQuery,
       sheetsQuery,
+      receiptsDaysQuery,
     ]);
 
     const fetchedRecords = (recordsRes.data as DailyRecord[]) || [];
     setRecords(fetchedRecords);
     setInfluencers(infRes.data || []);
     setPersistedDays((sheetsRes.data || []).map((s: any) => s.date));
+    setReceiptDays(Array.from(new Set(((receiptsDaysRes.data as any[]) || []).map((r) => r.date))));
 
     // Fetch shared partners for all records that are shared
     const sharedRecordIds = fetchedRecords.filter((r) => r.is_shared).map((r) => r.id);
@@ -505,10 +518,11 @@ export default function PlanilhamentoDiario({
     const days = new Set<string>();
     for (const d of recordsByDate.keys()) days.add(d);
     for (const d of persistedDays) days.add(d);
+    for (const d of receiptDays) days.add(d);
     const today = new Date().toISOString().split("T")[0];
     if (monthDays.includes(today)) days.add(today);
     return monthDays.filter((d) => days.has(d));
-  }, [recordsByDate, persistedDays, monthDays, focusedDate]);
+  }, [recordsByDate, persistedDays, receiptDays, monthDays, focusedDate]);
 
   const getInfluencerHandle = (id: string) => {
     return influencers.find((i) => i.id === id)?.handle || id;
