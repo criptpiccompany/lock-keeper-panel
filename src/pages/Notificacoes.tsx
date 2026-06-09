@@ -220,35 +220,30 @@ export default function Notificacoes() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <div className="border-b border-border/40">
-        <div className="container py-8 space-y-4">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
-              <Bell className="h-6 w-6" />
-              Notificações
-              {pendingCount > 0 && (
-                <Badge className="bg-amber-500 text-white text-xs ml-2">{pendingCount} pendente{pendingCount > 1 ? "s" : ""}</Badge>
-              )}
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Edições com motivo obrigatório para revisão — {teamFilteredNotifications.length} notificações
-            </p>
-          </div>
-
-          {/* ADMIN: Team tabs */}
-          {isAdmin && teams.length > 1 && (
-            <Tabs value={selectedTeamId} onValueChange={setSelectedTeamId}>
-              <TabsList>
-                {teams.map(t => (
-                  <TabsTrigger key={t.id} value={t.id}>{t.name}</TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-          )}
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#F6F4F0]">
+      <PageHeader
+        eyebrow="Notificações"
+        icon={Bell}
+        title={
+          <span className="flex items-center gap-3">
+            Central de notificações
+            {pendingCount > 0 && (
+              <Badge className="bg-amber-500 text-white text-xs">{pendingCount} pendente{pendingCount > 1 ? "s" : ""}</Badge>
+            )}
+          </span>
+        }
+        subtitle={`Edições com motivo obrigatório para revisão — ${teamFilteredNotifications.length} notificações no escopo atual.`}
+      >
+        {isAdmin && teams.length > 1 && (
+          <Tabs value={selectedTeamId} onValueChange={setSelectedTeamId}>
+            <TabsList className={brandTabsListClass}>
+              {teams.map(t => (
+                <TabsTrigger key={t.id} value={t.id} className={brandTabsTriggerClass}>{t.name}</TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        )}
+      </PageHeader>
 
       <div className="container py-6 space-y-4">
         {/* Filters */}
