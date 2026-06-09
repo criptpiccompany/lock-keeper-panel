@@ -738,6 +738,30 @@ export default function Admin() {
         onConfirm={handleArchiveConfirm}
       />
 
+      {/* Deactivate User Confirmation */}
+      <AlertDialog open={!!deactivateUser} onOpenChange={(v) => !v && setDeactivateUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desativar conta de {deactivateUser?.nome}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O usuário será bloqueado e não poderá mais acessar o sistema. O histórico permanece intacto para auditoria. Esta ação pode ser revertida manualmente no banco.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deactivating}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleConfirmDeactivate(); }}
+              disabled={deactivating}
+              className="bg-rose-600 hover:bg-rose-700"
+            >
+              {deactivating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Desativar conta
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
       {/* Edit Name Modal */}
       <Dialog open={editNameModalOpen} onOpenChange={setEditNameModalOpen}>
         <DialogContent>
