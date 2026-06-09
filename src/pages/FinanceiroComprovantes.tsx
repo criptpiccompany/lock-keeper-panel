@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { todayStr } from "@/components/financeiro/financeiroHelpers";
 import { Calendar, FileText, Loader2, User, Users } from "lucide-react";
 import DailyReceiptsCarousel from "@/components/planilhamento/DailyReceiptsCarousel";
 import QuickAddReceiptBar from "@/components/planilhamento/QuickAddReceiptBar";
 
 interface Closer { id: string; nome: string; team_id: string | null }
 interface Team { id: string; name: string }
-
-function todayStr() { return new Date().toISOString().split("T")[0]; }
 
 function formatPtDate(iso: string) {
   try {
