@@ -45,8 +45,11 @@ export default function Financeiro() {
   const [customStart, setCustomStart] = useState<Date | undefined>();
   const [customEnd, setCustomEnd] = useState<Date | undefined>();
 
-  const today = todayStr();
-  const yesterday = yesterdayStr();
+  // Memoize "today"/"yesterday" once per mount — otherwise every render
+  // creates new strings that ripple through useMemo/useEffect deps and
+  // can cause unnecessary refetches / re-renders (flicker).
+  const today = useMemo(() => todayStr(), []);
+  const yesterday = useMemo(() => yesterdayStr(), []);
 
   const filterStart = useMemo(() => {
     if (preset === "today") return today;
