@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowUpDown, AtSign, Check, CheckCircle2, ChevronDown, ChevronRight, Clock3, ExternalLink, FileText, Link as LinkIcon, MoreHorizontal, Plus, Search, SlidersHorizontal, Tag, Wallet, Zap } from "lucide-react";
+import { Archive, ArrowUpDown, AtSign, Check, CheckCircle2, ChevronDown, ChevronRight, Clock3, ExternalLink, FileText, Link as LinkIcon, MoreHorizontal, Plus, Search, SlidersHorizontal, Tag, Wallet, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { CLASSIFICACAO_OPTIONS, type KanbanCard } from "@/components/kanban/types";
 import { CardHistorySheet } from "@/components/home/CardHistorySheet";
@@ -201,6 +202,7 @@ function TableRow({
   statusOptions,
   onCheckClick,
   showCheck,
+  onArchive,
 }: {
   card: TeamBoardCard;
   visibleColumns: Array<{ key: ColumnKey; label: string; width: string; sortable?: boolean }>;
@@ -209,6 +211,7 @@ function TableRow({
   statusOptions: string[];
   onCheckClick?: (card: TeamBoardCard) => void;
   showCheck?: boolean;
+  onArchive?: (card: TeamBoardCard) => void;
 }) {
   const [historyOpen, setHistoryOpen] = useState(false);
   const isClosed = !!card.closed_by;
@@ -296,6 +299,17 @@ function TableRow({
                   >
                     <Clock3 className="h-3.5 w-3.5" />
                   </button>
+                  {onArchive ? (
+                    <button
+                      type="button"
+                      onClick={() => onArchive(card)}
+                      className="shrink-0 text-[#b2b2ad] transition-colors hover:text-[#c2410c]"
+                      title="Arquivar influenciador"
+                      aria-label="Arquivar influenciador"
+                    >
+                      <Archive className="h-3.5 w-3.5" />
+                    </button>
+                  ) : null}
                   <CardHistorySheet
                     cardId={card.id}
                     cardName={card.display_name}
@@ -588,6 +602,7 @@ function SectionBlock({
   statusOptions,
   onCheckClick,
   showCheck,
+  onArchive,
 }: {
   title: string;
   subtitle?: string;
@@ -601,6 +616,7 @@ function SectionBlock({
   statusOptions: string[];
   onCheckClick?: (card: TeamBoardCard) => void;
   showCheck?: boolean;
+  onArchive?: (card: TeamBoardCard) => void;
 }) {
   return (
     <section>
@@ -629,6 +645,7 @@ function SectionBlock({
                 statusOptions={statusOptions}
                 onCheckClick={onCheckClick}
                 showCheck={showCheck}
+                onArchive={onArchive}
               />
             ))}
           </div>
@@ -749,6 +766,20 @@ export function CloserSharedBoard() {
         current.map((card) => (card.id === cardId ? { ...card, ...fields } : card))
       );
     }
+  };
+
+  const handleArchive = async (card: TeamBoardCard) => {
+    if (!window.confirm(`Arquivar @${card.instagram_username}? Você poderá restaurá-lo depois pela aba "Arquivados" no Kanban.`)) return;
+    const { error } = await supabase
+      .from("team_shared_board")
+      .update({ archived: true, archived_at: new Date().toISOString(), archived_from_status: card.status } as never)
+      .eq("id", card.id);
+    if (error) {
+      toast.error("Erro ao arquivar influenciador");
+      return;
+    }
+    setCards((current) => current.filter((c) => c.id !== card.id));
+    toast.success("Influenciador arquivado");
   };
 
   const filteredCards = useMemo(() => {
@@ -1161,6 +1192,7 @@ export function CloserSharedBoard() {
                             statusOptions={CLOSED_STATUSES as unknown as string[]}
                             onCheckClick={openMarkModal}
                             showCheck
+                            onArchive={handleArchive}
                           />
                         ))}
                         {sections.concorrencia.length > 0 ? (
@@ -1173,6 +1205,7 @@ export function CloserSharedBoard() {
                             statusOptions={CLOSED_STATUSES as unknown as string[]}
                             onCheckClick={openMarkModal}
                             showCheck
+                            onArchive={handleArchive}
                           />
                         ) : null}
                       </>
@@ -1188,6 +1221,7 @@ export function CloserSharedBoard() {
                           statusOptions={PROSPECT_STATUSES as unknown as string[]}
                           onCheckClick={openMarkModal}
                           showCheck
+                          onArchive={handleArchive}
                         />
                         <SectionBlock
                           title="Geral"
@@ -1199,6 +1233,7 @@ export function CloserSharedBoard() {
                           statusOptions={PROSPECT_STATUSES as unknown as string[]}
                           onCheckClick={openMarkModal}
                           showCheck
+                          onArchive={handleArchive}
                         />
                       </>
                     )}
