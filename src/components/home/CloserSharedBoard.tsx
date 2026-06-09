@@ -1192,6 +1192,7 @@ export function CloserSharedBoard() {
                             statusOptions={CLOSED_STATUSES as unknown as string[]}
                             onCheckClick={openMarkModal}
                             showCheck
+                            onArchive={handleArchive}
                           />
                         ))}
                         {sections.concorrencia.length > 0 ? (
@@ -1204,6 +1205,7 @@ export function CloserSharedBoard() {
                             statusOptions={CLOSED_STATUSES as unknown as string[]}
                             onCheckClick={openMarkModal}
                             showCheck
+                            onArchive={handleArchive}
                           />
                         ) : null}
                       </>
@@ -1219,6 +1221,7 @@ export function CloserSharedBoard() {
                           statusOptions={PROSPECT_STATUSES as unknown as string[]}
                           onCheckClick={openMarkModal}
                           showCheck
+                          onArchive={handleArchive}
                         />
                         <SectionBlock
                           title="Geral"
@@ -1230,6 +1233,7 @@ export function CloserSharedBoard() {
                           statusOptions={PROSPECT_STATUSES as unknown as string[]}
                           onCheckClick={openMarkModal}
                           showCheck
+                          onArchive={handleArchive}
                         />
                       </>
                     )}
