@@ -945,6 +945,42 @@ export default function Home() {
           </div>
         </div>
       ) : null}
+
+      {/* Closer shortcuts — modals */}
+      {!isManagementView && (
+        <>
+          <AddInfluencerUnifiedModal
+            open={addInfluencerOpen}
+            onOpenChange={setAddInfluencerOpen}
+          />
+
+          <Dialog open={planAddOpen} onOpenChange={setPlanAddOpen}>
+            <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto p-0">
+              <DialogHeader className="px-6 pt-6">
+                <DialogTitle>Registrar fechamento de hoje</DialogTitle>
+              </DialogHeader>
+              <div className="px-2 pb-4">
+                {planAddOpen && (
+                  <PlanilhamentoDiario focusedDate={today} autoOpenAdd compact />
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={planViewOpen} onOpenChange={setPlanViewOpen}>
+            <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto p-0">
+              <DialogHeader className="px-6 pt-6">
+                <DialogTitle>Planilhamento de hoje</DialogTitle>
+              </DialogHeader>
+              <div className="px-2 pb-4">
+                {planViewOpen && (
+                  <PlanilhamentoDiario focusedDate={today} compact />
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
     </>
   );
 }
