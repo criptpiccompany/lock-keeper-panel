@@ -201,6 +201,7 @@ function TableRow({
   statusOptions,
   onCheckClick,
   showCheck,
+  onArchive,
 }: {
   card: TeamBoardCard;
   visibleColumns: Array<{ key: ColumnKey; label: string; width: string; sortable?: boolean }>;
@@ -209,6 +210,7 @@ function TableRow({
   statusOptions: string[];
   onCheckClick?: (card: TeamBoardCard) => void;
   showCheck?: boolean;
+  onArchive?: (card: TeamBoardCard) => void;
 }) {
   const [historyOpen, setHistoryOpen] = useState(false);
   const isClosed = !!card.closed_by;
