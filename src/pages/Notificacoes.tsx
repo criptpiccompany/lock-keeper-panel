@@ -17,7 +17,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageHeader, brandTabsListClass, brandTabsTriggerClass } from "@/components/PageHeader";
+import { PageHeader, brandTabsListClass, brandTabsTriggerClass, BrandStat } from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDateTime } from "@/lib/helpers";
@@ -184,6 +184,8 @@ export default function Notificacoes() {
   useEffect(() => { setPage(0); }, [filterStatus, filterActor, filterActionType, dateFrom, dateTo, search]);
 
   const pendingCount = teamFilteredNotifications.filter((n) => n.review_status === "PENDENTE").length;
+  const reviewedCount = teamFilteredNotifications.filter((n) => n.review_status === "REVISADO").length;
+  const suspectCount = teamFilteredNotifications.filter((n) => n.review_status === "SUSPEITO").length;
 
   const updateStatus = async (id: string, status: "PENDENTE" | "REVISADO" | "SUSPEITO") => {
     setUpdating(true);
@@ -243,6 +245,12 @@ export default function Notificacoes() {
             </TabsList>
           </Tabs>
         )}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <BrandStat label="Total" value={teamFilteredNotifications.length} icon={Bell} />
+          <BrandStat label="Pendentes" value={pendingCount} icon={Clock} tone="amber" hint="Aguardando revisão" />
+          <BrandStat label="Revisados" value={reviewedCount} icon={CheckCircle2} tone="emerald" />
+          <BrandStat label="Suspeitos" value={suspectCount} icon={AlertTriangle} tone="rose" />
+        </div>
       </PageHeader>
 
       <div className="container py-6 space-y-4">
@@ -314,7 +322,7 @@ export default function Notificacoes() {
               return (
                 <div
                   key={n.id}
-                  className="bg-card rounded-xl border border-border/40 p-4 hover:border-border/80 transition-colors cursor-pointer"
+                  className="bg-white rounded-2xl border border-black/5 shadow-[0_1px_0_rgba(0,0,0,0.02)] p-4 sm:p-5 hover:border-slate-200 hover:shadow-[0_4px_16px_-8px_rgba(0,0,0,0.08)] transition-all cursor-pointer"
                   onClick={() => setDetailNotif(n)}
                 >
                   <div className="flex items-start justify-between gap-4">

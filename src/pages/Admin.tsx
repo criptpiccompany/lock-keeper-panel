@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,10 +14,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { enrichInfluencer, formatDate, LockInfo } from "@/lib/helpers";
 import { InfluencerWithStatus } from "@/types";
-import { Settings, Archive, RefreshCw, AlertTriangle, Loader2, Users, Mail, Shield, ShieldCheck, Pencil, Key, Percent, UserCheck, UserX, Download, UserPlus, ArrowRightLeft } from "lucide-react";
+import { Settings, Archive, RefreshCw, AlertTriangle, Loader2, Users, Mail, Shield, ShieldCheck, Pencil, Key, Percent, UserCheck, UserX, Download, UserPlus, ArrowRightLeft, User as UserIcon, ShieldAlert } from "lucide-react";
 import { exportMonthXlsx } from "@/lib/exportMonthXlsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageHeader, brandTabsListClass, brandTabsTriggerClass } from "@/components/PageHeader";
+import { PageHeader, brandTabsListClass, brandTabsTriggerClass, BrandStat, BrandCard, brandTableWrapClass } from "@/components/PageHeader";
 import { OrphanUsersTab } from "@/components/admin/OrphanUsersTab";
 
 interface Team {
@@ -319,21 +317,34 @@ export default function Admin() {
     return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
   }
 
+  const totalUsers = users.length;
+  const totalClosers = users.filter(u => u.role === 'CLOSER').length;
+  const totalAdmins = users.filter(u => u.role === 'ADMIN' || u.role === 'SUBADMIN').length;
+  const totalActiveInfs = influencers.filter(i => i.ativo).length;
+
   return (
     <div className="min-h-screen bg-[#F6F4F0]">
       <PageHeader
         eyebrow="Painel Admin"
         icon={Settings}
         title="Gestão de usuários e acessos"
-        subtitle="Administre membros, convites, aprovações e órfãos do sistema. Todas as ações ficam registradas na trilha de auditoria."
-      />
-       <div className="container py-6 space-y-6">
-        <Alert className="border-amber-200 bg-amber-50/80 rounded-2xl">
-          <AlertTriangle className="h-4 w-4 text-amber-600" />
-          <AlertTitle className="text-amber-800">Atenção</AlertTitle>
-          <AlertDescription className="text-amber-700">Todas as ações são registradas no log de auditoria.</AlertDescription>
-        </Alert>
-
+        subtitle="Administre membros, convites, aprovações e órfãos. Todas as ações ficam registradas na trilha de auditoria."
+      >
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <BrandStat label="Usuários" value={totalUsers} icon={Users} />
+          <BrandStat label="Closers" value={totalClosers} icon={UserIcon} tone="emerald" hint="Equipe operacional" />
+          <BrandStat label="Admins" value={totalAdmins} icon={ShieldCheck} tone="amber" hint="ADMIN + SUBADMIN" />
+          <BrandStat label="Influs ativos" value={totalActiveInfs} icon={Shield} tone="blue" />
+        </div>
+        <div className="inline-flex items-start gap-2 rounded-2xl border border-amber-200/70 bg-amber-50/60 px-4 py-2.5">
+          <ShieldAlert className="h-4 w-4 mt-0.5 text-amber-600 shrink-0" />
+          <p className="text-[12.5px] leading-5 text-amber-800">
+            <span className="font-medium">Tudo é auditado.</span>{" "}
+            <span className="text-amber-700/90">Cada alteração fica registrada com autor, motivo e timestamp.</span>
+          </p>
+        </div>
+      </PageHeader>
+      <div className="container py-6 space-y-6">
         <Tabs defaultValue="gestao" className="space-y-6">
           <TabsList className={brandTabsListClass}>
             <TabsTrigger value="gestao" className={brandTabsTriggerClass}><Users className="h-4 w-4 mr-1.5" />Gestão</TabsTrigger>
@@ -345,12 +356,9 @@ export default function Admin() {
           <TabsContent value="gestao" className="space-y-6">
 
         {/* Users Management */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" />Gerenciar Usuários</CardTitle>
-            <CardDescription>Lista de usuários, papéis e redefinição de senha</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <BrandCard title="Gerenciar usuários" description="Lista de usuários, papéis e redefinição de senha" icon={Users}>
+
+          <div className="space-y-4">
            {/* Team filter tabs - ADMIN only */}
             {isAdmin && (
             <div className="flex flex-wrap gap-2">
@@ -377,8 +385,8 @@ export default function Admin() {
             </div>
             )}
 
-            <div className="rounded-lg border">
-              <table className="w-full">
+            <div className={brandTableWrapClass}>
+              <table className="table-minimal">
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="text-left p-3 font-medium">Nome</th>
@@ -489,17 +497,13 @@ export default function Admin() {
                 </tbody>
               </table>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </BrandCard>
 
         {/* Archive Management - ADMIN only */}
         {isAdmin && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Archive className="h-5 w-5" />Arquivar/Desarquivar</CardTitle>
-            <CardDescription>Arquive influenciadores inativos</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <BrandCard title="Arquivar / Desarquivar" description="Arquive influenciadores inativos" icon={Archive}>
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label>Selecionar Influenciador</Label>
               <Select value={selectedId} onValueChange={setSelectedId}>
@@ -532,21 +536,13 @@ export default function Admin() {
                 </Button>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </BrandCard>
         )}
 
         {/* Export Month */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Download className="h-5 w-5" />Exportar Mês Completo</CardTitle>
-            <CardDescription>
-              {isAdmin 
-                ? "Gere um arquivo XLSX com dados do mês — escolha a equipe" 
-                : "Gere um arquivo XLSX com dados da sua equipe"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        <BrandCard title="Exportar mês completo" description={isAdmin ? "Gere um arquivo XLSX com dados do mês — escolha a equipe" : "Gere um arquivo XLSX com dados da sua equipe"} icon={Download}>
+          <div>
             <div className="flex flex-wrap items-center gap-3">
               <Select value={exportMonth} onValueChange={setExportMonth}>
                 <SelectTrigger className="w-[200px] h-9 text-sm">
@@ -591,19 +587,15 @@ export default function Admin() {
                 Exportar XLSX
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </BrandCard>
 
         {/* Commission Settings - ADMIN only */}
         {isAdmin && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Percent className="h-5 w-5" />Comissão por Closer</CardTitle>
-            <CardDescription>Defina a taxa de comissão individual (ex: 0.10 = 10%)</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-lg border">
-              <table className="w-full">
+        <BrandCard title="Comissão por closer" description="Defina a taxa de comissão individual (ex: 0.10 = 10%)" icon={Percent}>
+          <div>
+            <div className={brandTableWrapClass}>
+              <table className="table-minimal">
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="text-left p-3 font-medium text-sm">Closer</th>
@@ -678,8 +670,8 @@ export default function Admin() {
                 </tbody>
               </table>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </BrandCard>
         )}
           </TabsContent>
 

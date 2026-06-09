@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageHeader, brandTabsListClass, brandTabsTriggerClass } from "@/components/PageHeader";
+import { PageHeader, brandTabsListClass, brandTabsTriggerClass, BrandStat, brandTableWrapClass } from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDateTime } from "@/lib/helpers";
@@ -189,6 +189,16 @@ export default function Auditoria() {
     ? null
     : userTabs.find(([id]) => id === activeTab)?.[1] || "Usuário";
 
+  const statsCounts = useMemo(() => {
+    const c = { total: teamFilteredLogs.length, insert: 0, update: 0, del: 0 };
+    teamFilteredLogs.forEach(l => {
+      if (l.action === "INSERT") c.insert++;
+      else if (l.action === "UPDATE") c.update++;
+      else if (l.action === "DELETE") c.del++;
+    });
+    return c;
+  }, [teamFilteredLogs]);
+
   if (loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -196,6 +206,7 @@ export default function Auditoria() {
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen bg-[#F6F4F0]">
@@ -214,7 +225,14 @@ export default function Auditoria() {
             </TabsList>
           </Tabs>
         )}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <BrandStat label="Eventos totais" value={statsCounts.total} icon={ShieldAlert} />
+          <BrandStat label="Criações" value={statsCounts.insert} icon={Plus} tone="emerald" />
+          <BrandStat label="Edições" value={statsCounts.update} icon={Pencil} tone="blue" />
+          <BrandStat label="Remoções" value={statsCounts.del} icon={Trash2} tone="rose" />
+        </div>
       </PageHeader>
+
 
       {/* Sub-tabs */}
       <div className="border-b bg-card">
@@ -369,7 +387,7 @@ function AuditTable({
       </div>
 
       {/* Table */}
-      <div className="bg-card rounded-xl border border-border/40 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-black/5 shadow-[0_1px_0_rgba(0,0,0,0.02)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
