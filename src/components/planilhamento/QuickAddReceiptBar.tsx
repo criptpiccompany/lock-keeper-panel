@@ -99,13 +99,21 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
   return (
     <div
       ref={dropRef}
-      className="rounded-[18px] border border-[#ececeb] bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,0.04)]"
+      className="rounded-[22px] border border-[#ececeb] bg-white/95 backdrop-blur-md p-5 shadow-[0_12px_32px_rgba(15,23,42,0.06)]"
     >
-      <div className="flex items-center gap-2 mb-3">
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-[#1f1f1f] text-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em]">
-          Adicionar comprovante
+      <div className="flex items-end justify-between gap-4 mb-4">
+        <div className="space-y-1.5">
+          <div className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-[#999]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#6ea93d]" />
+            Adicionar comprovante
+          </div>
+          <h2 className="text-[22px] leading-[1.05] font-semibold tracking-[-0.03em] text-[#1f1f1f]">
+            Anexe um comprovante <span className="text-[#cfcfce]">em segundos.</span>
+          </h2>
         </div>
-        <p className="text-[11.5px] text-[#999]">Cole (Ctrl+V), arraste ou clique. Selecione closer e influenciador, depois confirme.</p>
+        <p className="hidden md:block text-right text-[11.5px] leading-snug text-[#999] max-w-[260px]">
+          Cole (Ctrl+V), arraste ou clique. Escolha o closer e o influenciador, então confirme.
+        </p>
       </div>
 
       <div className="grid grid-cols-12 gap-3 items-stretch">
@@ -114,11 +122,11 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer?.files?.[0]; if (f) setFile(f); }}
           onClick={() => !file && fileRef.current?.click()}
-          className="col-span-12 md:col-span-4 relative rounded-xl border-2 border-dashed border-[#e5e3dd] bg-[#fafaf8] hover:border-[#6ea93d] hover:bg-white transition-colors min-h-[92px] flex items-center justify-center cursor-pointer overflow-hidden"
+          className="col-span-12 md:col-span-4 group relative rounded-2xl border-2 border-dashed border-[#e5e3dd] bg-[#fafaf8] hover:border-[#1f1f1f]/40 hover:bg-white transition-all min-h-[100px] flex items-center justify-center cursor-pointer overflow-hidden"
         >
           {preview && preview !== "pdf" ? (
             <>
-              <img src={preview} alt="preview" className="max-h-[88px] object-contain" />
+              <img src={preview} alt="preview" className="max-h-[96px] object-contain" />
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); setFile(null); }}
@@ -130,14 +138,19 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
             </>
           ) : preview === "pdf" ? (
             <div className="flex items-center gap-2 px-3">
-              <FileText className="h-5 w-5 text-[#999]" />
-              <span className="text-[12px] font-medium text-[#1f1f1f] truncate max-w-[160px]">{file?.name}</span>
+              <FileText className="h-5 w-5 text-[#676767]" />
+              <span className="text-[12.5px] font-medium text-[#1f1f1f] truncate max-w-[160px]">{file?.name}</span>
               <button type="button" onClick={(e) => { e.stopPropagation(); setFile(null); }} className="text-[10px] text-[#999] underline ml-1">remover</button>
             </div>
           ) : (
-            <div className="flex items-center gap-2 text-[#999]">
-              <Upload className="h-4 w-4" />
-              <p className="text-[12px] font-medium text-[#1f1f1f]">Cole, arraste ou clique aqui</p>
+            <div className="flex items-center gap-2.5 text-[#676767]">
+              <div className="grid h-8 w-8 place-items-center rounded-full bg-[#1f1f1f] text-white shadow-sm group-hover:scale-105 transition-transform">
+                <Upload className="h-3.5 w-3.5" />
+              </div>
+              <div className="flex flex-col leading-tight">
+                <p className="text-[12.5px] font-semibold tracking-[-0.01em] text-[#1f1f1f]">Cole, arraste ou clique</p>
+                <p className="text-[10.5px] text-[#999]">PNG · JPG · WEBP · PDF</p>
+              </div>
             </div>
           )}
           <input
@@ -151,13 +164,13 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
 
         {/* Closer */}
         <div className="col-span-6 md:col-span-3">
-          <label className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#999] mb-1 block">Closer</label>
-          <div className="inline-flex w-full items-center gap-2 rounded-xl border border-[#ececeb] bg-white px-3 py-2.5">
+          <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#999] mb-1.5 block">Closer</label>
+          <div className="inline-flex w-full items-center gap-2 rounded-2xl border border-[#ececeb] bg-white px-3.5 py-3 focus-within:border-[#1f1f1f]/40 transition-colors">
             <UserIcon className="h-4 w-4 text-[#999]" />
             <select
               value={closerId}
               onChange={(e) => setCloserId(e.target.value)}
-              className="flex-1 bg-transparent text-[13px] font-medium tracking-[-0.01em] text-[#1f1f1f] outline-none"
+              className="flex-1 bg-transparent text-[13.5px] font-medium tracking-[-0.01em] text-[#1f1f1f] outline-none cursor-pointer"
             >
               <option value="">Selecione…</option>
               {closers.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
@@ -167,15 +180,15 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
 
         {/* Influencer */}
         <div className="col-span-6 md:col-span-3">
-          <label className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#999] mb-1 block">Influenciador</label>
-          <div className="inline-flex w-full items-center gap-1 rounded-xl border border-[#ececeb] bg-white px-3 py-2.5">
+          <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#999] mb-1.5 block">Influenciador</label>
+          <div className="inline-flex w-full items-center gap-1 rounded-2xl border border-[#ececeb] bg-white px-3.5 py-3 focus-within:border-[#1f1f1f]/40 transition-colors">
             <span className="text-[#999] text-[14px]">@</span>
             <input
               value={influencer}
               onChange={(e) => setInfluencer(e.target.value.replace(/^@+/, ""))}
               onKeyDown={(e) => { if (e.key === "Enter") handleConfirm(); }}
               placeholder="handle"
-              className="flex-1 min-w-0 bg-transparent text-[13px] font-medium tracking-[-0.01em] text-[#1f1f1f] outline-none placeholder:text-[#bbb]"
+              className="flex-1 min-w-0 bg-transparent text-[13.5px] font-medium tracking-[-0.01em] text-[#1f1f1f] outline-none placeholder:text-[#bbb]"
             />
           </div>
         </div>
@@ -185,7 +198,7 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
           <Button
             onClick={handleConfirm}
             disabled={saving || !file || !closerId || !influencer.trim()}
-            className="w-full bg-[#1f1f1f] text-white hover:bg-[#0d0d0d] rounded-xl h-[42px] mt-0 md:mt-[18px]"
+            className="w-full rounded-2xl h-[48px] mt-0 md:mt-[22px] text-[13px] font-semibold tracking-[-0.01em] bg-[linear-gradient(180deg,#1f1f1f_0%,#0d0d0d_100%)] text-white hover:opacity-95 disabled:bg-[#e5e3dd] disabled:bg-none disabled:text-[#bbb] shadow-[0_6px_14px_rgba(15,23,42,0.18)] disabled:shadow-none"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmar"}
           </Button>
@@ -194,3 +207,4 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
     </div>
   );
 }
+
