@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -131,17 +132,17 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
       ref={dropRef}
       className="rounded-[22px] border border-[#ececeb] bg-white/95 backdrop-blur-md p-5 shadow-[0_12px_32px_rgba(15,23,42,0.06)]"
     >
-      <div className="flex items-end justify-between gap-4 mb-4">
-        <div className="space-y-1.5">
-          <div className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-[#999]">
+      <div className="flex items-end justify-between gap-4 mb-5">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold uppercase tracking-[0.2em] text-[#1f1f1f]/70">
             <span className="h-1.5 w-1.5 rounded-full bg-[#6ea93d]" />
             Adicionar comprovante
           </div>
-          <h2 className="text-[22px] leading-[1.05] font-semibold tracking-[-0.03em] text-[#1f1f1f]">
+          <h2 className="text-[28px] leading-[1.05] font-semibold tracking-[-0.03em] text-[#1f1f1f]">
             Anexe um comprovante <span className="text-[#cfcfce]">em segundos.</span>
           </h2>
         </div>
-        <p className="hidden md:block text-right text-[11.5px] leading-snug text-[#999] max-w-[260px]">
+        <p className="hidden md:block text-right text-[12.5px] leading-snug text-[#676767] max-w-[280px]">
           Cole (Ctrl+V), arraste ou clique. Escolha o closer e o influenciador, então confirme.
         </p>
       </div>
@@ -149,7 +150,7 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
       <div className="grid grid-cols-12 gap-3 items-end">
         {/* Drop area */}
         <div className="col-span-12 md:col-span-4">
-          <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#999] mb-1.5 block">Comprovante</label>
+          <label className="text-[11.5px] font-semibold uppercase tracking-[0.18em] text-[#1f1f1f]/70 mb-2 block">Comprovante</label>
           <div className="flex items-stretch gap-2">
             <div
               onDragOver={(e) => e.preventDefault()}
@@ -209,31 +210,57 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
 
         {/* Closer */}
         <div className="col-span-6 md:col-span-3">
-          <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#999] mb-1.5 block">Closer</label>
-          <div className="flex h-[52px] w-full items-center gap-2 rounded-2xl border border-[#ececeb] bg-white px-3.5 focus-within:border-[#1f1f1f]/40 transition-colors">
-            <UserIcon className="h-4 w-4 text-[#999] shrink-0" />
-            <select
-              value={closerId}
-              onChange={(e) => setCloserId(e.target.value)}
-              className="flex-1 bg-transparent text-[13.5px] font-medium tracking-[-0.01em] text-[#1f1f1f] outline-none cursor-pointer"
-            >
-              <option value="">Selecione…</option>
-              {closers.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-            </select>
-          </div>
+          <label className="text-[11.5px] font-semibold uppercase tracking-[0.18em] text-[#1f1f1f]/70 mb-2 block">Closer</label>
+          <Select value={closerId} onValueChange={setCloserId}>
+            <SelectTrigger className="h-[52px] w-full rounded-2xl border border-[#ececeb] bg-white px-3.5 text-[14px] font-medium tracking-[-0.01em] text-[#1f1f1f] focus:ring-0 focus:ring-offset-0 data-[state=open]:border-[#1f1f1f]/40 hover:border-[#1f1f1f]/30 transition-colors [&>span]:flex [&>span]:items-center [&>span]:gap-2">
+              <SelectValue
+                placeholder={
+                  <span className="flex items-center gap-2 text-[#999]">
+                    <UserIcon className="h-4 w-4" />
+                    Selecione…
+                  </span>
+                }
+              >
+                {closerId ? (
+                  <span className="flex items-center gap-2">
+                    <span className="grid h-6 w-6 place-items-center rounded-full bg-[linear-gradient(180deg,#1f1f1f_0%,#0d0d0d_100%)] text-white text-[10px] font-semibold uppercase">
+                      {closers.find((c) => c.id === closerId)?.nome?.[0]}
+                    </span>
+                    {closers.find((c) => c.id === closerId)?.nome}
+                  </span>
+                ) : null}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className="rounded-2xl border border-[#ececeb] bg-white shadow-[0_18px_40px_rgba(15,23,42,0.12)] p-1.5">
+              {closers.map((c) => (
+                <SelectItem
+                  key={c.id}
+                  value={c.id}
+                  className="rounded-xl px-2.5 py-2.5 text-[13.5px] font-medium tracking-[-0.01em] text-[#1f1f1f] focus:bg-[#fafaf8] data-[state=checked]:bg-[#f4f2ec]"
+                >
+                  <span className="flex items-center gap-2.5">
+                    <span className="grid h-7 w-7 place-items-center rounded-full bg-[linear-gradient(180deg,#1f1f1f_0%,#0d0d0d_100%)] text-white text-[11px] font-semibold uppercase">
+                      {c.nome?.[0]}
+                    </span>
+                    {c.nome}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Influencer */}
         <div className="col-span-6 md:col-span-3">
-          <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#999] mb-1.5 block">Influenciador</label>
-          <div className="flex h-[52px] w-full items-center gap-1 rounded-2xl border border-[#ececeb] bg-white px-3.5 focus-within:border-[#1f1f1f]/40 transition-colors">
-            <span className="text-[#999] text-[14px]">@</span>
+          <label className="text-[11.5px] font-semibold uppercase tracking-[0.18em] text-[#1f1f1f]/70 mb-2 block">Influenciador</label>
+          <div className="flex h-[52px] w-full items-center gap-1.5 rounded-2xl border border-[#ececeb] bg-white px-3.5 focus-within:border-[#1f1f1f]/40 transition-colors">
+            <span className="text-[#999] text-[15px]">@</span>
             <input
               value={influencer}
               onChange={(e) => setInfluencer(e.target.value.replace(/^@+/, ""))}
               onKeyDown={(e) => { if (e.key === "Enter") handleConfirm(); }}
               placeholder="handle"
-              className="flex-1 min-w-0 bg-transparent text-[13.5px] font-medium tracking-[-0.01em] text-[#1f1f1f] outline-none placeholder:text-[#bbb]"
+              className="flex-1 min-w-0 bg-transparent text-[14px] font-medium tracking-[-0.01em] text-[#1f1f1f] outline-none placeholder:text-[#bbb]"
             />
           </div>
         </div>
