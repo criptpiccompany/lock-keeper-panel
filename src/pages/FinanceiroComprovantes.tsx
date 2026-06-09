@@ -159,9 +159,7 @@ export default function FinanceiroComprovantes() {
         </div>
       )}
 
-      <QuickAddReceiptModal
-        open={quickOpen}
-        onClose={() => setQuickOpen(false)}
+      <QuickAddReceiptBar
         closers={closers}
         date={date}
         onCreated={() => setRefreshKey((k) => k + 1)}
