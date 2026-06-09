@@ -197,6 +197,16 @@ export default function Auditoria() {
     );
   }
 
+  const statsCounts = useMemo(() => {
+    const c = { total: teamFilteredLogs.length, insert: 0, update: 0, del: 0 };
+    teamFilteredLogs.forEach(l => {
+      if (l.action === "INSERT") c.insert++;
+      else if (l.action === "UPDATE") c.update++;
+      else if (l.action === "DELETE") c.del++;
+    });
+    return c;
+  }, [teamFilteredLogs]);
+
   return (
     <div className="min-h-screen bg-[#F6F4F0]">
       <PageHeader
@@ -214,7 +224,14 @@ export default function Auditoria() {
             </TabsList>
           </Tabs>
         )}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <BrandStat label="Eventos totais" value={statsCounts.total} icon={ShieldAlert} />
+          <BrandStat label="Criações" value={statsCounts.insert} icon={Plus} tone="emerald" />
+          <BrandStat label="Edições" value={statsCounts.update} icon={Pencil} tone="blue" />
+          <BrandStat label="Remoções" value={statsCounts.del} icon={Trash2} tone="rose" />
+        </div>
       </PageHeader>
+
 
       {/* Sub-tabs */}
       <div className="border-b bg-card">
