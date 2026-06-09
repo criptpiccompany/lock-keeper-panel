@@ -601,6 +601,7 @@ function SectionBlock({
   statusOptions,
   onCheckClick,
   showCheck,
+  onArchive,
 }: {
   title: string;
   subtitle?: string;
@@ -614,6 +615,7 @@ function SectionBlock({
   statusOptions: string[];
   onCheckClick?: (card: TeamBoardCard) => void;
   showCheck?: boolean;
+  onArchive?: (card: TeamBoardCard) => void;
 }) {
   return (
     <section>
@@ -642,6 +644,7 @@ function SectionBlock({
                 statusOptions={statusOptions}
                 onCheckClick={onCheckClick}
                 showCheck={showCheck}
+                onArchive={onArchive}
               />
             ))}
           </div>
