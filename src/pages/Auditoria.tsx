@@ -234,56 +234,46 @@ export default function Auditoria() {
       </PageHeader>
 
 
-      {/* Sub-tabs */}
-      <div className="border-b bg-card">
-        <div className="container">
-          <nav className="flex gap-1 overflow-x-auto scrollbar-none">
+      {/* Sub-tabs — pill premium */}
+      <div className="bg-[#F6F4F0]">
+        <div className="container px-4 sm:px-6 lg:px-8 pt-6">
+          <nav className={`${brandTabsListClass} max-w-full overflow-x-auto scrollbar-none`}>
             <button
               onClick={() => handleTabClick("ALL")}
-              className={`
-                flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap
-                ${activeTab === "ALL"
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground/80"
-                }
-              `}
+              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors whitespace-nowrap ${
+                activeTab === "ALL"
+                  ? "bg-slate-950 text-white shadow-sm"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
             >
-              <Users className="h-4 w-4" />
+              <Users className="h-3.5 w-3.5" />
               Geral
-              {activeTab === "ALL" && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-full" />
-              )}
             </button>
             {userTabs.map(([userId, nome]) => {
               const isActive = activeTab === userId;
               const level = unseenLevel(userId);
               const dotColor = level === "sensitive"
-                ? { ping: "bg-red-400", dot: "bg-red-500" }
+                ? { ping: "bg-rose-400", dot: "bg-rose-500" }
                 : level === "common"
-                  ? { ping: "bg-orange-400", dot: "bg-orange-500" }
+                  ? { ping: "bg-amber-400", dot: "bg-amber-500" }
                   : null;
               return (
                 <button
                   key={userId}
                   onClick={() => handleTabClick(userId)}
-                  className={`
-                    flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap
-                    ${isActive
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground/80"
-                    }
-                  `}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors whitespace-nowrap ${
+                    isActive
+                      ? "bg-slate-950 text-white shadow-sm"
+                      : "text-slate-500 hover:text-slate-900"
+                  }`}
                 >
-                  <User className="h-4 w-4" />
+                  <User className="h-3.5 w-3.5" />
                   {nome}
                   {dotColor && !isActive && (
-                    <span className="relative flex h-2.5 w-2.5">
+                    <span className="relative flex h-2 w-2">
                       <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${dotColor.ping} opacity-75`} />
-                      <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${dotColor.dot}`} />
+                      <span className={`relative inline-flex rounded-full h-2 w-2 ${dotColor.dot}`} />
                     </span>
-                  )}
-                  {isActive && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-full" />
                   )}
                 </button>
               );
@@ -305,6 +295,7 @@ export default function Auditoria() {
     </div>
   );
 }
+
 
 // --- Filterable table (shared between Geral and per-user) ---
 
@@ -348,22 +339,22 @@ function AuditTable({
   const colSpan = showUserColumn ? 5 : 4;
 
   return (
-    <div className="container py-6 space-y-4">
-      <p className="text-xs text-muted-foreground">{subtitle}</p>
+    <div className="container px-4 sm:px-6 lg:px-8 py-8 space-y-5">
+      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">{subtitle}</p>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 items-end">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-wrap gap-3 items-center rounded-2xl border border-black/5 bg-white p-3 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
+        <div className="relative flex-1 min-w-[220px] max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             placeholder="Buscar por nome, influenciador..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 h-9 text-sm"
+            className="pl-9 h-9 text-sm rounded-full border-black/5 bg-[#F6F4F0]/60 focus-visible:bg-white"
           />
         </div>
         <Select value={filterAction} onValueChange={setFilterAction}>
-          <SelectTrigger className="w-[140px] h-9 text-sm">
+          <SelectTrigger className="w-[150px] h-9 text-sm rounded-full border-black/5 bg-[#F6F4F0]/60">
             <SelectValue placeholder="Tipo" />
           </SelectTrigger>
           <SelectContent>
@@ -374,7 +365,7 @@ function AuditTable({
           </SelectContent>
         </Select>
         <Select value={filterEntity} onValueChange={setFilterEntity}>
-          <SelectTrigger className="w-[180px] h-9 text-sm">
+          <SelectTrigger className="w-[190px] h-9 text-sm rounded-full border-black/5 bg-[#F6F4F0]/60">
             <SelectValue placeholder="Área" />
           </SelectTrigger>
           <SelectContent>
@@ -387,82 +378,80 @@ function AuditTable({
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-black/5 shadow-[0_1px_0_rgba(0,0,0,0.02)] overflow-hidden">
+      <div className={brandTableWrapClass}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border/40 bg-muted/40">
-                <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs">Quando</th>
-                <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs w-[100px]">Tipo</th>
-                <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs">O que aconteceu</th>
+              <tr className="border-b border-black/5 bg-[#FAF9F6]">
+                <th className="text-left py-3 px-5 font-medium text-slate-500 text-[10px] uppercase tracking-[0.14em]">Quando</th>
+                <th className="text-left py-3 px-5 font-medium text-slate-500 text-[10px] uppercase tracking-[0.14em] w-[110px]">Tipo</th>
+                <th className="text-left py-3 px-5 font-medium text-slate-500 text-[10px] uppercase tracking-[0.14em]">O que aconteceu</th>
                 {showUserColumn && (
-                  <th className="text-left py-2.5 px-4 font-medium text-muted-foreground text-xs">Quem fez</th>
+                  <th className="text-left py-3 px-5 font-medium text-slate-500 text-[10px] uppercase tracking-[0.14em]">Quem fez</th>
                 )}
-                <th className="text-center py-2.5 px-4 font-medium text-muted-foreground text-xs w-12"></th>
+                <th className="text-center py-3 px-5 w-12"></th>
               </tr>
             </thead>
             <tbody>
               {pageData.length === 0 ? (
                 <tr>
-                  <td colSpan={colSpan} className="text-center py-12 text-muted-foreground">
+                  <td colSpan={colSpan} className="text-center py-16 text-sm text-slate-500">
                     Nenhum evento encontrado.
                   </td>
                 </tr>
               ) : (
-                pageData.map((log, idx) => {
-                  const zebraClass = idx % 2 === 1 ? "bg-muted/30" : "";
-                  return (
-                    <tr
-                      key={log.id}
-                      className={`border-b border-border/20 hover:bg-muted/40 transition-colors cursor-pointer ${zebraClass}`}
-                      onClick={() => setDetailLog(log)}
-                    >
-                      <td className="py-2.5 px-4 text-muted-foreground text-xs whitespace-nowrap">
-                        {formatDateTime(log.created_at)}
+                pageData.map((log) => (
+                  <tr
+                    key={log.id}
+                    className="border-b border-black/5 last:border-0 hover:bg-[#FAF9F6]/70 transition-colors cursor-pointer"
+                    onClick={() => setDetailLog(log)}
+                  >
+                    <td className="py-3 px-5 text-slate-500 text-xs whitespace-nowrap tabular-nums">
+                      {formatDateTime(log.created_at)}
+                    </td>
+                    <td className="py-3 px-5">
+                      <Badge variant="outline" className={`text-[10px] gap-1 rounded-full font-medium ${actionClassName(log)}`}>
+                        <ActionIcon log={log} />
+                        {actionLabel(log)}
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-5 text-[13px] text-slate-700 max-w-[420px] truncate">
+                      <DescriptionCell log={log} />
+                    </td>
+                    {showUserColumn && (
+                      <td className="py-3 px-5 text-[13px] text-slate-600">
+                        {log.actor_nome || "Sistema"}
                       </td>
-                      <td className="py-2.5 px-4">
-                        <Badge variant="outline" className={`text-[10px] gap-1 ${actionClassName(log)}`}>
-                          <ActionIcon log={log} />
-                          {actionLabel(log)}
-                        </Badge>
-                      </td>
-                      <td className="py-2.5 px-4 text-xs max-w-[360px] truncate">
-                        <DescriptionCell log={log} />
-                      </td>
-                      {showUserColumn && (
-                        <td className="py-2.5 px-4 text-xs">
-                          <span className="text-muted-foreground">{log.actor_nome || "Sistema"}</span>
-                        </td>
-                      )}
-                      <td className="py-2.5 px-4 text-center">
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); setDetailLog(log); }}>
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })
+                    )}
+                    <td className="py-3 px-5 text-center">
+                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-slate-400 hover:text-slate-900" onClick={(e) => { e.stopPropagation(); setDetailLog(log); }}>
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-border/30">
-            <span className="text-xs text-muted-foreground">
-              {filtered.length} eventos — Página {page + 1} de {totalPages}
+          <div className="flex items-center justify-between px-5 py-3 border-t border-black/5 bg-[#FAF9F6]/60">
+            <span className="text-[11px] uppercase tracking-[0.14em] text-slate-500">
+              {filtered.length} eventos · Página {page + 1} de {totalPages}
             </span>
             <div className="flex gap-1">
-              <Button variant="ghost" size="icon" className="h-7 w-7" disabled={page === 0} onClick={() => setPage(page - 1)}>
+              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" disabled={page === 0} onClick={() => setPage(page - 1)}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
+              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
         )}
       </div>
+
 
       {detailLog && (
         <AuditDetailDialog log={detailLog} open={!!detailLog} onClose={() => setDetailLog(null)} />
