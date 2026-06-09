@@ -1736,11 +1736,11 @@ export default function PlanilhamentoDiario({
                     )}
 
                     {/* Receipts carousel (story-style) — replaces per-row Comprovantes column */}
-                    {RECEIPTS_AS_CAROUSEL && effectiveCloserId && (
+                    {RECEIPTS_AS_CAROUSEL && (closerId || user?.id) && (
                       <div className="border-t border-border/30 px-4 py-3 bg-[#fcfcf8]">
                         <DailyReceiptsCarousel
                           date={day}
-                          closerId={effectiveCloserId}
+                          closerId={(closerId || user?.id) as string}
                           canEdit={!viewingOther}
                           influencerLines={dayRecords.map((r) => ({
                             recordId: r.id,
