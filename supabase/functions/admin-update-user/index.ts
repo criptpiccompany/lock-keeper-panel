@@ -8,10 +8,11 @@ const corsHeaders = {
 
 interface UpdateUserRequest {
   userId: string;
-  action: "update_password" | "update_name";
+  action: "update_password" | "update_name" | "deactivate_user";
   newPassword?: string;
   newName?: string;
 }
+
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
