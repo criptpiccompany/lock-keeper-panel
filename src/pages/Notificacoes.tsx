@@ -245,6 +245,12 @@ export default function Notificacoes() {
             </TabsList>
           </Tabs>
         )}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <BrandStat label="Total" value={teamFilteredNotifications.length} icon={Bell} />
+          <BrandStat label="Pendentes" value={pendingCount} icon={Clock} tone="amber" hint="Aguardando revisão" />
+          <BrandStat label="Revisados" value={reviewedCount} icon={CheckCircle2} tone="emerald" />
+          <BrandStat label="Suspeitos" value={suspectCount} icon={AlertTriangle} tone="rose" />
+        </div>
       </PageHeader>
 
       <div className="container py-6 space-y-4">
