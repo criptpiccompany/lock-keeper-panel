@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/command";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { dateToStr, todayStr as getLocalTodayStr } from "@/components/financeiro/financeiroHelpers";
 import { toast } from "sonner";
 import {
   Loader2,
@@ -486,7 +487,7 @@ export default function PlanilhamentoDiario({
     setLoading(false);
     setIsSyncing(false);
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = getLocalTodayStr();
     if (isInitial && !viewingOther && today >= startDate && today <= endDate) {
       setExpandedDays(new Set([today]));
     }
@@ -519,7 +520,7 @@ export default function PlanilhamentoDiario({
     for (const d of recordsByDate.keys()) days.add(d);
     for (const d of persistedDays) days.add(d);
     for (const d of receiptDays) days.add(d);
-    const today = new Date().toISOString().split("T")[0];
+    const today = getLocalTodayStr();
     if (monthDays.includes(today)) days.add(today);
     return monthDays.filter((d) => days.has(d));
   }, [recordsByDate, persistedDays, receiptDays, monthDays, focusedDate]);
@@ -565,14 +566,14 @@ export default function PlanilhamentoDiario({
     if (lastDay) {
       const next = new Date(lastDay + "T12:00:00");
       next.setDate(next.getDate() + 1);
-      const nextStr = next.toISOString().split("T")[0];
+      const nextStr = dateToStr(next);
       if (!monthDays.includes(nextStr)) {
         toast.info("Fim do mês atingido");
         return;
       }
       targetDate = nextStr;
     } else {
-      const today = new Date().toISOString().split("T")[0];
+      const today = getLocalTodayStr();
       targetDate = monthDays.includes(today) ? today : monthDays[0];
     }
 
@@ -729,7 +730,7 @@ export default function PlanilhamentoDiario({
 
   // Helper: check if a date string is a past day (before today)
   const isPastDay = (dateStr: string): boolean => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = getLocalTodayStr();
     return dateStr < today;
   };
 
