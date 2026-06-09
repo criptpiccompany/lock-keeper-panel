@@ -77,14 +77,18 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
       const { data: urlData } = supabase.storage.from("comprovantes").getPublicUrl(path);
       const fileType = file.type === "application/pdf" ? "pdf" : "image";
       const handle = influencer.trim().replace(/^@+/, "");
-      const { error: insErr } = await supabase.from("daily_receipt_uploads").insert({
+      const { data: inserted, error: insErr } = await supabase.from("daily_receipt_uploads").insert({
         date, closer_id: closerId, daily_record_id: null,
         file_url: urlData.publicUrl, file_type: fileType, uploaded_by: user.id,
-        parsed_data: { destinatario: `@${handle}`, manual: true } as any,
-        parse_status: "done",
-        parsed_at: new Date().toISOString(),
-      } as any);
+        parsed_data: { manual_influencer: `@${handle}` } as any,
+        parse_status: "processing",
+      } as any).select("id").single();
       if (insErr) throw insErr;
+      // Trigger AI parse (fire and forget)
+      if (inserted?.id && fileType === "image") {
+        supabase.functions.invoke("parse-receipt", { body: { receiptId: inserted.id } })
+          .catch((e) => console.warn("parse-receipt invoke fail:", e));
+      }
       toast.success("Comprovante adicionado");
       onCreated?.(closerId);
       reset();

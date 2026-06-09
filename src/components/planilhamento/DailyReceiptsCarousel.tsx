@@ -345,6 +345,11 @@ export default function DailyReceiptsCarousel({
                     </span>
                   ) : it.parsedData ? (
                     <div className="text-[9px] text-foreground space-y-0.5">
+                      {it.parsedData.manual_influencer && (
+                        <div className="font-semibold text-[10px] text-[#1f1f1f] truncate" title={it.parsedData.manual_influencer}>
+                          {it.parsedData.manual_influencer}
+                        </div>
+                      )}
                       {it.parsedData.valor && (
                         <div className="font-semibold text-[10px] text-[#2c2c2c]">R$ {it.parsedData.valor}</div>
                       )}
