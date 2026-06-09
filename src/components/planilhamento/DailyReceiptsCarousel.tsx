@@ -224,7 +224,7 @@ export default function DailyReceiptsCarousel({
       ref={carouselRef}
       tabIndex={requireFocus ? 0 : -1}
       className={cn(
-        "rounded-2xl border bg-white/60 backdrop-blur-sm px-4 py-3 outline-none",
+        "rounded-2xl border bg-white/60 backdrop-blur-sm px-4 pt-4 pb-5 outline-none",
         compact ? "" : "mt-4",
         requireFocus && "focus-within:border-[#6ea93d] focus-within:bg-white"
       )}
