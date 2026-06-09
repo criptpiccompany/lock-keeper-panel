@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {}
   };
 
-  const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
+  const fetchUserProfile = async (userId: string, email: string): Promise<AuthUser | null> => {
     try {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -74,11 +74,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-
       return {
         id: userId,
-        email: authUser?.email || '',
+        email,
         nome: profile.nome,
         role: roleData.role as UserRole,
         status: (profile as any).status as AccountStatus || 'pending',
@@ -92,36 +90,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // Track the last loaded profile id so token refresh / focus events
+    // do NOT trigger a full profile refetch (which re-creates the `user`
+    // object and cascades re-renders across the app — visible as flicker).
+    let lastLoadedUserId: string | null = null;
+    let cancelled = false;
+
+    const loadProfile = (userId: string, email: string) => {
+      // Fire-and-forget — never await inside onAuthStateChange.
+      fetchUserProfile(userId, email).then((userProfile) => {
+        if (cancelled) return;
+        if (userProfile) lastLoadedUserId = userId;
+        setUser(userProfile);
+        setLoading(false);
+      });
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      (event, currentSession) => {
         setSession(currentSession);
-        if (currentSession?.user) {
-          setTimeout(async () => {
-            const userProfile = await fetchUserProfile(currentSession.user.id);
-            setUser(userProfile);
-            setLoading(false);
-          }, 0);
-        } else {
+        const sessionUserId = currentSession?.user?.id ?? null;
+
+        if (!sessionUserId) {
+          lastLoadedUserId = null;
           setViewAsRole(null);
           setUser(null);
           setLoading(false);
+          return;
+        }
+
+        // Only (re)fetch profile when the user identity actually changes
+        // or on explicit USER_UPDATED. Ignore TOKEN_REFRESHED / SIGNED_IN
+        // on the same user — they fire on tab focus and were causing the
+        // whole tree to re-render as if reloading.
+        const userChanged = sessionUserId !== lastLoadedUserId;
+        if (userChanged || event === 'USER_UPDATED') {
+          loadProfile(sessionUserId, currentSession!.user.email || '');
         }
       }
     );
 
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      if (cancelled) return;
       setSession(currentSession);
       if (currentSession?.user) {
-        fetchUserProfile(currentSession.user.id).then((userProfile) => {
-          setUser(userProfile);
-          setLoading(false);
-        });
+        loadProfile(currentSession.user.id, currentSession.user.email || '');
       } else {
         setLoading(false);
       }
     });
 
-    return () => { subscription.unsubscribe(); };
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
