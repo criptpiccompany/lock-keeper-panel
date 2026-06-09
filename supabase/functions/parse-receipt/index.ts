@@ -106,9 +106,10 @@ Responda APENAS com JSON válido neste formato exato (use null para campos não 
       parsed = { raw: text };
     }
 
+    const merged = { ...(parsed || {}), ...(manualInfluencer ? { manual_influencer: manualInfluencer } : {}) };
     await supabase.from("daily_receipt_uploads")
       .update({
-        parsed_data: parsed,
+        parsed_data: merged,
         parse_status: "done",
         parsed_at: new Date().toISOString(),
       })
