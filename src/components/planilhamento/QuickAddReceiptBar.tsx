@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Loader2, Upload, X, FileText, User as UserIcon } from "lucide-react";
+import { Loader2, Upload, X, FileText, User as UserIcon, ClipboardPaste } from "lucide-react";
 
 interface Closer { id: string; nome: string; team_id: string | null }
 
