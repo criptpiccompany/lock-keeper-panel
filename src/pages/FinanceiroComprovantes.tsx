@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Calendar, FileText, Loader2, Plus, User, Users } from "lucide-react";
+import { Calendar, FileText, Loader2, User, Users } from "lucide-react";
 import DailyReceiptsCarousel from "@/components/planilhamento/DailyReceiptsCarousel";
-import QuickAddReceiptModal from "@/components/planilhamento/QuickAddReceiptModal";
+import QuickAddReceiptBar from "@/components/planilhamento/QuickAddReceiptBar";
 
 interface Closer { id: string; nome: string; team_id: string | null }
 interface Team { id: string; name: string }
@@ -25,8 +25,7 @@ export default function FinanceiroComprovantes() {
   const [date, setDate] = useState<string>(todayStr());
   const [loading, setLoading] = useState(true);
   const [filterTeam, setFilterTeam] = useState<string>("all");
-  const [quickOpen, setQuickOpen] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const load = async () => {
@@ -88,15 +87,8 @@ export default function FinanceiroComprovantes() {
               <span className="h-1.5 w-1.5 rounded-full bg-[#6ea93d]" />
               {visibleClosers.length} closer{visibleClosers.length === 1 ? "" : "s"} visíveis
             </div>
-            <button
-              type="button"
-              onClick={() => setQuickOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#1f1f1f] text-white px-3.5 py-1.5 text-[11.5px] font-medium hover:bg-[#0d0d0d] transition-colors"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Adicionar comprovante
-            </button>
           </div>
+
           <div className="flex flex-wrap items-center justify-end gap-2">
             <label className="inline-flex items-center gap-2 rounded-full border border-[#ececeb] bg-white px-3.5 py-2">
               <Calendar className="h-3.5 w-3.5 text-[#999999]" />
@@ -122,6 +114,14 @@ export default function FinanceiroComprovantes() {
         </div>
       </header>
 
+      {/* Quick-add bar (fixo no topo do conteúdo) */}
+      <div className="sticky top-2 z-30">
+        <QuickAddReceiptBar
+          closers={closers}
+          date={date}
+          onCreated={() => setRefreshKey((k) => k + 1)}
+        />
+      </div>
 
       {/* Grid */}
       {visibleClosers.length === 0 ? (
@@ -165,14 +165,6 @@ export default function FinanceiroComprovantes() {
           })}
         </div>
       )}
-
-      <QuickAddReceiptModal
-        open={quickOpen}
-        onClose={() => setQuickOpen(false)}
-        closers={closers}
-        date={date}
-        onCreated={() => setRefreshKey((k) => k + 1)}
-      />
     </div>
   );
 }
