@@ -517,7 +517,20 @@ export default function Admin() {
                               </>
                             )}
                           </Button>
+                          {isAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Desativar conta"
+                              onClick={() => setDeactivateUser(u)}
+                              disabled={u.id === user?.id}
+                              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                            >
+                              <UserX className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
+
                       </td>
                     </tr>
                   ))}
