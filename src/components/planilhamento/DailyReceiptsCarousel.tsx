@@ -242,7 +242,7 @@ export default function DailyReceiptsCarousel({
       </div>
 
       <div
-        className="flex items-center gap-3 overflow-x-auto pb-1 -mx-1 px-1 scroll-smooth"
+        className="flex items-start gap-4 overflow-x-auto pt-3 pb-2 -mx-1 px-1 scroll-smooth"
         onDragOver={(e) => { if (canEdit) { e.preventDefault(); } }}
         onDrop={(e) => {
           if (!canEdit) return;
@@ -255,11 +255,11 @@ export default function DailyReceiptsCarousel({
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={uploading}
-            className="shrink-0 inline-flex flex-col items-center justify-center w-[68px] h-[68px] rounded-2xl border-2 border-dashed border-[#d8d6cf] bg-white hover:border-primary/50 hover:bg-primary/5 transition-colors disabled:opacity-50"
+            className="shrink-0 inline-flex flex-col items-center justify-center w-[104px] h-[104px] rounded-2xl border-2 border-dashed border-[#d8d6cf] bg-white hover:border-primary/50 hover:bg-primary/5 transition-colors disabled:opacity-50"
             title="Adicionar comprovante"
           >
-            {uploading ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : <Plus className="h-5 w-5 text-muted-foreground" />}
-            <span className="text-[9px] text-muted-foreground mt-0.5">Adicionar</span>
+            {uploading ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : <Plus className="h-6 w-6 text-muted-foreground" />}
+            <span className="text-[11px] text-muted-foreground mt-1">Adicionar</span>
           </button>
         )}
 
