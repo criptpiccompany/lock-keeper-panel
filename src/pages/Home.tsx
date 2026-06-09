@@ -558,6 +558,12 @@ export default function Home() {
   const [closerData, setCloserData] = useState<CloserHomeData | null>(null);
   const [adminData, setAdminData] = useState<AdminHomeData | null>(null);
 
+  // Closer shortcuts (top-right of the page header)
+  const [addInfluencerOpen, setAddInfluencerOpen] = useState(false);
+  const [planAddOpen, setPlanAddOpen] = useState(false);
+  const [planViewOpen, setPlanViewOpen] = useState(false);
+  const today = useMemo(() => todayStr(), []);
+
   const { feeRate } = useTeamFeeRate(user?.teamId);
   const { currentPercentage, nextThreshold, amountMissing } = useCommissionTier(resultado);
 
