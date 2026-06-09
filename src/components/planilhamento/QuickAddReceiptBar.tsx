@@ -211,17 +211,43 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
         {/* Closer */}
         <div className="col-span-6 md:col-span-3">
           <label className="text-[11.5px] font-semibold uppercase tracking-[0.18em] text-[#1f1f1f]/70 mb-2 block">Closer</label>
-          <div className="flex h-[52px] w-full items-center gap-2 rounded-2xl border border-[#ececeb] bg-white px-3.5 focus-within:border-[#1f1f1f]/40 transition-colors">
-            <UserIcon className="h-4 w-4 text-[#999] shrink-0" />
-            <select
-              value={closerId}
-              onChange={(e) => setCloserId(e.target.value)}
-              className="flex-1 bg-transparent text-[13.5px] font-medium tracking-[-0.01em] text-[#1f1f1f] outline-none cursor-pointer"
-            >
-              <option value="">Selecione…</option>
-              {closers.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-            </select>
-          </div>
+          <Select value={closerId} onValueChange={setCloserId}>
+            <SelectTrigger className="h-[52px] w-full rounded-2xl border border-[#ececeb] bg-white px-3.5 text-[14px] font-medium tracking-[-0.01em] text-[#1f1f1f] focus:ring-0 focus:ring-offset-0 data-[state=open]:border-[#1f1f1f]/40 hover:border-[#1f1f1f]/30 transition-colors [&>span]:flex [&>span]:items-center [&>span]:gap-2">
+              <SelectValue
+                placeholder={
+                  <span className="flex items-center gap-2 text-[#999]">
+                    <UserIcon className="h-4 w-4" />
+                    Selecione…
+                  </span>
+                }
+              >
+                {closerId ? (
+                  <span className="flex items-center gap-2">
+                    <span className="grid h-6 w-6 place-items-center rounded-full bg-[linear-gradient(180deg,#1f1f1f_0%,#0d0d0d_100%)] text-white text-[10px] font-semibold uppercase">
+                      {closers.find((c) => c.id === closerId)?.nome?.[0]}
+                    </span>
+                    {closers.find((c) => c.id === closerId)?.nome}
+                  </span>
+                ) : null}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className="rounded-2xl border border-[#ececeb] bg-white shadow-[0_18px_40px_rgba(15,23,42,0.12)] p-1.5">
+              {closers.map((c) => (
+                <SelectItem
+                  key={c.id}
+                  value={c.id}
+                  className="rounded-xl px-2.5 py-2.5 text-[13.5px] font-medium tracking-[-0.01em] text-[#1f1f1f] focus:bg-[#fafaf8] data-[state=checked]:bg-[#f4f2ec]"
+                >
+                  <span className="flex items-center gap-2.5">
+                    <span className="grid h-7 w-7 place-items-center rounded-full bg-[linear-gradient(180deg,#1f1f1f_0%,#0d0d0d_100%)] text-white text-[11px] font-semibold uppercase">
+                      {c.nome?.[0]}
+                    </span>
+                    {c.nome}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Influencer */}
