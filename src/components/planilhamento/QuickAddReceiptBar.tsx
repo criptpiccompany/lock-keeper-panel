@@ -132,17 +132,17 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
       ref={dropRef}
       className="rounded-[22px] border border-[#ececeb] bg-white/95 backdrop-blur-md p-5 shadow-[0_12px_32px_rgba(15,23,42,0.06)]"
     >
-      <div className="flex items-end justify-between gap-4 mb-4">
-        <div className="space-y-1.5">
-          <div className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-[#999]">
+      <div className="flex items-end justify-between gap-4 mb-5">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold uppercase tracking-[0.2em] text-[#1f1f1f]/70">
             <span className="h-1.5 w-1.5 rounded-full bg-[#6ea93d]" />
             Adicionar comprovante
           </div>
-          <h2 className="text-[22px] leading-[1.05] font-semibold tracking-[-0.03em] text-[#1f1f1f]">
+          <h2 className="text-[28px] leading-[1.05] font-semibold tracking-[-0.03em] text-[#1f1f1f]">
             Anexe um comprovante <span className="text-[#cfcfce]">em segundos.</span>
           </h2>
         </div>
-        <p className="hidden md:block text-right text-[11.5px] leading-snug text-[#999] max-w-[260px]">
+        <p className="hidden md:block text-right text-[12.5px] leading-snug text-[#676767] max-w-[280px]">
           Cole (Ctrl+V), arraste ou clique. Escolha o closer e o influenciador, então confirme.
         </p>
       </div>
