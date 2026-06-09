@@ -26,10 +26,11 @@ Deno.serve(async (req) => {
 
     const { data: rec, error: recErr } = await supabase
       .from("daily_receipt_uploads")
-      .select("id, file_url, file_type")
+      .select("id, file_url, file_type, parsed_data")
       .eq("id", receiptId)
       .single();
     if (recErr || !rec) throw recErr || new Error("not found");
+    const manualInfluencer = (rec as any)?.parsed_data?.manual_influencer ?? null;
 
     if (rec.file_type === "pdf") {
       await supabase.from("daily_receipt_uploads")
