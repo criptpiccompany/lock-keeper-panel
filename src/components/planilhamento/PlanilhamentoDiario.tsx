@@ -62,6 +62,7 @@ import {
   ArrowDown,
   ArrowUp,
   Info,
+  RefreshCw,
 } from "lucide-react";
 import ComprovanteThumbnail from "./ComprovanteThumbnail";
 import ComprovanteLightbox from "./ComprovanteLightbox";
@@ -401,6 +402,11 @@ export default function PlanilhamentoDiario({
   const [dayListOpen, setDayListOpen] = useState(false);
   const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
 
+  // Renew to today (re-add same influencer in today's list with same valor_pago)
+  const [renewTarget, setRenewTarget] = useState<DailyRecord | null>(null);
+  const [renewing, setRenewing] = useState(false);
+
+
   const monthKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}`;
   const monthDays = useMemo(() => getMonthDays(selectedYear, selectedMonth), [selectedYear, selectedMonth]);
 
@@ -675,6 +681,67 @@ export default function PlanilhamentoDiario({
 
     setCreatingAllDays(false);
   };
+
+  // --- Renew: re-add this influencer in TODAY's list with same valor_pago ---
+  const handleRenewToToday = async () => {
+    if (!renewTarget || !user) return;
+    setRenewing(true);
+    const today = getLocalTodayStr();
+    const targetCloserId = renewTarget.closer_id;
+
+    try {
+      // Already exists for today? avoid duplicates.
+      const { data: existing } = await supabase
+        .from("daily_influencer_records")
+        .select("id")
+        .eq("date", today)
+        .eq("influencer_id", renewTarget.influencer_id)
+        .eq("closer_id", targetCloserId)
+        .is("deleted_at", null)
+        .maybeSingle();
+
+      if (existing) {
+        toast.info("Este influenciador já está na lista de hoje");
+        setRenewTarget(null);
+        setRenewing(false);
+        return;
+      }
+
+      // Ensure daily_sheets row exists for today (best-effort, ignore dup error)
+      const todayMonth = today.slice(0, 7);
+      await supabase
+        .from("daily_sheets")
+        .insert({ date: today, month: todayMonth, closer_id: targetCloserId } as any)
+        .then(() => {}, () => {});
+
+      const { error } = await supabase.from("daily_influencer_records").insert({
+        date: today,
+        influencer_id: renewTarget.influencer_id,
+        closer_id: targetCloserId,
+        valor_pago: Number(renewTarget.valor_pago),
+        faturamento: null,
+        acumulado: null,
+        observacao: null,
+        is_shared: false,
+      } as any);
+
+      if (error) throw error;
+
+      toast.success("Influenciador adicionado à lista de hoje");
+
+      if (monthDays.includes(today)) {
+        await fetchData();
+        setExpandedDays((prev) => new Set([...prev, today]));
+      }
+    } catch (err: any) {
+      console.error("Renew error:", err);
+      toast.error("Erro ao renovar", { description: err?.message });
+    } finally {
+      setRenewing(false);
+      setRenewTarget(null);
+    }
+  };
+
 
   // --- Add row ---
   const openNewRecord = (date: string) => {
@@ -1380,17 +1447,37 @@ export default function PlanilhamentoDiario({
                                           </div>
                                         </td>
                                         <td className="px-4 py-5" onClick={(e) => e.stopPropagation()}>
-                                          {viewingOther ? (
-                                            <span className={cn("inline-flex items-center gap-2 rounded-full px-3 py-2 text-[12px] font-medium tracking-[0.04em]", workflowBadgeClass(record.status, !!record.comprovante_url))}>
-                                              <span className="h-2 w-2 rounded-full bg-current opacity-70" />
-                                              {record.status || "—"}
-                                            </span>
-                                          ) : (
-                                            <WorkflowStatusDropdown
-                                              value={record.status}
-                                              onChange={(val) => handleStatusChange(record.id, val)}
-                                            />
-                                          )}
+                                          <div className="flex items-center gap-2">
+                                            {viewingOther ? (
+                                              <span className={cn("inline-flex items-center gap-2 rounded-full px-3 py-2 text-[12px] font-medium tracking-[0.04em]", workflowBadgeClass(record.status, !!record.comprovante_url))}>
+                                                <span className="h-2 w-2 rounded-full bg-current opacity-70" />
+                                                {record.status || "—"}
+                                              </span>
+                                            ) : (
+                                              <WorkflowStatusDropdown
+                                                value={record.status}
+                                                onChange={(val) => handleStatusChange(record.id, val)}
+                                              />
+                                            )}
+                                            {!viewingOther && record.date !== getLocalTodayStr() && (
+                                              <TooltipProvider delayDuration={150}>
+                                                <Tooltip>
+                                                  <TooltipTrigger asChild>
+                                                    <Button
+                                                      type="button"
+                                                      size="icon"
+                                                      variant="ghost"
+                                                      className="h-9 w-9 rounded-full border border-[#ececeb] bg-white hover:bg-[#f3f3f0]"
+                                                      onClick={(e) => { e.stopPropagation(); setRenewTarget(record); }}
+                                                    >
+                                                      <RefreshCw className="h-4 w-4 text-[#2c2c2c]" />
+                                                    </Button>
+                                                  </TooltipTrigger>
+                                                  <TooltipContent side="top">Renovar para hoje</TooltipContent>
+                                                </Tooltip>
+                                              </TooltipProvider>
+                                            )}
+                                          </div>
                                         </td>
                                         {!RECEIPTS_AS_CAROUSEL && (
                                           <td className="px-4 py-5">
@@ -1584,9 +1671,23 @@ export default function PlanilhamentoDiario({
                                   )}
                                   {!viewingOther && (
                                     <td className="py-2.5 px-4 text-right">
-                                      <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => openEditRecord(record)}>
-                                        Editar
-                                      </Button>
+                                      <div className="inline-flex items-center gap-1">
+                                        {record.date !== getLocalTodayStr() && (
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-7 px-2 text-xs gap-1"
+                                            title="Renovar para hoje"
+                                            onClick={(e) => { e.stopPropagation(); setRenewTarget(record); }}
+                                          >
+                                            <RefreshCw className="h-3.5 w-3.5" />
+                                            Renovar
+                                          </Button>
+                                        )}
+                                        <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => openEditRecord(record)}>
+                                          Editar
+                                        </Button>
+                                      </div>
                                     </td>
                                   )}
                                 </tr>
@@ -2173,6 +2274,50 @@ export default function PlanilhamentoDiario({
         diffs={pendingDiffs}
         submitting={submitting}
       />
+
+      {/* Confirm renew to today */}
+      <Dialog open={!!renewTarget} onOpenChange={(o) => { if (!o && !renewing) setRenewTarget(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Renovar para hoje?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>
+              Vamos adicionar{" "}
+              <span className="font-medium text-foreground">
+                {renewTarget ? getInfluencerHandle(renewTarget.influencer_id) : ""}
+              </span>{" "}
+              na lista de <span className="font-medium text-foreground">hoje</span> com o
+              mesmo Valor Pago de{" "}
+              <span className="font-medium text-foreground">
+                {renewTarget ? formatCurrency(Number(renewTarget.valor_pago)) : ""}
+              </span>.
+            </p>
+            <p>Faturamento e demais campos ficam em branco para serem preenchidos depois.</p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="ghost"
+              className="rounded-full"
+              onClick={() => setRenewTarget(null)}
+              disabled={renewing}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="rounded-full bg-[#242424] text-white hover:bg-[#1b1b1b]"
+              onClick={handleRenewToToday}
+              disabled={renewing}
+            >
+              {renewing ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adicionando…</>
+              ) : (
+                <><RefreshCw className="mr-2 h-4 w-4" /> Adicionar a hoje</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
