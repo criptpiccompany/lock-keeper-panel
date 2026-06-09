@@ -358,7 +358,7 @@ export default function Admin() {
         {/* Users Management */}
         <BrandCard title="Gerenciar usuários" description="Lista de usuários, papéis e redefinição de senha" icon={Users}>
 
-          <CardContent className="space-y-4">
+          <div className="space-y-4">
            {/* Team filter tabs - ADMIN only */}
             {isAdmin && (
             <div className="flex flex-wrap gap-2">
@@ -497,17 +497,13 @@ export default function Admin() {
                 </tbody>
               </table>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </BrandCard>
 
         {/* Archive Management - ADMIN only */}
         {isAdmin && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Archive className="h-5 w-5" />Arquivar/Desarquivar</CardTitle>
-            <CardDescription>Arquive influenciadores inativos</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <BrandCard title="Arquivar / Desarquivar" description="Arquive influenciadores inativos" icon={Archive}>
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label>Selecionar Influenciador</Label>
               <Select value={selectedId} onValueChange={setSelectedId}>
@@ -540,21 +536,13 @@ export default function Admin() {
                 </Button>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </BrandCard>
         )}
 
         {/* Export Month */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Download className="h-5 w-5" />Exportar Mês Completo</CardTitle>
-            <CardDescription>
-              {isAdmin 
-                ? "Gere um arquivo XLSX com dados do mês — escolha a equipe" 
-                : "Gere um arquivo XLSX com dados da sua equipe"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        <BrandCard title="Exportar mês completo" description={isAdmin ? "Gere um arquivo XLSX com dados do mês — escolha a equipe" : "Gere um arquivo XLSX com dados da sua equipe"} icon={Download}>
+          <div>
             <div className="flex flex-wrap items-center gap-3">
               <Select value={exportMonth} onValueChange={setExportMonth}>
                 <SelectTrigger className="w-[200px] h-9 text-sm">
@@ -599,17 +587,13 @@ export default function Admin() {
                 Exportar XLSX
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </BrandCard>
 
         {/* Commission Settings - ADMIN only */}
         {isAdmin && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Percent className="h-5 w-5" />Comissão por Closer</CardTitle>
-            <CardDescription>Defina a taxa de comissão individual (ex: 0.10 = 10%)</CardDescription>
-          </CardHeader>
-          <CardContent>
+        <BrandCard title="Comissão por closer" description="Defina a taxa de comissão individual (ex: 0.10 = 10%)" icon={Percent}>
+          <div>
             <div className="rounded-lg border">
               <table className="w-full">
                 <thead>
@@ -686,8 +670,8 @@ export default function Admin() {
                 </tbody>
               </table>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </BrandCard>
         )}
           </TabsContent>
 
