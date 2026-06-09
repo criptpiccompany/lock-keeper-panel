@@ -338,29 +338,29 @@ export default function DailyReceiptsCarousel({
               </div>
               {/* Dados extraídos pela IA */}
               {it.kind === "receipt" && (
-                <div className="w-[120px] text-center leading-tight mt-0.5">
+                <div className="w-[140px] text-center leading-tight mt-1">
                   {it.parseStatus === "processing" || (!it.parsedData && it.parseStatus !== "error" && it.parseStatus !== "unsupported" && it.parseStatus !== "done") ? (
-                    <span className="text-[9px] text-muted-foreground inline-flex items-center gap-1">
-                      <Loader2 className="h-2.5 w-2.5 animate-spin" /> lendo…
+                    <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+                      <Loader2 className="h-3 w-3 animate-spin" /> lendo…
                     </span>
                   ) : it.parsedData ? (
-                    <div className="text-[9px] text-foreground space-y-0.5">
+                    <div className="space-y-0.5">
                       {it.parsedData.manual_influencer && (
-                        <div className="font-semibold text-[10px] text-[#1f1f1f] truncate" title={it.parsedData.manual_influencer}>
+                        <div className="font-semibold text-[13px] tracking-[-0.01em] text-[#1f1f1f] truncate" title={it.parsedData.manual_influencer}>
                           {it.parsedData.manual_influencer}
                         </div>
                       )}
                       {it.parsedData.valor && (
-                        <div className="font-semibold text-[10px] text-[#2c2c2c]">R$ {it.parsedData.valor}</div>
+                        <div className="font-semibold text-[12.5px] text-[#2c2c2c]">R$ {it.parsedData.valor}</div>
                       )}
                       {it.parsedData.destinatario && (
-                        <div className="truncate text-muted-foreground" title={it.parsedData.destinatario}>
+                        <div className="truncate text-[11px] text-muted-foreground" title={it.parsedData.destinatario}>
                           {it.parsedData.destinatario}
                         </div>
                       )}
                     </div>
                   ) : it.parseStatus === "error" ? (
-                    <span className="text-[9px] text-red-500/70">falha leitura</span>
+                    <span className="text-[11px] text-red-500/70">falha leitura</span>
                   ) : null}
                 </div>
               )}
