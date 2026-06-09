@@ -19,6 +19,7 @@ import { InfluencerWithStatus } from "@/types";
 import { Settings, Archive, RefreshCw, AlertTriangle, Loader2, Users, Mail, Shield, ShieldCheck, Pencil, Key, Percent, UserCheck, UserX, Download, UserPlus, ArrowRightLeft } from "lucide-react";
 import { exportMonthXlsx } from "@/lib/exportMonthXlsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageHeader, brandTabsListClass, brandTabsTriggerClass } from "@/components/PageHeader";
 import { OrphanUsersTab } from "@/components/admin/OrphanUsersTab";
 
 interface Team {
