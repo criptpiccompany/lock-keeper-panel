@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { BrandCard } from "@/components/PageHeader";
 import { cn } from "@/lib/utils";
-import { formatBRL, fmtShortDate, TAX_TOTAL, type DayAggregate } from "./financeiroHelpers";
+import { formatBRL, fmtShortDate, computeNet, type DayAggregate } from "./financeiroHelpers";
 
 type Metric = "cost" | "revenue" | "net";
 
@@ -28,7 +28,7 @@ export default function FinanceiroChart({ byDate, today, filterStart, filterEnd 
       .sort((a, b) => a[0].localeCompare(b[0]));
 
     return dates.map(([date, agg]) => {
-      const net = agg.revenue - agg.revenue * TAX_TOTAL;
+      const net = computeNet(agg.revenue, agg.cost);
       return {
         date,
         label: fmtShortDate(date),
