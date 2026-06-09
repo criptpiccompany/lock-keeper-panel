@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowUpDown, AtSign, Check, CheckCircle2, ChevronDown, ChevronRight, Clock3, ExternalLink, FileText, Link as LinkIcon, MoreHorizontal, Plus, Search, SlidersHorizontal, Tag, Wallet, Zap } from "lucide-react";
+import { Archive, ArrowUpDown, AtSign, Check, CheckCircle2, ChevronDown, ChevronRight, Clock3, ExternalLink, FileText, Link as LinkIcon, MoreHorizontal, Plus, Search, SlidersHorizontal, Tag, Wallet, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
