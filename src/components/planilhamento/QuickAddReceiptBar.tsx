@@ -58,6 +58,32 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
 
   const reset = () => { setFile(null); setInfluencer(""); };
 
+  const handlePasteClick = async () => {
+    try {
+      // @ts-ignore
+      if (!navigator.clipboard?.read) {
+        toast.error("Navegador não suporta colar imagem", { description: "Use Ctrl+V" });
+        return;
+      }
+      // @ts-ignore
+      const items = await navigator.clipboard.read();
+      for (const item of items) {
+        const imgType = item.types.find((t: string) => t.startsWith("image/") || t === "application/pdf");
+        if (imgType) {
+          const blob = await item.getType(imgType);
+          const ext = imgType.split("/")[1] || "png";
+          const f = new File([blob], `colado-${Date.now()}.${ext}`, { type: imgType });
+          setFile(f);
+          toast.success("Imagem colada");
+          return;
+        }
+      }
+      toast.error("Nenhuma imagem na área de transferência");
+    } catch (err: any) {
+      toast.error("Não foi possível colar", { description: err?.message || "Permita o acesso à área de transferência" });
+    }
+  };
+
   const handleConfirm = async () => {
     if (!user) return;
     if (!file) return toast.error("Adicione um comprovante");
