@@ -50,7 +50,8 @@ interface Props {
 export default function DailyReceiptsCarousel({
   date, closerId, teamId, canEdit = true, influencerLines = [], legacyReceipts = [], compact = false, requireFocus = false,
 }: Props) {
-  const { user } = useAuth();
+  const { user, isAdmin, isFinanceiro } = useAuth();
+  const canDelete = isAdmin || isFinanceiro;
   const [receipts, setReceipts] = useState<ReceiptRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -326,13 +327,15 @@ export default function DailyReceiptsCarousel({
                         </PopoverContent>
                       </Popover>
                     )}
-                    <button
-                      onClick={() => handleDelete(it.receiptId!)}
-                      className="h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm"
-                      title="Remover"
-                    >
-                      <X className="h-2.5 w-2.5" />
-                    </button>
+                    {canDelete && (
+                      <button
+                        onClick={() => handleDelete(it.receiptId!)}
+                        className="h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm"
+                        title="Remover"
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
