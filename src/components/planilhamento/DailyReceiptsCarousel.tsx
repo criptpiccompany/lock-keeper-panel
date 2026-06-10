@@ -50,7 +50,8 @@ interface Props {
 export default function DailyReceiptsCarousel({
   date, closerId, teamId, canEdit = true, influencerLines = [], legacyReceipts = [], compact = false, requireFocus = false,
 }: Props) {
-  const { user } = useAuth();
+  const { user, isAdmin, isFinanceiro } = useAuth();
+  const canDelete = isAdmin || isFinanceiro;
   const [receipts, setReceipts] = useState<ReceiptRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
