@@ -24,6 +24,7 @@ import PendingApproval from "./pages/PendingApproval";
 import Financeiro from "./pages/Financeiro";
 import Home from "./pages/Home";
 import FinanceiroWorkspace from "./pages/FinanceiroWorkspace";
+import InfluboardTest from "./pages/InfluboardTest";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ function AppRoutes() {
         
         <Route path="/painel" element={<PainelGeral />} />
         <Route path="/registro" element={<RegistroDiario />} />
+        <Route path="/influboard-test" element={<InfluboardTest />} />
 
         <Route
           path="/dashboard"
