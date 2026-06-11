@@ -166,7 +166,7 @@ export function WorkspaceLayout() {
         { label: "Minha Lista", path: "/meu" },
         { label: "Planilhamento", path: "/registro" },
         { label: "Painel", path: "/painel" },
-        
+        { label: "Teste Influboard", path: "/influboard-test" },
       ];
 
   const handleSignOut = async () => {
