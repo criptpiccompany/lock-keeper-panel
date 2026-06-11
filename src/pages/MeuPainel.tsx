@@ -209,22 +209,23 @@ export default function MeuPainel() {
               </div>
             ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[760px] text-sm">
+              <table className="w-full min-w-[800px] text-sm">
                 <thead>
                   <tr>
-                    <th className="px-5 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Influenciador</th>
+                    <th className="px-5 py-5 text-left text-[12px] font-medium text-[#6e6e6e] w-12">#</th>
+                    <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Influenciador</th>
                     <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Dias Restantes</th>
                     <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Status</th>
                     <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Notas</th>
                   </tr>
                   <tr>
-                    <td colSpan={4} className="px-5">
+                    <td colSpan={5} className="px-5">
                       <div className="border-b border-dashed border-[#e6ddb0]" />
                     </td>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredInfluencers.map((inf) => {
+                  {filteredInfluencers.map((inf, idx) => {
                     const handleNorm = inf.handle.trim().toLowerCase().replace(/^@/, "");
                     const lock = locksMap.get(handleNorm);
                     const daysLeft = lock
