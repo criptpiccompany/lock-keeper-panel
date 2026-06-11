@@ -15,10 +15,11 @@ import {
   Users, 
   Loader2,
   Link,
+  Copy,
 } from "lucide-react";
 
 export default function MeuPainel() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [influencers, setInfluencers] = useState<InfluencerWithStatus[]>([]);
@@ -178,6 +179,24 @@ export default function MeuPainel() {
                 <div className="shrink-0 rounded-full bg-[#f3f3ef] px-3 py-2 text-[12px] font-medium text-[#676767]">
                   {filteredInfluencers.length} resultados
                 </div>
+                {isAdmin && (
+                  <Button
+                    variant="outline"
+                    className="h-11 shrink-0 rounded-full border-[#ececeb] bg-white px-4 text-[13px] font-medium text-[#1f1f1f] hover:bg-[#f6f4f0]"
+                    onClick={() => {
+                      const text = filteredInfluencers
+                        .map((inf, i) => `${i + 1}. ${inf.handle}`)
+                        .join("\n");
+                      navigator.clipboard.writeText(text).then(
+                        () => toast.success("Lista copiada para a área de transferência"),
+                        () => toast.error("Não foi possível copiar a lista")
+                      );
+                    }}
+                  >
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copiar lista
+                  </Button>
+                )}
               </div>
             </div>
             {filteredInfluencers.length === 0 ? (
@@ -190,22 +209,23 @@ export default function MeuPainel() {
               </div>
             ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[760px] text-sm">
+              <table className="w-full min-w-[800px] text-sm">
                 <thead>
                   <tr>
-                    <th className="px-5 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Influenciador</th>
+                    <th className="px-5 py-5 text-left text-[12px] font-medium text-[#6e6e6e] w-12">#</th>
+                    <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Influenciador</th>
                     <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Dias Restantes</th>
                     <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Status</th>
                     <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Notas</th>
                   </tr>
                   <tr>
-                    <td colSpan={4} className="px-5">
+                    <td colSpan={5} className="px-5">
                       <div className="border-b border-dashed border-[#e6ddb0]" />
                     </td>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredInfluencers.map((inf) => {
+                  {filteredInfluencers.map((inf, idx) => {
                     const handleNorm = inf.handle.trim().toLowerCase().replace(/^@/, "");
                     const lock = locksMap.get(handleNorm);
                     const daysLeft = lock
@@ -215,7 +235,10 @@ export default function MeuPainel() {
 
                     return (
                       <tr key={inf.id} className="odd:bg-white even:bg-[#fbfbf8]">
-                        <td className="px-5 py-4">
+                        <td className="px-5 py-4 text-[13px] font-medium text-[#9a9a96] tabular-nums">
+                          {idx + 1}
+                        </td>
+                        <td className="px-4 py-4">
                           <span className="text-[13px] font-medium text-[#1f1f1f]">{inf.handle}</span>
                         </td>
                         <td className="px-4 py-4">
