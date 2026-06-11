@@ -684,6 +684,17 @@ export function CloserSharedBoard() {
   const [newBridge, setNewBridge] = useState("");
   const [newAssignedTo, setNewAssignedTo] = useState<string>("none");
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [duplicateInfo, setDuplicateInfo] = useState<{
+    inBoard: { closerName: string } | null;
+    inList: { ownerName: string } | null;
+  }>({ inBoard: null, inList: null });
+
+  const normalizedNewHandle = useMemo(() => {
+    const raw = newInfluencer.trim();
+    if (!raw) return "";
+    const m = raw.match(/(?:instagram\.com|instagr\.am)\/([a-zA-Z0-9_.]+)/i);
+    return (m?.[1] || raw.replace(/^@/, "")).toLowerCase();
+  }, [newInfluencer]);
 
   const fetchCards = async () => {
     setLoading(true);
