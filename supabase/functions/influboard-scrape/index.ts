@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
     }
     await r2.text();
 
-    // 3) GET /closer/painel-de-consulta
+    // 3) GET /closer/painel-de-consulta as HTML (to discover Inertia version)
     const r3 = await fetch(`${BASE}/closer/painel-de-consulta`, {
       headers: {
         'User-Agent': UA,
@@ -105,30 +105,29 @@ Deno.serve(async (req) => {
     const finalLocation = r3.headers.get('location') ?? '';
     const html = await r3.text();
 
-    // Try to extract Inertia data-page JSON if present
-    let inertiaData: unknown = null;
-    const m = html.match(/<div id="app"[^>]*data-page="([^"]+)"/);
-    if (m) {
+    // Extract Inertia data-page JSON from <script data-page="app" type="application/json">{...}</script>
+    let inertiaData: any = null;
+    let inertiaVersion: string | null = null;
+    const scriptMatch = html.match(/<script[^>]*data-page="app"[^>]*type="application\/json"[^>]*>([\s\S]*?)<\/script>/);
+    if (scriptMatch) {
       try {
-        const decoded = m[1]
-          .replaceAll('&quot;', '"')
-          .replaceAll('&#039;', "'")
-          .replaceAll('&amp;', '&')
-          .replaceAll('&lt;', '<')
-          .replaceAll('&gt;', '>');
-        inertiaData = JSON.parse(decoded);
+        inertiaData = JSON.parse(scriptMatch[1]);
+        inertiaVersion = inertiaData?.version ?? null;
       } catch (_) { /* ignore */ }
     }
+
+    const props = inertiaData?.props ?? {};
+    const lockedInfluencers = Array.isArray(props.lockedInfluencers) ? props.lockedInfluencers : [];
 
     return new Response(JSON.stringify({
       ok: true,
       loginStatus,
-      loginLocation,
       finalStatus,
-      finalLocation,
-      htmlLength: html.length,
-      htmlPreview: html.slice(0, 2000),
-      inertiaData,
+      component: inertiaData?.component ?? null,
+      authUser: props?.auth?.user ?? null,
+      count: lockedInfluencers.length,
+      lockedInfluencers,
+      propsKeys: Object.keys(props),
     }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
     return new Response(JSON.stringify({ error: String(err?.message ?? err) }), {
