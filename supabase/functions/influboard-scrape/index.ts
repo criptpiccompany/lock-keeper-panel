@@ -1,5 +1,6 @@
-// Influboard scraper - login Laravel + GET painel-de-consulta
+// Influboard scraper - login Laravel + GET painel-de-consulta + cache em DB
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const BASE = 'https://influboard.site';
 
@@ -119,6 +120,45 @@ Deno.serve(async (req) => {
     const props = inertiaData?.props ?? {};
     const lockedInfluencers = Array.isArray(props.lockedInfluencers) ? props.lockedInfluencers : [];
 
+    // Persist to cache (service role)
+    let cacheError: string | null = null;
+    try {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      );
+
+      if (lockedInfluencers.length > 0) {
+        const rows = lockedInfluencers.map((inf: any) => ({
+          external_id: inf.id ?? null,
+          handle: inf.handle,
+          handle_normalized: String(inf.handle ?? '').replace(/^@/, '').toLowerCase(),
+          instagram_url: inf.instagram_url ?? null,
+          lock_expires_at: inf.lock_expires_at ?? null,
+          closer_name: Array.isArray(inf.closers) ? inf.closers.map((c: any) => c.name).join(', ') : null,
+          team_name: inf.team?.name ?? null,
+          fetched_at: new Date().toISOString(),
+        }));
+
+        // Replace strategy: delete all then insert (small dataset, simple consistency)
+        await supabase.from('influboard_locked_cache').delete().neq('id', -1);
+        const { error: insErr } = await supabase.from('influboard_locked_cache').insert(rows);
+        if (insErr) cacheError = insErr.message;
+      } else {
+        await supabase.from('influboard_locked_cache').delete().neq('id', -1);
+      }
+
+      await supabase.from('influboard_sync_meta').upsert({
+        id: 1,
+        last_run_at: new Date().toISOString(),
+        last_count: lockedInfluencers.length,
+        last_status: cacheError ? 'error' : 'ok',
+        last_error: cacheError,
+      });
+    } catch (e) {
+      cacheError = String((e as Error).message);
+    }
+
     return new Response(JSON.stringify({
       ok: true,
       loginStatus,
@@ -127,7 +167,7 @@ Deno.serve(async (req) => {
       authUser: props?.auth?.user ?? null,
       count: lockedInfluencers.length,
       lockedInfluencers,
-      propsKeys: Object.keys(props),
+      cacheError,
     }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
     return new Response(JSON.stringify({ error: String(err?.message ?? err) }), {
