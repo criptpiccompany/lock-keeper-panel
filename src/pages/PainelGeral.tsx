@@ -197,14 +197,17 @@ export default function PainelGeral() {
                 </tr>
               </thead>
               <tbody>
-                {filteredLocks.map((lock) => {
+                {filteredLocks.map((lock, idx) => {
                   const isMine = lock.locked_by_user_id === user?.id;
                   const days = daysUntil(lock.locked_until);
                   const isExpiring = days <= 2;
 
                   return (
                     <tr key={lock.id} className="odd:bg-white even:bg-[#fbfbf8]">
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 text-[13px] font-medium text-[#9a9a96] tabular-nums">
+                        {idx + 1}
+                      </td>
+                      <td className="px-4 py-4">
                         <span className="text-[13px] font-medium text-[#1f1f1f]">@{lock.handle_normalized}</span>
                       </td>
                       <td className="px-4 py-4">
