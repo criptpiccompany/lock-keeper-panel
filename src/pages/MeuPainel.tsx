@@ -15,6 +15,7 @@ import {
   Users, 
   Loader2,
   Link,
+  Copy,
 } from "lucide-react";
 
 export default function MeuPainel() {
