@@ -2,6 +2,8 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Loader2, RefreshCw } from "lucide-react";
+import { useInfluboardLocks } from "@/hooks/useInfluboardLocks";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Locked {
   id: number;
