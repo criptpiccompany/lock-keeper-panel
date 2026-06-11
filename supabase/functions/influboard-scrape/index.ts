@@ -105,30 +105,15 @@ Deno.serve(async (req) => {
     const finalLocation = r3.headers.get('location') ?? '';
     const html = await r3.text();
 
-    // Extract Inertia data-page JSON (try several quoting/attribute patterns)
+    // Extract Inertia data-page JSON from <script data-page="app" type="application/json">{...}</script>
     let inertiaData: any = null;
     let inertiaVersion: string | null = null;
-    const patterns = [
-      /data-page=(?:"|&quot;)((?:(?!data-page=)[\s\S])*?)(?:"|&quot;)\s*>/,
-      /data-page='([^']+)'/,
-      /data-page="((?:\\.|[^"\\])+)"/,
-    ];
-    for (const re of patterns) {
-      const m = html.match(re);
-      if (m) {
-        try {
-          const decoded = m[1]
-            .replaceAll('&quot;', '"')
-            .replaceAll('&#039;', "'")
-            .replaceAll('&apos;', "'")
-            .replaceAll('&amp;', '&')
-            .replaceAll('&lt;', '<')
-            .replaceAll('&gt;', '>');
-          inertiaData = JSON.parse(decoded);
-          inertiaVersion = inertiaData?.version ?? null;
-          break;
-        } catch (_) { /* try next */ }
-      }
+    const scriptMatch = html.match(/<script[^>]*data-page="app"[^>]*type="application\/json"[^>]*>([\s\S]*?)<\/script>/);
+    if (scriptMatch) {
+      try {
+        inertiaData = JSON.parse(scriptMatch[1]);
+        inertiaVersion = inertiaData?.version ?? null;
+      } catch (_) { /* ignore */ }
     }
 
     // Sniff HTML for stack hints (Inertia / Livewire / API endpoints)
