@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, LayoutGrid, Loader2, Lock, Info } from "lucide-react";
+import { Search, LayoutGrid, Loader2, Lock, Info, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 interface LockEntry {
   id: string;
@@ -153,35 +155,59 @@ export default function PainelGeral() {
                 <div className="text-[12px] uppercase tracking-[0.18em] text-[#999999]">Travamentos ativos</div>
                 <div className="mt-1 text-[24px] font-medium tracking-[-0.04em] text-[#1f1f1f]">Influenciadores protegidos</div>
               </div>
-              <div className="rounded-full bg-[#f3f3ef] px-3 py-2 text-[12px] font-medium text-[#676767]">
-                {filteredLocks.length} resultados
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-[#f3f3ef] px-3 py-2 text-[12px] font-medium text-[#676767]">
+                  {filteredLocks.length} resultados
+                </div>
+                {isAdmin && (
+                  <Button
+                    variant="outline"
+                    className="h-10 rounded-full border-[#ececeb] bg-white px-4 text-[13px] font-medium text-[#1f1f1f] hover:bg-[#f6f4f0]"
+                    onClick={() => {
+                      const text = filteredLocks
+                        .map((l, i) => `${i + 1}. @${l.handle_normalized}`)
+                        .join("\n");
+                      navigator.clipboard.writeText(text).then(
+                        () => toast.success("Lista copiada"),
+                        () => toast.error("Não foi possível copiar")
+                      );
+                    }}
+                  >
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copiar lista
+                  </Button>
+                )}
               </div>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[760px] text-sm">
+              <table className="w-full min-w-[800px] text-sm">
               <thead>
                 <tr>
-                  <th className="px-5 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Influenciador</th>
+                  <th className="px-5 py-5 text-left text-[12px] font-medium text-[#6e6e6e] w-12">#</th>
+                  <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Influenciador</th>
                   <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Responsável</th>
                   <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Última Atividade</th>
                   <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Libera em</th>
                   <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">Dias Restantes</th>
                 </tr>
                 <tr>
-                  <td colSpan={5} className="px-5">
+                  <td colSpan={6} className="px-5">
                     <div className="border-b border-dashed border-[#e6ddb0]" />
                   </td>
                 </tr>
               </thead>
               <tbody>
-                {filteredLocks.map((lock) => {
+                {filteredLocks.map((lock, idx) => {
                   const isMine = lock.locked_by_user_id === user?.id;
                   const days = daysUntil(lock.locked_until);
                   const isExpiring = days <= 2;
 
                   return (
                     <tr key={lock.id} className="odd:bg-white even:bg-[#fbfbf8]">
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 text-[13px] font-medium text-[#9a9a96] tabular-nums">
+                        {idx + 1}
+                      </td>
+                      <td className="px-4 py-4">
                         <span className="text-[13px] font-medium text-[#1f1f1f]">@{lock.handle_normalized}</span>
                       </td>
                       <td className="px-4 py-4">
