@@ -208,6 +208,18 @@ export function WorkspaceLayout() {
           </div>
 
           <div className="flex items-center justify-start gap-3 lg:justify-end">
+            <a
+              href="https://influboard.site/closer/painel-de-consulta"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Abrir Influboard (Painel de Consulta externo) em nova aba"
+              className="inline-flex items-center gap-2 rounded-[20px] bg-[#FFD400] px-4 py-2.5 text-[13px] font-semibold tracking-[-0.01em] text-slate-950 shadow-[0_12px_28px_-14px_rgba(255,212,0,0.55)] ring-1 ring-black/10 transition hover:bg-[#ffdf33] focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            >
+              <span className="h-2 w-2 rounded-full bg-red-600 animate-pulse" />
+              Influboard
+              <ChevronRight className="h-3.5 w-3.5 -rotate-45" />
+            </a>
+
             <div className="flex items-center gap-2 rounded-[20px] bg-white p-[6px] shadow-[0_12px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
               <button type="button" className="grid h-[34px] w-[34px] place-items-center rounded-full text-slate-700 transition hover:bg-black/[0.03] hover:text-slate-900">
                 <Search className="h-4 w-4" />
