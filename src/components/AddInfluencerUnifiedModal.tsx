@@ -291,6 +291,22 @@ export function AddInfluencerUnifiedModal({ open, onOpenChange, onSuccess }: Pro
                   Será adicionado como: <span className="font-medium text-[#1f1f1f]">@{singlePreview.toLowerCase()}</span>
                 </p>
               )}
+              {singlePreview && (() => {
+                const lock = influboard?.byHandle.get(singlePreview.toLowerCase());
+                if (!lock) return null;
+                return (
+                  <div className="flex items-start gap-2 rounded-[14px] border border-red-200 bg-red-50 p-3 text-[12px] text-red-800">
+                    <Lock className="mt-0.5 h-4 w-4 shrink-0" />
+                    <div>
+                      <div className="font-semibold">Travado no Influboard</div>
+                      <div className="mt-0.5 text-red-700/90">
+                        Por <b>{lock.closer_name ?? "—"}</b> ({lock.team_name ?? "—"}) até{" "}
+                        {lock.lock_expires_at ? new Date(lock.lock_expires_at).toLocaleString("pt-BR") : "—"}.
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <Button
                 onClick={handleSingleSubmit}
