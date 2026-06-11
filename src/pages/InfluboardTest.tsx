@@ -73,7 +73,7 @@ export default function InfluboardTest() {
             Teste Influboard
           </h1>
           <p className="mt-2 text-sm text-slate-500">
-            Lista de travados sincronizada do Influboard. Atualização automática a cada 10 min.
+            Lista de travados sincronizada do Influboard. Atualização automática a cada 3 min.
           </p>
         </div>
         <Button
