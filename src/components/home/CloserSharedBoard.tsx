@@ -770,6 +770,36 @@ export function CloserSharedBoard() {
     return () => { cancelled = true; };
   }, []);
 
+  // Duplicate detection for the add modal
+  useEffect(() => {
+    if (!normalizedNewHandle || !dialogOpen) {
+      setDuplicateInfo({ inBoard: null, inList: null });
+      return;
+    }
+    const boardMatch = cards.find(
+      (c) => (c.instagram_username || "").toLowerCase() === normalizedNewHandle
+    );
+    const inBoard = boardMatch ? { closerName: boardMatch.closerName || "Outro closer" } : null;
+
+    let cancelled = false;
+    (async () => {
+      const handleWithAt = "@" + normalizedNewHandle;
+      const { data } = await (supabase as any)
+        .from("influencers")
+        .select("handle, owner_nome")
+        .ilike("handle", handleWithAt)
+        .is("deleted_at", null)
+        .limit(1)
+        .maybeSingle();
+      if (cancelled) return;
+      setDuplicateInfo({
+        inBoard,
+        inList: data?.owner_nome ? { ownerName: data.owner_nome } : null,
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [normalizedNewHandle, dialogOpen, cards]);
+
   const updateCard = async (cardId: string, fields: Partial<KanbanCard>) => {
     const { error } = await supabase.from("team_shared_board").update(fields).eq("id", cardId);
     if (!error) {
