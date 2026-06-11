@@ -357,31 +357,41 @@ export function AddInfluencerUnifiedModal({ open, onOpenChange, onSuccess }: Pro
             ) : (
               <div className="space-y-3">
                 <div className="max-h-[220px] space-y-2 overflow-y-auto pr-1">
-                  {results.map((r, i) => (
-                    <div key={i} className="flex items-center justify-between rounded-[14px] bg-[#fafaf8] px-3 py-2">
+                  {results.map((r, i) => {
+                    const ibLock = influboard?.byHandle.get(r.handle.replace(/^@/, "").toLowerCase());
+                    return (
+                    <div key={i} className="flex items-center justify-between gap-2 rounded-[14px] bg-[#fafaf8] px-3 py-2">
                       <span className="font-mono text-[13px] text-[#1f1f1f]">{r.handle}</span>
-                      {r.status === "pending" && (
-                        <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">
-                          <Check className="mr-1 h-3 w-3" /> Pronto
-                        </Badge>
-                      )}
-                      {r.status === "exists" && (
-                        <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700">
-                          <AlertCircle className="mr-1 h-3 w-3" /> {r.message}
-                        </Badge>
-                      )}
-                      {r.status === "locked" && (
-                        <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
-                          <X className="mr-1 h-3 w-3" /> {r.message}
-                        </Badge>
-                      )}
-                      {r.status === "invalid" && (
-                        <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700">
-                          <X className="mr-1 h-3 w-3" /> {r.message}
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-1.5">
+                        {ibLock && (
+                          <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700" title={`${ibLock.closer_name ?? "—"} • ${ibLock.team_name ?? "—"}`}>
+                            <Lock className="mr-1 h-3 w-3" /> Influboard
+                          </Badge>
+                        )}
+                        {r.status === "pending" && (
+                          <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">
+                            <Check className="mr-1 h-3 w-3" /> Pronto
+                          </Badge>
+                        )}
+                        {r.status === "exists" && (
+                          <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700">
+                            <AlertCircle className="mr-1 h-3 w-3" /> {r.message}
+                          </Badge>
+                        )}
+                        {r.status === "locked" && (
+                          <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+                            <X className="mr-1 h-3 w-3" /> {r.message}
+                          </Badge>
+                        )}
+                        {r.status === "invalid" && (
+                          <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700">
+                            <X className="mr-1 h-3 w-3" /> {r.message}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 <div className="flex items-center justify-between border-t pt-2 text-[12px] text-[#6e6e73]">
                   <span>{pendingCount} de {results.length} serão processados</span>
