@@ -35,9 +35,20 @@ export default function InfluboardTest() {
   const { data, isLoading } = useInfluboardLocks();
   const qc = useQueryClient();
   const [syncing, setSyncing] = useState(false);
+  const [query, setQuery] = useState("");
 
   const list = data?.list ?? [];
   const meta = data?.meta ?? null;
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase().replace(/^@/, "");
+    if (!q) return list;
+    return list.filter((i) =>
+      i.handle_normalized.toLowerCase().includes(q) ||
+      (i.closer_name ?? "").toLowerCase().includes(q) ||
+      (i.team_name ?? "").toLowerCase().includes(q)
+    );
+  }, [list, query]);
 
   const sync = async () => {
     setSyncing(true);
