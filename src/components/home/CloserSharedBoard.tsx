@@ -1325,6 +1325,23 @@ export function CloserSharedBoard() {
                     placeholder="@username ou https://instagram.com/exemplo"
                     className="h-12 rounded-[12px] border-[#ececeb] bg-[#fafaf8] text-[14px] shadow-none"
                   />
+                  {duplicateInfo.inBoard ? (
+                    <div className="flex items-start gap-2 rounded-[10px] border border-red-200 bg-red-50 px-3 py-2 text-[12px] text-red-700">
+                      <span className="mt-[1px]">⚠️</span>
+                      <span>
+                        <strong>{duplicateInfo.inBoard.closerName}</strong> já adicionou{" "}
+                        <strong>@{normalizedNewHandle}</strong> no board compartilhado.
+                      </span>
+                    </div>
+                  ) : duplicateInfo.inList ? (
+                    <div className="flex items-start gap-2 rounded-[10px] border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-800">
+                      <span className="mt-[1px]">⚠️</span>
+                      <span>
+                        <strong>@{normalizedNewHandle}</strong> já está na lista de{" "}
+                        <strong>{duplicateInfo.inList.ownerName}</strong>.
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="space-y-2">
