@@ -179,6 +179,24 @@ export default function MeuPainel() {
                 <div className="shrink-0 rounded-full bg-[#f3f3ef] px-3 py-2 text-[12px] font-medium text-[#676767]">
                   {filteredInfluencers.length} resultados
                 </div>
+                {isAdmin && (
+                  <Button
+                    variant="outline"
+                    className="h-11 shrink-0 rounded-full border-[#ececeb] bg-white px-4 text-[13px] font-medium text-[#1f1f1f] hover:bg-[#f6f4f0]"
+                    onClick={() => {
+                      const text = filteredInfluencers
+                        .map((inf, i) => `${i + 1}. ${inf.handle}`)
+                        .join("\n");
+                      navigator.clipboard.writeText(text).then(
+                        () => toast.success("Lista copiada para a área de transferência"),
+                        () => toast.error("Não foi possível copiar a lista")
+                      );
+                    }}
+                  >
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copiar lista
+                  </Button>
+                )}
               </div>
             </div>
             {filteredInfluencers.length === 0 ? (
