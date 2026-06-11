@@ -684,6 +684,17 @@ export function CloserSharedBoard() {
   const [newBridge, setNewBridge] = useState("");
   const [newAssignedTo, setNewAssignedTo] = useState<string>("none");
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [duplicateInfo, setDuplicateInfo] = useState<{
+    inBoard: { closerName: string } | null;
+    inList: { ownerName: string } | null;
+  }>({ inBoard: null, inList: null });
+
+  const normalizedNewHandle = useMemo(() => {
+    const raw = newInfluencer.trim();
+    if (!raw) return "";
+    const m = raw.match(/(?:instagram\.com|instagr\.am)\/([a-zA-Z0-9_.]+)/i);
+    return (m?.[1] || raw.replace(/^@/, "")).toLowerCase();
+  }, [newInfluencer]);
 
   const fetchCards = async () => {
     setLoading(true);
@@ -758,6 +769,36 @@ export function CloserSharedBoard() {
     })();
     return () => { cancelled = true; };
   }, []);
+
+  // Duplicate detection for the add modal
+  useEffect(() => {
+    if (!normalizedNewHandle || !dialogOpen) {
+      setDuplicateInfo({ inBoard: null, inList: null });
+      return;
+    }
+    const boardMatch = cards.find(
+      (c) => (c.instagram_username || "").toLowerCase() === normalizedNewHandle
+    );
+    const inBoard = boardMatch ? { closerName: boardMatch.closerName || "Outro closer" } : null;
+
+    let cancelled = false;
+    (async () => {
+      const handleWithAt = "@" + normalizedNewHandle;
+      const { data } = await (supabase as any)
+        .from("influencers")
+        .select("handle, owner_nome")
+        .ilike("handle", handleWithAt)
+        .is("deleted_at", null)
+        .limit(1)
+        .maybeSingle();
+      if (cancelled) return;
+      setDuplicateInfo({
+        inBoard,
+        inList: data?.owner_nome ? { ownerName: data.owner_nome } : null,
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [normalizedNewHandle, dialogOpen, cards]);
 
   const updateCard = async (cardId: string, fields: Partial<KanbanCard>) => {
     const { error } = await supabase.from("team_shared_board").update(fields).eq("id", cardId);
@@ -960,6 +1001,11 @@ export function CloserSharedBoard() {
       .match(/(?:instagram\.com|instagr\.am)\/([a-zA-Z0-9_.]+)/i)?.[1] || newInfluencer.trim().replace(/^@/, "");
 
     if (!normalized || !user) return;
+
+    if (duplicateInfo.inBoard) {
+      toast.error(`${duplicateInfo.inBoard.closerName} já adicionou @${normalized} no board.`);
+      return;
+    }
 
     setSaving(true);
     const username = normalized.toLowerCase();
@@ -1284,6 +1330,23 @@ export function CloserSharedBoard() {
                     placeholder="@username ou https://instagram.com/exemplo"
                     className="h-12 rounded-[12px] border-[#ececeb] bg-[#fafaf8] text-[14px] shadow-none"
                   />
+                  {duplicateInfo.inBoard ? (
+                    <div className="flex items-start gap-2 rounded-[10px] border border-red-200 bg-red-50 px-3 py-2 text-[12px] text-red-700">
+                      <span className="mt-[1px]">⚠️</span>
+                      <span>
+                        <strong>{duplicateInfo.inBoard.closerName}</strong> já adicionou{" "}
+                        <strong>@{normalizedNewHandle}</strong> no board compartilhado.
+                      </span>
+                    </div>
+                  ) : duplicateInfo.inList ? (
+                    <div className="flex items-start gap-2 rounded-[10px] border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-800">
+                      <span className="mt-[1px]">⚠️</span>
+                      <span>
+                        <strong>@{normalizedNewHandle}</strong> já está na lista de{" "}
+                        <strong>{duplicateInfo.inList.ownerName}</strong>.
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="space-y-2">
@@ -1449,7 +1512,7 @@ export function CloserSharedBoard() {
             </Button>
             <Button
               onClick={handleQuickAdd}
-              disabled={!newInfluencer.trim() || saving}
+              disabled={!newInfluencer.trim() || saving || !!duplicateInfo.inBoard}
               className="h-11 rounded-full bg-[#1f1f1f] px-6 text-[13px] font-medium text-white hover:bg-[#111111]"
             >
               {saving ? "Adicionando..." : "Adicionar influenciador"}
