@@ -515,6 +515,66 @@ export type Database = {
           },
         ]
       }
+      influboard_locked_cache: {
+        Row: {
+          closer_name: string | null
+          external_id: number | null
+          fetched_at: string
+          handle: string
+          handle_normalized: string
+          id: number
+          instagram_url: string | null
+          lock_expires_at: string | null
+          team_name: string | null
+        }
+        Insert: {
+          closer_name?: string | null
+          external_id?: number | null
+          fetched_at?: string
+          handle: string
+          handle_normalized: string
+          id?: never
+          instagram_url?: string | null
+          lock_expires_at?: string | null
+          team_name?: string | null
+        }
+        Update: {
+          closer_name?: string | null
+          external_id?: number | null
+          fetched_at?: string
+          handle?: string
+          handle_normalized?: string
+          id?: never
+          instagram_url?: string | null
+          lock_expires_at?: string | null
+          team_name?: string | null
+        }
+        Relationships: []
+      }
+      influboard_sync_meta: {
+        Row: {
+          id: number
+          last_count: number | null
+          last_error: string | null
+          last_run_at: string | null
+          last_status: string | null
+        }
+        Insert: {
+          id?: number
+          last_count?: number | null
+          last_error?: string | null
+          last_run_at?: string | null
+          last_status?: string | null
+        }
+        Update: {
+          id?: number
+          last_count?: number | null
+          last_error?: string | null
+          last_run_at?: string | null
+          last_status?: string | null
+        }
+        Relationships: []
+      }
       influencer_locks: {
         Row: {
           created_at: string
