@@ -131,9 +131,25 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 4) Re-fetch as Inertia JSON (much cleaner: returns props directly)
+    // Sniff HTML for stack hints (Inertia / Livewire / API endpoints)
+    const hints = {
+      hasInertia: /inertia/i.test(html),
+      hasLivewire: /livewire/i.test(html),
+      hasDataPage: /data-page=/.test(html),
+      hasAppDiv: /<div\s+id="app"/.test(html),
+      apiEndpoints: Array.from(new Set(
+        Array.from(html.matchAll(/["'`](\/api\/[a-zA-Z0-9_\-\/]+)["'`]/g)).map(m => m[1])
+      )).slice(0, 30),
+      ziggyRoutes: Array.from(new Set(
+        Array.from(html.matchAll(/route\(['"]([a-zA-Z0-9_.\-]+)['"]/g)).map(m => m[1])
+      )).slice(0, 30),
+    };
+
+    // 4) Re-fetch as Inertia JSON
     let inertiaJson: any = null;
     let inertiaJsonStatus: number | null = null;
+    let inertiaLocationHeader: string | null = null;
+    let inertiaResponseHeaders: Record<string, string> = {};
     try {
       const r4 = await fetch(`${BASE}/closer/painel-de-consulta`, {
         headers: {
@@ -148,6 +164,8 @@ Deno.serve(async (req) => {
         redirect: 'manual',
       });
       inertiaJsonStatus = r4.status;
+      r4.headers.forEach((v, k) => { inertiaResponseHeaders[k] = v; });
+      inertiaLocationHeader = r4.headers.get('x-inertia-location') ?? r4.headers.get('location');
       mergeJar(jar, parseSetCookies(r4.headers));
       const txt = await r4.text();
       try { inertiaJson = JSON.parse(txt); } catch { inertiaJson = { _raw: txt.slice(0, 1500) }; }
@@ -163,9 +181,13 @@ Deno.serve(async (req) => {
       finalLocation,
       htmlLength: html.length,
       htmlPreview: html.slice(0, 1500),
+      htmlBodySnippet: (html.match(/<body[\s\S]{0,3000}/)?.[0] ?? '').slice(0, 3000),
+      hints,
       inertiaVersion,
       inertiaData,
       inertiaJsonStatus,
+      inertiaLocationHeader,
+      inertiaResponseHeaders,
       inertiaJson,
     }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
