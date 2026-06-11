@@ -25,9 +25,10 @@ export function useInfluboardLocks() {
   return useQuery({
     queryKey: ["influboard-locks"],
     queryFn: async () => {
+      const sb = supabase as any;
       const [{ data: locks }, { data: meta }] = await Promise.all([
-        supabase.from("influboard_locked_cache").select("*").order("handle_normalized"),
-        supabase.from("influboard_sync_meta").select("*").eq("id", 1).maybeSingle(),
+        sb.from("influboard_locked_cache").select("*").order("handle_normalized"),
+        sb.from("influboard_sync_meta").select("*").eq("id", 1).maybeSingle(),
       ]);
       const map = new Map<string, InfluboardLock>();
       (locks ?? []).forEach((l: any) => map.set(l.handle_normalized, l));
