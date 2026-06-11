@@ -33,7 +33,8 @@ function daysUntil(dateStr: string): number {
 }
 
 export default function PainelGeral() {
-  const { user, isAdmin } = useAuth();
+  const { user, realRole } = useAuth();
+  const canCopy = realRole === 'ADMIN' || realRole === 'FINANCEIRO' || realRole === 'SUBADMIN';
   const [searchQuery, setSearchQuery] = useState("");
   const [locks, setLocks] = useState<LockEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -159,7 +160,7 @@ export default function PainelGeral() {
                 <div className="rounded-full bg-[#f3f3ef] px-3 py-2 text-[12px] font-medium text-[#676767]">
                   {filteredLocks.length} resultados
                 </div>
-                {isAdmin && (
+                {canCopy && (
                   <Button
                     variant="outline"
                     className="h-10 rounded-full border-[#ececeb] bg-white px-4 text-[13px] font-medium text-[#1f1f1f] hover:bg-[#f6f4f0]"
