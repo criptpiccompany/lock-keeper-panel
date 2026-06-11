@@ -1507,7 +1507,7 @@ export function CloserSharedBoard() {
             </Button>
             <Button
               onClick={handleQuickAdd}
-              disabled={!newInfluencer.trim() || saving}
+              disabled={!newInfluencer.trim() || saving || !!duplicateInfo.inBoard}
               className="h-11 rounded-full bg-[#1f1f1f] px-6 text-[13px] font-medium text-white hover:bg-[#111111]"
             >
               {saving ? "Adicionando..." : "Adicionar influenciador"}
