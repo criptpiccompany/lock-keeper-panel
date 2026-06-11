@@ -1002,6 +1002,11 @@ export function CloserSharedBoard() {
 
     if (!normalized || !user) return;
 
+    if (duplicateInfo.inBoard) {
+      toast.error(`${duplicateInfo.inBoard.closerName} já adicionou @${normalized} no board.`);
+      return;
+    }
+
     setSaving(true);
     const username = normalized.toLowerCase();
     const bridgeItems = newBridge
