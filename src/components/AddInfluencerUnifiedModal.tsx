@@ -13,7 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { UserPlus, Users, Link as LinkIcon, Check, X, AlertCircle, Loader2 } from "lucide-react";
+import { UserPlus, Users, Link as LinkIcon, Check, X, AlertCircle, Loader2, Lock } from "lucide-react";
+import { useInfluboardLocks } from "@/hooks/useInfluboardLocks";
 
 interface Props {
   open: boolean;
@@ -37,6 +38,7 @@ const extractHandle = (input: string): string | null => {
 
 export function AddInfluencerUnifiedModal({ open, onOpenChange, onSuccess }: Props) {
   const { user } = useAuth();
+  const { data: influboard } = useInfluboardLocks();
 
   // Single side
   const [singleInput, setSingleInput] = useState("");
