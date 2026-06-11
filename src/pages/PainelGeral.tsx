@@ -166,7 +166,7 @@ export default function PainelGeral() {
                     className="h-10 rounded-full border-[#ececeb] bg-white px-4 text-[13px] font-medium text-[#1f1f1f] hover:bg-[#f6f4f0]"
                     onClick={() => {
                       const text = filteredLocks
-                        .map((l, i) => `${i + 1}. @${l.handle_normalized}`)
+                        .map((l, i) => `${i + 1}\t@${l.handle_normalized}`)
                         .join("\n");
                       navigator.clipboard.writeText(text).then(
                         () => toast.success("Lista copiada"),
