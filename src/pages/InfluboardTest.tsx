@@ -93,7 +93,7 @@ export default function InfluboardTest() {
         <Stat label="Total travados" value={String(list.length)} />
         <Stat label="Última sync" value={formatRelative(meta?.last_run_at ?? null)} />
         <Stat label="Status" value={meta?.last_status ?? "—"} tone={meta?.last_status === "ok" ? "ok" : meta?.last_status === "error" ? "bad" : undefined} />
-        <Stat label="Frequência" value="10 min" />
+        <Stat label="Frequência" value="3 min" />
       </div>
 
       {meta?.last_error && (
