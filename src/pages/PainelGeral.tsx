@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, LayoutGrid, Loader2, Lock, Info } from "lucide-react";
+import { Search, LayoutGrid, Loader2, Lock, Info, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 interface LockEntry {
   id: string;
