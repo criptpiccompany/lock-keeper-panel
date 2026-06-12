@@ -400,7 +400,7 @@ function TableRow({
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        const next = total >= 8 ? 0 : total + 1;
+                        const next = total >= 12 ? 0 : total + 1;
                         onUpdate?.(card.id, { outreach_count: next } as Partial<KanbanCard>);
                       }}
                       onContextMenu={(e) => {
