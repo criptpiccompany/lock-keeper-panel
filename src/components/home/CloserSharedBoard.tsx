@@ -410,9 +410,7 @@ function TableRow({
                       title={
                         total === 0
                           ? "Marcar abordagem"
-                          : cycle2
-                          ? `Abordagens: ${total} (2º ciclo). Botão direito para zerar.`
-                          : `Abordagens: ${total}. Botão direito para zerar.`
+                          : `Abordagens: ${total} (${cycleLabel} ciclo). Botão direito para zerar.`
                       }
                       className={cn(
                         "h-3 w-3 rounded-full border transition-all hover:scale-110",
