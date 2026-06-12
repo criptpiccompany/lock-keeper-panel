@@ -384,6 +384,41 @@ function TableRow({
                 <BridgeCell card={card} onUpdate={onUpdate} />
               </div>
             );
+          case "outreach": {
+            const count = Math.max(0, Math.min(4, card.outreach_count ?? 0));
+            return (
+              <div key={column.key} className="flex items-center gap-1">
+                {[0, 1, 2, 3].map((i) => {
+                  const filled = i < count;
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // click last filled = decrement; click empty = set to i+1
+                        const next = filled && i === count - 1 ? count - 1 : i + 1;
+                        const final = filled && i === count - 1 ? count - 1 : Math.min(4, i + 1);
+                        onUpdate?.(card.id, { outreach_count: final } as Partial<KanbanCard>);
+                      }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        onUpdate?.(card.id, { outreach_count: 0 } as Partial<KanbanCard>);
+                      }}
+                      title={filled ? `Abordagem ${i + 1} — clique para diminuir, botão direito para zerar` : `Marcar abordagem ${i + 1}`}
+                      className={cn(
+                        "h-3 w-3 rounded-full border transition-all",
+                        filled
+                          ? "border-[#1f1f1f] bg-[#1f1f1f] hover:scale-110"
+                          : "border-[#d8d8d3] bg-white hover:border-[#1f1f1f]"
+                      )}
+                      aria-label={`Abordagem ${i + 1}`}
+                    />
+                  );
+                })}
+              </div>
+            );
+          }
           case "valor_negociado":
             return (
               <div key={column.key} className="text-[11px] font-medium text-[#2a2a28]">
