@@ -1,0 +1,1 @@
+ALTER TABLE public.team_shared_board ADD COLUMN IF NOT EXISTS outreach_count smallint NOT NULL DEFAULT 0 CHECK (outreach_count BETWEEN 0 AND 4);

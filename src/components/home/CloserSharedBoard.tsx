@@ -31,6 +31,7 @@ type TeamBoardCard = KanbanCard & {
   assignedName?: string | null;
   closed_by?: string | null;
   closedByName?: string | null;
+  outreach_count?: number | null;
 };
 
 type TeamMember = { id: string; nome: string };
@@ -45,6 +46,7 @@ type ColumnKey =
   | "sites"
   | "closerName"
   | "apoios"
+  | "outreach"
   | "valor_negociado"
   | "last_moved_at";
 
@@ -81,6 +83,7 @@ const COLUMN_DEFS: Array<{ key: ColumnKey; label: string; width: string; sortabl
   { key: "classificacao", label: "Engaj.", width: "48px", sortable: true },
   { key: "status", label: "Status", width: "minmax(110px,0.9fr)", sortable: true },
   { key: "display_name", label: "Influenciador", width: "minmax(160px,2.2fr)", sortable: true },
+  { key: "outreach", label: "Abord.", width: "76px" },
   { key: "apoios", label: "Ponte", width: "minmax(80px,1fr)" },
   { key: "valor_negociado", label: "Valor", width: "minmax(90px,1fr)", sortable: true },
   { key: "last_moved_at", label: "Att", width: "minmax(70px,0.7fr)", sortable: true },
@@ -381,6 +384,39 @@ function TableRow({
                 <BridgeCell card={card} onUpdate={onUpdate} />
               </div>
             );
+          case "outreach": {
+            const count = Math.max(0, Math.min(4, card.outreach_count ?? 0));
+            return (
+              <div key={column.key} className="flex items-center gap-1">
+                {[0, 1, 2, 3].map((i) => {
+                  const filled = i < count;
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const final = filled && i === count - 1 ? count - 1 : Math.min(4, i + 1);
+                        onUpdate?.(card.id, { outreach_count: final } as Partial<KanbanCard>);
+                      }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        onUpdate?.(card.id, { outreach_count: 0 } as Partial<KanbanCard>);
+                      }}
+                      title={filled ? `Abordagem ${i + 1} — clique para diminuir, botão direito para zerar` : `Marcar abordagem ${i + 1}`}
+                      className={cn(
+                        "h-3 w-3 rounded-full border transition-all",
+                        filled
+                          ? "border-[#1f1f1f] bg-[#1f1f1f] hover:scale-110"
+                          : "border-[#d8d8d3] bg-white hover:border-[#1f1f1f]"
+                      )}
+                      aria-label={`Abordagem ${i + 1}`}
+                    />
+                  );
+                })}
+              </div>
+            );
+          }
           case "valor_negociado":
             return (
               <div key={column.key} className="text-[11px] font-medium text-[#2a2a28]">

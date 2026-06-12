@@ -963,6 +963,7 @@ export type Database = {
           instagram_username: string
           last_moved_at: string
           observacao: string | null
+          outreach_count: number
           status: string
           team_id: string | null
           updated_at: string
@@ -984,6 +985,7 @@ export type Database = {
           instagram_username: string
           last_moved_at?: string
           observacao?: string | null
+          outreach_count?: number
           status?: string
           team_id?: string | null
           updated_at?: string
@@ -1005,6 +1007,7 @@ export type Database = {
           instagram_username?: string
           last_moved_at?: string
           observacao?: string | null
+          outreach_count?: number
           status?: string
           team_id?: string | null
           updated_at?: string
