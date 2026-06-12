@@ -45,6 +45,7 @@ type ColumnKey =
   | "sites"
   | "closerName"
   | "apoios"
+  | "outreach"
   | "valor_negociado"
   | "last_moved_at";
 
@@ -81,6 +82,7 @@ const COLUMN_DEFS: Array<{ key: ColumnKey; label: string; width: string; sortabl
   { key: "classificacao", label: "Engaj.", width: "48px", sortable: true },
   { key: "status", label: "Status", width: "minmax(110px,0.9fr)", sortable: true },
   { key: "display_name", label: "Influenciador", width: "minmax(160px,2.2fr)", sortable: true },
+  { key: "outreach", label: "Abord.", width: "76px" },
   { key: "apoios", label: "Ponte", width: "minmax(80px,1fr)" },
   { key: "valor_negociado", label: "Valor", width: "minmax(90px,1fr)", sortable: true },
   { key: "last_moved_at", label: "Att", width: "minmax(70px,0.7fr)", sortable: true },
