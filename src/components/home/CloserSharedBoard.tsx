@@ -385,31 +385,39 @@ function TableRow({
               </div>
             );
           case "outreach": {
-            const count = Math.max(0, Math.min(4, card.outreach_count ?? 0));
+            const total = Math.max(0, Math.min(8, card.outreach_count ?? 0));
+            const cycle2 = total > 4;
+            const visibleCount = cycle2 ? total - 4 : total;
+            const fillColor = cycle2 ? "#eab308" : "#1f1f1f"; // yellow on 2nd cycle, black on 1st
             return (
               <div key={column.key} className="flex items-center gap-1">
                 {[0, 1, 2, 3].map((i) => {
-                  const filled = i < count;
+                  const filled = i < visibleCount;
                   return (
                     <button
                       key={i}
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        const final = filled && i === count - 1 ? count - 1 : Math.min(4, i + 1);
-                        onUpdate?.(card.id, { outreach_count: final } as Partial<KanbanCard>);
+                        const next = total >= 8 ? 0 : total + 1;
+                        onUpdate?.(card.id, { outreach_count: next } as Partial<KanbanCard>);
                       }}
                       onContextMenu={(e) => {
                         e.preventDefault();
                         onUpdate?.(card.id, { outreach_count: 0 } as Partial<KanbanCard>);
                       }}
-                      title={filled ? `Abordagem ${i + 1} — clique para diminuir, botão direito para zerar` : `Marcar abordagem ${i + 1}`}
+                      title={
+                        total === 0
+                          ? "Marcar abordagem"
+                          : cycle2
+                          ? `Abordagens: ${total} (2º ciclo). Botão direito para zerar.`
+                          : `Abordagens: ${total}. Botão direito para zerar.`
+                      }
                       className={cn(
-                        "h-3 w-3 rounded-full border transition-all",
-                        filled
-                          ? "border-[#1f1f1f] bg-[#1f1f1f] hover:scale-110"
-                          : "border-[#d8d8d3] bg-white hover:border-[#1f1f1f]"
+                        "h-3 w-3 rounded-full border transition-all hover:scale-110",
+                        filled ? "border-transparent" : "border-[#d8d8d3] bg-white hover:border-[#1f1f1f]"
                       )}
+                      style={filled ? { backgroundColor: fillColor } : undefined}
                       aria-label={`Abordagem ${i + 1}`}
                     />
                   );
