@@ -31,6 +31,7 @@ type TeamBoardCard = KanbanCard & {
   assignedName?: string | null;
   closed_by?: string | null;
   closedByName?: string | null;
+  outreach_count?: number | null;
 };
 
 type TeamMember = { id: string; nome: string };
