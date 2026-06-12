@@ -385,10 +385,11 @@ function TableRow({
               </div>
             );
           case "outreach": {
-            const total = Math.max(0, Math.min(8, card.outreach_count ?? 0));
-            const cycle2 = total > 4;
-            const visibleCount = cycle2 ? total - 4 : total;
-            const fillColor = cycle2 ? "#eab308" : "#1f1f1f"; // yellow on 2nd cycle, black on 1st
+            const total = Math.max(0, Math.min(12, card.outreach_count ?? 0));
+            const cycle = Math.min(2, Math.floor((Math.max(1, total) - 1) / 4)); // 0,1,2
+            const visibleCount = total === 0 ? 0 : total - cycle * 4;
+            const fillColor = total === 0 ? "#1f1f1f" : ["#1f1f1f", "#eab308", "#2563eb"][cycle];
+            const cycleLabel = ["1º", "2º", "3º"][cycle];
             return (
               <div key={column.key} className="flex items-center gap-1">
                 {[0, 1, 2, 3].map((i) => {
