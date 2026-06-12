@@ -396,8 +396,6 @@ function TableRow({
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        // click last filled = decrement; click empty = set to i+1
-                        const next = filled && i === count - 1 ? count - 1 : i + 1;
                         const final = filled && i === count - 1 ? count - 1 : Math.min(4, i + 1);
                         onUpdate?.(card.id, { outreach_count: final } as Partial<KanbanCard>);
                       }}
