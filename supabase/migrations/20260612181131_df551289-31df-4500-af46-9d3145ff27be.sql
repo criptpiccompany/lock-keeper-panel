@@ -1,0 +1,2 @@
+ALTER TABLE public.team_shared_board DROP CONSTRAINT IF EXISTS team_shared_board_outreach_count_check;
+ALTER TABLE public.team_shared_board ADD CONSTRAINT team_shared_board_outreach_count_check CHECK (outreach_count BETWEEN 0 AND 12);
