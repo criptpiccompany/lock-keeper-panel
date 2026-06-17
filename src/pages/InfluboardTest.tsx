@@ -108,6 +108,26 @@ export default function InfluboardTest() {
           <p className="mt-2 text-sm text-slate-500">
             Lista de travados sincronizada do Influboard. Atualização automática a cada 3 min.
           </p>
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-slate-500">
+            <span className="font-medium uppercase tracking-wider text-slate-400">Legenda travas:</span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-block h-2 w-2 rounded-full bg-slate-300" /> 1× novato
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-block h-2 w-2 rounded-full bg-amber-300" /> 2× renovou 1
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" /> 3× renovou 2
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-block h-2 w-2 rounded-full bg-gradient-to-r from-amber-300 to-yellow-500" /> 4× dourado
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-block h-2 w-2 rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500" /> 5×+ TOP
+            </span>
+            <span className="text-slate-300">·</span>
+            <span><span className="font-semibold text-red-600">vermelho</span> em "Visto há" = 1× há 3d+ (não renovou)</span>
+          </div>
         </div>
         <Button
           onClick={sync}
