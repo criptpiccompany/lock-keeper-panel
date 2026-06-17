@@ -189,7 +189,7 @@ export function WorkspaceLayout() {
             <div className="text-[14px] font-medium tracking-[-0.01em] text-slate-900">CREATORS</div>
           </div>
 
-          <div className="flex justify-start lg:justify-center">
+          <div className="flex flex-wrap items-center justify-start gap-3 lg:justify-center lg:gap-6">
             <div className="inline-flex items-center gap-[6px] rounded-[20px] bg-white p-[6px] shadow-[0_14px_30px_-26px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
               {topNavItems.map((item) => {
                 const active = location.pathname === item.path;
@@ -208,6 +208,30 @@ export function WorkspaceLayout() {
                 );
               })}
             </div>
+
+            {externalNavItems.length > 0 && (
+              <div
+                className="inline-flex items-center gap-[6px] rounded-[20px] bg-white/70 p-[6px] shadow-[0_14px_30px_-26px_rgba(15,23,42,0.10)] ring-1 ring-dashed ring-slate-300"
+                title="Sistema externo"
+              >
+                {externalNavItems.map((item) => {
+                  const active = location.pathname === item.path;
+                  return (
+                    <button
+                      key={item.path}
+                      type="button"
+                      onClick={() => navigate(item.path)}
+                      className={cn(
+                        "rounded-full px-4 py-2.5 text-[13px] font-medium tracking-[-0.01em] transition-colors",
+                        active ? "bg-[#242424] text-white" : "text-slate-400 hover:text-slate-700"
+                      )}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center justify-start gap-3 lg:justify-end">
