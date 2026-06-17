@@ -166,8 +166,11 @@ export function WorkspaceLayout() {
         { label: "Minha Lista", path: "/meu" },
         { label: "Planilhamento", path: "/registro" },
         { label: "Painel", path: "/painel" },
-        { label: "Influs Travados", path: "/influboard-test" },
       ];
+
+  const externalNavItems = !isFinanceiro && !isManagementView
+    ? [{ label: "Influs Travados", path: "/influboard-test" }]
+    : [];
 
   const handleSignOut = async () => {
     await signOut();
