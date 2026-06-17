@@ -166,7 +166,7 @@ export function WorkspaceLayout() {
         { label: "Minha Lista", path: "/meu" },
         { label: "Planilhamento", path: "/registro" },
         { label: "Painel", path: "/painel" },
-        { label: "Teste Influboard", path: "/influboard-test" },
+        { label: "Influs Travados", path: "/influboard-test" },
       ];
 
   const handleSignOut = async () => {
@@ -208,20 +208,6 @@ export function WorkspaceLayout() {
           </div>
 
           <div className="flex items-center justify-start gap-3 lg:justify-end">
-            <a
-              href="https://influboard.site/closer/painel-de-consulta"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Abrir Painel de Consulta externo em nova aba"
-              className="inline-flex items-center gap-2.5 rounded-[22px] bg-[#FFD400] px-5 py-3 text-[15px] font-bold uppercase tracking-[0.02em] text-slate-950 shadow-[0_16px_36px_-12px_rgba(255,212,0,0.7)] ring-2 ring-yellow-500/40 transition hover:bg-[#ffdf33] hover:scale-[1.03] focus:outline-none focus:ring-4 focus:ring-yellow-500/60"
-            >
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-600 opacity-75" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-600" />
-              </span>
-              Consultar travados
-              <ChevronRight className="h-4 w-4 -rotate-45" />
-            </a>
 
             <div className="flex items-center gap-2 rounded-[20px] bg-white p-[6px] shadow-[0_12px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
               <button type="button" className="grid h-[34px] w-[34px] place-items-center rounded-full text-slate-700 transition hover:bg-black/[0.03] hover:text-slate-900">
