@@ -31,6 +31,39 @@ function formatRelative(iso: string | null): string {
   return `há ${h}h ${m % 60}min`;
 }
 
+function daysSince(iso: string | null): { label: string; days: number } {
+  if (!iso) return { label: "—", days: 0 };
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (days <= 0) return { label: "hoje", days: 0 };
+  if (days === 1) return { label: "ontem", days: 1 };
+  return { label: `há ${days}d`, days };
+}
+
+// Tier visual por nº de travas (incluindo a 1ª)
+// 1× cinza · 2× amarelo · 3× verde · 4× dourado · 5×+ topo (gradient)
+function getLockTier(count: number) {
+  if (count >= 5) return {
+    className: "bg-gradient-to-r from-fuchsia-500 via-violet-500 to-indigo-500 text-white shadow-sm ring-1 ring-white/40",
+    label: "TOP",
+  };
+  if (count >= 4) return {
+    className: "bg-gradient-to-r from-amber-300 to-yellow-500 text-amber-950 shadow-sm ring-1 ring-amber-200",
+    label: "Dourado",
+  };
+  if (count >= 3) return {
+    className: "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200",
+    label: "Verde",
+  };
+  if (count >= 2) return {
+    className: "bg-amber-100 text-amber-800 ring-1 ring-amber-200",
+    label: "Amarelo",
+  };
+  return {
+    className: "bg-slate-100 text-slate-600",
+    label: "Novato",
+  };
+}
+
 export default function InfluboardTest() {
   const { data, isLoading } = useInfluboardLocks();
   const qc = useQueryClient();
@@ -130,7 +163,7 @@ export default function InfluboardTest() {
               <th className="px-4 py-3 font-medium">Closer</th>
               <th className="px-4 py-3 font-medium">Equipe</th>
               <th className="px-4 py-3 font-medium">Travas</th>
-              <th className="px-4 py-3 font-medium">Desde</th>
+              <th className="px-4 py-3 font-medium">Visto há</th>
               <th className="px-4 py-3 font-medium">Destrava em</th>
               <th className="px-4 py-3 font-medium">Restante</th>
               <th className="px-4 py-3 font-medium"></th>
@@ -149,10 +182,10 @@ export default function InfluboardTest() {
             {filtered.map((inf) => {
               const count = inf.lock_count ?? 1;
               const renewals = Math.max(0, count - 1);
-              const countTone =
-                count >= 4 ? "bg-emerald-100 text-emerald-800"
-                : count >= 2 ? "bg-sky-100 text-sky-800"
-                : "bg-slate-100 text-slate-600";
+              const tier = getLockTier(count);
+              const seen = daysSince(inf.first_locked_at ?? null);
+              // Alerta: travou 1x e já faz >= 3 dias = não renovou (prejuízo provável)
+              const isStale = count === 1 && seen.days >= 3;
               return (
               <tr key={inf.handle_normalized} className="hover:bg-slate-50/60">
                 <td className="px-4 py-2.5 font-medium text-slate-900">@{inf.handle_normalized}</td>
@@ -160,14 +193,20 @@ export default function InfluboardTest() {
                 <td className="px-4 py-2.5 text-slate-700">{inf.team_name ?? "—"}</td>
                 <td className="px-4 py-2.5">
                   <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${countTone}`}
-                    title={renewals === 0 ? "Travado pela 1ª vez" : `${renewals} renovação${renewals > 1 ? "ões" : ""}`}
+                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${tier.className}`}
+                    title={`${tier.label} · ${renewals === 0 ? "Travado pela 1ª vez" : `${renewals} renovação${renewals > 1 ? "ões" : ""}`}`}
                   >
-                    {count}× {renewals > 0 && <span className="text-[10px] font-normal opacity-75">({renewals} renov.)</span>}
+                    {count}×
+                    {renewals > 0 && (
+                      <span className="text-[10px] font-normal opacity-80">({renewals} renov.)</span>
+                    )}
                   </span>
                 </td>
-                <td className="px-4 py-2.5 font-mono text-xs text-slate-500">
-                  {inf.first_locked_at ? new Date(inf.first_locked_at).toLocaleDateString("pt-BR") : "—"}
+                <td
+                  className={`px-4 py-2.5 text-xs ${isStale ? "font-semibold text-red-600" : "text-slate-500"}`}
+                  title={inf.first_locked_at ? new Date(inf.first_locked_at).toLocaleString("pt-BR") : ""}
+                >
+                  {seen.label}
                 </td>
                 <td className="px-4 py-2.5 font-mono text-xs text-slate-500">
                   {inf.lock_expires_at ? new Date(inf.lock_expires_at).toLocaleString("pt-BR") : "—"}
