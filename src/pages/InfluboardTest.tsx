@@ -163,7 +163,7 @@ export default function InfluboardTest() {
               <th className="px-4 py-3 font-medium">Closer</th>
               <th className="px-4 py-3 font-medium">Equipe</th>
               <th className="px-4 py-3 font-medium">Travas</th>
-              <th className="px-4 py-3 font-medium">Desde</th>
+              <th className="px-4 py-3 font-medium">Visto há</th>
               <th className="px-4 py-3 font-medium">Destrava em</th>
               <th className="px-4 py-3 font-medium">Restante</th>
               <th className="px-4 py-3 font-medium"></th>
@@ -182,10 +182,10 @@ export default function InfluboardTest() {
             {filtered.map((inf) => {
               const count = inf.lock_count ?? 1;
               const renewals = Math.max(0, count - 1);
-              const countTone =
-                count >= 4 ? "bg-emerald-100 text-emerald-800"
-                : count >= 2 ? "bg-sky-100 text-sky-800"
-                : "bg-slate-100 text-slate-600";
+              const tier = getLockTier(count);
+              const seen = daysSince(inf.first_locked_at ?? null);
+              // Alerta: travou 1x e já faz >= 3 dias = não renovou (prejuízo provável)
+              const isStale = count === 1 && seen.days >= 3;
               return (
               <tr key={inf.handle_normalized} className="hover:bg-slate-50/60">
                 <td className="px-4 py-2.5 font-medium text-slate-900">@{inf.handle_normalized}</td>
@@ -193,14 +193,20 @@ export default function InfluboardTest() {
                 <td className="px-4 py-2.5 text-slate-700">{inf.team_name ?? "—"}</td>
                 <td className="px-4 py-2.5">
                   <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${countTone}`}
-                    title={renewals === 0 ? "Travado pela 1ª vez" : `${renewals} renovação${renewals > 1 ? "ões" : ""}`}
+                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${tier.className}`}
+                    title={`${tier.label} · ${renewals === 0 ? "Travado pela 1ª vez" : `${renewals} renovação${renewals > 1 ? "ões" : ""}`}`}
                   >
-                    {count}× {renewals > 0 && <span className="text-[10px] font-normal opacity-75">({renewals} renov.)</span>}
+                    {count}×
+                    {renewals > 0 && (
+                      <span className="text-[10px] font-normal opacity-80">({renewals} renov.)</span>
+                    )}
                   </span>
                 </td>
-                <td className="px-4 py-2.5 font-mono text-xs text-slate-500">
-                  {inf.first_locked_at ? new Date(inf.first_locked_at).toLocaleDateString("pt-BR") : "—"}
+                <td
+                  className={`px-4 py-2.5 text-xs ${isStale ? "font-semibold text-red-600" : "text-slate-500"}`}
+                  title={inf.first_locked_at ? new Date(inf.first_locked_at).toLocaleString("pt-BR") : ""}
+                >
+                  {seen.label}
                 </td>
                 <td className="px-4 py-2.5 font-mono text-xs text-slate-500">
                   {inf.lock_expires_at ? new Date(inf.lock_expires_at).toLocaleString("pt-BR") : "—"}
