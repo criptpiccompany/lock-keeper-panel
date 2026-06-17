@@ -140,10 +140,53 @@ Deno.serve(async (req) => {
           fetched_at: new Date().toISOString(),
         }));
 
-        // Replace strategy: delete all then insert (small dataset, simple consistency)
+        // Replace strategy for current cache: delete all then insert
         await supabase.from('influboard_locked_cache').delete().neq('id', -1);
         const { error: insErr } = await supabase.from('influboard_locked_cache').insert(rows);
         if (insErr) cacheError = insErr.message;
+
+        // ---- Persistent renewal history -----------------------------------
+        // Detect renewals by comparing the new lock_expires_at with the
+        // previously stored one. A jump forward (> 1h tolerance) = renewal.
+        const handles = rows.map(r => r.handle_normalized);
+        const { data: existingHistory } = await supabase
+          .from('influboard_lock_history')
+          .select('handle_normalized, last_expires_at, lock_count, first_locked_at')
+          .in('handle_normalized', handles);
+        const histMap = new Map<string, any>();
+        (existingHistory ?? []).forEach((h: any) => histMap.set(h.handle_normalized, h));
+
+        const nowIso = new Date().toISOString();
+        const TOLERANCE_MS = 60 * 60 * 1000; // 1h
+
+        const upserts = rows.map(r => {
+          const prev = histMap.get(r.handle_normalized);
+          const newExpMs = r.lock_expires_at ? new Date(r.lock_expires_at).getTime() : 0;
+          const prevExpMs = prev?.last_expires_at ? new Date(prev.last_expires_at).getTime() : 0;
+          let lock_count = prev?.lock_count ?? 1;
+          if (!prev) {
+            lock_count = 1;
+          } else if (newExpMs > prevExpMs + TOLERANCE_MS) {
+            lock_count = (prev.lock_count ?? 1) + 1;
+          }
+          return {
+            handle_normalized: r.handle_normalized,
+            handle: r.handle,
+            first_locked_at: prev?.first_locked_at ?? nowIso,
+            last_locked_at: nowIso,
+            last_expires_at: r.lock_expires_at,
+            lock_count,
+            last_closer_name: r.closer_name,
+            last_team_name: r.team_name,
+          };
+        });
+
+        if (upserts.length > 0) {
+          const { error: hErr } = await supabase
+            .from('influboard_lock_history')
+            .upsert(upserts, { onConflict: 'handle_normalized' });
+          if (hErr && !cacheError) cacheError = hErr.message;
+        }
       } else {
         await supabase.from('influboard_locked_cache').delete().neq('id', -1);
       }

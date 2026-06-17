@@ -515,6 +515,45 @@ export type Database = {
           },
         ]
       }
+      influboard_lock_history: {
+        Row: {
+          created_at: string
+          first_locked_at: string
+          handle: string
+          handle_normalized: string
+          last_closer_name: string | null
+          last_expires_at: string | null
+          last_locked_at: string
+          last_team_name: string | null
+          lock_count: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          first_locked_at?: string
+          handle: string
+          handle_normalized: string
+          last_closer_name?: string | null
+          last_expires_at?: string | null
+          last_locked_at?: string
+          last_team_name?: string | null
+          lock_count?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          first_locked_at?: string
+          handle?: string
+          handle_normalized?: string
+          last_closer_name?: string | null
+          last_expires_at?: string | null
+          last_locked_at?: string
+          last_team_name?: string | null
+          lock_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       influboard_locked_cache: {
         Row: {
           closer_name: string | null
