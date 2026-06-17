@@ -31,6 +31,39 @@ function formatRelative(iso: string | null): string {
   return `há ${h}h ${m % 60}min`;
 }
 
+function daysSince(iso: string | null): { label: string; days: number } {
+  if (!iso) return { label: "—", days: 0 };
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (days <= 0) return { label: "hoje", days: 0 };
+  if (days === 1) return { label: "ontem", days: 1 };
+  return { label: `há ${days}d`, days };
+}
+
+// Tier visual por nº de travas (incluindo a 1ª)
+// 1× cinza · 2× amarelo · 3× verde · 4× dourado · 5×+ topo (gradient)
+function getLockTier(count: number) {
+  if (count >= 5) return {
+    className: "bg-gradient-to-r from-fuchsia-500 via-violet-500 to-indigo-500 text-white shadow-sm ring-1 ring-white/40",
+    label: "TOP",
+  };
+  if (count >= 4) return {
+    className: "bg-gradient-to-r from-amber-300 to-yellow-500 text-amber-950 shadow-sm ring-1 ring-amber-200",
+    label: "Dourado",
+  };
+  if (count >= 3) return {
+    className: "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200",
+    label: "Verde",
+  };
+  if (count >= 2) return {
+    className: "bg-amber-100 text-amber-800 ring-1 ring-amber-200",
+    label: "Amarelo",
+  };
+  return {
+    className: "bg-slate-100 text-slate-600",
+    label: "Novato",
+  };
+}
+
 export default function InfluboardTest() {
   const { data, isLoading } = useInfluboardLocks();
   const qc = useQueryClient();
