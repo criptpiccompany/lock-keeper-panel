@@ -129,6 +129,8 @@ export default function InfluboardTest() {
               <th className="px-4 py-3 font-medium">Handle</th>
               <th className="px-4 py-3 font-medium">Closer</th>
               <th className="px-4 py-3 font-medium">Equipe</th>
+              <th className="px-4 py-3 font-medium">Travas</th>
+              <th className="px-4 py-3 font-medium">Desde</th>
               <th className="px-4 py-3 font-medium">Destrava em</th>
               <th className="px-4 py-3 font-medium">Restante</th>
               <th className="px-4 py-3 font-medium"></th>
@@ -136,19 +138,37 @@ export default function InfluboardTest() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {isLoading && (
-              <tr><td colSpan={6} className="px-4 py-10 text-center text-slate-400">Carregando…</td></tr>
+              <tr><td colSpan={8} className="px-4 py-10 text-center text-slate-400">Carregando…</td></tr>
             )}
             {!isLoading && list.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-10 text-center text-slate-400">Nenhum travado no cache. Clique em "Atualizar agora".</td></tr>
+              <tr><td colSpan={8} className="px-4 py-10 text-center text-slate-400">Nenhum travado no cache. Clique em "Atualizar agora".</td></tr>
             )}
             {!isLoading && list.length > 0 && filtered.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-10 text-center text-slate-400">Nenhum resultado para "{query}".</td></tr>
+              <tr><td colSpan={8} className="px-4 py-10 text-center text-slate-400">Nenhum resultado para "{query}".</td></tr>
             )}
-            {filtered.map((inf) => (
+            {filtered.map((inf) => {
+              const count = inf.lock_count ?? 1;
+              const renewals = Math.max(0, count - 1);
+              const countTone =
+                count >= 4 ? "bg-emerald-100 text-emerald-800"
+                : count >= 2 ? "bg-sky-100 text-sky-800"
+                : "bg-slate-100 text-slate-600";
+              return (
               <tr key={inf.handle_normalized} className="hover:bg-slate-50/60">
                 <td className="px-4 py-2.5 font-medium text-slate-900">@{inf.handle_normalized}</td>
                 <td className="px-4 py-2.5 text-slate-700">{inf.closer_name ?? "—"}</td>
                 <td className="px-4 py-2.5 text-slate-700">{inf.team_name ?? "—"}</td>
+                <td className="px-4 py-2.5">
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${countTone}`}
+                    title={renewals === 0 ? "Travado pela 1ª vez" : `${renewals} renovação${renewals > 1 ? "ões" : ""}`}
+                  >
+                    {count}× {renewals > 0 && <span className="text-[10px] font-normal opacity-75">({renewals} renov.)</span>}
+                  </span>
+                </td>
+                <td className="px-4 py-2.5 font-mono text-xs text-slate-500">
+                  {inf.first_locked_at ? new Date(inf.first_locked_at).toLocaleDateString("pt-BR") : "—"}
+                </td>
                 <td className="px-4 py-2.5 font-mono text-xs text-slate-500">
                   {inf.lock_expires_at ? new Date(inf.lock_expires_at).toLocaleString("pt-BR") : "—"}
                 </td>
@@ -170,7 +190,8 @@ export default function InfluboardTest() {
                   )}
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
