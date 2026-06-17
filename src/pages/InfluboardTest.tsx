@@ -70,7 +70,7 @@ export default function InfluboardTest() {
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Experimental</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-[-0.02em] text-slate-950">
-            Teste Influboard
+            Influs Travados
           </h1>
           <p className="mt-2 text-sm text-slate-500">
             Lista de travados sincronizada do Influboard. Atualização automática a cada 3 min.
