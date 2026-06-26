@@ -148,7 +148,10 @@ Deno.serve(async (req) => {
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
       );
 
-      if (lockedInfluencers.length > 0) {
+      if (sessionFailed) {
+        // Do NOT wipe the cache on silent auth failure — keep last good data.
+        cacheError = `Sessão inválida (login não autenticou). finalUrl=${currentUrl} chain=${redirectChain.join(' | ')}`;
+      } else if (lockedInfluencers.length > 0) {
         const rows = lockedInfluencers.map((inf: any) => ({
           external_id: inf.id ?? null,
           handle: inf.handle,
@@ -166,8 +169,6 @@ Deno.serve(async (req) => {
         if (insErr) cacheError = insErr.message;
 
         // ---- Persistent renewal history -----------------------------------
-        // Detect renewals by comparing the new lock_expires_at with the
-        // previously stored one. A jump forward (> 1h tolerance) = renewal.
         const handles = rows.map(r => r.handle_normalized);
         const { data: existingHistory } = await supabase
           .from('influboard_lock_history')
@@ -177,7 +178,7 @@ Deno.serve(async (req) => {
         (existingHistory ?? []).forEach((h: any) => histMap.set(h.handle_normalized, h));
 
         const nowIso = new Date().toISOString();
-        const TOLERANCE_MS = 60 * 60 * 1000; // 1h
+        const TOLERANCE_MS = 60 * 60 * 1000;
 
         const upserts = rows.map(r => {
           const prev = histMap.get(r.handle_normalized);
@@ -208,16 +209,40 @@ Deno.serve(async (req) => {
           if (hErr && !cacheError) cacheError = hErr.message;
         }
       } else {
+        // Page rendered ok, but list legitimately empty.
         await supabase.from('influboard_locked_cache').delete().neq('id', -1);
       }
 
       await supabase.from('influboard_sync_meta').upsert({
         id: 1,
         last_run_at: new Date().toISOString(),
-        last_count: lockedInfluencers.length,
-        last_status: cacheError ? 'error' : 'ok',
+        last_count: sessionFailed ? 0 : lockedInfluencers.length,
+        last_status: sessionFailed || cacheError ? 'error' : 'ok',
         last_error: cacheError,
       });
+    } catch (e) {
+      cacheError = String((e as Error).message);
+    }
+
+    return new Response(JSON.stringify({
+      ok: !sessionFailed,
+      loginStatus,
+      finalStatus,
+      finalUrl: currentUrl,
+      redirectChain,
+      component: inertiaData?.component ?? null,
+      authUser: props?.auth?.user ?? null,
+      sessionFailed,
+      count: lockedInfluencers.length,
+      lockedInfluencers,
+      cacheError,
+    }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: String(err?.message ?? err) }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});
     } catch (e) {
       cacheError = String((e as Error).message);
     }
