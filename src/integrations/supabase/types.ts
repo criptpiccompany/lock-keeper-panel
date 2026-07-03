@@ -829,6 +829,141 @@ export type Database = {
           },
         ]
       }
+      megaarena_afiliados: {
+        Row: {
+          cadastro_at: string | null
+          closer_name: string | null
+          created_at: string
+          email: string | null
+          external_id: string
+          first_seen_at: string
+          handle: string
+          id: string
+          last_seen_at: string
+          updated_at: string
+        }
+        Insert: {
+          cadastro_at?: string | null
+          closer_name?: string | null
+          created_at?: string
+          email?: string | null
+          external_id: string
+          first_seen_at?: string
+          handle: string
+          id?: string
+          last_seen_at?: string
+          updated_at?: string
+        }
+        Update: {
+          cadastro_at?: string | null
+          closer_name?: string | null
+          created_at?: string
+          email?: string | null
+          external_id?: string
+          first_seen_at?: string
+          handle?: string
+          id?: string
+          last_seen_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      megaarena_janela_9h: {
+        Row: {
+          afiliado_external_id: string
+          closer_snapshot: string | null
+          comissao_janela_cents: number
+          computed_at: string
+          depositado_janela_cents: number
+          handle_snapshot: string | null
+          id: string
+          janela_date: string
+        }
+        Insert: {
+          afiliado_external_id: string
+          closer_snapshot?: string | null
+          comissao_janela_cents?: number
+          computed_at?: string
+          depositado_janela_cents?: number
+          handle_snapshot?: string | null
+          id?: string
+          janela_date: string
+        }
+        Update: {
+          afiliado_external_id?: string
+          closer_snapshot?: string | null
+          comissao_janela_cents?: number
+          computed_at?: string
+          depositado_janela_cents?: number
+          handle_snapshot?: string | null
+          id?: string
+          janela_date?: string
+        }
+        Relationships: []
+      }
+      megaarena_snapshots: {
+        Row: {
+          afiliado_external_id: string
+          ativos: number
+          captured_at: string
+          comissao_hoje_cents: number
+          depositado_hoje_cents: number
+          id: number
+          indicados: number
+          sacado_cents: number
+          status: string | null
+        }
+        Insert: {
+          afiliado_external_id: string
+          ativos?: number
+          captured_at?: string
+          comissao_hoje_cents?: number
+          depositado_hoje_cents?: number
+          id?: number
+          indicados?: number
+          sacado_cents?: number
+          status?: string | null
+        }
+        Update: {
+          afiliado_external_id?: string
+          ativos?: number
+          captured_at?: string
+          comissao_hoje_cents?: number
+          depositado_hoje_cents?: number
+          id?: number
+          indicados?: number
+          sacado_cents?: number
+          status?: string | null
+        }
+        Relationships: []
+      }
+      megaarena_sync_meta: {
+        Row: {
+          id: number
+          last_count: number | null
+          last_error: string | null
+          last_run_at: string | null
+          last_status: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          last_count?: number | null
+          last_error?: string | null
+          last_run_at?: string | null
+          last_status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          last_count?: number | null
+          last_error?: string | null
+          last_run_at?: string | null
+          last_status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       monthly_influencer_list: {
         Row: {
           casa_1_email: string | null
