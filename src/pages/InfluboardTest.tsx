@@ -206,11 +206,16 @@ export default function InfluboardTest() {
               const seen = daysSince(inf.first_locked_at ?? null);
               // Alerta: travou 1x e já faz >= 3 dias = não renovou (prejuízo provável)
               const isStale = count === 1 && seen.days >= 3;
+              const isPartnerTeam = (inf.team_name ?? "").trim().toLowerCase() === "digitalmoney";
               return (
-              <tr key={inf.handle_normalized} className="hover:bg-slate-50/60">
-                <td className="px-4 py-2.5 font-medium text-slate-900">@{inf.handle_normalized}</td>
-                <td className="px-4 py-2.5 text-slate-700">{inf.closer_name ?? "—"}</td>
-                <td className="px-4 py-2.5 text-slate-700">{inf.team_name ?? "—"}</td>
+              <tr
+                key={inf.handle_normalized}
+                className={isPartnerTeam ? "bg-red-50 hover:bg-red-100/70" : "hover:bg-slate-50/60"}
+                title={isPartnerTeam ? "Equipe parceira DigitalMoney" : undefined}
+              >
+                <td className={`px-4 py-2.5 font-medium ${isPartnerTeam ? "text-red-900" : "text-slate-900"}`}>@{inf.handle_normalized}</td>
+                <td className={`px-4 py-2.5 ${isPartnerTeam ? "text-red-800" : "text-slate-700"}`}>{inf.closer_name ?? "—"}</td>
+                <td className={`px-4 py-2.5 font-medium ${isPartnerTeam ? "text-red-700" : "text-slate-700"}`}>{inf.team_name ?? "—"}</td>
                 <td className="px-4 py-2.5">
                   <span
                     className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${tier.className}`}
