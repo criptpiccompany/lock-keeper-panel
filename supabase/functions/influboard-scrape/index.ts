@@ -59,27 +59,28 @@ Deno.serve(async (req) => {
     }
     const xsrf = decodeURIComponent(xsrfRaw);
 
-    // 2) POST /login (form-encoded)
-    const body = new URLSearchParams({ email, password, remember: 'on' });
+    // 2) POST /login — Inertia JSON (site migrado para Inertia/Vue)
     const r2 = await fetch(`${BASE}/login`, {
       method: 'POST',
       headers: {
         'User-Agent': UA,
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Accept: 'text/html,application/xhtml+xml',
+        'Content-Type': 'application/json',
+        Accept: 'text/html, application/xhtml+xml',
+        'X-Inertia': 'true',
+        'X-Requested-With': 'XMLHttpRequest',
         Referer: `${BASE}/login`,
         Origin: BASE,
         Cookie: cookieHeader(jar),
         'X-XSRF-TOKEN': xsrf,
       },
-      body: body.toString(),
+      body: JSON.stringify({ email, password, remember: false }),
       redirect: 'manual',
     });
     mergeJar(jar, parseSetCookies(r2.headers));
     const loginLocation = r2.headers.get('location') ?? '';
     const loginStatus = r2.status;
 
-    // Laravel redirects 302 on success
+    // Inertia: sucesso = 302 para /closer/*; falha = 302 de volta para /login
     if (loginStatus !== 302 && loginStatus !== 303) {
       const txt = await r2.text();
       return new Response(JSON.stringify({
@@ -87,6 +88,14 @@ Deno.serve(async (req) => {
         status: loginStatus,
         location: loginLocation,
         bodyPreview: txt.slice(0, 800),
+      }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    if (/\/login/i.test(loginLocation)) {
+      await r2.text();
+      return new Response(JSON.stringify({
+        error: 'Credenciais rejeitadas (redirect volta para /login) — senha do Influboard pode ter sido alterada',
+        status: loginStatus,
+        location: loginLocation,
       }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
     await r2.text();
