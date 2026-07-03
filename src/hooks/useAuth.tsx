@@ -104,12 +104,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let lastAccessToken: string | null = null;
     let cancelled = false;
 
-    const loadProfile = (userId: string, email: string) => {
+    const loadProfile = (userId: string, email: string, forceCloserView = false) => {
       fetchUserProfile(userId, email).then((userProfile) => {
         if (cancelled) return;
         if (userProfile) lastLoadedUserId = userId;
         setUser(userProfile);
         setLoading(false);
+        // On fresh sign-in, ADMIN starts in "view as CLOSER" mode by default.
+        if (forceCloserView && userProfile?.role === 'ADMIN') {
+          setViewAsRole('CLOSER');
+        }
       });
     };
 
