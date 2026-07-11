@@ -234,20 +234,20 @@ export default function PlanilhaBeta() {
   };
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif", background: "#fff" }}>
+    <div style={{ width: "100%", fontFamily: "'Poppins', sans-serif", background: "#fff" }}>
       {/* Year toggle */}
-      <div style={{ width: TABLE_W, display: "flex", justifyContent: "flex-end", gap: 6, marginBottom: 6 }}>
+      <div style={{ width: "100%", display: "flex", justifyContent: "flex-start", gap: 6, marginBottom: 6 }}>
         <button onClick={() => setYear((y) => y - 1)} className="rounded border px-2 py-0.5 text-xs">◀</button>
         <span className="text-xs font-medium tabular-nums" style={{ lineHeight: "22px" }}>{year}</span>
         <button onClick={() => setYear((y) => y + 1)} className="rounded border px-2 py-0.5 text-xs">▶</button>
       </div>
 
       <div style={{ width: "100%", overflowX: "auto", overflowY: "visible" }}>
-        <div style={{ width: TABLE_W, minWidth: TABLE_W }}>
+        <div style={{ width: "100%", minWidth: TABLE_W }}>
           {/* Black month bar */}
           <div
             style={{
-              width: TABLE_W,
+              width: "100%",
               height: 58,
               background: "#000",
               color: "#fff",
@@ -273,7 +273,7 @@ export default function PlanilhaBeta() {
           ) : (
             <table
               style={{
-                width: TABLE_W,
+                width: "100%",
                 tableLayout: "fixed",
                 borderCollapse: "collapse",
                 borderTop: border,
@@ -395,7 +395,7 @@ export default function PlanilhaBeta() {
           {/* Month tabs */}
           <div
             style={{
-              width: TABLE_W,
+              width: "100%",
               marginTop: 8,
               display: "flex",
               flexWrap: "wrap",
