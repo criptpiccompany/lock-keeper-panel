@@ -8,16 +8,27 @@ const MONTHS_PT = [
   "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO",
 ];
 
-const ROWS_PER_MONTH = 40;
-const FEE_RATE = 0.10; // 10% da coluna FATURAMENTO
+const ROWS_PER_MONTH = 30;
+const FEE_RATE = 0.10;
+
+// Column widths (px) — total = 965
+const COL_W = {
+  date: 105,
+  influencer: 195,
+  traffic: 145,
+  revenue: 185,
+  result: 165,
+  accumulated: 170,
+};
+const TABLE_W =
+  COL_W.date + COL_W.influencer + COL_W.traffic + COL_W.revenue + COL_W.result + COL_W.accumulated;
 
 interface RowState {
   influenciador: string;
-  trafego: string;      // BRL masked (mapped to diaria_cents)
-  faturamento: string;  // BRL masked
-  acumulado: string;    // BRL masked (entrada manual)
+  trafego: string;
+  faturamento: string;
+  acumulado: string;
 }
-
 interface DbRow {
   id?: string;
   day: number;
@@ -33,28 +44,25 @@ function toCents(masked: string): number {
   const digits = masked.replace(/\D/g, "");
   return digits ? parseInt(digits, 10) : 0;
 }
-
 function fromCents(cents: number): string {
   if (!cents) return "";
   return (cents / 100).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
   });
 }
-
-function formatBRLFromInput(raw: string): string {
-  const digits = raw.replace(/\D/g, "");
-  if (!digits) return "";
-  const cents = parseInt(digits, 10);
-  return (cents / 100).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-  });
+function formatInput(raw: string): string {
+  // Accept plain integers/decimals typed by user; store as displayed
+  return raw.replace(/[^\d.,-]/g, "");
 }
-
-// Sem símbolo R$ — visual mais próximo do Sheets
+function parseUserNumber(s: string): number {
+  if (!s) return 0;
+  // Convert "1.234,56" or "1234.56" or "1234,56" -> cents
+  const cleaned = s.replace(/\./g, "").replace(",", ".");
+  const n = parseFloat(cleaned);
+  if (isNaN(n)) return 0;
+  return Math.round(n * 100);
+}
 function displayNumber(cents: number): string {
   if (!cents) return "";
   const v = cents / 100;
@@ -69,10 +77,7 @@ export default function PlanilhaBeta() {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<RowState[]>(
     Array.from({ length: ROWS_PER_MONTH }, () => ({
-      influenciador: "",
-      trafego: "",
-      faturamento: "",
-      acumulado: "",
+      influenciador: "", trafego: "", faturamento: "", acumulado: "",
     }))
   );
   const rowIds = useRef<Record<number, string>>({});
@@ -91,12 +96,8 @@ export default function PlanilhaBeta() {
         .eq("year", year)
         .eq("month", month)
         .order("row_index");
-
       const fresh: RowState[] = Array.from({ length: ROWS_PER_MONTH }, () => ({
-        influenciador: "",
-        trafego: "",
-        faturamento: "",
-        acumulado: "",
+        influenciador: "", trafego: "", faturamento: "", acumulado: "",
       }));
       (data as DbRow[] | null)?.forEach((r) => {
         if (r.row_index >= 0 && r.row_index < ROWS_PER_MONTH) {
@@ -115,12 +116,15 @@ export default function PlanilhaBeta() {
     load();
   }, [user?.id, year, month]);
 
-  // RESULTADO = Faturamento - Tráfego - Faturamento * 10%
   const resultados = useMemo(
     () =>
       rows.map((r) => {
-        const fat = toCents(r.faturamento);
-        const tra = toCents(r.trafego);
+        const hasData =
+          r.influenciador.trim() || r.trafego || r.faturamento || r.acumulado;
+        if (!hasData) return null;
+        const fat = parseUserNumber(r.faturamento);
+        const tra = parseUserNumber(r.trafego);
+        if (fat === 0 && tra === 0) return null;
         return Math.round(fat - tra - fat * FEE_RATE);
       }),
     [rows]
@@ -141,18 +145,13 @@ export default function PlanilhaBeta() {
     dirtyIndex.current.delete(idx);
     const r = rows[idx];
     const day = 1;
-    const diaria_cents = toCents(r.trafego);
-    const faturamento_cents = toCents(r.faturamento);
-    const acumulado_cents = toCents(r.acumulado);
+    const diaria_cents = parseUserNumber(r.trafego);
+    const faturamento_cents = parseUserNumber(r.faturamento);
+    const acumulado_cents = parseUserNumber(r.acumulado);
     const influenciador = r.influenciador.trim() || null;
     const isEmpty =
-      !influenciador &&
-      diaria_cents === 0 &&
-      faturamento_cents === 0 &&
-      acumulado_cents === 0;
-
+      !influenciador && !diaria_cents && !faturamento_cents && !acumulado_cents;
     const existingId = rowIds.current[idx];
-
     if (isEmpty) {
       if (existingId) {
         await supabase.from("planilha_beta").delete().eq("id", existingId);
@@ -160,28 +159,17 @@ export default function PlanilhaBeta() {
       }
       return;
     }
-
     if (existingId) {
-      await supabase
-        .from("planilha_beta")
+      await supabase.from("planilha_beta")
         .update({ influenciador, diaria_cents, faturamento_cents, acumulado_cents, day })
         .eq("id", existingId);
     } else {
-      const { data } = await supabase
-        .from("planilha_beta")
+      const { data } = await supabase.from("planilha_beta")
         .insert({
-          closer_id: user.id,
-          year,
-          month,
-          day,
-          row_index: idx,
-          influenciador,
-          diaria_cents,
-          faturamento_cents,
-          acumulado_cents,
+          closer_id: user.id, year, month, day, row_index: idx,
+          influenciador, diaria_cents, faturamento_cents, acumulado_cents,
         })
-        .select("id")
-        .single();
+        .select("id").single();
       if (data?.id) rowIds.current[idx] = data.id;
     }
   };
@@ -189,147 +177,172 @@ export default function PlanilhaBeta() {
   const monthLabel = MONTHS_PT[month - 1];
   const firstDayStr = `01/${String(month).padStart(2, "0")}/${year}`;
 
-  const cellBase =
-    "border border-black/70 px-2 py-2 text-center align-middle";
-  const inputBase =
-    "w-full bg-transparent text-center outline-none focus:bg-blue-50/60";
+  const border = "1px solid #e3e3e3";
+  const cellStyle: React.CSSProperties = {
+    height: 26,
+    padding: "0 8px",
+    borderRight: border,
+    borderBottom: border,
+    fontFamily: "'Poppins', sans-serif",
+    fontSize: 13,
+    fontWeight: 400,
+    color: "#111",
+    textAlign: "center",
+    verticalAlign: "middle",
+    lineHeight: "26px",
+    background: "#fff",
+  };
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    height: 26,
+    padding: "0 4px",
+    border: "none",
+    outline: "none",
+    background: "transparent",
+    fontFamily: "'Poppins', sans-serif",
+    fontSize: 13,
+    color: "#111",
+    textAlign: "center",
+    lineHeight: "26px",
+  };
+  const headerCell: React.CSSProperties = {
+    height: 42,
+    padding: "0 8px",
+    background: "#209d55",
+    color: "#ffffff",
+    fontFamily: "'Poppins', sans-serif",
+    fontSize: 14,
+    fontWeight: 700,
+    textAlign: "center",
+    verticalAlign: "middle",
+    whiteSpace: "nowrap",
+    borderRight: border,
+    borderBottom: border,
+    textTransform: "uppercase",
+  };
+  const headerResult: React.CSSProperties = {
+    ...headerCell,
+    background: "#fcbc00",
+    color: "#111",
+  };
 
   return (
-    <div className="mx-auto max-w-[1400px]" style={{ fontFamily: "'Poppins', sans-serif" }}>
-      <div className="mb-3 flex items-center justify-end gap-2">
-        <button
-          onClick={() => setYear((y) => y - 1)}
-          className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
-        >
-          ◀
-        </button>
-        <span className="text-xs font-medium text-slate-700 tabular-nums">{year}</span>
-        <button
-          onClick={() => setYear((y) => y + 1)}
-          className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
-        >
-          ▶
-        </button>
+    <div style={{ fontFamily: "'Poppins', sans-serif", background: "#fff" }}>
+      {/* Year toggle */}
+      <div style={{ width: TABLE_W, display: "flex", justifyContent: "flex-end", gap: 6, marginBottom: 6 }}>
+        <button onClick={() => setYear((y) => y - 1)} className="rounded border px-2 py-0.5 text-xs">◀</button>
+        <span className="text-xs font-medium tabular-nums" style={{ lineHeight: "22px" }}>{year}</span>
+        <button onClick={() => setYear((y) => y + 1)} className="rounded border px-2 py-0.5 text-xs">▶</button>
       </div>
 
-      <div className="overflow-hidden bg-white shadow-sm">
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+      <div style={{ width: "100%", overflowX: "auto", overflowY: "visible" }}>
+        <div style={{ width: TABLE_W, minWidth: TABLE_W }}>
+          {/* Black month bar */}
+          <div
+            style={{
+              width: TABLE_W,
+              height: 58,
+              background: "#000",
+              color: "#fff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: 25,
+              fontWeight: 700,
+              lineHeight: 1,
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+            }}
+          >
+            {monthLabel}
           </div>
-        ) : (
-          <div className="overflow-x-auto">
+          <div style={{ height: 12, background: "#fff" }} />
+
+          {loading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+            </div>
+          ) : (
             <table
-              className="w-full border-collapse"
-              style={{ fontFamily: "'Poppins', sans-serif", fontSize: 15 }}
+              style={{
+                width: TABLE_W,
+                tableLayout: "fixed",
+                borderCollapse: "collapse",
+                borderTop: border,
+                borderLeft: border,
+              }}
             >
               <colgroup>
-                <col style={{ width: "13%" }} />
-                <col style={{ width: "22%" }} />
-                <col style={{ width: "15%" }} />
-                <col style={{ width: "18%" }} />
-                <col style={{ width: "17%" }} />
-                <col style={{ width: "15%" }} />
+                <col style={{ width: COL_W.date }} />
+                <col style={{ width: COL_W.influencer }} />
+                <col style={{ width: COL_W.traffic }} />
+                <col style={{ width: COL_W.revenue }} />
+                <col style={{ width: COL_W.result }} />
+                <col style={{ width: COL_W.accumulated }} />
               </colgroup>
               <thead>
-                {/* Faixa preta com o mês */}
                 <tr>
-                  <th
-                    colSpan={6}
-                    className="border border-black bg-black text-white text-center"
-                    style={{ height: 78, fontSize: 30, fontWeight: 700, letterSpacing: 1 }}
-                  >
-                    {monthLabel}
-                  </th>
-                </tr>
-                {/* Linha em branco (row 2 do Sheets) */}
-                <tr>
-                  <th colSpan={6} className="p-0" style={{ height: 14 }} />
-                </tr>
-                {/* Cabeçalho das colunas */}
-                <tr style={{ height: 58 }}>
-                  <th className={`${cellBase} text-white`} style={{ background: "#1F9D55", fontWeight: 700 }}>
-                    {firstDayStr}
-                  </th>
-                  <th className={`${cellBase} text-white`} style={{ background: "#1F9D55", fontWeight: 700 }}>
-                    INFLUENCIADOR
-                  </th>
-                  <th className={`${cellBase} text-white`} style={{ background: "#1F9D55", fontWeight: 700 }}>
-                    TRÁFEGO
-                  </th>
-                  <th className={`${cellBase} text-white`} style={{ background: "#1F9D55", fontWeight: 700 }}>
-                    FATURAMENTO
-                  </th>
-                  <th className={`${cellBase} text-black`} style={{ background: "#FBBC04", fontWeight: 700 }}>
-                    RESULTADO
-                  </th>
-                  <th className={`${cellBase} text-white`} style={{ background: "#1F9D55", fontWeight: 700 }}>
-                    ACUMULADO
-                  </th>
+                  <th style={headerCell}>{firstDayStr}</th>
+                  <th style={headerCell}>INFLUENCIADOR</th>
+                  <th style={headerCell}>TRÁFEGO</th>
+                  <th style={headerCell}>FATURAMENTO</th>
+                  <th style={headerResult}>RESULTADO</th>
+                  <th style={headerCell}>ACUMULADO</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((r, idx) => {
                   const resultado = resultados[idx];
-                  let resBg = "transparent";
-                  let resColor = "#000";
-                  if (resultado > 0) {
-                    resBg = "#D9EAD3"; // verde claro Sheets
-                    resColor = "#000";
-                  } else if (resultado < 0) {
-                    resBg = "#F4CCCC"; // vermelho claro Sheets
-                    resColor = "#000";
+                  let resBg = "#fff";
+                  if (resultado !== null && resultado !== undefined) {
+                    if (resultado < 0) resBg = "#f4c6c3";
+                    else if (resultado > 0 && resultado <= 5000) resBg = "#fde7b3";
+                    else if (resultado > 5000) resBg = "#b7e0cd";
                   }
                   return (
-                    <tr key={idx} style={{ height: 40 }}>
-                      <td className={`${cellBase}`} />
-                      <td className={`${cellBase} p-0`}>
+                    <tr key={idx}>
+                      <td style={cellStyle} />
+                      <td style={{ ...cellStyle, padding: 0 }}>
                         <input
                           type="text"
                           value={r.influenciador}
                           onChange={(e) => updateRow(idx, { influenciador: e.target.value })}
                           onBlur={() => persistRow(idx)}
-                          className={`${inputBase} px-2 py-2`}
-                          style={{ fontFamily: "'Poppins', sans-serif", fontSize: 15 }}
+                          style={inputStyle}
                         />
                       </td>
-                      <td className={`${cellBase} p-0`}>
+                      <td style={{ ...cellStyle, padding: 0 }}>
                         <input
                           type="text"
-                          inputMode="numeric"
+                          inputMode="decimal"
                           value={r.trafego}
-                          onChange={(e) => updateRow(idx, { trafego: formatBRLFromInput(e.target.value) })}
+                          onChange={(e) => updateRow(idx, { trafego: formatInput(e.target.value) })}
                           onBlur={() => persistRow(idx)}
-                          className={`${inputBase} px-2 py-2 tabular-nums`}
-                          style={{ fontFamily: "'Poppins', sans-serif", fontSize: 15 }}
+                          style={{ ...inputStyle, fontVariantNumeric: "tabular-nums" }}
                         />
                       </td>
-                      <td className={`${cellBase} p-0`}>
+                      <td style={{ ...cellStyle, padding: 0 }}>
                         <input
                           type="text"
-                          inputMode="numeric"
+                          inputMode="decimal"
                           value={r.faturamento}
-                          onChange={(e) => updateRow(idx, { faturamento: formatBRLFromInput(e.target.value) })}
+                          onChange={(e) => updateRow(idx, { faturamento: formatInput(e.target.value) })}
                           onBlur={() => persistRow(idx)}
-                          className={`${inputBase} px-2 py-2 tabular-nums`}
-                          style={{ fontFamily: "'Poppins', sans-serif", fontSize: 15 }}
+                          style={{ ...inputStyle, fontVariantNumeric: "tabular-nums" }}
                         />
                       </td>
-                      <td
-                        className={`${cellBase} tabular-nums`}
-                        style={{ background: resBg, color: resColor, fontWeight: 500 }}
-                      >
-                        {resultado === 0 ? "0" : displayNumber(resultado)}
+                      <td style={{ ...cellStyle, background: resBg, fontVariantNumeric: "tabular-nums" }}>
+                        {resultado === null || resultado === undefined ? "" : displayNumber(resultado)}
                       </td>
-                      <td className={`${cellBase} p-0`}>
+                      <td style={{ ...cellStyle, padding: 0 }}>
                         <input
                           type="text"
-                          inputMode="numeric"
+                          inputMode="decimal"
                           value={r.acumulado}
-                          onChange={(e) => updateRow(idx, { acumulado: formatBRLFromInput(e.target.value) })}
+                          onChange={(e) => updateRow(idx, { acumulado: formatInput(e.target.value) })}
                           onBlur={() => persistRow(idx)}
-                          className={`${inputBase} px-2 py-2 tabular-nums`}
-                          style={{ fontFamily: "'Poppins', sans-serif", fontSize: 15 }}
+                          style={{ ...inputStyle, fontVariantNumeric: "tabular-nums" }}
                         />
                       </td>
                     </tr>
@@ -337,29 +350,43 @@ export default function PlanilhaBeta() {
                 })}
               </tbody>
             </table>
-          </div>
-        )}
-      </div>
+          )}
 
-      {/* Abas de meses estilo Google Sheets */}
-      <div className="mt-3 flex flex-wrap gap-1 border-t border-slate-200 bg-[#f8f9fa] px-2 py-2 rounded-b-md">
-        {MONTHS_PT.map((m, i) => {
-          const isActive = month === i + 1;
-          return (
-            <button
-              key={m}
-              onClick={() => setMonth(i + 1)}
-              className={`rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors ${
-                isActive
-                  ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-300"
-                  : "text-slate-500 hover:bg-white/60 hover:text-slate-800"
-              }`}
-              style={{ fontFamily: "'Poppins', sans-serif" }}
-            >
-              {m.slice(0, 3)}
-            </button>
-          );
-        })}
+          {/* Month tabs */}
+          <div
+            style={{
+              width: TABLE_W,
+              marginTop: 8,
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 4,
+              background: "#f8f9fa",
+              padding: 6,
+            }}
+          >
+            {MONTHS_PT.map((m, i) => {
+              const isActive = month === i + 1;
+              return (
+                <button
+                  key={m}
+                  onClick={() => setMonth(i + 1)}
+                  style={{
+                    padding: "4px 10px",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    fontFamily: "'Poppins', sans-serif",
+                    borderRadius: 4,
+                    background: isActive ? "#fff" : "transparent",
+                    color: isActive ? "#111" : "#666",
+                    border: isActive ? "1px solid #d0d0d0" : "1px solid transparent",
+                  }}
+                >
+                  {m.slice(0, 3)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
