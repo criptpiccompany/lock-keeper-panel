@@ -146,7 +146,7 @@ export default function Admin() {
           id: profile.id,
           nome: profile.nome,
           email: '',
-          role: (userRole?.role as 'CLOSER' | 'ADMIN' | 'SUBADMIN' | 'FINANCEIRO') || 'CLOSER',
+          role: (userRole?.role === 'SUBADMIN' ? 'CLOSER' : (userRole?.role as 'CLOSER' | 'ADMIN' | 'FINANCEIRO')) || 'CLOSER',
           commission_rate: profile.commission_rate ?? 0.1,
           team_id: profile.team_id,
         };
