@@ -346,7 +346,7 @@ export default function Admin() {
 
   const totalUsers = users.length;
   const totalClosers = users.filter(u => u.role === 'CLOSER').length;
-  const totalAdmins = users.filter(u => u.role === 'ADMIN' || u.role === 'SUBADMIN').length;
+  const totalAdmins = users.filter(u => u.role === 'ADMIN').length;
   const totalActiveInfs = influencers.filter(i => i.ativo).length;
 
   return (
