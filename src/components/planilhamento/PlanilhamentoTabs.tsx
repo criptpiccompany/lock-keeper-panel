@@ -129,7 +129,7 @@ export default function PlanilhamentoTabs() {
   if (!isAdmin) {
     return (
       <div className="min-h-screen">
-        <div className="container px-4 pt-3 sm:px-6 lg:px-8">
+        <div className="container flex -translate-y-8 justify-center px-4 pt-3 sm:-translate-y-10 sm:px-6 lg:-translate-y-14 lg:px-8">
           <PillTabGroup className="max-w-full overflow-x-auto scrollbar-none">
             {subTabs.map((tab) => {
               const Icon = tab.icon;
@@ -151,8 +151,8 @@ export default function PlanilhamentoTabs() {
           </PillTabGroup>
         </div>
 
-        <div className="container px-4 py-5 sm:px-6 lg:px-8">
-          {closerTab === "diario" && <PlanilhamentoCalendarWorkspace />}
+        <div className={closerTab === "diario" ? "w-full px-0 py-0" : "container px-4 py-5 sm:px-6 lg:px-8"}>
+          {closerTab === "diario" && <PlanilhaBeta />}
           {closerTab === "balanco" && <Balanco />}
           {closerTab === "lista-mes" && <ListaDoMes />}
         </div>

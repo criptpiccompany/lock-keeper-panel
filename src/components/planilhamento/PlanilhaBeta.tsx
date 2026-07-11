@@ -1,432 +1,440 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Eye, Loader2, Paperclip, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useLayoutStore } from "@/store/useLayoutStore";
-import { Loader2 } from "lucide-react";
 
 const MONTHS_PT = [
   "JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO",
   "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO",
 ];
 
-const ROWS_PER_MONTH = 100;
-const FEE_RATE = 0.10;
+const DEFAULT_ROWS_PER_DAY = 20;
+const MAX_ROWS_PER_DAY = 100;
+const DAILY_FEE_RATE = 0.1;
 
-// Column widths (px) — total = 1135
-const COL_W = {
-  date: 125,
-  influencer: 230,
-  traffic: 170,
-  revenue: 215,
-  result: 195,
-  accumulated: 200,
-};
-const TABLE_W =
-  COL_W.date + COL_W.influencer + COL_W.traffic + COL_W.revenue + COL_W.result + COL_W.accumulated;
+const COLUMN_WIDTHS = [94, 176, 130, 150, 155, 90, 140, 135];
+const MIN_SHEET_WIDTH = 1480;
 
-interface RowState {
+interface SheetRow {
   influenciador: string;
   trafego: string;
   faturamento: string;
   acumulado: string;
+  comprovanteUrl: string;
+  observacao: string;
 }
+
 interface DbRow {
-  id?: string;
+  id: string;
   day: number;
   row_index: number;
   influenciador: string | null;
   diaria_cents: number;
   faturamento_cents: number;
-  acumulado_cents?: number;
+  acumulado_cents: number;
+  comprovante_url: string | null;
+  observacao: string | null;
 }
 
-function toCents(masked: string): number {
-  if (!masked) return 0;
-  const digits = masked.replace(/\D/g, "");
-  return digits ? parseInt(digits, 10) : 0;
+type MonthRows = Record<number, SheetRow[]>;
+
+const emptyRow = (): SheetRow => ({
+  influenciador: "",
+  trafego: "",
+  faturamento: "",
+  acumulado: "",
+  comprovanteUrl: "",
+  observacao: "",
+});
+
+const createMonthRows = (daysInMonth: number): MonthRows =>
+  Object.fromEntries(
+    Array.from({ length: daysInMonth }, (_, index) => [
+      index + 1,
+      Array.from({ length: MAX_ROWS_PER_DAY }, emptyRow),
+    ]),
+  );
+
+function parseCents(value: string): number {
+  if (!value.trim()) return 0;
+  const normalized = value.replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
+  const parsed = Number.parseFloat(normalized);
+  return Number.isFinite(parsed) ? Math.round(parsed * 100) : 0;
 }
-function fromCents(cents: number): string {
+
+function formatCents(cents: number): string {
   if (!cents) return "";
   return (cents / 100).toLocaleString("pt-BR", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   });
 }
-function formatInput(raw: string): string {
-  // Accept plain integers/decimals typed by user; store as displayed
-  return raw.replace(/[^\d.,-]/g, "");
+
+function sanitizeNumber(value: string): string {
+  return value.replace(/[^\d.,-]/g, "");
 }
-function parseUserNumber(s: string): number {
-  if (!s) return 0;
-  // Convert "1.234,56" or "1234.56" or "1234,56" -> cents
-  const cleaned = s.replace(/\./g, "").replace(",", ".");
-  const n = parseFloat(cleaned);
-  if (isNaN(n)) return 0;
-  return Math.round(n * 100);
+
+function rowResult(row: SheetRow): number | null {
+  const hasValues = row.influenciador.trim() || row.trafego || row.faturamento || row.acumulado || row.comprovanteUrl || row.observacao.trim();
+  if (!hasValues) return null;
+  const traffic = parseCents(row.trafego);
+  const revenue = parseCents(row.faturamento);
+  return Math.round(revenue - traffic - revenue * DAILY_FEE_RATE);
 }
-function displayNumber(cents: number): string {
-  if (!cents) return "";
-  const v = cents / 100;
-  return v.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+
+function formatRoi(result: number | null, traffic: number): string {
+  if (result === null || traffic <= 0) return "—";
+  return `${((result / traffic) * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
+}
+
+const betaTable = () => supabase.from("planilha_beta") as any;
+
+function resultBackground(result: number | null, traffic: number): string {
+  if (result === null) return "var(--sheet-cell)";
+  if (result < 0) return "var(--sheet-result-negative)";
+  if (result <= traffic * 0.3) return "var(--sheet-result-warning)";
+  return "var(--sheet-result-positive)";
 }
 
 export default function PlanilhaBeta() {
   const { user } = useAuth();
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
+  const today = new Date();
+  const [year, setYear] = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth() + 1);
   const [loading, setLoading] = useState(true);
-  const [rows, setRows] = useState<RowState[]>(
-    Array.from({ length: ROWS_PER_MONTH }, () => ({
-      influenciador: "", trafego: "", faturamento: "", acumulado: "",
-    }))
-  );
-  const rowIds = useRef<Record<number, string>>({});
-  const dirtyIndex = useRef<Set<number>>(new Set());
+  const daysInMonth = useMemo(() => new Date(year, month, 0).getDate(), [year, month]);
+  const [rowsByDay, setRowsByDay] = useState<MonthRows>(() => createMonthRows(daysInMonth));
+  const [visibleRowsByDay, setVisibleRowsByDay] = useState<Record<number, number>>({});
+  const rowsRef = useRef(rowsByDay);
+  const rowIds = useRef<Record<string, string>>({});
+  const dirtyRows = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    rowsRef.current = rowsByDay;
+  }, [rowsByDay]);
 
   useEffect(() => {
     useLayoutStore.getState().setFullWidth(true);
     return () => useLayoutStore.getState().setFullWidth(false);
   }, []);
 
-
   useEffect(() => {
     if (!user) return;
-    const load = async () => {
+    let cancelled = false;
+
+    const loadRows = async () => {
       setLoading(true);
       rowIds.current = {};
-      dirtyIndex.current.clear();
-      const { data } = await supabase
-        .from("planilha_beta")
-        .select("id, day, row_index, influenciador, diaria_cents, faturamento_cents, acumulado_cents")
+      dirtyRows.current.clear();
+
+      const { data, error } = await betaTable()
+        .select("id, day, row_index, influenciador, diaria_cents, faturamento_cents, acumulado_cents, comprovante_url, observacao")
         .eq("closer_id", user.id)
         .eq("year", year)
         .eq("month", month)
+        .order("day")
         .order("row_index");
-      const fresh: RowState[] = Array.from({ length: ROWS_PER_MONTH }, () => ({
-        influenciador: "", trafego: "", faturamento: "", acumulado: "",
-      }));
-      (data as DbRow[] | null)?.forEach((r) => {
-        if (r.row_index >= 0 && r.row_index < ROWS_PER_MONTH) {
-          fresh[r.row_index] = {
-            influenciador: r.influenciador || "",
-            trafego: fromCents(r.diaria_cents),
-            faturamento: fromCents(r.faturamento_cents),
-            acumulado: fromCents(r.acumulado_cents || 0),
-          };
-          if (r.id) rowIds.current[r.row_index] = r.id;
-        }
+
+      if (cancelled) return;
+      if (error) {
+        toast.error("Não foi possível carregar a Planilha Diário");
+        setLoading(false);
+        return;
+      }
+
+      const nextRows = createMonthRows(daysInMonth);
+      const nextVisibleRows: Record<number, number> = Object.fromEntries(
+        Array.from({ length: daysInMonth }, (_, index) => [index + 1, DEFAULT_ROWS_PER_DAY]),
+      );
+      (data as DbRow[] | null)?.forEach((row) => {
+        if (!nextRows[row.day] || row.row_index < 0 || row.row_index >= MAX_ROWS_PER_DAY) return;
+        nextRows[row.day][row.row_index] = {
+          influenciador: row.influenciador ?? "",
+          trafego: formatCents(row.diaria_cents),
+          faturamento: formatCents(row.faturamento_cents),
+          acumulado: formatCents(row.acumulado_cents),
+          comprovanteUrl: row.comprovante_url ?? "",
+          observacao: row.observacao ?? "",
+        };
+        rowIds.current[`${row.day}:${row.row_index}`] = row.id;
+        nextVisibleRows[row.day] = Math.max(nextVisibleRows[row.day], row.row_index + 1);
       });
-      setRows(fresh);
+
+      rowsRef.current = nextRows;
+      setRowsByDay(nextRows);
+      setVisibleRowsByDay(nextVisibleRows);
       setLoading(false);
     };
-    load();
-  }, [user?.id, year, month]);
 
-  const resultados = useMemo(
-    () =>
-      rows.map((r) => {
-        const hasData =
-          r.influenciador.trim() || r.trafego || r.faturamento || r.acumulado;
-        if (!hasData) return null;
-        const fat = parseUserNumber(r.faturamento);
-        const tra = parseUserNumber(r.trafego);
-        if (fat === 0 && tra === 0) return null;
-        return Math.round(fat - tra - fat * FEE_RATE);
-      }),
-    [rows]
-  );
+    void loadRows();
+    return () => { cancelled = true; };
+  }, [daysInMonth, month, user, year]);
 
-  const updateRow = (idx: number, patch: Partial<RowState>) => {
-    setRows((prev) => {
-      const next = [...prev];
-      next[idx] = { ...next[idx], ...patch };
-      return next;
+  const updateRow = useCallback((day: number, rowIndex: number, patch: Partial<SheetRow>) => {
+    const key = `${day}:${rowIndex}`;
+    dirtyRows.current.add(key);
+    setRowsByDay((current) => {
+      const dayRows = [...current[day]];
+      dayRows[rowIndex] = { ...dayRows[rowIndex], ...patch };
+      return { ...current, [day]: dayRows };
     });
-    dirtyIndex.current.add(idx);
-  };
+  }, []);
 
-  const persistRow = async (idx: number) => {
+  const persistRow = useCallback(async (day: number, rowIndex: number, rowOverride?: SheetRow) => {
     if (!user) return;
-    if (!dirtyIndex.current.has(idx)) return;
-    dirtyIndex.current.delete(idx);
-    const r = rows[idx];
-    const day = 1;
-    const diaria_cents = parseUserNumber(r.trafego);
-    const faturamento_cents = parseUserNumber(r.faturamento);
-    const acumulado_cents = parseUserNumber(r.acumulado);
-    const influenciador = r.influenciador.trim() || null;
-    const isEmpty =
-      !influenciador && !diaria_cents && !faturamento_cents && !acumulado_cents;
-    const existingId = rowIds.current[idx];
-    if (isEmpty) {
-      if (existingId) {
-        await supabase.from("planilha_beta").delete().eq("id", existingId);
-        delete rowIds.current[idx];
-      }
+    const key = `${day}:${rowIndex}`;
+    if (!dirtyRows.current.has(key)) return;
+
+    const row = rowOverride ?? rowsRef.current[day][rowIndex];
+    const payload = {
+      influenciador: row.influenciador.trim() || null,
+      diaria_cents: parseCents(row.trafego),
+      faturamento_cents: parseCents(row.faturamento),
+      acumulado_cents: parseCents(row.acumulado),
+      comprovante_url: row.comprovanteUrl || null,
+      observacao: row.observacao.trim() || null,
+    };
+    const isEmpty = !payload.influenciador && !payload.diaria_cents && !payload.faturamento_cents && !payload.acumulado_cents && !payload.comprovante_url && !payload.observacao;
+    const existingId = rowIds.current[key];
+
+    dirtyRows.current.delete(key);
+    let error: { message: string } | null = null;
+
+    if (isEmpty && existingId) {
+      ({ error } = await betaTable().delete().eq("id", existingId));
+      if (!error) delete rowIds.current[key];
+    } else if (!isEmpty && existingId) {
+      ({ error } = await betaTable().update(payload).eq("id", existingId));
+    } else if (!isEmpty) {
+      const response = await betaTable()
+        .insert({
+          closer_id: user.id,
+          year,
+          month,
+          day,
+          row_index: rowIndex,
+          ...payload,
+        })
+        .select("id")
+        .single();
+      error = response.error;
+      if (response.data?.id) rowIds.current[key] = response.data.id;
+    }
+
+    if (error) {
+      dirtyRows.current.add(key);
+      toast.error("Não foi possível salvar esta linha");
+    }
+  }, [month, user, year]);
+
+  const uploadProof = useCallback(async (day: number, rowIndex: number, file?: File) => {
+    if (!file || !user) return;
+    if (!(["image/jpeg", "image/png", "image/webp", "application/pdf"].includes(file.type))) {
+      toast.error("Formato não aceito", { description: "Use JPG, PNG, WEBP ou PDF." });
       return;
     }
-    if (existingId) {
-      await supabase.from("planilha_beta")
-        .update({ influenciador, diaria_cents, faturamento_cents, acumulado_cents, day })
-        .eq("id", existingId);
-    } else {
-      const { data } = await supabase.from("planilha_beta")
-        .insert({
-          closer_id: user.id, year, month, day, row_index: idx,
-          influenciador, diaria_cents, faturamento_cents, acumulado_cents,
-        })
-        .select("id").single();
-      if (data?.id) rowIds.current[idx] = data.id;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Arquivo muito grande", { description: "O limite é 10 MB." });
+      return;
     }
+
+    const extension = file.name.split(".").pop()?.toLowerCase() || "bin";
+    const path = `${user.id}/planilha-beta/${year}/${month}/${day}-${rowIndex}-${Date.now()}.${extension}`;
+    const { error: uploadError } = await supabase.storage.from("comprovantes").upload(path, file, {
+      cacheControl: "3600",
+      upsert: false,
+    });
+    if (uploadError) {
+      toast.error("Erro ao enviar comprovante", { description: uploadError.message });
+      return;
+    }
+
+    const { data } = supabase.storage.from("comprovantes").getPublicUrl(path);
+    const nextRow = { ...rowsRef.current[day][rowIndex], comprovanteUrl: data.publicUrl };
+    updateRow(day, rowIndex, { comprovanteUrl: data.publicUrl });
+    await persistRow(day, rowIndex, nextRow);
+    toast.success("Comprovante anexado");
+  }, [month, persistRow, updateRow, user, year]);
+
+  const moveOnEnter = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    const inputs = Array.from(document.querySelectorAll<HTMLInputElement>("[data-sheet-input]"));
+    const position = inputs.indexOf(event.currentTarget);
+    inputs[position + 4]?.focus();
   };
 
-  const monthLabel = MONTHS_PT[month - 1];
-  const firstDayStr = `01/${String(month).padStart(2, "0")}/${year}`;
-
-  const border = "1px solid #e3e3e3";
-  const cellStyle: React.CSSProperties = {
-    height: 26,
-    padding: "0 8px",
-    borderRight: border,
-    borderBottom: border,
-    fontFamily: "'Poppins', sans-serif",
-    fontSize: 13,
-    fontWeight: 400,
-    color: "#111",
-    textAlign: "center",
-    verticalAlign: "middle",
-    lineHeight: "26px",
-    background: "#fff",
-  };
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    height: 26,
-    padding: "0 4px",
-    border: "none",
-    outline: "none",
-    background: "transparent",
-    fontFamily: "'Poppins', sans-serif",
-    fontSize: 13,
-    color: "#111",
-    textAlign: "center",
-    lineHeight: "26px",
-  };
-  const headerCell: React.CSSProperties = {
-    height: 42,
-    padding: "0 8px",
-    background: "#209d55",
-    color: "#ffffff",
-    fontFamily: "'Poppins', sans-serif",
-    fontSize: 14,
-    fontWeight: 700,
-    textAlign: "center",
-    verticalAlign: "middle",
-    whiteSpace: "nowrap",
-    borderRight: border,
-    borderBottom: border,
-    textTransform: "uppercase",
-  };
-  const headerResult: React.CSSProperties = {
-    ...headerCell,
-    background: "#fcbc00",
-    color: "#111",
-  };
+  const input = (
+    day: number,
+    rowIndex: number,
+    field: keyof SheetRow,
+    value: string,
+    numeric = false,
+  ) => (
+    <input
+      data-sheet-input
+      aria-label={`${field}, dia ${day}, linha ${rowIndex + 1}`}
+      inputMode={numeric ? "decimal" : "text"}
+      value={value}
+      onChange={(event) => updateRow(day, rowIndex, {
+        [field]: numeric ? sanitizeNumber(event.target.value) : event.target.value,
+      })}
+      onBlur={() => void persistRow(day, rowIndex)}
+      onKeyDown={moveOnEnter}
+      className="h-full w-full border-0 bg-transparent px-1 text-center font-[Poppins] text-[15px] text-foreground outline-none focus:bg-[var(--sheet-focus)]"
+    />
+  );
 
   return (
-    <div style={{ width: "100%", fontFamily: "'Poppins', sans-serif", background: "#fff" }}>
-      {/* Year toggle */}
-      <div style={{ width: "100%", display: "flex", justifyContent: "flex-start", gap: 6, marginBottom: 6 }}>
-        <button onClick={() => setYear((y) => y - 1)} className="rounded border px-2 py-0.5 text-xs">◀</button>
-        <span className="text-xs font-medium tabular-nums" style={{ lineHeight: "22px" }}>{year}</span>
-        <button onClick={() => setYear((y) => y + 1)} className="rounded border px-2 py-0.5 text-xs">▶</button>
+    <div
+      className="min-h-screen w-full overflow-x-auto bg-[var(--sheet-canvas)] pb-12"
+      style={{
+        "--sheet-canvas": "#ffffff",
+        "--sheet-cell": "#ffffff",
+        "--sheet-grid": "#d9d9d9",
+        "--sheet-header": "#1f9d55",
+        "--sheet-result-header": "#fbbc04",
+        "--sheet-result-positive": "#b7e1cd",
+        "--sheet-result-warning": "#fce8b2",
+        "--sheet-result-negative": "#f4c7c3",
+        "--sheet-focus": "#e8f0fe",
+      } as React.CSSProperties}
+    >
+      <div className="sticky left-0 z-20 flex h-10 items-center gap-2 border-b border-[var(--sheet-grid)] bg-[var(--sheet-canvas)] px-3">
+        <button className="h-7 rounded border border-[var(--sheet-grid)] px-2 text-xs" onClick={() => setYear((value) => value - 1)}>◀</button>
+        <span className="min-w-12 text-center text-xs font-semibold tabular-nums">{year}</span>
+        <button className="h-7 rounded border border-[var(--sheet-grid)] px-2 text-xs" onClick={() => setYear((value) => value + 1)}>▶</button>
+        <select
+          aria-label="Mês"
+          value={month}
+          onChange={(event) => setMonth(Number(event.target.value))}
+          className="ml-2 h-7 rounded border border-[var(--sheet-grid)] bg-background px-2 text-xs"
+        >
+          {MONTHS_PT.map((label, index) => <option key={label} value={index + 1}>{label}</option>)}
+        </select>
       </div>
 
-      <div style={{ width: "100%", overflowX: "auto", overflowY: "visible" }}>
-        <div style={{ width: "100%", minWidth: TABLE_W }}>
-          {/* Black month bar */}
-          <div
-            style={{
-              width: "100%",
-              height: 58,
-              background: "#000",
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: 25,
-              fontWeight: 700,
-              lineHeight: 1,
-              textTransform: "uppercase",
-              letterSpacing: 0.5,
-            }}
-          >
-            {monthLabel}
-          </div>
-          <div style={{ height: 12, background: "#fff" }} />
-
-          {loading ? (
-            <div className="flex items-center justify-center py-10">
-              <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
-            </div>
-          ) : (
-            <table
-              style={{
-                width: "100%",
-                tableLayout: "fixed",
-                borderCollapse: "collapse",
-                borderTop: border,
-                borderLeft: border,
-              }}
-            >
-              <colgroup>
-                <col style={{ width: COL_W.date }} />
-                <col style={{ width: COL_W.influencer }} />
-                <col style={{ width: COL_W.traffic }} />
-                <col style={{ width: COL_W.revenue }} />
-                <col style={{ width: COL_W.result }} />
-                <col style={{ width: COL_W.accumulated }} />
-              </colgroup>
-              <thead>
-                <tr>
-                  <th style={headerCell}>{firstDayStr}</th>
-                  <th style={headerCell}>INFLUENCIADOR</th>
-                  <th style={headerCell}>TRÁFEGO</th>
-                  <th style={headerCell}>FATURAMENTO</th>
-                  <th style={headerResult}>RESULTADO</th>
-                  <th style={headerCell}>ACUMULADO</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r, idx) => {
-                  const resultado = resultados[idx];
-                  let resBg = "#fff";
-                  if (resultado !== null && resultado !== undefined) {
-                    if (resultado < 0) resBg = "#f4c6c3";
-                    else if (resultado > 0 && resultado <= 5000) resBg = "#fde7b3";
-                    else if (resultado > 5000) resBg = "#b7e0cd";
-                  }
-                  return (
-                    <tr key={idx}>
-                      <td style={cellStyle} />
-                      <td style={{ ...cellStyle, padding: 0 }}>
-                        <input
-                          type="text"
-                          value={r.influenciador}
-                          onChange={(e) => updateRow(idx, { influenciador: e.target.value })}
-                          onBlur={() => persistRow(idx)}
-                          style={inputStyle}
-                        />
-                      </td>
-                      <td style={{ ...cellStyle, padding: 0 }}>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={r.trafego}
-                          onChange={(e) => updateRow(idx, { trafego: formatInput(e.target.value) })}
-                          onBlur={() => persistRow(idx)}
-                          style={{ ...inputStyle, fontVariantNumeric: "tabular-nums" }}
-                        />
-                      </td>
-                      <td style={{ ...cellStyle, padding: 0 }}>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={r.faturamento}
-                          onChange={(e) => updateRow(idx, { faturamento: formatInput(e.target.value) })}
-                          onBlur={() => persistRow(idx)}
-                          style={{ ...inputStyle, fontVariantNumeric: "tabular-nums" }}
-                        />
-                      </td>
-                      <td style={{ ...cellStyle, background: resBg, fontVariantNumeric: "tabular-nums" }}>
-                        {resultado === null || resultado === undefined ? "" : displayNumber(resultado)}
-                      </td>
-                      <td style={{ ...cellStyle, padding: 0 }}>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={r.acumulado}
-                          onChange={(e) => updateRow(idx, { acumulado: formatInput(e.target.value) })}
-                          onBlur={() => persistRow(idx)}
-                          style={{ ...inputStyle, fontVariantNumeric: "tabular-nums" }}
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                {(() => {
-                  const totTraf = rows.reduce((s, r) => s + parseUserNumber(r.trafego), 0);
-                  const totFat = rows.reduce((s, r) => s + parseUserNumber(r.faturamento), 0);
-                  const totRes = resultados.reduce((s: number, v) => s + (v || 0), 0);
-                  const totAcum = rows.reduce((s, r) => s + parseUserNumber(r.acumulado), 0);
-                  const footCell: React.CSSProperties = {
-                    height: 38,
-                    padding: "0 8px",
-                    background: "#209d55",
-                    color: "#fff",
-                    fontFamily: "'Poppins', sans-serif",
-                    fontSize: 13,
-                    fontWeight: 700,
-                    textAlign: "center",
-                    verticalAlign: "middle",
-                    borderRight: border,
-                    borderBottom: border,
-                    fontVariantNumeric: "tabular-nums",
-                  };
-                  const footResult: React.CSSProperties = { ...footCell, background: "#fcbc00", color: "#111" };
-                  return (
-                    <tr>
-                      <td style={footCell}>TOTAL</td>
-                      <td style={footCell} />
-                      <td style={footCell}>{totTraf ? displayNumber(totTraf) : ""}</td>
-                      <td style={footCell}>{totFat ? displayNumber(totFat) : ""}</td>
-                      <td style={footResult}>{totRes ? displayNumber(totRes) : ""}</td>
-                      <td style={footCell}>{totAcum ? displayNumber(totAcum) : ""}</td>
-                    </tr>
-                  );
-                })()}
-              </tfoot>
-            </table>
-          )}
-
-          {/* Month tabs */}
-          <div
-            style={{
-              width: "100%",
-              marginTop: 8,
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 4,
-              background: "#f8f9fa",
-              padding: 6,
-            }}
-          >
-            {MONTHS_PT.map((m, i) => {
-              const isActive = month === i + 1;
-              return (
-                <button
-                  key={m}
-                  onClick={() => setMonth(i + 1)}
-                  style={{
-                    padding: "4px 10px",
-                    fontSize: 12,
-                    fontWeight: 500,
-                    fontFamily: "'Poppins', sans-serif",
-                    borderRadius: 4,
-                    background: isActive ? "#fff" : "transparent",
-                    color: isActive ? "#111" : "#666",
-                    border: isActive ? "1px solid #d0d0d0" : "1px solid transparent",
-                  }}
-                >
-                  {m.slice(0, 3)}
-                </button>
-              );
-            })}
-          </div>
+      <div className="mx-[26px] w-[calc(100%-52px)]" style={{ minWidth: MIN_SHEET_WIDTH }}>
+        <div className="mt-4 flex h-[54px] items-center justify-center bg-black font-[Poppins] text-[30px] font-bold text-white">
+          {MONTHS_PT[month - 1]}
         </div>
+        <div className="h-[13px]" />
+
+        {loading ? (
+          <div className="flex h-40 items-center justify-center">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          Array.from({ length: daysInMonth }, (_, dayIndex) => {
+            const day = dayIndex + 1;
+            const visibleRowCount = visibleRowsByDay[day] ?? DEFAULT_ROWS_PER_DAY;
+            const visibleRows = rowsByDay[day].slice(0, visibleRowCount);
+            const trafficTotal = visibleRows.reduce((total, row) => total + parseCents(row.trafego), 0);
+            const revenueTotal = visibleRows.reduce((total, row) => total + parseCents(row.faturamento), 0);
+            const resultTotal = visibleRows.reduce((total, row) => total + (rowResult(row) ?? 0), 0);
+            return (
+              <section key={day} aria-label={`Dia ${day}`}>
+                <table className="w-full table-fixed border-collapse font-[Poppins]">
+                  <colgroup>
+                    {COLUMN_WIDTHS.map((width, index) => <col key={index} style={{ width }} />)}
+                    <col />
+                  </colgroup>
+                  <thead>
+                    <tr className="h-[41px] text-[15px] font-bold uppercase">
+                      <th className="border border-[var(--sheet-grid)] bg-[var(--sheet-header)] text-white">{String(day).padStart(2, "0")}/{String(month).padStart(2, "0")}/{year}</th>
+                      <th className="border border-[var(--sheet-grid)] bg-[var(--sheet-header)] text-white">Influenciador</th>
+                      <th className="border border-[var(--sheet-grid)] bg-[var(--sheet-header)] text-white">Tráfego</th>
+                      <th className="border border-[var(--sheet-grid)] bg-[var(--sheet-header)] text-white">Faturamento</th>
+                      <th className="border border-[var(--sheet-grid)] bg-[var(--sheet-result-header)] text-black">Resultado</th>
+                      <th className="border border-[var(--sheet-grid)] bg-[var(--sheet-header)] text-white">ROI</th>
+                      <th className="border border-[var(--sheet-grid)] bg-[var(--sheet-header)] text-white">Acumulado</th>
+                      <th className="border border-[var(--sheet-grid)] bg-[var(--sheet-header)] text-white">Comprovante</th>
+                      <th className="border border-[var(--sheet-grid)] bg-[var(--sheet-header)] text-white">Observação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visibleRows.map((row, rowIndex) => {
+                      const result = rowResult(row);
+                      const traffic = parseCents(row.trafego);
+                      return (
+                        <tr key={rowIndex} className="h-[21px]">
+                          <td className="border border-[var(--sheet-grid)] bg-[var(--sheet-cell)]" />
+                          <td className="border border-[var(--sheet-grid)] bg-[var(--sheet-cell)] p-0">{input(day, rowIndex, "influenciador", row.influenciador)}</td>
+                          <td className="border border-[var(--sheet-grid)] bg-[var(--sheet-cell)] p-0">{input(day, rowIndex, "trafego", row.trafego, true)}</td>
+                          <td className="border border-[var(--sheet-grid)] bg-[var(--sheet-cell)] p-0">{input(day, rowIndex, "faturamento", row.faturamento, true)}</td>
+                          <td
+                            className="border border-[var(--sheet-grid)] px-1 text-center text-[15px] tabular-nums text-black"
+                            style={{ background: resultBackground(result, traffic) }}
+                          >
+                            {result === null ? "" : formatCents(result)}
+                          </td>
+                          <td className="border border-[var(--sheet-grid)] bg-[var(--sheet-cell)] px-1 text-center text-[13px] font-medium tabular-nums">
+                            {formatRoi(result, traffic)}
+                          </td>
+                          <td className="border border-[var(--sheet-grid)] bg-[var(--sheet-cell)] p-0">{input(day, rowIndex, "acumulado", row.acumulado, true)}</td>
+                          <td className="border border-[var(--sheet-grid)] bg-[var(--sheet-cell)] px-1">
+                            <div className="flex items-center justify-center gap-1">
+                              <label className="inline-flex h-6 cursor-pointer items-center gap-1 rounded-full bg-foreground px-2.5 text-[10px] font-semibold text-background transition-opacity hover:opacity-80">
+                                <Paperclip className="h-3 w-3" />
+                                {row.comprovanteUrl ? "Trocar" : "Anexar"}
+                                <input
+                                  type="file"
+                                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                                  className="sr-only"
+                                  onChange={(event) => void uploadProof(day, rowIndex, event.target.files?.[0])}
+                                />
+                              </label>
+                              {row.comprovanteUrl && (
+                                <a href={row.comprovanteUrl} target="_blank" rel="noreferrer" className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-[var(--sheet-grid)] text-foreground hover:bg-muted" title="Ver comprovante">
+                                  <Eye className="h-3 w-3" />
+                                </a>
+                              )}
+                            </div>
+                          </td>
+                          <td className="border border-[var(--sheet-grid)] bg-[var(--sheet-cell)] p-0">{input(day, rowIndex, "observacao", row.observacao)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr className="h-[27px] bg-[var(--sheet-cell)] text-[15px] font-bold text-black">
+                      <td className="border border-[var(--sheet-grid)]" />
+                      <td className="border border-[var(--sheet-grid)] text-center">TOTAL</td>
+                      <td className="border border-[var(--sheet-grid)] text-center tabular-nums">{formatCents(trafficTotal)}</td>
+                      <td className="border border-[var(--sheet-grid)] text-center tabular-nums">{formatCents(revenueTotal)}</td>
+                      <td
+                        className="border border-[var(--sheet-grid)] text-center font-normal tabular-nums"
+                        style={{ background: resultBackground(resultTotal, trafficTotal) }}
+                      >
+                        {formatCents(resultTotal)}
+                      </td>
+                      <td className="border border-[var(--sheet-grid)] text-center font-normal tabular-nums">{formatRoi(resultTotal, trafficTotal)}</td>
+                      <td className="border border-[var(--sheet-grid)]" />
+                      <td className="border border-[var(--sheet-grid)]" />
+                      <td className="border border-[var(--sheet-grid)]" />
+                    </tr>
+                  </tfoot>
+                </table>
+                <div className="flex h-12 items-center border-x border-b border-[var(--sheet-grid)] bg-[var(--sheet-cell)] px-3">
+                  <button
+                    type="button"
+                    disabled={visibleRowCount >= MAX_ROWS_PER_DAY}
+                    onClick={() => setVisibleRowsByDay((current) => ({
+                      ...current,
+                      [day]: Math.min(MAX_ROWS_PER_DAY, visibleRowCount + 1),
+                    }))}
+                    className="inline-flex h-8 items-center gap-1.5 rounded-full bg-foreground px-4 text-xs font-semibold text-background shadow-sm transition-all hover:-translate-y-px hover:shadow-md active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Adicionar linha
+                  </button>
+                </div>
+              </section>
+            );
+          })
+        )}
       </div>
     </div>
   );

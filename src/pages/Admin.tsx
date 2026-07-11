@@ -247,7 +247,19 @@ export default function Admin() {
       const { data, error } = await supabase.functions.invoke('admin-update-user', {
         body: { userId: passwordUser.id, action: 'update_password', newPassword }
       });
-      if (error) throw error;
+      if (error) {
+        let message = error.message;
+        const response = (error as any).context as Response | undefined;
+        if (response) {
+          try {
+            const payload = await response.clone().json();
+            message = payload?.error || payload?.message || message;
+          } catch {
+            // Keep the client error when the function does not return JSON.
+          }
+        }
+        throw new Error(message);
+      }
       toast.success(`Senha alterada para ${passwordUser.nome}`);
       setPasswordModalOpen(false);
     } catch (error: any) {
