@@ -22,6 +22,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { useLayoutStore } from "@/store/useLayoutStore";
 import {
   DropdownMenu,
   DropdownMenuContent,
