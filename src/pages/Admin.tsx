@@ -443,8 +443,6 @@ export default function Admin() {
                           variant="outline" 
                           className={u.role === 'ADMIN' 
                             ? "border-amber-300 text-amber-700 bg-amber-50" 
-                            : u.role === 'SUBADMIN'
-                            ? "border-blue-300 text-blue-700 bg-blue-50"
                             : u.role === 'FINANCEIRO'
                             ? "border-violet-300 text-violet-700 bg-violet-50"
                             : "border-emerald-300 text-emerald-700 bg-emerald-50"
