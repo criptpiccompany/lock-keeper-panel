@@ -3,7 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-type UserRole = 'CLOSER' | 'ADMIN' | 'SUBADMIN' | 'FINANCEIRO';
+type UserRole = 'CLOSER' | 'ADMIN' | 'FINANCEIRO';
 
 type AccountStatus = 'pending' | 'approved' | 'rejected' | 'blocked';
 
@@ -25,7 +25,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, nome: string, inviteToken?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
-  isSubAdmin: boolean;
+  isAdminOnlyView: boolean;
   isCloser: boolean;
   isFinanceiro: boolean;
   isGlobalViewer: boolean;
@@ -216,14 +216,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const realRole = user?.role ?? null;
-  const canImpersonate = realRole === 'ADMIN' || realRole === 'SUBADMIN' || realRole === 'FINANCEIRO';
+  const canImpersonate = realRole === 'ADMIN' || realRole === 'FINANCEIRO';
   const effectiveRole: UserRole | null = canImpersonate && viewAsRole ? viewAsRole : realRole;
   const isImpersonating = !!(canImpersonate && viewAsRole && viewAsRole !== realRole);
 
   const value: AuthContextType = {
     user, session, loading, signIn, signUp, signOut,
     isAdmin: effectiveRole === 'ADMIN',
-    isSubAdmin: effectiveRole === 'SUBADMIN',
+    isAdminOnlyView: realRole === 'ADMIN',
     isCloser: effectiveRole === 'CLOSER',
     isFinanceiro: effectiveRole === 'FINANCEIRO',
     isGlobalViewer: effectiveRole === 'ADMIN' || effectiveRole === 'FINANCEIRO',

@@ -24,7 +24,7 @@ export function ProtectedRoute({ children, requireAdmin = false, requireFinancei
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  const elevated = user.role === 'ADMIN' || user.role === 'SUBADMIN' || user.role === 'FINANCEIRO';
+  const elevated = user.role === 'ADMIN' || user.role === 'FINANCEIRO';
 
   if (user.status !== 'approved' && !elevated) {
     return <Navigate to="/aguardando-aprovacao" replace />;
@@ -35,7 +35,7 @@ export function ProtectedRoute({ children, requireAdmin = false, requireFinancei
     return <Navigate to="/financeiro/comprovantes" replace />;
   }
 
-  if (requireAdmin && user.role !== 'ADMIN' && user.role !== 'SUBADMIN') {
+  if (requireAdmin && user.role !== 'ADMIN') {
     if (user.role === 'FINANCEIRO') return <Navigate to="/financeiro/comprovantes" replace />;
     return <Navigate to="/meu" replace />;
   }

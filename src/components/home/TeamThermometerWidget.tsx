@@ -13,8 +13,8 @@ interface Props {
 }
 
 export default function TeamThermometerWidget({ month, compact = false }: Props) {
-  const { user, isAdmin, isSubAdmin } = useAuth();
-  const { members, loading, tiers } = useTeamCommission(month, user?.id, isAdmin || isSubAdmin);
+  const { user, isAdmin } = useAuth();
+  const { members, loading, tiers } = useTeamCommission(month, user?.id, isAdmin);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   if (loading) {

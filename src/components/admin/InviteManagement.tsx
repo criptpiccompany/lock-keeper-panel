@@ -32,7 +32,7 @@ interface Invite {
 type StatusFilter = "ALL" | "ATIVO" | "USADO" | "EXPIRADO";
 
 export function InviteManagement() {
-  const { user, isAdmin, isSubAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [teams, setTeams] = useState<Team[]>([]);
   const [invites, setInvites] = useState<Invite[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,17 +64,7 @@ export function InviteManagement() {
     }));
     setInvites(fetchedInvites);
 
-    // For SUBADMIN, auto-select their team
-    if (isSubAdmin && !isAdmin) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("team_id")
-        .eq("id", user?.id || "")
-        .single();
-      if (profile?.team_id) {
-        setSelectedTeamId(profile.team_id);
-      }
-    } else if (fetchedTeams.length > 0 && !selectedTeamId) {
+    if (fetchedTeams.length > 0 && !selectedTeamId) {
       setSelectedTeamId(fetchedTeams[0].id);
     }
 
@@ -201,7 +191,7 @@ export function InviteManagement() {
               <SelectContent>
                 <SelectItem value="CLOSER">CLOSER</SelectItem>
                   {isAdmin && <SelectItem value="FINANCEIRO">FINANCEIRO</SelectItem>}
-                {isAdmin && <SelectItem value="SUBADMIN">SUBADMIN</SelectItem>}
+                
               </SelectContent>
             </Select>
           </div>

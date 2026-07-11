@@ -31,13 +31,13 @@ interface UserWithRole {
   id: string;
   nome: string;
   email: string;
-  role: 'CLOSER' | 'ADMIN' | 'SUBADMIN' | 'FINANCEIRO';
+  role: 'CLOSER' | 'ADMIN' | 'FINANCEIRO';
   commission_rate: number;
   team_id: string | null;
 }
 
 export default function Admin() {
-  const { user, isAdmin, isSubAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [influencers, setInfluencers] = useState<InfluencerWithStatus[]>([]);
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -146,7 +146,7 @@ export default function Admin() {
           id: profile.id,
           nome: profile.nome,
           email: '',
-          role: (userRole?.role as 'CLOSER' | 'ADMIN' | 'SUBADMIN' | 'FINANCEIRO') || 'CLOSER',
+          role: (userRole?.role === 'SUBADMIN' ? 'CLOSER' : (userRole?.role as 'CLOSER' | 'ADMIN' | 'FINANCEIRO')) || 'CLOSER',
           commission_rate: profile.commission_rate ?? 0.1,
           team_id: profile.team_id,
         };
@@ -346,7 +346,7 @@ export default function Admin() {
 
   const totalUsers = users.length;
   const totalClosers = users.filter(u => u.role === 'CLOSER').length;
-  const totalAdmins = users.filter(u => u.role === 'ADMIN' || u.role === 'SUBADMIN').length;
+  const totalAdmins = users.filter(u => u.role === 'ADMIN').length;
   const totalActiveInfs = influencers.filter(i => i.ativo).length;
 
   return (
@@ -360,7 +360,7 @@ export default function Admin() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           <BrandStat label="Usuários" value={totalUsers} icon={Users} />
           <BrandStat label="Closers" value={totalClosers} icon={UserIcon} tone="emerald" hint="Equipe operacional" />
-          <BrandStat label="Admins" value={totalAdmins} icon={ShieldCheck} tone="amber" hint="ADMIN + SUBADMIN" />
+          <BrandStat label="Admins" value={totalAdmins} icon={ShieldCheck} tone="amber" hint="ADMIN" />
           <BrandStat label="Influs ativos" value={totalActiveInfs} icon={Shield} tone="blue" />
         </div>
         <div className="inline-flex items-start gap-2 rounded-2xl border border-amber-200/70 bg-amber-50/60 px-4 py-2.5">
@@ -443,8 +443,6 @@ export default function Admin() {
                           variant="outline" 
                           className={u.role === 'ADMIN' 
                             ? "border-amber-300 text-amber-700 bg-amber-50" 
-                            : u.role === 'SUBADMIN'
-                            ? "border-blue-300 text-blue-700 bg-blue-50"
                             : u.role === 'FINANCEIRO'
                             ? "border-violet-300 text-violet-700 bg-violet-50"
                             : "border-emerald-300 text-emerald-700 bg-emerald-50"
@@ -496,7 +494,7 @@ export default function Admin() {
                                 <SelectContent>
                                   <SelectItem value="CLOSER">CLOSER</SelectItem>
                                   <SelectItem value="FINANCEIRO">FINANCEIRO</SelectItem>
-                                  <SelectItem value="SUBADMIN">SUBADMIN</SelectItem>
+                                  
                                   <SelectItem value="ADMIN">ADMIN</SelectItem>
                                 </SelectContent>
                               </Select>
@@ -614,7 +612,7 @@ export default function Admin() {
                     const tname = tid ? teams.find(t => t.id === tid)?.name : undefined;
                     handleExport(tid, tname);
                   } else {
-                    // SUBADMIN: use their own team_id from users list
+                    // Non-admin fallback: usa a própria equipe
                     const myUser = users.find(u => u.id === user?.id);
                     const myTeamId = myUser?.team_id;
                     const myTeamName = myTeamId ? teams.find(t => t.id === myTeamId)?.name : undefined;

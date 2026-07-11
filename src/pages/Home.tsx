@@ -547,8 +547,8 @@ function ActivityList({ rows }: { rows: RecentRecord[] }) {
 }
 
 export default function Home() {
-  const { user, isAdmin, isSubAdmin } = useAuth();
-  const isManagementView = isAdmin || isSubAdmin;
+  const { user, isAdmin } = useAuth();
+  const isManagementView = isAdmin;
   const month = useMemo(() => getCurrentMonth(), []);
   const greeting = getGreeting();
   const monthLabel = getMonthLabel(month);
@@ -883,7 +883,7 @@ export default function Home() {
                   value={formatCurrency(adminData.revenue)}
                   delta={adminData.result >= 0 ? "↑ margem positiva" : "↓ margem sob pressão"}
                   deltaNote="na operação"
-                  topPill={isAdmin ? "Admin" : "SubAdmin"}
+                  topPill="Admin"
                   miniCards={[
                     { title: "Receita", value: formatCompactCurrency(adminData.revenue), note: "Receita total do período", status: "Active" },
                     { title: "Gasto", value: formatCompactCurrency(adminData.invested), note: "Investimento consolidado", status: "Active" },
