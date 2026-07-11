@@ -883,7 +883,7 @@ export default function Home() {
                   value={formatCurrency(adminData.revenue)}
                   delta={adminData.result >= 0 ? "↑ margem positiva" : "↓ margem sob pressão"}
                   deltaNote="na operação"
-                  topPill={isAdmin ? "Admin" : "SubAdmin"}
+                  topPill="Admin"
                   miniCards={[
                     { title: "Receita", value: formatCompactCurrency(adminData.revenue), note: "Receita total do período", status: "Active" },
                     { title: "Gasto", value: formatCompactCurrency(adminData.invested), note: "Investimento consolidado", status: "Active" },
