@@ -4,7 +4,6 @@ import {
   Bell,
   BookOpen,
   CalendarDays,
-  Check,
   ChevronRight,
   DollarSign,
   FileText,
@@ -27,15 +26,22 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+type NavTone = "closer" | "admin" | "financeiro";
 
 type NavItem = {
   path: string;
   label: string;
   icon: ComponentType<{ className?: string }>;
+  tone?: NavTone;
+};
+
+const toneClasses: Record<NavTone, { icon: string; dot: string }> = {
+  closer: { icon: "text-emerald-600", dot: "bg-emerald-500" },
+  admin: { icon: "text-amber-600", dot: "bg-amber-500" },
+  financeiro: { icon: "text-violet-600", dot: "bg-violet-500" },
 };
 
 function SidebarLink({
@@ -48,6 +54,7 @@ function SidebarLink({
   expanded: boolean;
 }) {
   const Icon = item.icon;
+  const tone = item.tone ? toneClasses[item.tone].icon : "";
 
   return (
     <Link
@@ -61,7 +68,10 @@ function SidebarLink({
           "grid h-[44px] w-[44px] place-items-center rounded-[18px] transition-all",
           active
             ? "bg-[#242424] text-white shadow-[0_16px_36px_-30px_rgba(15,23,42,0.28)]"
-            : "bg-white text-[#676767] shadow-[0_8px_24px_rgba(0,0,0,0.04)] hover:text-slate-900"
+            : cn(
+                "bg-white shadow-[0_8px_24px_rgba(0,0,0,0.04)] hover:text-slate-900",
+                tone || "text-[#676767]"
+              )
         )}
       >
         <Icon className="h-4 w-4" />
@@ -82,100 +92,51 @@ function SidebarLink({
 export function WorkspaceLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAdmin, isFinanceiro, isAdminOnlyView, signOut, realRole, viewAsRole, setViewAsRole, isImpersonating } = useAuth();
-  const actualRole = realRole;
-  const effectiveRole = viewAsRole ?? realRole;
+  const { user, isFinanceiro, isAdminOnlyView, signOut } = useAuth();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   if (!user) return null;
 
-  const isManagementView = isAdmin;
-  // Admin logado em modo closer: mescla os menus de admin/financeiro no topo
-  const adminViewingAsCloser = isAdminOnlyView && effectiveRole === 'CLOSER';
   const firstName = user.nome.split(/\s+/)[0];
-  const canImpersonate = actualRole === 'ADMIN' || actualRole === 'FINANCEIRO';
 
-  const roleLabels: Record<string, string> = {
-    ADMIN: 'Admin',
-    FINANCEIRO: 'Financeiro',
-    CLOSER: 'Closer',
-  };
-
-  const viewRolesByActual: Record<string, string[]> = {
-    ADMIN: ['ADMIN', 'FINANCEIRO', 'CLOSER'],
-    FINANCEIRO: ['FINANCEIRO', 'CLOSER'],
-    CLOSER: ['CLOSER'],
-  };
-  const availableViewRoles = viewRolesByActual[actualRole ?? 'CLOSER'] ?? ['CLOSER'];
-
-  const handleSelectViewRole = (role: string) => {
-    if (role === actualRole) {
-      setViewAsRole(null);
-      navigate(role === 'FINANCEIRO' ? '/financeiro/comprovantes' : '/home');
-    } else {
-      setViewAsRole(role as any);
-      navigate(role === 'FINANCEIRO' ? '/financeiro/comprovantes' : '/home');
-    }
-  };
-
-
+  // Menus por perfil, com "tone" para colorir o ícone conforme a área
   const closerNav: NavItem[] = [
-    { path: "/home", label: "Home", icon: HomeIcon },
-    { path: "/meu", label: "Minha Lista", icon: User },
-    { path: "/registro", label: "Planilhamento", icon: FileText },
-    { path: "/painel", label: "Meu Painel", icon: Lock },
+    { path: "/home", label: "Home", icon: HomeIcon, tone: "closer" },
+    { path: "/meu", label: "Minha Lista", icon: User, tone: "closer" },
+    { path: "/registro", label: "Planilhamento", icon: FileText, tone: "closer" },
+    { path: "/painel", label: "Meu Painel", icon: Lock, tone: "closer" },
   ];
 
-  const managementNav: NavItem[] = [
-    { path: "/home", label: "Home", icon: HomeIcon },
-    { path: "/financeiro", label: "Financeiro", icon: DollarSign },
-    { path: "/diretorio", label: "Diretório", icon: BookOpen },
-    { path: "/notificacoes", label: "Notificações", icon: Bell },
-    { path: "/auditoria", label: "Auditoria", icon: Shield },
-    { path: "/admin", label: "Admin", icon: Settings },
+  const adminNav: NavItem[] = [
+    { path: "/financeiro", label: "Financeiro", icon: DollarSign, tone: "admin" },
+    { path: "/diretorio", label: "Diretório", icon: BookOpen, tone: "admin" },
+    { path: "/notificacoes", label: "Notificações", icon: Bell, tone: "admin" },
+    { path: "/auditoria", label: "Auditoria", icon: Shield, tone: "admin" },
+    { path: "/admin", label: "Admin", icon: Settings, tone: "admin" },
   ];
 
-  const financeiroNav: NavItem[] = [
+  const financeiroInternalNav: NavItem[] = [
+    { path: "/financeiro/comprovantes", label: "Comprovantes", icon: FileText, tone: "financeiro" },
+    { path: "/financeiro/espelhamento", label: "Espelhamento", icon: LayoutGrid, tone: "financeiro" },
+  ];
+
+  const financeiroPageNav: NavItem[] = [
     { path: "/financeiro/comprovantes", label: "Comprovantes", icon: FileText },
     { path: "/financeiro/espelhamento", label: "Espelhamento", icon: LayoutGrid },
   ];
 
+  // ADMIN: view única, mesclando closer + admin + financeiro (com cores)
+  // FINANCEIRO: apenas suas páginas
+  // CLOSER: apenas closer
   const primaryNav: NavItem[] = isFinanceiro
-    ? financeiroNav
-    : isManagementView
-    ? managementNav
-    : adminViewingAsCloser
-    ? [...closerNav, ...managementNav.filter((n) => n.path !== "/home")]
+    ? financeiroPageNav
+    : isAdminOnlyView
+    ? [...closerNav, ...adminNav, ...financeiroInternalNav]
     : closerNav;
 
-  const closerTopNav = [
-    { label: "Home", path: "/home" },
-    { label: "Minha Lista", path: "/meu" },
-    { label: "Planilhamento", path: "/registro" },
-    { label: "Painel", path: "/painel" },
-  ];
-  const managementTopNav = [
-    { label: "Home", path: "/home" },
-    { label: "Financeiro", path: "/financeiro" },
-    { label: "Diretório", path: "/diretorio" },
-    { label: "Auditoria", path: "/auditoria" },
-    { label: "Notificações", path: "/notificacoes" },
-    { label: "Admin", path: "/admin" },
-  ];
-  const financeiroTopNav = [
-    { label: "Comprovantes", path: "/financeiro/comprovantes" },
-    { label: "Espelhamento", path: "/financeiro/espelhamento" },
-  ];
+  const topNavItems = primaryNav;
 
-  const topNavItems = isFinanceiro
-    ? financeiroTopNav
-    : isManagementView
-    ? managementTopNav
-    : adminViewingAsCloser
-    ? [...closerTopNav, ...managementTopNav.filter((n) => n.path !== "/home")]
-    : closerTopNav;
-
-  const externalNavItems = !isFinanceiro && !isManagementView
+  const externalNavItems = !isFinanceiro && !isAdminOnlyView
     ? [{ label: "Influs Travados", path: "/influboard-test" }]
     : [];
 
@@ -183,6 +144,9 @@ export function WorkspaceLayout() {
     await signOut();
     navigate("/login");
   };
+
+
+
 
 
   return (
@@ -200,16 +164,19 @@ export function WorkspaceLayout() {
             <div className="inline-flex items-center gap-[6px] rounded-[20px] bg-white p-[6px] shadow-[0_14px_30px_-26px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
               {topNavItems.map((item) => {
                 const active = location.pathname === item.path;
+                const Icon = item.icon;
+                const toneIcon = item.tone ? toneClasses[item.tone].icon : "text-slate-500";
                 return (
                   <button
                     key={item.path}
                     type="button"
                     onClick={() => navigate(item.path)}
                     className={cn(
-                      "rounded-full px-4 py-2.5 text-[13px] font-medium tracking-[-0.01em] transition-colors",
+                      "flex items-center gap-1.5 rounded-full px-4 py-2.5 text-[13px] font-medium tracking-[-0.01em] transition-colors",
                       active ? "bg-[#242424] text-white" : "text-slate-500 hover:text-slate-900"
                     )}
                   >
+                    <Icon className={cn("h-3.5 w-3.5", active ? "text-white" : toneIcon)} />
                     {item.label}
                   </button>
                 );
@@ -264,34 +231,13 @@ export function WorkspaceLayout() {
                   <div className="min-w-0">
                     <div className="truncate text-[13px] font-medium tracking-[-0.01em] text-slate-900">{user.nome}</div>
                     <div className="mt-0.5 truncate text-[11px] text-slate-400">
-                      {isImpersonating ? `Visualizando como ${effectiveRole}` : user.email}
+                      {user.email}
                     </div>
                   </div>
                   <MoreHorizontal className="ml-auto h-4 w-4 text-slate-400" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                {canImpersonate ? (
-                  <>
-                    <DropdownMenuLabel className="text-[11px] uppercase tracking-wider text-slate-400">
-                      Visualizar como
-                    </DropdownMenuLabel>
-                    {availableViewRoles.map((role) => {
-                      const selected = (viewAsRole ?? actualRole) === role;
-                      return (
-                        <DropdownMenuItem
-                          key={role}
-                          onClick={() => handleSelectViewRole(role)}
-                          className="flex items-center justify-between"
-                        >
-                          <span>{roleLabels[role]}</span>
-                          {selected ? <Check className="h-4 w-4 text-slate-700" /> : null}
-                        </DropdownMenuItem>
-                      );
-                    })}
-                    <DropdownMenuSeparator />
-                  </>
-                ) : null}
                 <DropdownMenuItem onClick={handleSignOut} className="text-red-600 focus:text-red-600">
                   <LogOut className="mr-2 h-4 w-4" />
                   Sair

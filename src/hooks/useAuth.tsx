@@ -104,15 +104,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let lastAccessToken: string | null = null;
     let cancelled = false;
 
-    const loadProfile = (userId: string, email: string, forceCloserView = false) => {
+    const loadProfile = (userId: string, email: string) => {
       fetchUserProfile(userId, email).then((userProfile) => {
         if (cancelled) return;
         if (userProfile) lastLoadedUserId = userId;
         setUser(userProfile);
         setLoading(false);
-        // On fresh sign-in, ADMIN starts in "view as CLOSER" mode by default.
-        if (forceCloserView && userProfile?.role === 'ADMIN') {
-          setViewAsRole('CLOSER');
+        // ADMIN não usa mais modos de visualização — mantém view unificada.
+        if (userProfile?.role === 'ADMIN') {
+          setViewAsRole(null);
         }
       });
     };
@@ -152,7 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const userChanged = sessionUserId !== lastLoadedUserId;
         if (userChanged || event === 'USER_UPDATED') {
-          loadProfile(sessionUserId, currentSession!.user.email || '', event === 'SIGNED_IN');
+          loadProfile(sessionUserId, currentSession!.user.email || '');
         }
       }
     );
