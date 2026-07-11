@@ -35,7 +35,7 @@ export function ProtectedRoute({ children, requireAdmin = false, requireFinancei
     return <Navigate to="/financeiro/comprovantes" replace />;
   }
 
-  if (requireAdmin && user.role !== 'ADMIN' && user.role !== 'SUBADMIN') {
+  if (requireAdmin && user.role !== 'ADMIN') {
     if (user.role === 'FINANCEIRO') return <Navigate to="/financeiro/comprovantes" replace />;
     return <Navigate to="/meu" replace />;
   }
