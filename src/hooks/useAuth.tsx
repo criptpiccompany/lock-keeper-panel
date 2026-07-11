@@ -216,14 +216,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const realRole = user?.role ?? null;
-  const canImpersonate = realRole === 'ADMIN' || realRole === 'SUBADMIN' || realRole === 'FINANCEIRO';
+  const canImpersonate = realRole === 'ADMIN' || realRole === 'FINANCEIRO';
   const effectiveRole: UserRole | null = canImpersonate && viewAsRole ? viewAsRole : realRole;
   const isImpersonating = !!(canImpersonate && viewAsRole && viewAsRole !== realRole);
 
   const value: AuthContextType = {
     user, session, loading, signIn, signUp, signOut,
     isAdmin: effectiveRole === 'ADMIN',
-    isSubAdmin: effectiveRole === 'SUBADMIN',
+    isAdminOnlyView: realRole === 'ADMIN',
     isCloser: effectiveRole === 'CLOSER',
     isFinanceiro: effectiveRole === 'FINANCEIRO',
     isGlobalViewer: effectiveRole === 'ADMIN' || effectiveRole === 'FINANCEIRO',
