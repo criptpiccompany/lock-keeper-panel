@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, type ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
-import { FileText, BarChart3, ListChecks, Trophy, User, Radar } from "lucide-react";
+import { FileText, BarChart3, ListChecks, Trophy, User, Radar, UserCircle2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import PlanilhamentoCalendarWorkspace from "./PlanilhamentoCalendarWorkspace";
