@@ -152,7 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const userChanged = sessionUserId !== lastLoadedUserId;
         if (userChanged || event === 'USER_UPDATED') {
-          loadProfile(sessionUserId, currentSession!.user.email || '', event === 'SIGNED_IN');
+          loadProfile(sessionUserId, currentSession!.user.email || '');
         }
       }
     );
