@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useLayoutStore } from "@/store/useLayoutStore";
 import { Loader2 } from "lucide-react";
 
 const MONTHS_PT = [
@@ -82,6 +83,12 @@ export default function PlanilhaBeta() {
   );
   const rowIds = useRef<Record<number, string>>({});
   const dirtyIndex = useRef<Set<number>>(new Set());
+
+  useEffect(() => {
+    useLayoutStore.getState().setFullWidth(true);
+    return () => useLayoutStore.getState().setFullWidth(false);
+  }, []);
+
 
   useEffect(() => {
     if (!user) return;

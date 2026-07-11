@@ -22,6 +22,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { useLayoutStore } from "@/store/useLayoutStore";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -94,6 +95,7 @@ export function WorkspaceLayout() {
   const navigate = useNavigate();
   const { user, isFinanceiro, isAdminOnlyView, signOut } = useAuth();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const fullWidth = useLayoutStore((s) => s.fullWidth);
 
   if (!user) return null;
 
@@ -249,8 +251,14 @@ export function WorkspaceLayout() {
       </div>
 
 
-      <div className="grid min-h-[calc(100vh-98px)] lg:grid-cols-[56px_minmax(0,1fr)] lg:gap-6 lg:px-6">
-        <aside className="relative border-b border-black/[0.04] bg-transparent px-5 pb-4 pt-4 lg:sticky lg:top-[92px] lg:h-[calc(100vh-120px)] lg:border-b-0 lg:px-0 lg:pt-[18px]">
+      <div className={cn(
+        "grid min-h-[calc(100vh-98px)]",
+        fullWidth ? "" : "lg:grid-cols-[56px_minmax(0,1fr)] lg:gap-6 lg:px-6"
+      )}>
+        <aside className={cn(
+          "relative border-b border-black/[0.04] bg-transparent px-5 pb-4 pt-4 lg:sticky lg:top-[92px] lg:h-[calc(100vh-120px)] lg:border-b-0 lg:px-0 lg:pt-[18px]",
+          fullWidth && "hidden"
+        )}>
           {/* Glow branco com efeito de pena que se expande para a direita */}
           <div
             aria-hidden
@@ -313,7 +321,17 @@ export function WorkspaceLayout() {
           </div>
         </aside>
 
-        <main className="min-w-0 px-5 py-6 lg:px-3 lg:py-8 xl:pr-8">
+        <main className={cn("min-w-0", fullWidth ? "px-0 py-2" : "px-5 py-6 lg:px-3 lg:py-8 xl:pr-8")}>
+          {fullWidth && (
+            <button
+              type="button"
+              onClick={() => useLayoutStore.getState().setFullWidth(false)}
+              aria-label="Mostrar menu lateral"
+              className="fixed left-2 top-[100px] z-40 grid h-8 w-8 place-items-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm hover:text-slate-900"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          )}
           <Outlet />
         </main>
       </div>
