@@ -37,7 +37,7 @@ interface UserWithRole {
 }
 
 export default function Admin() {
-  const { user, isAdmin, isSubAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [influencers, setInfluencers] = useState<InfluencerWithStatus[]>([]);
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
