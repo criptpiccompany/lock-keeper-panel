@@ -612,7 +612,7 @@ export default function Admin() {
                     const tname = tid ? teams.find(t => t.id === tid)?.name : undefined;
                     handleExport(tid, tname);
                   } else {
-                    // SUBADMIN: use their own team_id from users list
+                    // Non-admin fallback: usa a própria equipe
                     const myUser = users.find(u => u.id === user?.id);
                     const myTeamId = myUser?.team_id;
                     const myTeamName = myTeamId ? teams.find(t => t.id === myTeamId)?.name : undefined;
