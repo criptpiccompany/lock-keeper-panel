@@ -95,102 +95,58 @@ function SidebarLink({
 export function WorkspaceLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAdmin, isFinanceiro, isAdminOnlyView, signOut, realRole, viewAsRole, setViewAsRole, isImpersonating } = useAuth();
-  const actualRole = realRole;
-  const effectiveRole = viewAsRole ?? realRole;
+  const { user, isAdmin, isFinanceiro, isAdminOnlyView, signOut } = useAuth();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   if (!user) return null;
 
-  const isManagementView = isAdmin;
-  // Admin logado em modo closer: mescla os menus de admin/financeiro no topo
-  const adminViewingAsCloser = isAdminOnlyView && effectiveRole === 'CLOSER';
   const firstName = user.nome.split(/\s+/)[0];
-  const canImpersonate = actualRole === 'ADMIN' || actualRole === 'FINANCEIRO';
 
-  const roleLabels: Record<string, string> = {
-    ADMIN: 'Admin',
-    FINANCEIRO: 'Financeiro',
-    CLOSER: 'Closer',
-  };
-
-  const viewRolesByActual: Record<string, string[]> = {
-    ADMIN: ['ADMIN', 'FINANCEIRO', 'CLOSER'],
-    FINANCEIRO: ['FINANCEIRO', 'CLOSER'],
-    CLOSER: ['CLOSER'],
-  };
-  const availableViewRoles = viewRolesByActual[actualRole ?? 'CLOSER'] ?? ['CLOSER'];
-
-  const handleSelectViewRole = (role: string) => {
-    if (role === actualRole) {
-      setViewAsRole(null);
-      navigate(role === 'FINANCEIRO' ? '/financeiro/comprovantes' : '/home');
-    } else {
-      setViewAsRole(role as any);
-      navigate(role === 'FINANCEIRO' ? '/financeiro/comprovantes' : '/home');
-    }
-  };
-
-
+  // Menus por perfil, com "tone" para colorir o ícone conforme a área
   const closerNav: NavItem[] = [
-    { path: "/home", label: "Home", icon: HomeIcon },
-    { path: "/meu", label: "Minha Lista", icon: User },
-    { path: "/registro", label: "Planilhamento", icon: FileText },
-    { path: "/painel", label: "Meu Painel", icon: Lock },
+    { path: "/home", label: "Home", icon: HomeIcon, tone: "closer" },
+    { path: "/meu", label: "Minha Lista", icon: User, tone: "closer" },
+    { path: "/registro", label: "Planilhamento", icon: FileText, tone: "closer" },
+    { path: "/painel", label: "Meu Painel", icon: Lock, tone: "closer" },
   ];
 
-  const managementNav: NavItem[] = [
-    { path: "/home", label: "Home", icon: HomeIcon },
-    { path: "/financeiro", label: "Financeiro", icon: DollarSign },
-    { path: "/diretorio", label: "Diretório", icon: BookOpen },
-    { path: "/notificacoes", label: "Notificações", icon: Bell },
-    { path: "/auditoria", label: "Auditoria", icon: Shield },
-    { path: "/admin", label: "Admin", icon: Settings },
+  const adminNav: NavItem[] = [
+    { path: "/financeiro", label: "Financeiro", icon: DollarSign, tone: "admin" },
+    { path: "/diretorio", label: "Diretório", icon: BookOpen, tone: "admin" },
+    { path: "/notificacoes", label: "Notificações", icon: Bell, tone: "admin" },
+    { path: "/auditoria", label: "Auditoria", icon: Shield, tone: "admin" },
+    { path: "/admin", label: "Admin", icon: Settings, tone: "admin" },
   ];
 
-  const financeiroNav: NavItem[] = [
+  const financeiroInternalNav: NavItem[] = [
+    { path: "/financeiro/comprovantes", label: "Comprovantes", icon: FileText, tone: "financeiro" },
+    { path: "/financeiro/espelhamento", label: "Espelhamento", icon: LayoutGrid, tone: "financeiro" },
+  ];
+
+  const financeiroPageNav: NavItem[] = [
     { path: "/financeiro/comprovantes", label: "Comprovantes", icon: FileText },
     { path: "/financeiro/espelhamento", label: "Espelhamento", icon: LayoutGrid },
   ];
 
+  // ADMIN: view única, mesclando closer + admin + financeiro (com cores)
+  // FINANCEIRO: apenas suas páginas
+  // CLOSER: apenas closer
   const primaryNav: NavItem[] = isFinanceiro
-    ? financeiroNav
-    : isManagementView
-    ? managementNav
-    : adminViewingAsCloser
-    ? [...closerNav, ...managementNav.filter((n) => n.path !== "/home")]
+    ? financeiroPageNav
+    : isAdminOnlyView
+    ? [...closerNav, ...adminNav, ...financeiroInternalNav]
     : closerNav;
 
-  const closerTopNav = [
-    { label: "Home", path: "/home" },
-    { label: "Minha Lista", path: "/meu" },
-    { label: "Planilhamento", path: "/registro" },
-    { label: "Painel", path: "/painel" },
-  ];
-  const managementTopNav = [
-    { label: "Home", path: "/home" },
-    { label: "Financeiro", path: "/financeiro" },
-    { label: "Diretório", path: "/diretorio" },
-    { label: "Auditoria", path: "/auditoria" },
-    { label: "Notificações", path: "/notificacoes" },
-    { label: "Admin", path: "/admin" },
-  ];
-  const financeiroTopNav = [
-    { label: "Comprovantes", path: "/financeiro/comprovantes" },
-    { label: "Espelhamento", path: "/financeiro/espelhamento" },
-  ];
+  const topNavItems = primaryNav;
 
-  const topNavItems = isFinanceiro
-    ? financeiroTopNav
-    : isManagementView
-    ? managementTopNav
-    : adminViewingAsCloser
-    ? [...closerTopNav, ...managementTopNav.filter((n) => n.path !== "/home")]
-    : closerTopNav;
-
-  const externalNavItems = !isFinanceiro && !isManagementView
+  const externalNavItems = !isFinanceiro && !isAdminOnlyView
     ? [{ label: "Influs Travados", path: "/influboard-test" }]
     : [];
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/login");
+  };
 
   const handleSignOut = async () => {
     await signOut();
