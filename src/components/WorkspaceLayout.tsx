@@ -234,7 +234,7 @@ export function WorkspaceLayout() {
                   <div className="min-w-0">
                     <div className="truncate text-[13px] font-medium tracking-[-0.01em] text-slate-900">{user.nome}</div>
                     <div className="mt-0.5 truncate text-[11px] text-slate-400">
-                      {isImpersonating ? `Visualizando como ${effectiveRole}` : user.email}
+                      {user.email}
                     </div>
                   </div>
                   <MoreHorizontal className="ml-auto h-4 w-4 text-slate-400" />
