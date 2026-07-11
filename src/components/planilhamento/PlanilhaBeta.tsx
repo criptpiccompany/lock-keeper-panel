@@ -85,6 +85,12 @@ export default function PlanilhaBeta() {
   const dirtyIndex = useRef<Set<number>>(new Set());
 
   useEffect(() => {
+    useLayoutStore.getState().setFullWidth(true);
+    return () => useLayoutStore.getState().setFullWidth(false);
+  }, []);
+
+
+  useEffect(() => {
     if (!user) return;
     const load = async () => {
       setLoading(true);
