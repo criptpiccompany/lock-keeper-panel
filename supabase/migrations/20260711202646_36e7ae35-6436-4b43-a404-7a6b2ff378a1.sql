@@ -1,0 +1,1 @@
+ALTER TABLE public.planilha_beta ADD COLUMN IF NOT EXISTS acumulado_cents BIGINT NOT NULL DEFAULT 0;

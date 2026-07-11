@@ -1075,6 +1075,7 @@ export type Database = {
       }
       planilha_beta: {
         Row: {
+          acumulado_cents: number
           closer_id: string
           created_at: string
           day: number
@@ -1089,6 +1090,7 @@ export type Database = {
           year: number
         }
         Insert: {
+          acumulado_cents?: number
           closer_id: string
           created_at?: string
           day: number
@@ -1103,6 +1105,7 @@ export type Database = {
           year: number
         }
         Update: {
+          acumulado_cents?: number
           closer_id?: string
           created_at?: string
           day?: number
