@@ -167,16 +167,19 @@ export function WorkspaceLayout() {
             <div className="inline-flex items-center gap-[6px] rounded-[20px] bg-white p-[6px] shadow-[0_14px_30px_-26px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
               {topNavItems.map((item) => {
                 const active = location.pathname === item.path;
+                const Icon = item.icon;
+                const toneIcon = item.tone ? toneClasses[item.tone].icon : "text-slate-500";
                 return (
                   <button
                     key={item.path}
                     type="button"
                     onClick={() => navigate(item.path)}
                     className={cn(
-                      "rounded-full px-4 py-2.5 text-[13px] font-medium tracking-[-0.01em] transition-colors",
+                      "flex items-center gap-1.5 rounded-full px-4 py-2.5 text-[13px] font-medium tracking-[-0.01em] transition-colors",
                       active ? "bg-[#242424] text-white" : "text-slate-500 hover:text-slate-900"
                     )}
                   >
+                    <Icon className={cn("h-3.5 w-3.5", active ? "text-white" : toneIcon)} />
                     {item.label}
                   </button>
                 );
