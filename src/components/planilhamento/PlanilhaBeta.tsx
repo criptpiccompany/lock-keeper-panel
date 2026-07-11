@@ -8,7 +8,7 @@ const MONTHS_PT = [
   "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO",
 ];
 
-const ROWS_PER_MONTH = 30;
+const ROWS_PER_MONTH = 100;
 const FEE_RATE = 0.10;
 
 // Column widths (px) — total = 1135
