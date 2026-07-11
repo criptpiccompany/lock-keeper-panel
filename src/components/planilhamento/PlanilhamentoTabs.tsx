@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, type ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
-import { FileText, BarChart3, ListChecks, Trophy, User, Radar } from "lucide-react";
+import { FileText, BarChart3, ListChecks, Trophy, User, Radar, UserCircle2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import PlanilhamentoCalendarWorkspace from "./PlanilhamentoCalendarWorkspace";
@@ -184,6 +184,17 @@ export default function PlanilhamentoTabs() {
             <Radar className="h-4 w-4" />
             Conflitos
           </button>
+          {user && (
+            <button
+              onClick={() => handleAdminTabClick(user.id)}
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px] font-medium tracking-[-0.01em] transition-colors whitespace-nowrap ${
+                adminTab === user.id ? "bg-[#242424] text-white" : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              <UserCircle2 className="h-4 w-4" />
+              Meu Planilhamento
+            </button>
+          )}
           {closers.map((closer) => {
             const isActive = adminTab === closer.id;
             const unseen = hasUnseen(closer.id, closer.lastActivity);
