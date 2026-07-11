@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useLayoutStore } from "@/store/useLayoutStore";
 import { Loader2 } from "lucide-react";
 
 const MONTHS_PT = [
