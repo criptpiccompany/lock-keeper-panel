@@ -321,7 +321,17 @@ export function WorkspaceLayout() {
           </div>
         </aside>
 
-        <main className="min-w-0 px-5 py-6 lg:px-3 lg:py-8 xl:pr-8">
+        <main className={cn("min-w-0", fullWidth ? "px-0 py-2" : "px-5 py-6 lg:px-3 lg:py-8 xl:pr-8")}>
+          {fullWidth && (
+            <button
+              type="button"
+              onClick={() => useLayoutStore.getState().setFullWidth(false)}
+              aria-label="Mostrar menu lateral"
+              className="fixed left-2 top-[100px] z-40 grid h-8 w-8 place-items-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm hover:text-slate-900"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          )}
           <Outlet />
         </main>
       </div>
