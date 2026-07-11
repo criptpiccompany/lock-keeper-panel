@@ -148,10 +148,8 @@ export function WorkspaceLayout() {
     navigate("/login");
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/login");
-  };
+
+
 
 
   return (
