@@ -164,7 +164,7 @@ export default function PlanilhamentoTabs() {
     return (
     <div className="min-h-screen">
       {/* Level 1 tabs */}
-      <div className="container px-4 pt-3 sm:px-6 lg:px-8">
+      <div className={adminTab === "planilha-beta" ? "w-full px-0 pt-3" : "container px-4 pt-3 sm:px-6 lg:px-8"}>
         <PillTabGroup className="max-w-full overflow-x-auto scrollbar-none">
           <button
             onClick={() => handleAdminTabClick("ranking")}
@@ -261,7 +261,7 @@ export default function PlanilhamentoTabs() {
       )}
 
       {/* Content */}
-      <div className="container px-4 py-5 sm:px-6 lg:px-8">
+      <div className={adminTab === "planilha-beta" ? "w-full px-0 py-0" : "container px-4 py-5 sm:px-6 lg:px-8"}>
         {adminTab === "ranking" && <RankingSemanal />}
         {adminTab === "conflitos" && <ConflictRadar />}
         {adminTab === "planilha-beta" && <PlanilhaBeta />}
