@@ -360,7 +360,7 @@ export default function Admin() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           <BrandStat label="Usuários" value={totalUsers} icon={Users} />
           <BrandStat label="Closers" value={totalClosers} icon={UserIcon} tone="emerald" hint="Equipe operacional" />
-          <BrandStat label="Admins" value={totalAdmins} icon={ShieldCheck} tone="amber" hint="ADMIN + SUBADMIN" />
+          <BrandStat label="Admins" value={totalAdmins} icon={ShieldCheck} tone="amber" hint="ADMIN" />
           <BrandStat label="Influs ativos" value={totalActiveInfs} icon={Shield} tone="blue" />
         </div>
         <div className="inline-flex items-start gap-2 rounded-2xl border border-amber-200/70 bg-amber-50/60 px-4 py-2.5">
