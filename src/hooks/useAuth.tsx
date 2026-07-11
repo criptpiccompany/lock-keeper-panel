@@ -3,7 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-type UserRole = 'CLOSER' | 'ADMIN' | 'SUBADMIN' | 'FINANCEIRO';
+type UserRole = 'CLOSER' | 'ADMIN' | 'FINANCEIRO';
 
 type AccountStatus = 'pending' | 'approved' | 'rejected' | 'blocked';
 
