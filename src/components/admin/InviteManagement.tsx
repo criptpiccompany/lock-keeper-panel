@@ -191,7 +191,7 @@ export function InviteManagement() {
               <SelectContent>
                 <SelectItem value="CLOSER">CLOSER</SelectItem>
                   {isAdmin && <SelectItem value="FINANCEIRO">FINANCEIRO</SelectItem>}
-                {isAdmin && <SelectItem value="SUBADMIN">SUBADMIN</SelectItem>}
+                
               </SelectContent>
             </Select>
           </div>
