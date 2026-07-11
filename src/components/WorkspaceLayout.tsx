@@ -95,6 +95,7 @@ export function WorkspaceLayout() {
   const navigate = useNavigate();
   const { user, isFinanceiro, isAdminOnlyView, signOut } = useAuth();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const fullWidth = useLayoutStore((s) => s.fullWidth);
 
   if (!user) return null;
 
