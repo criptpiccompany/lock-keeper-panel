@@ -58,9 +58,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     const callerRole = roleData?.role;
     const isAdmin = callerRole === "ADMIN";
-    const isSubAdmin = callerRole === "SUBADMIN";
 
-    if (!isAdmin && !isSubAdmin) {
+    if (!isAdmin) {
       return new Response(JSON.stringify({ error: "Acesso negado" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -74,29 +73,6 @@ const handler = async (req: Request): Promise<Response> => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
-    }
-
-    // SUBADMIN: only password reset allowed, and only for same team
-    if (isSubAdmin && !isAdmin) {
-      if (action !== "update_password") {
-        return new Response(JSON.stringify({ error: "SUBADMIN só pode resetar senha" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      // Validate same team
-      const [{ data: callerProfile }, { data: targetProfile }] = await Promise.all([
-        supabaseAdmin.from("profiles").select("team_id").eq("id", callerUser.id).single(),
-        supabaseAdmin.from("profiles").select("team_id").eq("id", userId).single(),
-      ]);
-
-      if (!callerProfile?.team_id || !targetProfile?.team_id || callerProfile.team_id !== targetProfile.team_id) {
-        return new Response(JSON.stringify({ error: "Usuário não pertence à sua equipe" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
     }
 
     if (action === "update_password") {
