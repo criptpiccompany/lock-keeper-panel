@@ -34,7 +34,7 @@ function daysUntil(dateStr: string): number {
 
 export default function PainelGeral() {
   const { user, realRole } = useAuth();
-  const canCopy = realRole === 'ADMIN' || realRole === 'FINANCEIRO' || realRole === 'SUBADMIN';
+  const canCopy = realRole === 'ADMIN' || realRole === 'FINANCEIRO';
   const [searchQuery, setSearchQuery] = useState("");
   const [locks, setLocks] = useState<LockEntry[]>([]);
   const [loading, setLoading] = useState(true);
