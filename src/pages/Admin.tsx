@@ -494,7 +494,7 @@ export default function Admin() {
                                 <SelectContent>
                                   <SelectItem value="CLOSER">CLOSER</SelectItem>
                                   <SelectItem value="FINANCEIRO">FINANCEIRO</SelectItem>
-                                  <SelectItem value="SUBADMIN">SUBADMIN</SelectItem>
+                                  
                                   <SelectItem value="ADMIN">ADMIN</SelectItem>
                                 </SelectContent>
                               </Select>
