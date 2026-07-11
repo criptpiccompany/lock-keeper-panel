@@ -27,7 +27,7 @@ interface Props {
 }
 
 export default function UnifiedThermometerWidget({ resultado, month, compact = false }: Props) {
-  const { user, isAdmin, isSubAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const {
     loading: tierLoading,
     tiers,
@@ -36,7 +36,7 @@ export default function UnifiedThermometerWidget({ resultado, month, compact = f
     nextThreshold,
     amountMissing,
   } = useCommissionTier(resultado);
-  const { members, loading: teamLoading } = useTeamCommission(month, user?.id, isAdmin || isSubAdmin);
+  const { members, loading: teamLoading } = useTeamCommission(month, user?.id, isAdmin);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [showRanking, setShowRanking] = useState(false);
   const [showFinancials, setShowFinancials] = useState(true);
