@@ -547,8 +547,8 @@ function ActivityList({ rows }: { rows: RecentRecord[] }) {
 }
 
 export default function Home() {
-  const { user, isAdmin, isSubAdmin } = useAuth();
-  const isManagementView = isAdmin || isSubAdmin;
+  const { user, isAdmin } = useAuth();
+  const isManagementView = isAdmin;
   const month = useMemo(() => getCurrentMonth(), []);
   const greeting = getGreeting();
   const monthLabel = getMonthLabel(month);
