@@ -184,6 +184,17 @@ export default function PlanilhamentoTabs() {
             <Radar className="h-4 w-4" />
             Conflitos
           </button>
+          {user && (
+            <button
+              onClick={() => handleAdminTabClick(user.id)}
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px] font-medium tracking-[-0.01em] transition-colors whitespace-nowrap ${
+                adminTab === user.id ? "bg-[#242424] text-white" : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              <UserCircle2 className="h-4 w-4" />
+              Meu Planilhamento
+            </button>
+          )}
           {closers.map((closer) => {
             const isActive = adminTab === closer.id;
             const unseen = hasUnseen(closer.id, closer.lastActivity);
