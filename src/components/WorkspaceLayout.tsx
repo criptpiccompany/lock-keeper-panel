@@ -92,7 +92,7 @@ function SidebarLink({
 export function WorkspaceLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAdmin, isFinanceiro, isAdminOnlyView, signOut } = useAuth();
+  const { user, isFinanceiro, isAdminOnlyView, signOut } = useAuth();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   if (!user) return null;
