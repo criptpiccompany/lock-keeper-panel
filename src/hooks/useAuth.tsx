@@ -25,7 +25,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, nome: string, inviteToken?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
-  isSubAdmin: boolean;
+  isAdminOnlyView: boolean;
   isCloser: boolean;
   isFinanceiro: boolean;
   isGlobalViewer: boolean;
