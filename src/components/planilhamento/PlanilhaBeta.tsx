@@ -11,14 +11,14 @@ const MONTHS_PT = [
 const ROWS_PER_MONTH = 30;
 const FEE_RATE = 0.10;
 
-// Column widths (px) — total = 965
+// Column widths (px) — total = 1135
 const COL_W = {
-  date: 105,
-  influencer: 195,
-  traffic: 145,
-  revenue: 185,
-  result: 165,
-  accumulated: 170,
+  date: 125,
+  influencer: 230,
+  traffic: 170,
+  revenue: 215,
+  result: 195,
+  accumulated: 200,
 };
 const TABLE_W =
   COL_W.date + COL_W.influencer + COL_W.traffic + COL_W.revenue + COL_W.result + COL_W.accumulated;
