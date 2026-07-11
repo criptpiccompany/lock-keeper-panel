@@ -241,27 +241,6 @@ export function WorkspaceLayout() {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                {canImpersonate ? (
-                  <>
-                    <DropdownMenuLabel className="text-[11px] uppercase tracking-wider text-slate-400">
-                      Visualizar como
-                    </DropdownMenuLabel>
-                    {availableViewRoles.map((role) => {
-                      const selected = (viewAsRole ?? actualRole) === role;
-                      return (
-                        <DropdownMenuItem
-                          key={role}
-                          onClick={() => handleSelectViewRole(role)}
-                          className="flex items-center justify-between"
-                        >
-                          <span>{roleLabels[role]}</span>
-                          {selected ? <Check className="h-4 w-4 text-slate-700" /> : null}
-                        </DropdownMenuItem>
-                      );
-                    })}
-                    <DropdownMenuSeparator />
-                  </>
-                ) : null}
                 <DropdownMenuItem onClick={handleSignOut} className="text-red-600 focus:text-red-600">
                   <LogOut className="mr-2 h-4 w-4" />
                   Sair
