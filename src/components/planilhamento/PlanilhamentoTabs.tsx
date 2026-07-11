@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, type ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
-import { FileText, BarChart3, ListChecks, Trophy, User, Radar, UserCircle2 } from "lucide-react";
+import { FileText, BarChart3, ListChecks, Trophy, User, Radar, UserCircle2, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import PlanilhamentoCalendarWorkspace from "./PlanilhamentoCalendarWorkspace";
@@ -8,6 +8,7 @@ import Balanco from "./Balanco";
 import ListaDoMes from "./ListaDoMes";
 import RankingSemanal from "./RankingSemanal";
 import ConflictRadar from "./ConflictRadar";
+import PlanilhaBeta from "./PlanilhaBeta";
 
 const subTabs = [
   { id: "diario", label: "Planilhamento Diário", icon: FileText },
@@ -184,6 +185,15 @@ export default function PlanilhamentoTabs() {
             <Radar className="h-4 w-4" />
             Conflitos
           </button>
+          <button
+            onClick={() => handleAdminTabClick("planilha-beta")}
+            className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px] font-medium tracking-[-0.01em] transition-colors whitespace-nowrap ${
+              adminTab === "planilha-beta" ? "bg-[#242424] text-white" : "text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            <Sparkles className="h-4 w-4" />
+            Planilha (beta)
+          </button>
           {user && (
             <button
               onClick={() => handleAdminTabClick(user.id)}
@@ -221,7 +231,7 @@ export default function PlanilhamentoTabs() {
       </div>
 
       {/* Level 2 sub-tabs */}
-      {adminTab !== "ranking" && adminTab !== "conflitos" && (
+      {adminTab !== "ranking" && adminTab !== "conflitos" && adminTab !== "planilha-beta" && (
         <div className="container px-4 pt-3 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-[12px] font-medium tracking-[0.08em] text-[#8a8a8a] uppercase whitespace-nowrap">
@@ -254,13 +264,14 @@ export default function PlanilhamentoTabs() {
       <div className="container px-4 py-5 sm:px-6 lg:px-8">
         {adminTab === "ranking" && <RankingSemanal />}
         {adminTab === "conflitos" && <ConflictRadar />}
-        {adminTab !== "ranking" && adminTab !== "conflitos" && subTab === "diario" && (
+        {adminTab === "planilha-beta" && <PlanilhaBeta />}
+        {adminTab !== "ranking" && adminTab !== "conflitos" && adminTab !== "planilha-beta" && subTab === "diario" && (
           <PlanilhamentoCalendarWorkspace closerId={adminTab} />
         )}
-        {adminTab !== "ranking" && adminTab !== "conflitos" && subTab === "balanco" && (
+        {adminTab !== "ranking" && adminTab !== "conflitos" && adminTab !== "planilha-beta" && subTab === "balanco" && (
           <Balanco closerId={adminTab} />
         )}
-        {adminTab !== "ranking" && adminTab !== "conflitos" && subTab === "lista-mes" && (
+        {adminTab !== "ranking" && adminTab !== "conflitos" && adminTab !== "planilha-beta" && subTab === "lista-mes" && (
           <ListaDoMes closerId={adminTab} />
         )}
       </div>

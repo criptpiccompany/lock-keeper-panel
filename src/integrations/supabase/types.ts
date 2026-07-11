@@ -1073,6 +1073,59 @@ export type Database = {
           },
         ]
       }
+      planilha_beta: {
+        Row: {
+          closer_id: string
+          created_at: string
+          day: number
+          diaria_cents: number
+          faturamento_cents: number
+          id: string
+          influenciador: string | null
+          month: number
+          row_index: number
+          team_id: string | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          closer_id: string
+          created_at?: string
+          day: number
+          diaria_cents?: number
+          faturamento_cents?: number
+          id?: string
+          influenciador?: string | null
+          month: number
+          row_index?: number
+          team_id?: string | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          closer_id?: string
+          created_at?: string
+          day?: number
+          diaria_cents?: number
+          faturamento_cents?: number
+          id?: string
+          influenciador?: string | null
+          month?: number
+          row_index?: number
+          team_id?: string | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planilha_beta_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           approved_at: string | null
