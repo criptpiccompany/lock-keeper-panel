@@ -251,8 +251,14 @@ export function WorkspaceLayout() {
       </div>
 
 
-      <div className="grid min-h-[calc(100vh-98px)] lg:grid-cols-[56px_minmax(0,1fr)] lg:gap-6 lg:px-6">
-        <aside className="relative border-b border-black/[0.04] bg-transparent px-5 pb-4 pt-4 lg:sticky lg:top-[92px] lg:h-[calc(100vh-120px)] lg:border-b-0 lg:px-0 lg:pt-[18px]">
+      <div className={cn(
+        "grid min-h-[calc(100vh-98px)]",
+        fullWidth ? "" : "lg:grid-cols-[56px_minmax(0,1fr)] lg:gap-6 lg:px-6"
+      )}>
+        <aside className={cn(
+          "relative border-b border-black/[0.04] bg-transparent px-5 pb-4 pt-4 lg:sticky lg:top-[92px] lg:h-[calc(100vh-120px)] lg:border-b-0 lg:px-0 lg:pt-[18px]",
+          fullWidth && "hidden"
+        )}>
           {/* Glow branco com efeito de pena que se expande para a direita */}
           <div
             aria-hidden
