@@ -64,17 +64,7 @@ export function InviteManagement() {
     }));
     setInvites(fetchedInvites);
 
-    // For SUBADMIN, auto-select their team
-    if (isSubAdmin && !isAdmin) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("team_id")
-        .eq("id", user?.id || "")
-        .single();
-      if (profile?.team_id) {
-        setSelectedTeamId(profile.team_id);
-      }
-    } else if (fetchedTeams.length > 0 && !selectedTeamId) {
+    if (fetchedTeams.length > 0 && !selectedTeamId) {
       setSelectedTeamId(fetchedTeams[0].id);
     }
 
