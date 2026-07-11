@@ -31,7 +31,7 @@ interface UserWithRole {
   id: string;
   nome: string;
   email: string;
-  role: 'CLOSER' | 'ADMIN' | 'SUBADMIN' | 'FINANCEIRO';
+  role: 'CLOSER' | 'ADMIN' | 'FINANCEIRO';
   commission_rate: number;
   team_id: string | null;
 }
