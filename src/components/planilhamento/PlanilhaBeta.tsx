@@ -11,14 +11,14 @@ const MONTHS_PT = [
 const ROWS_PER_MONTH = 30;
 const FEE_RATE = 0.10;
 
-// Column widths (px) — total = 965
+// Column widths (px) — total = 1135
 const COL_W = {
-  date: 105,
-  influencer: 195,
-  traffic: 145,
-  revenue: 185,
-  result: 165,
-  accumulated: 170,
+  date: 125,
+  influencer: 230,
+  traffic: 170,
+  revenue: 215,
+  result: 195,
+  accumulated: 200,
 };
 const TABLE_W =
   COL_W.date + COL_W.influencer + COL_W.traffic + COL_W.revenue + COL_W.result + COL_W.accumulated;
@@ -349,6 +349,39 @@ export default function PlanilhaBeta() {
                   );
                 })}
               </tbody>
+              <tfoot>
+                {(() => {
+                  const totTraf = rows.reduce((s, r) => s + parseUserNumber(r.trafego), 0);
+                  const totFat = rows.reduce((s, r) => s + parseUserNumber(r.faturamento), 0);
+                  const totRes = resultados.reduce((s: number, v) => s + (v || 0), 0);
+                  const totAcum = rows.reduce((s, r) => s + parseUserNumber(r.acumulado), 0);
+                  const footCell: React.CSSProperties = {
+                    height: 38,
+                    padding: "0 8px",
+                    background: "#209d55",
+                    color: "#fff",
+                    fontFamily: "'Poppins', sans-serif",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    textAlign: "center",
+                    verticalAlign: "middle",
+                    borderRight: border,
+                    borderBottom: border,
+                    fontVariantNumeric: "tabular-nums",
+                  };
+                  const footResult: React.CSSProperties = { ...footCell, background: "#fcbc00", color: "#111" };
+                  return (
+                    <tr>
+                      <td style={footCell}>TOTAL</td>
+                      <td style={footCell} />
+                      <td style={footCell}>{totTraf ? displayNumber(totTraf) : ""}</td>
+                      <td style={footCell}>{totFat ? displayNumber(totFat) : ""}</td>
+                      <td style={footResult}>{totRes ? displayNumber(totRes) : ""}</td>
+                      <td style={footCell}>{totAcum ? displayNumber(totAcum) : ""}</td>
+                    </tr>
+                  );
+                })()}
+              </tfoot>
             </table>
           )}
 
