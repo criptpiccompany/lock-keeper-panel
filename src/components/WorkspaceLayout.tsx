@@ -4,7 +4,6 @@ import {
   Bell,
   BookOpen,
   CalendarDays,
-  Check,
   ChevronRight,
   DollarSign,
   FileText,
@@ -27,8 +26,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
