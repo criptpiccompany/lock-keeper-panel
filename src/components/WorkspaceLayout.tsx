@@ -32,10 +32,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+type NavTone = "closer" | "admin" | "financeiro";
+
 type NavItem = {
   path: string;
   label: string;
   icon: ComponentType<{ className?: string }>;
+  tone?: NavTone;
+};
+
+const toneClasses: Record<NavTone, { icon: string; dot: string }> = {
+  closer: { icon: "text-emerald-600", dot: "bg-emerald-500" },
+  admin: { icon: "text-amber-600", dot: "bg-amber-500" },
+  financeiro: { icon: "text-violet-600", dot: "bg-violet-500" },
 };
 
 function SidebarLink({
@@ -48,6 +57,7 @@ function SidebarLink({
   expanded: boolean;
 }) {
   const Icon = item.icon;
+  const tone = item.tone ? toneClasses[item.tone].icon : "";
 
   return (
     <Link
@@ -61,7 +71,10 @@ function SidebarLink({
           "grid h-[44px] w-[44px] place-items-center rounded-[18px] transition-all",
           active
             ? "bg-[#242424] text-white shadow-[0_16px_36px_-30px_rgba(15,23,42,0.28)]"
-            : "bg-white text-[#676767] shadow-[0_8px_24px_rgba(0,0,0,0.04)] hover:text-slate-900"
+            : cn(
+                "bg-white shadow-[0_8px_24px_rgba(0,0,0,0.04)] hover:text-slate-900",
+                tone || "text-[#676767]"
+              )
         )}
       >
         <Icon className="h-4 w-4" />
