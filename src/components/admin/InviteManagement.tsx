@@ -32,7 +32,7 @@ interface Invite {
 type StatusFilter = "ALL" | "ATIVO" | "USADO" | "EXPIRADO";
 
 export function InviteManagement() {
-  const { user, isAdmin, isSubAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [teams, setTeams] = useState<Team[]>([]);
   const [invites, setInvites] = useState<Invite[]>([]);
   const [loading, setLoading] = useState(true);
