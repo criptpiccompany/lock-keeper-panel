@@ -231,7 +231,7 @@ export default function PlanilhamentoTabs() {
       </div>
 
       {/* Level 2 sub-tabs */}
-      {adminTab !== "ranking" && adminTab !== "conflitos" && (
+      {adminTab !== "ranking" && adminTab !== "conflitos" && adminTab !== "planilha-beta" && (
         <div className="container px-4 pt-3 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-[12px] font-medium tracking-[0.08em] text-[#8a8a8a] uppercase whitespace-nowrap">
@@ -264,13 +264,14 @@ export default function PlanilhamentoTabs() {
       <div className="container px-4 py-5 sm:px-6 lg:px-8">
         {adminTab === "ranking" && <RankingSemanal />}
         {adminTab === "conflitos" && <ConflictRadar />}
-        {adminTab !== "ranking" && adminTab !== "conflitos" && subTab === "diario" && (
+        {adminTab === "planilha-beta" && <PlanilhaBeta />}
+        {adminTab !== "ranking" && adminTab !== "conflitos" && adminTab !== "planilha-beta" && subTab === "diario" && (
           <PlanilhamentoCalendarWorkspace closerId={adminTab} />
         )}
-        {adminTab !== "ranking" && adminTab !== "conflitos" && subTab === "balanco" && (
+        {adminTab !== "ranking" && adminTab !== "conflitos" && adminTab !== "planilha-beta" && subTab === "balanco" && (
           <Balanco closerId={adminTab} />
         )}
-        {adminTab !== "ranking" && adminTab !== "conflitos" && subTab === "lista-mes" && (
+        {adminTab !== "ranking" && adminTab !== "conflitos" && adminTab !== "planilha-beta" && subTab === "lista-mes" && (
           <ListaDoMes closerId={adminTab} />
         )}
       </div>
