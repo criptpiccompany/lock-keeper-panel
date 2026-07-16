@@ -1,10 +1,18 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { authorizationError, authorizeRequest } from "../_shared/authorize.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
+    let caller;
+    try {
+      caller = await authorizeRequest(req, ["ADMIN", "FINANCEIRO", "CLOSER"]);
+    } catch (error) {
+      return authorizationError(error, corsHeaders);
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(JSON.stringify({ error: "LOVABLE_API_KEY missing" }), {
@@ -26,10 +34,14 @@ Deno.serve(async (req) => {
 
     const { data: rec, error: recErr } = await supabase
       .from("daily_receipt_uploads")
-      .select("id, file_url, file_type, parsed_data")
+      .select("id, closer_id, file_url, file_type, parsed_data")
       .eq("id", receiptId)
       .single();
     if (recErr || !rec) throw recErr || new Error("not found");
+    const canReadAnyReceipt = caller.isService || caller.roles.some((role) => role === "ADMIN" || role === "FINANCEIRO");
+    if (!canReadAnyReceipt && rec.closer_id !== caller.userId) {
+      return authorizationError(new Error("FORBIDDEN"), corsHeaders);
+    }
     const manualInfluencer = (rec as any)?.parsed_data?.manual_influencer ?? null;
 
     if (rec.file_type === "pdf") {

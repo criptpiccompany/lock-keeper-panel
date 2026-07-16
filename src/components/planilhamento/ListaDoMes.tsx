@@ -8,15 +8,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Loader2, ListChecks, DollarSign, TrendingUp, TrendingDown, Receipt, Percent, Mail, Wallet } from "lucide-react";
-import { useTeamFeeRate } from "@/hooks/useTeamFeeRate";
+import { Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import SharedPartnersPopover, { type SharedPartner } from "./SharedPartnersPopover";
-import { CommissionCardCarousel } from "@/components/home/CommissionCard";
 import { useCommissionTier } from "@/hooks/useCommissionTier";
 import { getEstimatedCommission } from "@/lib/commissionCalc";
-import { cn } from "@/lib/utils";
+import { DAILY_FEE_LABEL, DAILY_FEE_RATE } from "@/lib/constants";
 
 /* ───── types ───── */
 
@@ -53,6 +50,16 @@ function formatBRL(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function formatSheetAmount(value: number): string {
+  return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function normalizeHandle(value: string): string {
+  const trimmed = value.trim().replace(/^https?:\/\/(?:www\.)?instagram\.com\//i, "").split(/[/?#]/)[0];
+  if (!trimmed) return "";
+  return `@${trimmed.replace(/^@+/, "").toLowerCase()}`;
+}
+
 function getMonthOptions(): { value: string; label: string }[] {
   const options: { value: string; label: string }[] = [];
   const now = new Date();
@@ -66,16 +73,20 @@ function getMonthOptions(): { value: string; label: string }[] {
 }
 
 const DEFAULT_PLATFORMS: PlatformNames = {
-  platform_1_name: "Casa / Plataforma 1",
-  platform_2_name: "Casa / Plataforma 2",
-  platform_3_name: "Casa / Plataforma 3",
+  platform_1_name: "Link 1",
+  platform_2_name: "Link 2",
+  platform_3_name: "Link 3",
 };
+
+function normalizePlatformName(value: string | null | undefined, index: number): string {
+  if (!value || /^Casa \/ Plataforma \d$/i.test(value.trim())) return `Link ${index}`;
+  return value;
+}
 
 /* ───── main component ───── */
 
-export default function ListaDoMes({ closerId, hideThermometer = false, externalMonth }: { closerId?: string; hideThermometer?: boolean; externalMonth?: string }) {
+export default function ListaDoMes({ closerId, externalMonth }: { closerId?: string; hideThermometer?: boolean; externalMonth?: string }) {
   const { user, isAdmin } = useAuth();
-  const { feeRate, feeLabel } = useTeamFeeRate(user?.teamId);
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<ListRow[]>([]);
   const [closers, setClosers] = useState<CloserProfile[]>([]);
@@ -148,7 +159,7 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
       const endDateStr = `${year}-${month}-${String(endDate.getDate()).padStart(2, "0")}`;
 
       // Parallel: daily records (for investido + influencer sync), platform names, existing list
-      const [dailyRes, platformRes, existingRes] = await Promise.all([
+      const [dailyRes, platformRes, existingRes, betaRes] = await Promise.all([
         supabase
           .from("daily_influencer_records")
           .select("influencer_id, valor_pago, is_shared, shared_note, id")
@@ -167,13 +178,20 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
           .select("*")
           .eq("closer_id", selectedCloserId)
           .eq("month", selectedMonth),
+        supabase
+          .from("planilha_beta")
+          .select("influenciador, diaria_cents, faturamento_cents")
+          .eq("closer_id", selectedCloserId)
+          .eq("year", Number(year))
+          .eq("month", Number(month)),
       ]);
 
       if (!active) return;
 
-      // Investido = sum of valor_pago from daily records
+      // O Diário novo é a fonte de verdade financeira desta visualização.
       const dailyRecords = (dailyRes.data || []) as any[];
-      const totalInvestido = dailyRecords.reduce((sum: number, r: any) => sum + (Number(r.valor_pago) || 0), 0);
+      const betaRows = (betaRes.data || []) as Array<{ influenciador: string | null; diaria_cents: number; faturamento_cents: number }>;
+      const totalInvestido = betaRows.reduce((sum, row) => sum + (Number(row.diaria_cents) || 0), 0) / 100;
       setInvestido(totalInvestido);
 
       // Build shared influencer map
@@ -207,18 +225,22 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
       if (platformRes.data) {
         setPlatforms({
           id: platformRes.data.id,
-          platform_1_name: platformRes.data.platform_1_name || DEFAULT_PLATFORMS.platform_1_name,
-          platform_2_name: platformRes.data.platform_2_name || DEFAULT_PLATFORMS.platform_2_name,
-          platform_3_name: platformRes.data.platform_3_name || DEFAULT_PLATFORMS.platform_3_name,
+          platform_1_name: normalizePlatformName(platformRes.data.platform_1_name, 1),
+          platform_2_name: normalizePlatformName(platformRes.data.platform_2_name, 2),
+          platform_3_name: normalizePlatformName(platformRes.data.platform_3_name, 3),
         });
       } else {
         setPlatforms({ ...DEFAULT_PLATFORMS });
       }
 
-      // Sync influencers
-      const uniqueInfluencerIds = [...new Set(dailyRecords.map((r) => r.influencer_id))];
+      // Lista única e alfabética derivada dos nomes efetivamente lançados no Diário.
+      const uniqueHandles = [...new Set(
+        betaRows
+          .map((row) => normalizeHandle(row.influenciador || ""))
+          .filter(Boolean),
+      )].sort((a, b) => a.localeCompare(b, "pt-BR"));
 
-      if (uniqueInfluencerIds.length === 0) {
+      if (uniqueHandles.length === 0) {
         setRows([]);
         setLoading(false);
         return;
@@ -227,20 +249,24 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
       const { data: influencers } = await supabase
         .from("influencers")
         .select("id, handle")
-        .in("id", uniqueInfluencerIds);
+        .in("handle", uniqueHandles);
 
       if (!active) return;
-      const handleMap = new Map((influencers || []).map((i) => [i.id, i.handle]));
+      const influencerByHandle = new Map((influencers || []).map((influencer) => [normalizeHandle(influencer.handle), influencer]));
+      const uniqueInfluencers = uniqueHandles
+        .map((handle) => influencerByHandle.get(handle))
+        .filter((influencer): influencer is { id: string; handle: string } => Boolean(influencer));
+      const uniqueInfluencerIds = uniqueInfluencers.map((influencer) => influencer.id);
       const existingMap = new Map((existingRes.data || []).map((r: any) => [r.influencer_id, r]));
 
       const toInsert: any[] = [];
-      for (const infId of uniqueInfluencerIds) {
-        if (!existingMap.has(infId)) {
+      for (const influencer of uniqueInfluencers) {
+        if (!existingMap.has(influencer.id)) {
           toInsert.push({
             month: selectedMonth,
             closer_id: selectedCloserId,
-            influencer_id: infId,
-            influencer_handle: handleMap.get(infId) || "???",
+            influencer_id: influencer.id,
+            influencer_handle: influencer.handle,
           });
         }
       }
@@ -255,6 +281,7 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
         .select("*")
         .eq("closer_id", selectedCloserId)
         .eq("month", selectedMonth)
+        .in("influencer_id", uniqueInfluencerIds)
         .order("influencer_handle", { ascending: true });
 
       if (!active) return;
@@ -302,6 +329,16 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
         {
           event: "*",
           schema: "public",
+          table: "planilha_beta",
+          filter: `closer_id=eq.${selectedCloserId}`,
+        },
+        scheduleReload
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
           table: "monthly_influencer_list",
           filter: `closer_id=eq.${selectedCloserId}`,
         },
@@ -318,11 +355,9 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
 
 
   /* ── computed summary ── */
-  const currentCloser = closers.find((c) => c.id === selectedCloserId);
-
   // Intermediate resultado for tier calculation
   const rawFaturado = rows.reduce((sum, r) => sum + r.valor_total, 0);
-  const rawFee = rawFaturado * feeRate;
+  const rawFee = rawFaturado * DAILY_FEE_RATE;
   const rawResultado = rawFaturado - investido - rawFee;
 
   // Use tier-based commission (same source of truth as thermometer)
@@ -397,259 +432,151 @@ export default function ListaDoMes({ closerId, hideThermometer = false, external
   if (!user) return null;
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-[30px] bg-[linear-gradient(180deg,#ffffff_0%,#fafaf8_100%)] p-5 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03] lg:p-6">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#f3f3ef] px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-[#676767]">
-              <ListChecks className="h-3.5 w-3.5" />
-              Monthly List
-            </div>
-            <div>
-              <h2 className="text-[34px] font-medium tracking-[-0.06em] text-foreground sm:text-[42px]">
-                {monthOptions.find((o) => o.value === selectedMonth)?.label || "Lista do mês"}
-              </h2>
-              <p className="mt-2 text-[14px] text-[#6e6e73]">
-                Leitura consolidada por influenciador com plataformas, faturamento, taxa e comissão.
-              </p>
-            </div>
+    <div className="min-h-screen bg-white pb-10">
+      <div className="flex h-[72px] items-center justify-end gap-3 border-b border-border bg-background px-4 sm:px-6 lg:px-8">
+        {!externalMonth && (
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="h-11 w-full rounded-2xl border-border bg-background px-4 text-sm shadow-sm sm:w-[220px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {monthOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
+        {!closerId && isAdmin && closers.length > 1 && (
+          <Select value={selectedCloserId} onValueChange={setSelectedCloserId}>
+            <SelectTrigger className="h-11 w-full rounded-2xl border-border bg-background px-4 text-sm shadow-sm sm:w-[220px]">
+              <SelectValue placeholder="Selecionar closer" />
+            </SelectTrigger>
+            <SelectContent>
+              {closers.map((closer) => (
+                <SelectItem key={closer.id} value={closer.id}>{closer.nome}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+
+      <section
+        className="relative mx-[26px] w-[calc(100%-52px)] overflow-hidden rounded-2xl border border-[var(--sheet-grid)] bg-[var(--sheet-cell)] font-[Poppins] shadow-sm"
+        style={{
+          "--sheet-title": "#000000",
+          "--sheet-cell": "#ffffff",
+          "--sheet-grid": "#c4c7c5",
+          "--sheet-header": "#1f9d55",
+          "--sheet-result-header": "#fbbc04",
+          "--sheet-result-positive": "#b7e1cd",
+          "--sheet-result-negative": "#f4c7c3",
+          "--sheet-calculated": "#f1f2f1",
+          "--sheet-alert": "#ea4335",
+        } as React.CSSProperties}
+      >
+        {loading && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/75 backdrop-blur-sm">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
+        )}
 
-          <div className="flex flex-col gap-3 lg:items-end">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center">
-              {!externalMonth && (
-                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger className="h-11 w-full rounded-full border-[#ececeb] bg-white px-4 text-sm shadow-none md:w-[220px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {monthOptions.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+        <div className="w-full overflow-hidden">
+          <div className="grid w-full grid-cols-1 items-start gap-4 p-0">
+            <table className="order-2 w-full table-fixed self-start border-collapse font-[Poppins]">
+              <colgroup>
+                <col className="w-[22%]" />
+                <col className="w-[19%]" />
+                <col className="w-[19%]" />
+                <col className="w-[19%]" />
+                <col className="w-[21%]" />
+              </colgroup>
+              <thead>
+                <tr className="h-[58px] text-[15px] font-extrabold uppercase text-white xl:text-[16px]">
+                  <th className="border border-[var(--sheet-grid)] bg-[var(--sheet-title)] px-3">Influenciadores</th>
+                  {[
+                    { field: "platform_1_name", value: platforms.platform_1_name },
+                    { field: "platform_2_name", value: platforms.platform_2_name },
+                    { field: "platform_3_name", value: platforms.platform_3_name },
+                  ].map((platform) => (
+                    <th key={platform.field} className="overflow-hidden border border-[var(--sheet-grid)] bg-[var(--sheet-header)] px-2">
+                      <EditableHeader value={platform.value} onChange={(value) => updatePlatformName(platform.field, value)} />
+                    </th>
+                  ))}
+                  <th className="border border-[var(--sheet-grid)] bg-[var(--sheet-result-header)] px-1 text-black">Valor total</th>
+                </tr>
+                <tr className="h-[28px] bg-[var(--sheet-header)] text-[9px] font-extrabold uppercase text-white xl:text-[10px]">
+                  <th className="border border-[var(--sheet-grid)]">Nomes</th>
+                  <th className="border border-[var(--sheet-grid)]">Valor link 1</th>
+                  <th className="border border-[var(--sheet-grid)]">Valor link 2</th>
+                  <th className="border border-[var(--sheet-grid)]">Valor link 3</th>
+                  <th className="border border-[var(--sheet-grid)] bg-[var(--sheet-alert)] px-1 text-[8px] leading-tight xl:text-[9px]">Calculado automaticamente</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.length === 0 && !loading ? (
+                  <tr className="h-[54px]">
+                    <td colSpan={5} className="border border-[var(--sheet-grid)] text-center text-[14px] text-muted-foreground">
+                      Nenhum influenciador fechado neste mês.
+                    </td>
+                  </tr>
+                ) : rows.map((row) => (
+                  <tr key={row.id} className="h-[38px] max-h-[38px] text-[12px] xl:text-[13px]">
+                    <td className="overflow-hidden border border-[var(--sheet-grid)] bg-[var(--sheet-cell)] px-1 font-semibold text-black">
+                      <div className="flex items-center justify-center gap-2">
+                        <span>@{row.influencer_handle.replace(/^@/, "")}</span>
+                        {sharedInfluencerMap.has(row.influencer_id) && (() => {
+                          const entries = sharedInfluencerMap.get(row.influencer_id)!;
+                          return <SharedPartnersPopover partners={entries.flatMap((entry) => entry.partners)} sharedNote={entries.find((entry) => entry.note)?.note || null} compact />;
+                        })()}
+                      </div>
+                    </td>
+                    <CasaCell valor={row.casa_1_valor} email={row.casa_1_email} onValorChange={(value) => updateField(row.id, "casa_1_valor", value)} onEmailChange={(value) => updateField(row.id, "casa_1_email", value)} />
+                    <CasaCell valor={row.casa_2_valor} email={row.casa_2_email} onValorChange={(value) => updateField(row.id, "casa_2_valor", value)} onEmailChange={(value) => updateField(row.id, "casa_2_email", value)} />
+                    <CasaCell valor={row.casa_3_valor} email={row.casa_3_email} onValorChange={(value) => updateField(row.id, "casa_3_valor", value)} onEmailChange={(value) => updateField(row.id, "casa_3_email", value)} />
+                    <td className="border border-[var(--sheet-grid)] bg-[var(--sheet-calculated)] px-1 text-center font-medium tabular-nums text-black">{formatSheetAmount(row.valor_total)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="h-[38px] text-[13px] font-extrabold">
+                  <td className="border border-[var(--sheet-grid)] bg-[var(--sheet-cell)] text-center" colSpan={4}>TOTAL DO MÊS</td>
+                  <td className="border border-[var(--sheet-grid)] bg-[var(--sheet-result-positive)] text-center tabular-nums">{formatSheetAmount(summary.faturado)}</td>
+                </tr>
+              </tfoot>
+            </table>
 
-              {currentCloser && (
-                <div className="inline-flex items-center rounded-full bg-white px-4 py-2 text-[12px] font-medium text-[#6e6e73] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03]">
-                  Comissão atual: <span className="ml-1 text-[#1f1f1f]">{currentPercentage}%</span>
-                </div>
-              )}
-
-              {!closerId && isAdmin && closers.length > 1 && (
-                <Select value={selectedCloserId} onValueChange={setSelectedCloserId}>
-                  <SelectTrigger className="h-11 w-full rounded-full border-[#ececeb] bg-white px-4 text-sm shadow-none md:w-[210px]">
-                    <SelectValue placeholder="Selecionar closer" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {closers.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+            <div className="order-1 min-w-0 overflow-hidden">
+              <div className="flex h-[72px] items-center justify-center border border-[var(--sheet-grid)] bg-[var(--sheet-title)] text-[36px] font-extrabold tracking-[-0.02em] text-white">TOTAL</div>
+              <div className="grid grid-cols-5">
+                {["Faturamento", "Gastos", DAILY_FEE_LABEL, "Balanço geral", `Comissão (${tierLoading ? "—" : `${currentPercentage}%`})`].map((label) => (
+                  <div key={label} className="flex h-[64px] min-w-0 items-center justify-center border border-[var(--sheet-grid)] bg-[var(--sheet-header)] px-2 text-center text-[16px] font-extrabold uppercase leading-tight text-white xl:text-[18px]">{label}</div>
+                ))}
+                <SummaryValue value={summary.faturado} tone="positive" />
+                <SummaryValue value={investido} tone="negative" />
+                <SummaryValue value={summary.fee} />
+                <SummaryValue value={summary.resultado} />
+                <SummaryValue value={summary.comissao} />
+              </div>
             </div>
+
           </div>
         </div>
       </section>
-
-      {loading ? (
-        <div className="flex items-center justify-center rounded-[28px] bg-white py-20 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      ) : rows.length === 0 ? (
-        <div className="rounded-[28px] bg-white py-20 text-center text-muted-foreground shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
-          <ListChecks className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">Nenhum influenciador registrado neste mês.</p>
-        </div>
-      ) : (
-        <>
-          {!hideThermometer && (
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.3fr_1fr]">
-              <div className="rounded-[28px] bg-white p-6 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
-                <div className="mb-4 flex items-center justify-between">
-                  <div>
-                    <div className="text-[12px] uppercase tracking-[0.18em] text-[#999999]">Porcentagem Atual</div>
-                    <div className="mt-1 text-[28px] font-medium tracking-[-0.04em] text-[#1f1f1f]">Performance do mês</div>
-                  </div>
-                  <div className="rounded-full bg-[#f3f3ef] px-3 py-2 text-[12px] font-medium text-[#676767]">
-                    {rows.length} influenciadores
-                  </div>
-                </div>
-                <CommissionCardCarousel
-                  employeeName={closers.find((c) => c.id === selectedCloserId)?.nome || user?.nome || ""}
-                  resultado={summary.resultado}
-                  revenue={summary.faturado}
-                />
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <SummaryCard label="Faturamento" value={summary.faturado} icon={TrendingUp} />
-                <SummaryCard label="Investido" value={investido} icon={DollarSign} />
-                <SummaryCard label={feeLabel} value={summary.fee} icon={Percent} variant="muted" />
-                <SummaryCard
-                  label="Resultado"
-                  value={summary.resultado}
-                  icon={summary.resultado >= 0 ? TrendingUp : TrendingDown}
-                  variant={summary.resultado > 0 ? (investido > 0 && summary.resultado / investido >= 0.3 ? "positive" : "warning") : "negative"}
-                />
-                <SummaryCard label="Comissão" value={summary.comissao} icon={Receipt} />
-                <SummaryCard
-                  label="Saldo Final"
-                  value={summary.saldo}
-                  icon={Wallet}
-                  variant={summary.saldo >= 0 ? "positive" : "negative"}
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="overflow-hidden rounded-[28px] bg-white p-3 shadow-[0_18px_44px_-38px_rgba(15,23,42,0.1)] ring-1 ring-black/[0.03]">
-            <div className="mb-3 flex items-center justify-between px-2 pt-2">
-              <div>
-                <div className="text-[12px] uppercase tracking-[0.18em] text-[#999999]">Distribuição mensal</div>
-                <div className="mt-1 text-[24px] font-medium tracking-[-0.04em] text-[#1f1f1f]">Influenciadores do mês</div>
-              </div>
-              <div className="rounded-full bg-[#f3f3ef] px-3 py-2 text-[12px] font-medium text-[#676767]">
-                {rows.length} linhas
-              </div>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[1160px] text-sm">
-                <thead>
-                  <tr>
-                    <th className="px-5 py-5 text-left text-[12px] font-medium text-[#6e6e6e] whitespace-nowrap">
-                      Influenciador
-                    </th>
-                    {[
-                      { field: "platform_1_name", val: platforms.platform_1_name },
-                      { field: "platform_2_name", val: platforms.platform_2_name },
-                      { field: "platform_3_name", val: platforms.platform_3_name },
-                    ].map((p) => (
-                      <th key={p.field} className="px-3 py-5 text-center text-[12px] font-medium text-[#6e6e6e] min-w-[180px]">
-                        <EditableHeader
-                          value={p.val}
-                          onChange={(v) => updatePlatformName(p.field, v)}
-                        />
-                      </th>
-                    ))}
-                    <th className="px-4 py-5 text-right text-[12px] font-medium text-[#6e6e6e] whitespace-nowrap">
-                      Valor total
-                    </th>
-                    <th className="px-4 py-5 text-left text-[12px] font-medium text-[#6e6e6e]">
-                      Obs
-                    </th>
-                  </tr>
-                  <tr>
-                    <td colSpan={6} className="px-5">
-                      <div className="border-b border-dashed border-[#e6ddb0]" />
-                    </td>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row, idx) => (
-                    <tr
-                      key={row.id}
-                      className={idx % 2 === 1 ? "bg-[#fbfbf8]" : "bg-white"}
-                    >
-                      <td className="px-5 py-4 text-[13px] font-medium text-[#1f1f1f] whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          {row.influencer_handle}
-                          {sharedInfluencerMap.has(row.influencer_id) && (() => {
-                            const entries = sharedInfluencerMap.get(row.influencer_id)!;
-                            const allPartners = entries.flatMap((e) => e.partners);
-                            const firstNote = entries.find((e) => e.note)?.note || null;
-                            return (
-                              <SharedPartnersPopover
-                                partners={allPartners}
-                                sharedNote={firstNote}
-                                compact
-                              />
-                            );
-                          })()}
-                        </div>
-                      </td>
-                      <CasaCell
-                        valor={row.casa_1_valor}
-                        email={row.casa_1_email}
-                        onValorChange={(v) => updateField(row.id, "casa_1_valor", v)}
-                        onEmailChange={(v) => updateField(row.id, "casa_1_email", v)}
-                      />
-                      <CasaCell
-                        valor={row.casa_2_valor}
-                        email={row.casa_2_email}
-                        onValorChange={(v) => updateField(row.id, "casa_2_valor", v)}
-                        onEmailChange={(v) => updateField(row.id, "casa_2_email", v)}
-                      />
-                      <CasaCell
-                        valor={row.casa_3_valor}
-                        email={row.casa_3_email}
-                        onValorChange={(v) => updateField(row.id, "casa_3_valor", v)}
-                        onEmailChange={(v) => updateField(row.id, "casa_3_email", v)}
-                      />
-                      <td className="px-4 py-4 text-right text-[13px] tabular-nums font-medium text-[#1f1f1f] whitespace-nowrap">
-                        {formatBRL(row.valor_total)}
-                      </td>
-                      <EditableTextCell
-                        value={row.observacoes}
-                        onChange={(v) => updateField(row.id, "observacoes", v)}
-                        placeholder="—"
-                      />
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr className="border-t border-[#ececeb] bg-[#f5f5f2] font-semibold text-foreground">
-                    <td className="px-5 py-4 text-[13px]" colSpan={4}>
-                      Total do mês
-                    </td>
-                    <td className="px-4 py-4 text-right text-[13px] tabular-nums">
-                      {formatBRL(summary.faturado)}
-                    </td>
-                    <td />
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 }
 
 /* ───── sub-components ───── */
 
-function SummaryCard({
-  label,
-  value,
-  icon: Icon,
-  variant = "default",
-}: {
-  label: string;
-  value: number;
-  icon: any;
-  variant?: "default" | "positive" | "negative" | "warning" | "muted";
-}) {
-  const colorMap = {
-    default: "text-[#1f1f1f]",
-    positive: "text-emerald-700",
-    negative: "text-red-600",
-    warning: "text-amber-700",
-    muted: "text-[#7b7b78]",
-  };
-
+function SummaryValue({ value, tone }: { value: number; tone?: "positive" | "negative" }) {
   return (
-    <div className="rounded-[24px] bg-white p-5 shadow-[0_8px_24px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.03]">
-      <div className="flex items-center gap-2">
-        <div className="grid h-8 w-8 place-items-center rounded-full bg-[#f3f3ef] text-[#6e6e73]">
-          <Icon className="h-4 w-4" />
-        </div>
-        <span className="text-[13px] font-medium text-[#7b7b78]">{label}</span>
-      </div>
-      <p className={cn("mt-4 text-[20px] font-semibold tracking-[-0.04em] tabular-nums", colorMap[variant])}>
-        {formatBRL(value)}
-      </p>
+    <div
+      className={`flex h-[70px] min-w-0 items-center justify-center overflow-hidden border border-[var(--sheet-grid)] bg-[var(--sheet-cell)] px-2 text-[21px] font-semibold tabular-nums tracking-[-0.02em] xl:text-[25px] ${
+        tone === "positive" ? "text-[var(--sheet-header)]" : tone === "negative" ? "text-[var(--sheet-alert)]" : "text-black"
+      }`}
+    >
+      {formatSheetAmount(value)}
     </div>
   );
 }
@@ -660,7 +587,7 @@ function EditableHeader({ value, onChange }: { value: string; onChange: (v: stri
 
   return (
     <input
-      className="w-full rounded-full border border-transparent bg-transparent px-2 py-1 text-center text-[11px] font-medium uppercase tracking-[0.16em] text-[#6e6e6e] outline-none transition-colors focus:border-[#e5e5e1] focus:bg-white"
+      className="w-full border-0 bg-transparent px-0.5 text-center text-[13px] font-extrabold uppercase text-white outline-none placeholder:text-white/70 xl:text-[14px]"
       value={local}
       onChange={(e) => setLocal(e.target.value)}
       onBlur={() => { if (local !== value) onChange(local); }}
@@ -707,11 +634,11 @@ function CurrencyInput({
   };
 
   return (
-    <Input
-      className="h-10 w-full rounded-[16px] border-[#ececeb] bg-white px-3 text-right text-[13px] tabular-nums shadow-none"
+    <input
+      className="h-[21px] w-full border-0 bg-transparent px-0.5 text-center text-[11px] tabular-nums text-black outline-none focus:bg-[var(--sheet-focus,#e8f0fe)] xl:text-[12px]"
       inputMode="numeric"
       value={display}
-      placeholder="R$ 0,00"
+      placeholder=""
       onChange={handleChange}
       onBlur={handleBlur}
     />
@@ -730,48 +657,39 @@ function CasaCell({
   onEmailChange: (v: string) => void;
 }) {
   const [localEmail, setLocalEmail] = useState(email);
+  const [showEmail, setShowEmail] = useState(Boolean(email));
   useEffect(() => { setLocalEmail(email); }, [email]);
 
   return (
-    <td className="px-3 py-4 align-top">
-      <div className="flex flex-col gap-2">
+    <td className="border border-[var(--sheet-grid)] bg-[var(--sheet-cell)] p-0 align-middle">
+      <div className="relative flex h-[37px] flex-col justify-center">
         <CurrencyInput value={valor} onChange={onValorChange} />
-        <div className="flex items-center gap-2 rounded-[14px] border border-[#efefeb] bg-[#fbfbf8] px-2.5 py-2">
-          <Mail className="h-3.5 w-3.5 text-[#9a9a96] shrink-0" />
-          <input
-            className="h-5 w-full bg-transparent text-[11px] text-[#6f6f6b] outline-none transition-colors placeholder:text-[#b5b5af] focus:text-[#1f1f1f]"
-            value={localEmail}
-            placeholder="email afiliado"
-            onChange={(e) => setLocalEmail(e.target.value)}
-            onBlur={() => { if (localEmail !== email) onEmailChange(localEmail); }}
-          />
-        </div>
+        {showEmail || localEmail ? (
+          <div className="flex h-[16px] items-center gap-1 border-t border-[var(--sheet-grid)] px-1">
+            <Mail className="h-3 w-3 shrink-0 text-muted-foreground" />
+            <input
+              autoFocus={!email}
+              className="h-full w-full bg-transparent text-[9px] text-muted-foreground outline-none placeholder:text-muted-foreground/60 focus:text-foreground"
+              value={localEmail}
+              placeholder="e-mail do link"
+              onChange={(event) => setLocalEmail(event.target.value)}
+              onBlur={() => {
+                if (localEmail !== email) onEmailChange(localEmail);
+                if (!localEmail) setShowEmail(false);
+              }}
+            />
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="absolute bottom-1 right-1 inline-flex h-4 w-4 items-center justify-center text-muted-foreground/50 hover:text-muted-foreground"
+            title="Adicionar e-mail do link"
+            onClick={() => setShowEmail(true)}
+          >
+            <Mail className="h-3 w-3" />
+          </button>
+        )}
       </div>
-    </td>
-  );
-}
-
-function EditableTextCell({
-  value,
-  onChange,
-  placeholder,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-}) {
-  const [local, setLocal] = useState(value);
-  useEffect(() => { setLocal(value); }, [value]);
-
-  return (
-    <td className="px-4 py-4 align-top">
-      <Input
-        className="h-10 min-w-[140px] rounded-[16px] border-[#ececeb] bg-white px-3 text-[13px] shadow-none"
-        value={local}
-        placeholder={placeholder}
-        onChange={(e) => setLocal(e.target.value)}
-        onBlur={() => { if (local !== value) onChange(local); }}
-      />
     </td>
   );
 }

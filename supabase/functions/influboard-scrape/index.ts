@@ -1,6 +1,7 @@
 // Influboard scraper - login Laravel + GET painel-de-consulta + cache em DB
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { authorizationError, authorizeRequest } from '../_shared/authorize.ts';
 
 const BASE = 'https://influboard.site';
 
@@ -32,6 +33,12 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
+    try {
+      await authorizeRequest(req, ['ADMIN', 'CLOSER']);
+    } catch (error) {
+      return authorizationError(error, corsHeaders);
+    }
+
     const email = Deno.env.get('INFLUBOARD_EMAIL');
     const password = Deno.env.get('INFLUBOARD_PASSWORD');
     if (!email || !password) {

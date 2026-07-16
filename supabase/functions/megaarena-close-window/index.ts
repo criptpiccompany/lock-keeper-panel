@@ -1,23 +1,19 @@
-// Fecha a janela 09h→09h do dia anterior e grava em megaarena_janela_9h.
-// Janela D = 09h (D-1 BRT) → 09h (D BRT). Chamada às 09h05 BRT.
+// Fecha a janela 12h→12h do dia anterior e grava em megaarena_janela_9h.
+// Janela D = 12h (D-1 BRT) → 12h (D BRT). Executar após 12h BRT.
 // Fórmula por afiliado:
-//   valor_da_janela = (total_dia_ontem_23:59 - snapshot_ontem_09h) + snapshot_hoje_09h
+//   valor_da_janela = (total_dia_ontem_23:59 - snapshot_ontem_12h) + snapshot_hoje_12h
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
-
-// BRT = UTC-3, sem DST.
-function brtDayBounds(date: Date) {
-  // date interpretado em BRT: retorna limites em UTC do dia BRT (00h..24h)
-  const y = date.getUTCFullYear();
-  const m = date.getUTCMonth();
-  const d = date.getUTCDate();
-  const start = new Date(Date.UTC(y, m, d, 3, 0, 0)); // 00h BRT = 03h UTC
-  const end = new Date(Date.UTC(y, m, d, 27, 0, 0)); // 24h BRT = 03h UTC do dia seguinte
-  return { start, end };
-}
+import { authorizationError, authorizeRequest } from '../_shared/authorize.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  try {
+    await authorizeRequest(req, ['ADMIN']);
+  } catch (error) {
+    return authorizationError(error, corsHeaders);
+  }
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -32,18 +28,18 @@ Deno.serve(async (req) => {
     const brtToday = new Date(Date.UTC(brtNow.getUTCFullYear(), brtNow.getUTCMonth(), brtNow.getUTCDate()));
     const brtYesterday = new Date(brtToday.getTime() - 86400000);
 
-    // 09h BRT hoje = 12h UTC hoje. 09h BRT ontem = 12h UTC ontem.
-    const nineTodayUtc = new Date(brtToday.getTime() + 12 * 3600 * 1000);
-    const nineYesterdayUtc = new Date(brtYesterday.getTime() + 12 * 3600 * 1000);
+    // 12h BRT hoje = 15h UTC hoje. 12h BRT ontem = 15h UTC ontem.
+    const windowEndUtc = new Date(brtToday.getTime() + 15 * 3600 * 1000);
+    const windowStartUtc = new Date(brtYesterday.getTime() + 15 * 3600 * 1000);
     // Fim do dia BRT de ontem (23:59:59 BRT = 02:59:59 UTC hoje)
     const endOfYesterdayUtc = new Date(brtToday.getTime() + 2 * 3600 * 1000 + 59 * 60 * 1000 + 59 * 1000);
 
     // janela_date = dia da ABERTURA da janela (ontem BRT)
     const janelaDateStr = brtYesterday.toISOString().slice(0, 10);
 
-    // Pega todos external_ids que tiveram algum snapshot em qualquer momento entre nineYesterday e nineToday+30min
-    const searchStart = new Date(nineYesterdayUtc.getTime() - 30 * 60 * 1000).toISOString();
-    const searchEnd = new Date(nineTodayUtc.getTime() + 30 * 60 * 1000).toISOString();
+    // Pega external_ids com snapshots entre a abertura e o fechamento da janela.
+    const searchStart = new Date(windowStartUtc.getTime() - 30 * 60 * 1000).toISOString();
+    const searchEnd = new Date(windowEndUtc.getTime() + 30 * 60 * 1000).toISOString();
 
     const { data: distinctAff, error: dErr } = await supabase
       .from('megaarena_snapshots')
@@ -60,16 +56,16 @@ Deno.serve(async (req) => {
     }
 
     // Para cada afiliado, buscar:
-    //   A = snapshot mais próximo <= nineYesterdayUtc (dentro de 30min antes)
+    //   A = snapshot mais próximo da abertura (dentro de 60min antes)
     //   B = último snapshot do dia BRT de ontem (<= endOfYesterdayUtc)
-    //   C = snapshot mais próximo <= nineTodayUtc (dentro de 30min antes)
+    //   C = snapshot mais próximo do fechamento (dentro de 60min antes)
     // Se A ausente, assume 0. Se B ausente, assume A. Se C ausente, pula.
     // janela = (B - A) + C
 
     // Pega afiliados metadata para snapshot handle/closer
     const { data: affs } = await supabase
       .from('megaarena_afiliados')
-      .select('external_id, handle, closer_name')
+      .select('external_id, handle, email, closer_name, cadastro_at')
       .in('external_id', ids);
     const affMap = new Map<string, any>();
     (affs ?? []).forEach((a: any) => affMap.set(a.external_id, a));
@@ -80,13 +76,13 @@ Deno.serve(async (req) => {
     for (let i = 0; i < ids.length; i += BATCH) {
       const chunk = ids.slice(i, i + BATCH);
       const promises = chunk.map(async (id) => {
-        // A: <= 09h ontem
+        // A: snapshot de abertura da janela
         const { data: aRow } = await supabase
           .from('megaarena_snapshots')
-          .select('depositado_hoje_cents, comissao_hoje_cents, captured_at')
+          .select('depositado_hoje_cents, comissao_hoje_cents, indicados, ativos, captured_at')
           .eq('afiliado_external_id', id)
-          .lte('captured_at', nineYesterdayUtc.toISOString())
-          .gte('captured_at', new Date(nineYesterdayUtc.getTime() - 60 * 60 * 1000).toISOString())
+          .lte('captured_at', windowStartUtc.toISOString())
+          .gte('captured_at', new Date(windowStartUtc.getTime() - 60 * 60 * 1000).toISOString())
           .order('captured_at', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -100,13 +96,13 @@ Deno.serve(async (req) => {
           .order('captured_at', { ascending: false })
           .limit(1)
           .maybeSingle();
-        // C: <= 09h hoje
+        // C: snapshot de fechamento da janela
         const { data: cRow } = await supabase
           .from('megaarena_snapshots')
-          .select('depositado_hoje_cents, comissao_hoje_cents, captured_at')
+          .select('depositado_hoje_cents, comissao_hoje_cents, indicados, ativos, captured_at')
           .eq('afiliado_external_id', id)
-          .lte('captured_at', nineTodayUtc.toISOString())
-          .gte('captured_at', new Date(nineTodayUtc.getTime() - 60 * 60 * 1000).toISOString())
+          .lte('captured_at', windowEndUtc.toISOString())
+          .gte('captured_at', new Date(windowEndUtc.getTime() - 60 * 60 * 1000).toISOString())
           .order('captured_at', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -120,6 +116,10 @@ Deno.serve(async (req) => {
 
         const dep = Math.max(0, (B - A)) + Math.max(0, C);
         const com = Math.max(0, (Bc - Ac)) + Math.max(0, Cc);
+        const indicadosInicio = aRow?.indicados ?? 0;
+        const indicadosFim = cRow?.indicados ?? indicadosInicio;
+        const ativosInicio = aRow?.ativos ?? 0;
+        const ativosFim = cRow?.ativos ?? ativosInicio;
 
         const meta = affMap.get(id) ?? {};
         return {
@@ -129,6 +129,16 @@ Deno.serve(async (req) => {
           comissao_janela_cents: com,
           handle_snapshot: meta.handle ?? null,
           closer_snapshot: meta.closer_name ?? null,
+          email_snapshot: meta.email ?? null,
+          cadastro_snapshot: meta.cadastro_at ?? null,
+          window_start: windowStartUtc.toISOString(),
+          window_end: windowEndUtc.toISOString(),
+          indicados_inicio: indicadosInicio,
+          indicados_fim: indicadosFim,
+          indicados_delta: Math.max(0, indicadosFim - indicadosInicio),
+          ativos_inicio: ativosInicio,
+          ativos_fim: ativosFim,
+          ativos_delta: Math.max(0, ativosFim - ativosInicio),
           computed_at: new Date().toISOString(),
         };
       });
