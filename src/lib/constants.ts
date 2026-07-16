@@ -7,9 +7,9 @@ export const PLATFORM_FEE_RATE = 0.06;
 // DEPRECATED: Use getFeeLabel(rate) from useTeamFeeRate instead
 export const PLATFORM_FEE_LABEL = "Taxa (6%)";
 
-// Daily spreadsheet uses 10% for internal calculation
-export const DAILY_FEE_RATE = 0.10;
-export const DAILY_FEE_LABEL = "Taxa 10% (Para Cálculo)";
+// Planilhamento Diário uses the operation's 3% internal calculation rate.
+export const DAILY_FEE_RATE = 0.03;
+export const DAILY_FEE_LABEL = "Taxa (3%)";
 
 // Status Colors (for reference, actual styles in CSS)
 export const STATUS_COLORS = {

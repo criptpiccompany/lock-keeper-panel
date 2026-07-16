@@ -3,3 +3,8 @@ node_modules
 dist
 npm-debug.log*
 .DS_Store
+.env
+.env.*
+!.env.production.example
+supabase/.temp
+coverage

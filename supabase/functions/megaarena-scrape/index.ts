@@ -1,6 +1,7 @@
 // MegaArena scraper — Laravel login + GET /adm/planos (Hoje) + snapshot em DB
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { authorizationError, authorizeRequest } from '../_shared/authorize.ts';
 
 const BASE = 'https://megaarenabrasil.com';
 
@@ -85,6 +86,12 @@ function parseCadastro(raw: string | null): string | null {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  try {
+    await authorizeRequest(req, ['ADMIN']);
+  } catch (error) {
+    return authorizationError(error, corsHeaders);
+  }
 
   const email = Deno.env.get('MEGAARENA_EMAIL');
   const password = Deno.env.get('MEGAARENA_PASSWORD');

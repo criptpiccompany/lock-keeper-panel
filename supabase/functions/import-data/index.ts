@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { authorizationError, authorizeRequest } from "../_shared/authorize.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,11 +33,18 @@ Deno.serve(async (req) => {
   }
 
   try {
+    try {
+      await authorizeRequest(req, ["ADMIN"]);
+    } catch (error) {
+      return authorizationError(error, corsHeaders);
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     const { table, csv, clear_all } = await req.json();
+    const allowedTables = new Set(["influencers", "close_events"]);
 
     // Clear all tables first if requested
     if (clear_all) {
@@ -49,7 +57,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (!table || !csv) {
+    if (!table || !csv || !allowedTables.has(table)) {
       return new Response(JSON.stringify({ error: "Missing table or csv" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

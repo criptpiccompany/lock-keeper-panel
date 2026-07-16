@@ -7,6 +7,13 @@ import { toast } from "sonner";
 import { Loader2, Upload, X, FileText, User as UserIcon, ClipboardPaste } from "lucide-react";
 
 interface Closer { id: string; nome: string; team_id: string | null }
+interface BetaRow {
+  id: string;
+  influenciador: string | null;
+  diaria_cents: number;
+  faturamento_cents: number;
+  acumulado_cents: number;
+}
 
 interface Props {
   closers: Closer[];
@@ -22,6 +29,7 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
   const [preview, setPreview] = useState<string | null>(null);
   const [closerId, setCloserId] = useState<string>("");
   const [influencer, setInfluencer] = useState("");
+  const [betaRows, setBetaRows] = useState<BetaRow[]>([]);
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
@@ -33,6 +41,27 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
     setPreview(url);
     return () => URL.revokeObjectURL(url);
   }, [file]);
+
+  useEffect(() => {
+    if (!closerId || !date) {
+      setBetaRows([]);
+      return;
+    }
+    const [year, month, day] = date.split("-").map(Number);
+    let cancelled = false;
+    void (supabase.from("planilha_beta") as any)
+      .select("id, influenciador, diaria_cents, faturamento_cents, acumulado_cents")
+      .eq("closer_id", closerId)
+      .eq("year", year)
+      .eq("month", month)
+      .eq("day", day)
+      .not("influenciador", "is", null)
+      .order("row_index")
+      .then(({ data }: { data: BetaRow[] | null }) => {
+        if (!cancelled) setBetaRows(data ?? []);
+      });
+    return () => { cancelled = true; };
+  }, [closerId, date]);
 
   // Paste handler — captures global paste when focus is inside this bar
   useEffect(() => {
@@ -104,10 +133,49 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
       const { data: urlData } = supabase.storage.from("comprovantes").getPublicUrl(path);
       const fileType = file.type === "application/pdf" ? "pdf" : "image";
       const handle = influencer.trim().replace(/^@+/, "");
+      const normalizedHandle = `@${handle}`.toLowerCase();
+      const betaRow = betaRows.find((row) => (row.influenciador ?? "").trim().toLowerCase() === normalizedHandle);
+      const { data: influencerRow } = await supabase
+        .from("influencers")
+        .select("id")
+        .eq("owner_id", closerId)
+        .eq("handle", normalizedHandle)
+        .eq("ativo", true)
+        .maybeSingle();
+      let dailyRecordId: string | null = null;
+      if (influencerRow?.id) {
+        const { data: dailyRecord } = await supabase
+          .from("daily_influencer_records")
+          .select("id")
+          .eq("closer_id", closerId)
+          .eq("date", date)
+          .eq("influencer_id", influencerRow.id)
+          .is("deleted_at", null)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        dailyRecordId = dailyRecord?.id ?? null;
+        if (!dailyRecordId && betaRow) {
+          const { data: createdRecord, error: createRecordError } = await supabase
+            .from("daily_influencer_records")
+            .insert({
+              closer_id: closerId,
+              date,
+              influencer_id: influencerRow.id,
+              valor_pago: betaRow.diaria_cents / 100,
+              faturamento: betaRow.faturamento_cents / 100,
+              acumulado: betaRow.acumulado_cents / 100,
+            })
+            .select("id")
+            .single();
+          if (createRecordError) throw createRecordError;
+          dailyRecordId = createdRecord.id;
+        }
+      }
       const { data: inserted, error: insErr } = await supabase.from("daily_receipt_uploads").insert({
-        date, closer_id: closerId, daily_record_id: null,
+        date, closer_id: closerId, daily_record_id: dailyRecordId,
         file_url: urlData.publicUrl, file_type: fileType, uploaded_by: user.id,
-        parsed_data: { manual_influencer: `@${handle}` } as any,
+        parsed_data: { manual_influencer: normalizedHandle, source: "financeiro" } as any,
         parse_status: "processing",
       } as any).select("id").single();
       if (insErr) throw insErr;
@@ -256,12 +324,18 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
           <div className="flex h-[52px] w-full items-center gap-1.5 rounded-2xl border border-[#ececeb] bg-white px-3.5 focus-within:border-[#1f1f1f]/40 transition-colors">
             <span className="text-[#999] text-[15px]">@</span>
             <input
+              list="beta-influencers"
               value={influencer}
               onChange={(e) => setInfluencer(e.target.value.replace(/^@+/, ""))}
               onKeyDown={(e) => { if (e.key === "Enter") handleConfirm(); }}
               placeholder="handle"
               className="flex-1 min-w-0 bg-transparent text-[14px] font-medium tracking-[-0.01em] text-[#1f1f1f] outline-none placeholder:text-[#bbb]"
             />
+            <datalist id="beta-influencers">
+              {betaRows.map((row) => (
+                <option key={row.id} value={(row.influenciador ?? "").replace(/^@+/, "")} />
+              ))}
+            </datalist>
           </div>
         </div>
 
@@ -279,4 +353,3 @@ export default function QuickAddReceiptBar({ closers, date, onCreated }: Props) 
     </div>
   );
 }
-

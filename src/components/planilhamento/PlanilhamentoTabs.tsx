@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, type ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
-import { FileText, BarChart3, ListChecks, Trophy, User, Radar, UserCircle2, Sparkles } from "lucide-react";
+import { Trophy, User, Radar, UserCircle2, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useLayoutStore } from "@/store/useLayoutStore";
 import { supabase } from "@/integrations/supabase/client";
 import PlanilhamentoCalendarWorkspace from "./PlanilhamentoCalendarWorkspace";
 import Balanco from "./Balanco";
@@ -11,9 +12,9 @@ import ConflictRadar from "./ConflictRadar";
 import PlanilhaBeta from "./PlanilhaBeta";
 
 const subTabs = [
-  { id: "diario", label: "Planilhamento Diário", icon: FileText },
-  { id: "balanco", label: "Balanço", icon: BarChart3 },
-  { id: "lista-mes", label: "Lista do Mês", icon: ListChecks },
+  { id: "diario", label: "Diário" },
+  { id: "balanco", label: "Balanço" },
+  { id: "lista-mes", label: "Lista do Mês" },
 ] as const;
 
 type SubTabId = (typeof subTabs)[number]["id"];
@@ -42,9 +43,50 @@ function PillTabGroup({
   );
 }
 
+function ConnectedPlanTabs({
+  active,
+  onSelect,
+}: {
+  active: SubTabId;
+  onSelect: (tab: SubTabId) => void;
+}) {
+  return (
+    <div className="max-w-full overflow-x-auto scrollbar-none">
+      <div className="inline-flex min-w-max items-end border-b-[3px] border-foreground px-1 pt-2">
+        {subTabs.map((tab, index) => {
+          const isActive = active === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => onSelect(tab.id)}
+              aria-current={isActive ? "page" : undefined}
+              className={`relative h-12 min-w-[150px] px-8 text-[13px] font-semibold tracking-[-0.01em] transition-colors sm:min-w-[176px] ${
+                index > 0 ? "-ml-4" : ""
+              } ${
+                isActive
+                  ? "z-20 bg-foreground text-background"
+                  : "z-10 bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+              style={{ clipPath: "polygon(13% 0, 87% 0, 100% 100%, 0 100%)" }}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function PlanilhamentoTabs() {
   const [searchParams] = useSearchParams();
   const { user, isAdmin } = useAuth();
+
+  useEffect(() => {
+    useLayoutStore.getState().setFullWidth(true);
+    return () => useLayoutStore.getState().setFullWidth(false);
+  }, []);
 
   // CLOSER view
   const [closerTab, setCloserTab] = useState<SubTabId>("diario");
@@ -129,29 +171,11 @@ export default function PlanilhamentoTabs() {
   if (!isAdmin) {
     return (
       <div className="min-h-screen">
-        <div className="container flex -translate-y-8 justify-center px-4 pt-3 sm:-translate-y-10 sm:px-6 lg:-translate-y-14 lg:px-8">
-          <PillTabGroup className="max-w-full overflow-x-auto scrollbar-none">
-            {subTabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = closerTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setCloserTab(tab.id)}
-                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px] font-medium tracking-[-0.01em] transition-colors whitespace-nowrap ${
-                    isActive ? "bg-[#242424] text-white" : "text-slate-500 hover:text-slate-900"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                  <span className="sm:hidden">{tab.label.split(" ")[0]}</span>
-                </button>
-              );
-            })}
-          </PillTabGroup>
+        <div className="flex -mt-6 justify-start px-4 pt-3 sm:-mt-8 sm:px-6 lg:-mt-10 lg:px-8">
+          <ConnectedPlanTabs active={closerTab} onSelect={setCloserTab} />
         </div>
 
-        <div className={closerTab === "diario" ? "w-full px-0 py-0" : "container px-4 py-5 sm:px-6 lg:px-8"}>
+        <div className="w-full px-0 py-0">
           {closerTab === "diario" && <PlanilhaBeta />}
           {closerTab === "balanco" && <Balanco />}
           {closerTab === "lista-mes" && <ListaDoMes />}
@@ -237,25 +261,7 @@ export default function PlanilhamentoTabs() {
             <span className="text-[12px] font-medium tracking-[0.08em] text-[#8a8a8a] uppercase whitespace-nowrap">
               {selectedCloserName}
             </span>
-            <PillTabGroup className="max-w-full overflow-x-auto scrollbar-none">
-              {subTabs.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = subTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setSubTab(tab.id)}
-                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px] font-medium tracking-[-0.01em] transition-colors whitespace-nowrap ${
-                      isActive ? "bg-[#242424] text-white" : "text-slate-500 hover:text-slate-900"
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span className="hidden sm:inline">{tab.label}</span>
-                    <span className="sm:hidden">{tab.label.split(" ")[0]}</span>
-                  </button>
-                );
-              })}
-            </PillTabGroup>
+            <ConnectedPlanTabs active={subTab} onSelect={setSubTab} />
           </div>
         </div>
       )}

@@ -17,7 +17,6 @@ import { toast } from "sonner";
 import { enrichInfluencer, formatDate, LockInfo } from "@/lib/helpers";
 import { InfluencerWithStatus } from "@/types";
 import { Settings, Archive, RefreshCw, AlertTriangle, Loader2, Users, Mail, Shield, ShieldCheck, Pencil, Key, Percent, UserCheck, UserX, Download, UserPlus, ArrowRightLeft, User as UserIcon, ShieldAlert } from "lucide-react";
-import { exportMonthXlsx } from "@/lib/exportMonthXlsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader, brandTabsListClass, brandTabsTriggerClass, BrandStat, BrandCard, brandTableWrapClass } from "@/components/PageHeader";
 import { OrphanUsersTab } from "@/components/admin/OrphanUsersTab";
@@ -93,6 +92,8 @@ export default function Admin() {
     try {
       const tid = teamIdOverride || exportTeamId || undefined;
       const tname = teamNameOverride || (tid ? teams.find(t => t.id === tid)?.name : undefined);
+      // XLSX é pesado e só precisa ser baixado quando o admin exporta.
+      const { exportMonthXlsx } = await import("@/lib/exportMonthXlsx");
       await exportMonthXlsx(exportMonth, (msg) => toast.info(msg), tid, tname);
       toast.success("Arquivo exportado com sucesso!");
     } catch (err: any) {
@@ -146,7 +147,7 @@ export default function Admin() {
           id: profile.id,
           nome: profile.nome,
           email: '',
-          role: (userRole?.role === 'SUBADMIN' ? 'CLOSER' : (userRole?.role as 'CLOSER' | 'ADMIN' | 'FINANCEIRO')) || 'CLOSER',
+          role: (userRole?.role as 'CLOSER' | 'ADMIN' | 'FINANCEIRO') || 'CLOSER',
           commission_rate: profile.commission_rate ?? 0.1,
           team_id: profile.team_id,
         };

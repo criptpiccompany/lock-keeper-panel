@@ -8,23 +8,25 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { WorkspaceLayout } from "@/components/WorkspaceLayout";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import MeuPainel from "./pages/MeuPainel";
-import PainelGeral from "./pages/PainelGeral";
-import Diretorio from "./pages/Diretorio";
-import Auditoria from "./pages/Auditoria";
-import Admin from "./pages/Admin";
-import NotFound from "./pages/NotFound";
-import ImportData from "./pages/ImportData";
-import RegistroDiario from "./pages/RegistroDiario";
-import Notificacoes from "./pages/Notificacoes";
+import { lazy, Suspense } from "react";
 
-import PendingApproval from "./pages/PendingApproval";
-import Financeiro from "./pages/Financeiro";
-import Home from "./pages/Home";
-import FinanceiroWorkspace from "./pages/FinanceiroWorkspace";
-import InfluboardTest from "./pages/InfluboardTest";
+const Login = lazy(() => import("./pages/Login"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const MeuPainel = lazy(() => import("./pages/MeuPainel"));
+const PainelGeral = lazy(() => import("./pages/PainelGeral"));
+const Diretorio = lazy(() => import("./pages/Diretorio"));
+const Auditoria = lazy(() => import("./pages/Auditoria"));
+const Admin = lazy(() => import("./pages/Admin"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const ImportData = lazy(() => import("./pages/ImportData"));
+const RegistroDiario = lazy(() => import("./pages/RegistroDiario"));
+const Notificacoes = lazy(() => import("./pages/Notificacoes"));
+const PendingApproval = lazy(() => import("./pages/PendingApproval"));
+const Financeiro = lazy(() => import("./pages/Financeiro"));
+const Home = lazy(() => import("./pages/Home"));
+const FinanceiroWorkspace = lazy(() => import("./pages/FinanceiroWorkspace"));
+const InfluboardTest = lazy(() => import("./pages/InfluboardTest"));
+const PainelWorkspace = lazy(() => import("./pages/PainelWorkspace"));
 
 const queryClient = new QueryClient();
 
@@ -65,9 +67,13 @@ function AppRoutes() {
         <Route path="/home" element={<Home />} />
         <Route path="/meu" element={<MeuPainel />} />
         
-        <Route path="/painel" element={<PainelGeral />} />
+        <Route path="/painel" element={<PainelWorkspace />}>
+          <Route index element={<Navigate to="travados" replace />} />
+          <Route path="travados" element={<InfluboardTest />} />
+          <Route path="meu" element={<PainelGeral />} />
+        </Route>
         <Route path="/registro" element={<RegistroDiario />} />
-        <Route path="/influboard-test" element={<InfluboardTest />} />
+        <Route path="/influboard-test" element={<Navigate to="/painel/travados" replace />} />
 
         <Route
           path="/dashboard"
@@ -118,6 +124,14 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/import"
+          element={
+            <ProtectedRoute requireAdmin>
+              <ImportData />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/financeiro/comprovantes"
           element={
             <ProtectedRoute requireFinanceiro>
@@ -137,8 +151,6 @@ function AppRoutes() {
 
       <Route path="*" element={<NotFound />} />
       
-      {/* Temporary import route */}
-      <Route path="/import" element={<ImportData />} />
     </Routes>
   );
 }
@@ -154,7 +166,9 @@ const App = () => (
             <ConnectionStatus />
             <div className="min-h-screen bg-background overflow-x-hidden">
               <ErrorBoundary fallbackTitle="Erro na página">
-                <AppRoutes />
+                <Suspense fallback={<div className="min-h-screen bg-background" aria-busy="true" />}>
+                  <AppRoutes />
+                </Suspense>
               </ErrorBoundary>
             </div>
           </AuthProvider>
