@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import ComprovanteLightbox from "./ComprovanteLightbox";
+import DailyReceiptsCarousel from "./DailyReceiptsCarousel";
 import { DAILY_FEE_RATE } from "@/lib/constants";
 import { ptBR } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
