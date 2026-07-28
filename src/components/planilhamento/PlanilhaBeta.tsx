@@ -1349,7 +1349,7 @@ export default function PlanilhaBeta({
                     })
                     .filter((line): line is { recordId: string; handle: string } => line !== null);
                   return (
-                    <div className="mt-3 mb-6">
+                    <div className="mt-2 mb-3">
                       <DailyReceiptsCarousel
                         date={dateStr}
                         closerId={effectiveCloserId}
