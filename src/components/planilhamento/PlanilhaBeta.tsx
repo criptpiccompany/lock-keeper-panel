@@ -1338,6 +1338,29 @@ export default function PlanilhaBeta({
                     </tr>
                   </tfoot>
                 </table>
+                {effectiveCloserId && (() => {
+                  const dateStr = isoDate(year, month, day);
+                  const influencerLines = visibleRows
+                    .map((row, rowIndex) => {
+                      const recordId = dailyRecordIds.current[`${day}:${rowIndex}`];
+                      const handle = row.influenciador.trim();
+                      if (!recordId || !handle) return null;
+                      return { recordId, handle };
+                    })
+                    .filter((line): line is { recordId: string; handle: string } => line !== null);
+                  return (
+                    <div className="mt-3 mb-6">
+                      <DailyReceiptsCarousel
+                        date={dateStr}
+                        closerId={effectiveCloserId}
+                        teamId={effectiveTeamId}
+                        canEdit={canEdit}
+                        influencerLines={influencerLines}
+                        compact
+                      />
+                    </div>
+                  );
+                })()}
               </section>
             );
           })
