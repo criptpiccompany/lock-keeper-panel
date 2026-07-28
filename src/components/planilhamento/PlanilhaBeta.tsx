@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import ComprovanteLightbox from "./ComprovanteLightbox";
+import DailyReceiptsCarousel from "./DailyReceiptsCarousel";
 import { DAILY_FEE_RATE } from "@/lib/constants";
 import { ptBR } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
@@ -1337,6 +1338,29 @@ export default function PlanilhaBeta({
                     </tr>
                   </tfoot>
                 </table>
+                {effectiveCloserId && (() => {
+                  const dateStr = isoDate(year, month, day);
+                  const influencerLines = visibleRows
+                    .map((row, rowIndex) => {
+                      const recordId = dailyRecordIds.current[`${day}:${rowIndex}`];
+                      const handle = row.influenciador.trim();
+                      if (!recordId || !handle) return null;
+                      return { recordId, handle };
+                    })
+                    .filter((line): line is { recordId: string; handle: string } => line !== null);
+                  return (
+                    <div className="mt-3 mb-6">
+                      <DailyReceiptsCarousel
+                        date={dateStr}
+                        closerId={effectiveCloserId}
+                        teamId={effectiveTeamId}
+                        canEdit={Boolean(user && effectiveCloserId)}
+                        influencerLines={influencerLines}
+                        compact
+                      />
+                    </div>
+                  );
+                })()}
               </section>
             );
           })
