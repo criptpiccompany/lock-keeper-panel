@@ -225,18 +225,18 @@ export default function DailyReceiptsCarousel({
       ref={carouselRef}
       tabIndex={requireFocus ? 0 : -1}
       className={cn(
-        "rounded-2xl border bg-white/60 backdrop-blur-sm px-4 pt-4 pb-5 outline-none",
+        "rounded-xl border bg-white/60 backdrop-blur-sm px-3 pt-2 pb-3 outline-none",
         compact ? "" : "mt-4",
         requireFocus && "focus-within:border-[#6ea93d] focus-within:bg-white"
       )}
     >
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-2">
-          <h4 className="text-[13px] font-semibold tracking-[-0.01em] text-[#2c2c2c]">Comprovantes do dia</h4>
-          <span className="text-[11px] text-muted-foreground">{allItems.length}</span>
+          <h4 className="text-[12px] font-semibold tracking-[-0.01em] text-[#2c2c2c]">Comprovantes do dia</h4>
+          <span className="text-[10px] text-muted-foreground">{allItems.length}</span>
         </div>
         {canEdit && (
-          <p className="hidden sm:block text-[11px] text-muted-foreground">
+          <p className="hidden sm:block text-[10px] text-muted-foreground">
             {requireFocus ? "Clique aqui e cole (Ctrl+V), arraste ou use +" : "Arraste, cole (Ctrl+V) ou clique em +"}
           </p>
         )}
