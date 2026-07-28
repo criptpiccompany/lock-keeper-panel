@@ -871,33 +871,63 @@ export type Database = {
       megaarena_janela_9h: {
         Row: {
           afiliado_external_id: string
+          ativos_delta: number
+          ativos_fim: number
+          ativos_inicio: number
+          cadastro_snapshot: string | null
           closer_snapshot: string | null
           comissao_janela_cents: number
           computed_at: string
           depositado_janela_cents: number
+          email_snapshot: string | null
           handle_snapshot: string | null
           id: string
+          indicados_delta: number
+          indicados_fim: number
+          indicados_inicio: number
           janela_date: string
+          window_end: string | null
+          window_start: string | null
         }
         Insert: {
           afiliado_external_id: string
+          ativos_delta?: number
+          ativos_fim?: number
+          ativos_inicio?: number
+          cadastro_snapshot?: string | null
           closer_snapshot?: string | null
           comissao_janela_cents?: number
           computed_at?: string
           depositado_janela_cents?: number
+          email_snapshot?: string | null
           handle_snapshot?: string | null
           id?: string
+          indicados_delta?: number
+          indicados_fim?: number
+          indicados_inicio?: number
           janela_date: string
+          window_end?: string | null
+          window_start?: string | null
         }
         Update: {
           afiliado_external_id?: string
+          ativos_delta?: number
+          ativos_fim?: number
+          ativos_inicio?: number
+          cadastro_snapshot?: string | null
           closer_snapshot?: string | null
           comissao_janela_cents?: number
           computed_at?: string
           depositado_janela_cents?: number
+          email_snapshot?: string | null
           handle_snapshot?: string | null
           id?: string
+          indicados_delta?: number
+          indicados_fim?: number
+          indicados_inicio?: number
           janela_date?: string
+          window_end?: string | null
+          window_start?: string | null
         }
         Relationships: []
       }
@@ -1077,6 +1107,7 @@ export type Database = {
         Row: {
           acumulado_cents: number
           closer_id: string
+          comprovante_url: string | null
           created_at: string
           day: number
           diaria_cents: number
@@ -1084,6 +1115,7 @@ export type Database = {
           id: string
           influenciador: string | null
           month: number
+          observacao: string | null
           row_index: number
           team_id: string | null
           updated_at: string
@@ -1092,6 +1124,7 @@ export type Database = {
         Insert: {
           acumulado_cents?: number
           closer_id: string
+          comprovante_url?: string | null
           created_at?: string
           day: number
           diaria_cents?: number
@@ -1099,6 +1132,7 @@ export type Database = {
           id?: string
           influenciador?: string | null
           month: number
+          observacao?: string | null
           row_index?: number
           team_id?: string | null
           updated_at?: string
@@ -1107,6 +1141,7 @@ export type Database = {
         Update: {
           acumulado_cents?: number
           closer_id?: string
+          comprovante_url?: string | null
           created_at?: string
           day?: number
           diaria_cents?: number
@@ -1114,6 +1149,7 @@ export type Database = {
           id?: string
           influenciador?: string | null
           month?: number
+          observacao?: string | null
           row_index?: number
           team_id?: string | null
           updated_at?: string
@@ -1122,6 +1158,68 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "planilha_beta_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planilha_beta_observation_styles: {
+        Row: {
+          background: string
+          bold: boolean
+          checkbox: boolean
+          checked: boolean
+          closer_id: string
+          created_at: string
+          day: number
+          id: string
+          italic: boolean
+          month: number
+          row_index: number
+          team_id: string | null
+          text: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          background?: string
+          bold?: boolean
+          checkbox?: boolean
+          checked?: boolean
+          closer_id: string
+          created_at?: string
+          day: number
+          id?: string
+          italic?: boolean
+          month: number
+          row_index: number
+          team_id?: string | null
+          text?: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          background?: string
+          bold?: boolean
+          checkbox?: boolean
+          checked?: boolean
+          closer_id?: string
+          created_at?: string
+          day?: number
+          id?: string
+          italic?: boolean
+          month?: number
+          row_index?: number
+          team_id?: string | null
+          text?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planilha_beta_observation_styles_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
@@ -1362,10 +1460,6 @@ export type Database = {
       is_global_viewer: { Args: { _user_id: string }; Returns: boolean }
       is_same_team: {
         Args: { _user_id_a: string; _user_id_b: string }
-        Returns: boolean
-      }
-      is_team_admin: {
-        Args: { _admin_id: string; _target_id: string }
         Returns: boolean
       }
       sync_influencer_to_closer: {
