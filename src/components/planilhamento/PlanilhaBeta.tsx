@@ -98,6 +98,12 @@ interface MyInfluencer {
   handle: string;
 }
 
+interface PlanilhaBetaProps {
+  closerId?: string;
+  closerName?: string;
+  closerTeamId?: string | null;
+}
+
 type MonthRows = Record<number, SheetRow[]>;
 
 const emptyRow = (): SheetRow => ({
@@ -447,8 +453,15 @@ function ObservationCell({
   );
 }
 
-export default function PlanilhaBeta() {
+export default function PlanilhaBeta({
+  closerId,
+  closerName,
+  closerTeamId,
+}: PlanilhaBetaProps = {}) {
   const { user } = useAuth();
+  const effectiveCloserId = closerId ?? user?.id;
+  const effectiveCloserName = closerName ?? user?.nome ?? "";
+  const effectiveTeamId = closerTeamId ?? user?.teamId ?? "unknown";
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth() + 1;
@@ -496,11 +509,11 @@ export default function PlanilhaBeta() {
   }, [currentMonth, currentYear, latestAllowedDate, month, monthStart, todayIso, year]);
 
   const loadMyInfluencers = useCallback(async () => {
-    if (!user) return;
+    if (!effectiveCloserId) return;
     const { data, error } = await supabase
       .from("influencers")
       .select("id, handle")
-      .eq("owner_id", user.id)
+      .eq("owner_id", effectiveCloserId)
       .eq("ativo", true)
       .order("handle", { ascending: true });
     if (error) {
@@ -508,14 +521,14 @@ export default function PlanilhaBeta() {
       return;
     }
     setMyInfluencers((data ?? []).sort((a, b) => a.handle.localeCompare(b.handle, "pt-BR")));
-  }, [user]);
+  }, [effectiveCloserId]);
 
   useEffect(() => {
     void loadMyInfluencers();
   }, [loadMyInfluencers]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!effectiveCloserId) return;
     let cancelled = false;
 
     const loadRows = async () => {
@@ -528,7 +541,7 @@ export default function PlanilhaBeta() {
 
       const { data, error } = await betaTable()
         .select("id, day, row_index, influenciador, diaria_cents, faturamento_cents, acumulado_cents")
-        .eq("closer_id", user.id)
+        .eq("closer_id", effectiveCloserId)
         .eq("year", year)
         .eq("month", month)
         .order("day")
@@ -544,11 +557,11 @@ export default function PlanilhaBeta() {
       const betaRows = (data as DbRow[] | null) ?? [];
       const { data: styleData, error: styleError } = await observationStylesTable()
         .select("day, row_index, background, text, bold, italic, checkbox, checked")
-        .eq("closer_id", user.id)
+        .eq("closer_id", effectiveCloserId)
         .eq("year", year)
         .eq("month", month);
       const stylesByRow = new Map<string, DbObservationStyle>();
-      const localStyles = readLocalObservationStyles(user.id, year, month);
+      const localStyles = readLocalObservationStyles(effectiveCloserId, year, month);
       const loadedStyles = styleError
         ? localStyles
         : [...((styleData as DbObservationStyle[] | null) ?? []), ...localStyles];
@@ -559,7 +572,7 @@ export default function PlanilhaBeta() {
       const { data: dailyData, error: dailyError } = await supabase
         .from("daily_influencer_records")
         .select("id, date, influencer_id, observacao, comprovante_url, comprovante_url_2, influencers(handle)")
-        .eq("closer_id", user.id)
+        .eq("closer_id", effectiveCloserId)
         .gte("date", startDate)
         .lte("date", endDate)
         .is("deleted_at", null);
@@ -640,7 +653,7 @@ export default function PlanilhaBeta() {
 
     void loadRows();
     return () => { cancelled = true; };
-  }, [currentDay, currentMonth, currentYear, daysInMonth, month, user, year]);
+  }, [currentDay, currentMonth, currentYear, daysInMonth, effectiveCloserId, month, year]);
 
   const updateRow = useCallback((day: number, rowIndex: number, patch: Partial<SheetRow>) => {
     const key = `${day}:${rowIndex}`;
@@ -683,7 +696,7 @@ export default function PlanilhaBeta() {
   }, [month, year]);
 
   const updateObservationStyle = useCallback(async (day: number, rowIndex: number, patch: Partial<ObservationStyle>) => {
-    if (!user) return;
+    if (!effectiveCloserId) return;
     const current = rowsRef.current[day][rowIndex].observationStyle;
     const next = { ...current, ...patch };
     setRowsByDay((rows) => {
@@ -700,15 +713,15 @@ export default function PlanilhaBeta() {
       && !next.italic
       && !next.checkbox
       && !next.checked;
-    writeLocalObservationStyle(user.id, year, month, day, rowIndex, next);
+    writeLocalObservationStyle(effectiveCloserId, year, month, day, rowIndex, next);
     if (!observationStylesBackendAvailable.current) return;
 
     const query = observationStylesTable();
     const response = isDefault
       ? await query.delete()
-        .eq("closer_id", user.id).eq("year", year).eq("month", month).eq("day", day).eq("row_index", rowIndex)
+        .eq("closer_id", effectiveCloserId).eq("year", year).eq("month", month).eq("day", day).eq("row_index", rowIndex)
       : await query.upsert({
-        closer_id: user.id,
+        closer_id: effectiveCloserId,
         year,
         month,
         day,
@@ -722,15 +735,15 @@ export default function PlanilhaBeta() {
     if (response.error) {
       toast.error("Não foi possível salvar o estilo da Observação", { description: response.error.message });
     }
-  }, [month, user, year]);
+  }, [effectiveCloserId, month, year]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!effectiveCloserId) return;
     const channel = supabase
-      .channel(`beta-receipts-${user.id}-${year}-${month}`)
+      .channel(`beta-receipts-${effectiveCloserId}-${year}-${month}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "daily_receipt_uploads", filter: `closer_id=eq.${user.id}` },
+        { event: "*", schema: "public", table: "daily_receipt_uploads", filter: `closer_id=eq.${effectiveCloserId}` },
         (payload: any) => {
           const receipt = payload.new ?? payload.old;
           const dailyRecordId = receipt?.daily_record_id as string | undefined;
@@ -751,10 +764,10 @@ export default function PlanilhaBeta() {
       )
       .subscribe();
     return () => { void supabase.removeChannel(channel); };
-  }, [month, updateRow, user, year]);
+  }, [effectiveCloserId, month, updateRow, year]);
 
   const ensureDailyRecord = useCallback(async (day: number, rowIndex: number, row: SheetRow): Promise<string | null> => {
-    if (!user) return null;
+    if (!effectiveCloserId) return null;
     const rowKey = `${day}:${rowIndex}`;
     const normalizedHandle = normalizeHandle(row.influenciador);
     let influencer = myInfluencers.find((item) => item.handle === normalizedHandle);
@@ -764,8 +777,8 @@ export default function PlanilhaBeta() {
         .from("influencers")
         .insert({
           handle: normalizedHandle,
-          owner_id: user.id,
-          owner_nome: user.nome,
+          owner_id: effectiveCloserId,
+          owner_nome: effectiveCloserName,
           ativo: true,
         })
         .select("id, handle")
@@ -785,7 +798,7 @@ export default function PlanilhaBeta() {
       const { data: existing, error: lookupError } = await supabase
         .from("daily_influencer_records")
         .select("id")
-        .eq("closer_id", user.id)
+        .eq("closer_id", effectiveCloserId)
         .eq("date", date)
         .eq("influencer_id", influencer.id)
         .is("deleted_at", null)
@@ -815,7 +828,7 @@ export default function PlanilhaBeta() {
     } else {
       const { data: inserted, error } = await supabase
         .from("daily_influencer_records")
-        .insert({ ...recordPayload, closer_id: user.id, date, influencer_id: influencer.id })
+        .insert({ ...recordPayload, closer_id: effectiveCloserId, date, influencer_id: influencer.id })
         .select("id")
         .single();
       if (error || !inserted?.id) {
@@ -827,10 +840,10 @@ export default function PlanilhaBeta() {
 
     dailyRecordIds.current[rowKey] = recordId;
     return recordId;
-  }, [month, myInfluencers, user, year]);
+  }, [effectiveCloserId, effectiveCloserName, month, myInfluencers, year]);
 
   const persistRow = useCallback(async (day: number, rowIndex: number, rowOverride?: SheetRow) => {
-    if (!user) return;
+    if (!effectiveCloserId) return;
     const key = `${day}:${rowIndex}`;
     if (!dirtyRows.current.has(key)) return;
 
@@ -855,7 +868,7 @@ export default function PlanilhaBeta() {
     } else if (!isEmpty) {
       const response = await betaTable()
         .upsert({
-          closer_id: user.id,
+          closer_id: effectiveCloserId,
           year,
           month,
           day,
@@ -874,10 +887,10 @@ export default function PlanilhaBeta() {
       return;
     }
     if (!isEmpty) await ensureDailyRecord(day, rowIndex, row);
-  }, [ensureDailyRecord, month, user, year]);
+  }, [effectiveCloserId, ensureDailyRecord, month, year]);
 
   const uploadProof = useCallback(async (day: number, rowIndex: number, file?: File) => {
-    if (!file || !user) return;
+    if (!file || !user || !effectiveCloserId) return;
     if (!(["image/jpeg", "image/png", "image/webp", "application/pdf"].includes(file.type))) {
       toast.error("Formato não aceito", { description: "Use JPG, PNG, WEBP ou PDF." });
       return;
@@ -899,7 +912,7 @@ export default function PlanilhaBeta() {
     if (!betaRowId) {
       const { data: savedRow, error: saveError } = await betaTable()
         .upsert({
-          closer_id: user.id,
+          closer_id: effectiveCloserId,
           year,
           month,
           day,
@@ -930,7 +943,7 @@ export default function PlanilhaBeta() {
 
     const date = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     const extension = file.name.split(".").pop()?.toLowerCase() || "bin";
-    const path = `daily-receipts/${user.teamId ?? "unknown"}/${user.id}/${date}/${Date.now()}-${rowIndex}.${extension}`;
+    const path = `daily-receipts/${effectiveTeamId}/${effectiveCloserId}/${date}/${Date.now()}-${rowIndex}.${extension}`;
     const { error: uploadError } = await supabase.storage.from("comprovantes").upload(path, file, {
       cacheControl: "3600",
       upsert: false,
@@ -944,7 +957,7 @@ export default function PlanilhaBeta() {
     const existingReceiptId = receiptIds.current[rowKey];
     const receiptPayload = {
       date,
-      closer_id: user.id,
+      closer_id: effectiveCloserId,
       daily_record_id: dailyRecordId,
       file_url: data.publicUrl,
       file_type: file.type === "application/pdf" ? "pdf" : "image",
@@ -966,7 +979,7 @@ export default function PlanilhaBeta() {
       void supabase.functions.invoke("parse-receipt", { body: { receiptId: receiptResponse.data.id } });
     }
     toast.success("Comprovante anexado");
-  }, [ensureDailyRecord, month, updateRow, user, year]);
+  }, [effectiveCloserId, effectiveTeamId, ensureDailyRecord, month, updateRow, user, year]);
 
   const openProofPreview = useCallback(async (url: string) => {
     const path = comprovanteStoragePath(url);
@@ -986,7 +999,7 @@ export default function PlanilhaBeta() {
   }, []);
 
   const addToMyList = useCallback(async (handle: string) => {
-    if (!user) return;
+    if (!effectiveCloserId) return;
     const normalized = normalizeHandle(handle);
     if (!validHandle(normalized)) {
       toast.error("@ do Instagram inválido");
@@ -999,8 +1012,8 @@ export default function PlanilhaBeta() {
       .from("influencers")
       .insert({
         handle: normalized,
-        owner_id: user.id,
-        owner_nome: user.nome,
+        owner_id: effectiveCloserId,
+        owner_nome: effectiveCloserName,
         ativo: true,
       })
       .select("id, handle")
@@ -1012,7 +1025,7 @@ export default function PlanilhaBeta() {
     }
     setMyInfluencers((current) => [...current, data].sort((a, b) => a.handle.localeCompare(b.handle, "pt-BR")));
     toast.success(`${normalized} adicionado à Minha Lista`);
-  }, [myInfluencers, user]);
+  }, [effectiveCloserId, effectiveCloserName, myInfluencers]);
 
   const moveOnEnter = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== "Enter") return;

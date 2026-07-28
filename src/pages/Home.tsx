@@ -1,5 +1,5 @@
 import { type ComponentType, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   CalendarDays,
   DollarSign,
@@ -537,7 +537,10 @@ function ActivityList({ rows }: { rows: RecentRecord[] }) {
 
 export default function Home() {
   const { user, isAdmin } = useAuth();
-  const isManagementView = isAdmin;
+  const [searchParams] = useSearchParams();
+  // A Home padrão é sempre o espaço operacional pessoal, inclusive para ADMIN.
+  // A antiga leitura gerencial permanece acessível apenas por URL explícita.
+  const isManagementView = isAdmin && searchParams.get("mode") === "management";
   const month = useMemo(() => getCurrentMonth(), []);
   const greeting = getGreeting();
   const monthLabel = getMonthLabel(month);
@@ -804,7 +807,7 @@ export default function Home() {
                 ]}
               />
 
-              <TeamDailyGoalCard teamId={user.teamId} isAdmin={isAdmin} />
+              <TeamDailyGoalCard teamId={user.teamId} isAdmin={false} />
 
               <SourceDualPanel title="Porcentagem Atual" actionLabel="Performance Club">
                 <CommissionCardCarousel
