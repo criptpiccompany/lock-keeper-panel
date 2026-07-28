@@ -1354,7 +1354,7 @@ export default function PlanilhaBeta({
                         date={dateStr}
                         closerId={effectiveCloserId}
                         teamId={effectiveTeamId}
-                        canEdit={canEdit}
+                        canEdit={Boolean(user && effectiveCloserId)}
                         influencerLines={influencerLines}
                         compact
                       />
