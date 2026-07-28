@@ -270,9 +270,9 @@ export default function DailyReceiptsCarousel({
           <span className="text-xs text-muted-foreground px-2">Nenhum comprovante</span>
         ) : (
           allItems.map((it) => (
-            <div key={it.id} className="shrink-0 flex flex-col items-center gap-1.5">
+            <div key={it.id} className="shrink-0 flex flex-col items-center gap-1">
               <div className="relative group">
-                <div className="w-[104px] h-[104px] rounded-2xl overflow-hidden ring-1 ring-black/5 bg-white flex items-center justify-center">
+                <div className="w-[72px] h-[72px] rounded-xl overflow-hidden ring-1 ring-black/5 bg-white flex items-center justify-center">
                   <ComprovanteThumbnail
                     url={it.url}
                     onClick={async () => {
@@ -289,7 +289,7 @@ export default function DailyReceiptsCarousel({
                   />
                 </div>
                 {it.tagHandle && (
-                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 max-w-[80px] truncate rounded-full bg-foreground text-background text-[9px] px-1.5 py-0.5 font-medium">
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 max-w-[70px] truncate rounded-full bg-foreground text-background text-[8px] px-1 py-0.5 font-medium">
                     {it.tagHandle}
                   </div>
                 )}
@@ -340,30 +340,30 @@ export default function DailyReceiptsCarousel({
                 )}
               </div>
               {/* Dados extraídos pela IA */}
-              {it.kind === "receipt" && (
-                <div className="w-[140px] text-center leading-tight mt-1">
+              {it.kind === "receipt" && !compact && (
+                <div className="w-[104px] text-center leading-tight mt-0.5">
                   {it.parseStatus === "processing" || (!it.parsedData && it.parseStatus !== "error" && it.parseStatus !== "unsupported" && it.parseStatus !== "done") ? (
-                    <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
-                      <Loader2 className="h-3 w-3 animate-spin" /> lendo…
+                    <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
+                      <Loader2 className="h-2.5 w-2.5 animate-spin" /> lendo…
                     </span>
                   ) : it.parsedData ? (
-                    <div className="space-y-0.5">
+                    <div className="space-y-0">
                       {it.parsedData.manual_influencer && (
-                        <div className="font-semibold text-[13px] tracking-[-0.01em] text-[#1f1f1f] truncate" title={it.parsedData.manual_influencer}>
+                        <div className="font-semibold text-[11px] tracking-[-0.01em] text-[#1f1f1f] truncate" title={it.parsedData.manual_influencer}>
                           {it.parsedData.manual_influencer}
                         </div>
                       )}
                       {it.parsedData.valor && (
-                        <div className="font-semibold text-[12.5px] text-[#2c2c2c]">R$ {it.parsedData.valor}</div>
+                        <div className="font-semibold text-[10.5px] text-[#2c2c2c]">R$ {it.parsedData.valor}</div>
                       )}
                       {it.parsedData.destinatario && (
-                        <div className="truncate text-[11px] text-muted-foreground" title={it.parsedData.destinatario}>
+                        <div className="truncate text-[9px] text-muted-foreground" title={it.parsedData.destinatario}>
                           {it.parsedData.destinatario}
                         </div>
                       )}
                     </div>
                   ) : it.parseStatus === "error" ? (
-                    <span className="text-[11px] text-red-500/70">falha leitura</span>
+                    <span className="text-[10px] text-red-500/70">falha leitura</span>
                   ) : null}
                 </div>
               )}
