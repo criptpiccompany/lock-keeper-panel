@@ -82,6 +82,9 @@ function ConnectedPlanTabs({
 export default function PlanilhamentoTabs() {
   const [searchParams] = useSearchParams();
   const { user, isAdmin } = useAuth();
+  // O Planilhamento aberto pelo menu "Meu espaço" pertence ao usuário conectado,
+  // mesmo quando essa conta também possui papel de ADMIN.
+  const isPersonalWorkspace = !isAdmin || searchParams.get("mode") !== "management";
 
   useEffect(() => {
     useLayoutStore.getState().setFullWidth(true);
@@ -106,7 +109,7 @@ export default function PlanilhamentoTabs() {
 
   // Fetch closers with latest activity for admin
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!isAdmin || isPersonalWorkspace) return;
     const fetchClosers = async () => {
       const { data: profiles } = await supabase
         .from("profiles")
@@ -146,7 +149,7 @@ export default function PlanilhamentoTabs() {
       setClosers(closerList);
     };
     fetchClosers();
-  }, [isAdmin]);
+  }, [isAdmin, isPersonalWorkspace]);
 
   const hasUnseen = (closerId: string, lastActivity: string): boolean => {
     if (!lastActivity) return false;
@@ -168,17 +171,23 @@ export default function PlanilhamentoTabs() {
   const selectedCloserName = closers.find((c) => c.id === adminTab)?.nome;
 
   // ── CLOSER view ──
-  if (!isAdmin) {
+  if (isPersonalWorkspace) {
     return (
       <div className="min-h-screen">
-        <div className="flex -mt-6 justify-start px-4 pt-3 sm:-mt-8 sm:px-6 lg:-mt-10 lg:px-8">
+        <div
+          className={
+            isAdmin
+              ? "flex justify-start px-4 pb-3 pt-4 sm:px-6 lg:px-8"
+              : "flex -mt-6 justify-start px-4 pt-3 sm:-mt-8 sm:px-6 lg:-mt-10 lg:px-8"
+          }
+        >
           <ConnectedPlanTabs active={closerTab} onSelect={setCloserTab} />
         </div>
 
         <div className="w-full px-0 py-0">
           {closerTab === "diario" && <PlanilhaBeta />}
-          {closerTab === "balanco" && <Balanco />}
-          {closerTab === "lista-mes" && <ListaDoMes />}
+          {closerTab === "balanco" && <Balanco closerId={user?.id} />}
+          {closerTab === "lista-mes" && <ListaDoMes closerId={user?.id} />}
         </div>
       </div>
     );

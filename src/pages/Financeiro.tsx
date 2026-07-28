@@ -1,110 +1,67 @@
-import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { Fragment, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronDown, ChevronUp, DollarSign, Loader2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, DollarSign, X, User, Trophy } from "lucide-react";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
-import FinanceiroEmployeeDrawerContent from "@/components/financeiro/FinanceiroEmployeeDrawerContent";
-import FinanceiroPeriodFilter from "@/components/financeiro/FinanceiroPeriodFilter";
-import FinanceiroSummaryCards from "@/components/financeiro/FinanceiroSummaryCards";
-import FinanceiroDetailBlocks from "@/components/financeiro/FinanceiroDetailBlocks";
-import FinanceiroChart from "@/components/financeiro/FinanceiroChart";
-import FinanceiroEmployeeSection from "@/components/financeiro/FinanceiroEmployeeSection";
-import FinanceiroDeltaStrip from "@/components/financeiro/FinanceiroDeltaStrip";
-import FinanceiroHistory from "@/components/financeiro/FinanceiroHistory";
-import TeamThermometersSection from "@/components/painel/TeamThermometersSection";
 import { PageHeader, brandTabsListClass, brandTabsTriggerClass } from "@/components/PageHeader";
-import {
-  todayStr, yesterdayStr, daysAgoStr, dateToStr, shiftDateStr, diffDaysInclusive, minDateStr,
-  type DailyRecord, type CloserProfile, type DayAggregate, type EmployeeDayData, type PeriodPreset,
-} from "@/components/financeiro/financeiroHelpers";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatBRL, todayStr, yesterdayStr } from "@/components/financeiro/financeiroHelpers";
 
 interface Team {
   id: string;
   name: string;
 }
 
-const EMPTY_AGG: DayAggregate = { cost: 0, revenue: 0, count: 0 };
+interface Closer {
+  id: string;
+  nome: string;
+  team_id: string | null;
+}
+
+interface FinancialRecord {
+  id: string;
+  date: string;
+  closer_id: string;
+  team_id: string | null;
+  valor_pago: number;
+  faturamento: number | null;
+  influencers: { handle: string } | null;
+}
+
+interface CloserRole {
+  user_id: string;
+}
+
+interface CloserSummary {
+  closer: Closer;
+  yesterdayCost: number;
+  yesterdayRevenue: number;
+  yesterdayCount: number;
+  monthCost: number;
+  monthRevenue: number;
+  yesterdayRecords: FinancialRecord[];
+}
+
+const monthStart = (date: string) => `${date.slice(0, 7)}-01`;
 
 export default function Financeiro() {
   const { isAdmin } = useAuth();
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [records, setRecords] = useState<(DailyRecord & { team_id?: string | null })[]>([]);
-  const [closers, setClosers] = useState<(CloserProfile & { team_id?: string | null })[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [selectedCloser, setSelectedCloser] = useState<CloserProfile | null>(null);
-
-  // Team tab (ADMIN only)
-  const [selectedTeamId, setSelectedTeamId] = useState<string>("");
-
-  // Period filter state
-  const [preset, setPreset] = useState<PeriodPreset>("today");
-  const [customStart, setCustomStart] = useState<Date | undefined>();
-  const [customEnd, setCustomEnd] = useState<Date | undefined>();
-
-  // Memoize "today"/"yesterday" once per mount — otherwise every render
-  // creates new strings that ripple through useMemo/useEffect deps and
-  // can cause unnecessary refetches / re-renders (flicker).
   const today = useMemo(() => todayStr(), []);
   const yesterday = useMemo(() => yesterdayStr(), []);
+  const currentMonthStart = useMemo(() => monthStart(today), [today]);
+  const queryStart = currentMonthStart < yesterday ? currentMonthStart : yesterday;
+  const [selectedTeamId, setSelectedTeamId] = useState("");
+  const [expandedCloserId, setExpandedCloserId] = useState<string | null>(null);
 
-  const filterStart = useMemo(() => {
-    if (preset === "today") return today;
-    if (preset === "yesterday") return yesterday;
-    if (preset === "7d") return daysAgoStr(6);
-    if (preset === "30d") return daysAgoStr(29);
-    if (preset === "custom" && customStart) return dateToStr(customStart);
-    return daysAgoStr(29);
-  }, [preset, customStart, today, yesterday]);
-
-  const filterEnd = useMemo(() => {
-    if (preset === "today") return today;
-    if (preset === "yesterday") return yesterday;
-    if (preset === "custom" && customEnd) return dateToStr(customEnd);
-    return today;
-  }, [preset, customEnd, today, yesterday]);
-
-  // Period meta — labels, previous window, partial flag
-  const periodMeta = useMemo(() => {
-    const lenDays = diffDaysInclusive(filterStart, filterEnd);
-    const previousEnd = shiftDateStr(filterStart, -1);
-    const previousStart = shiftDateStr(previousEnd, -(lenDays - 1));
-    const partial = filterEnd >= today;
-
-    let currentLabel = "Período atual";
-    let previousLabel = "Período anterior";
-    let showDeltaBase = false;
-    if (preset === "today") {
-      currentLabel = "Hoje";
-      previousLabel = "Ontem";
-      showDeltaBase = true;
-    } else if (preset === "yesterday") {
-      currentLabel = "Ontem";
-      previousLabel = "Anteontem";
-      showDeltaBase = true;
-    } else {
-      currentLabel = `Atual (${lenDays}d)`;
-      previousLabel = `Anterior (${lenDays}d)`;
-    }
-    return { lenDays, previousStart, previousEnd, partial, currentLabel, previousLabel, showDeltaBase };
-  }, [filterStart, filterEnd, preset, today]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      // Adaptive window: cobre o período selecionado + comparação + mínimo 90d para histórico
-      const baseline = daysAgoStr(90);
-      const since = minDateStr(baseline, periodMeta.previousStart);
-      const until = filterEnd > today ? filterEnd : today;
-
-      const [recRes, closerRes, teamsRes] = await Promise.all([
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["financeiro-simplificado", queryStart, today],
+    queryFn: async () => {
+      const [recordsResult, closersResult, teamsResult, rolesResult] = await Promise.all([
         supabase
           .from("daily_influencer_records")
-          .select("id, date, closer_id, valor_pago, faturamento, team_id")
-          .gte("date", since)
-          .lte("date", until)
+          .select("id, date, closer_id, team_id, valor_pago, faturamento, influencers(handle)")
+          .gte("date", queryStart)
+          .lte("date", today)
           .is("deleted_at", null)
           .order("date", { ascending: false }),
         supabase
@@ -112,230 +69,249 @@ export default function Financeiro() {
           .select("id, nome, team_id")
           .eq("status", "approved")
           .order("nome"),
-        supabase.from("teams").select("id, name"),
+        supabase.from("teams").select("id, name").order("name"),
+        supabase.from("user_roles").select("user_id").eq("role", "CLOSER"),
       ]);
-      const fetchedRecords = (recRes.data as any[]) || [];
-      const fetchedClosers = (closerRes.data as any[]) || [];
-      const fetchedTeams = (teamsRes.data as Team[]) || [];
 
-      setRecords(fetchedRecords);
-      setClosers(fetchedClosers);
-      setTeams(fetchedTeams);
+      if (recordsResult.error) throw recordsResult.error;
+      if (closersResult.error) throw closersResult.error;
+      if (teamsResult.error) throw teamsResult.error;
+      if (rolesResult.error) throw rolesResult.error;
 
-      if (fetchedTeams.length > 0 && !selectedTeamId) {
-        setSelectedTeamId(fetchedTeams[0].id);
-      }
-
-      setLoading(false);
-    };
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [periodMeta.previousStart, filterEnd, today]);
-
-  // Filter records by selected team (ADMIN only)
-  const teamRecords = useMemo(() => {
-    if (!isAdmin || !selectedTeamId) return records;
-    return records.filter(r => r.team_id === selectedTeamId);
-  }, [records, isAdmin, selectedTeamId]);
-
-  const teamClosers = useMemo(() => {
-    if (!isAdmin || !selectedTeamId) return closers;
-    return closers.filter(c => c.team_id === selectedTeamId);
-  }, [closers, isAdmin, selectedTeamId]);
-
-  // Aggregate by date (used by chart/history/delta)
-  const byDate = useMemo(() => {
-    const map = new Map<string, DayAggregate>();
-    teamRecords.forEach((r) => {
-      const e = map.get(r.date) || { cost: 0, revenue: 0, count: 0 };
-      e.cost += Number(r.valor_pago) || 0;
-      e.revenue += Number(r.faturamento) || 0;
-      e.count += 1;
-      map.set(r.date, e);
-    });
-    return map;
-  }, [teamRecords]);
-
-  // Aggregate for selected period + previous comparison
-  const { currentData, previousData, previousDeltaBase } = useMemo(() => {
-    const cur: DayAggregate = { cost: 0, revenue: 0, count: 0 };
-    const prev: DayAggregate = { cost: 0, revenue: 0, count: 0 };
-    byDate.forEach((agg, date) => {
-      if (date >= filterStart && date <= filterEnd) {
-        cur.cost += agg.cost; cur.revenue += agg.revenue; cur.count += agg.count;
-      }
-      if (date >= periodMeta.previousStart && date <= periodMeta.previousEnd) {
-        prev.cost += agg.cost; prev.revenue += agg.revenue; prev.count += agg.count;
-      }
-    });
-
-    // Para presets today/yesterday: deltabase = dia anterior ao "previousLabel"
-    let base: DayAggregate | null = null;
-    if (periodMeta.showDeltaBase) {
-      const baseDate = shiftDateStr(periodMeta.previousStart, -1);
-      base = byDate.get(baseDate) || null;
-    }
-    return { currentData: cur, previousData: prev, previousDeltaBase: base };
-  }, [byDate, filterStart, filterEnd, periodMeta]);
-
-  // Aggregate by closer over current + previous periods
-  const byCloser = useMemo(() => {
-    const map = new Map<string, EmployeeDayData>();
-    teamRecords.forEach((r) => {
-      const inCurrent = r.date >= filterStart && r.date <= filterEnd;
-      const inPrevious = r.date >= periodMeta.previousStart && r.date <= periodMeta.previousEnd;
-      if (!inCurrent && !inPrevious) return;
-      const e = map.get(r.closer_id) || {
-        costCurrent: 0, revCurrent: 0, countCurrent: 0,
-        costPrevious: 0, revPrevious: 0, countPrevious: 0,
+      return {
+        records: (recordsResult.data ?? []) as FinancialRecord[],
+        closers: (closersResult.data ?? []) as Closer[],
+        teams: (teamsResult.data ?? []) as Team[],
+        closerRoles: (rolesResult.data ?? []) as CloserRole[],
       };
-      if (inCurrent) {
-        e.costCurrent += Number(r.valor_pago) || 0;
-        e.revCurrent += Number(r.faturamento) || 0;
-        e.countCurrent += 1;
-      }
-      if (inPrevious) {
-        e.costPrevious += Number(r.valor_pago) || 0;
-        e.revPrevious += Number(r.faturamento) || 0;
-        e.countPrevious += 1;
-      }
-      map.set(r.closer_id, e);
-    });
-    return map;
-  }, [teamRecords, filterStart, filterEnd, periodMeta.previousStart, periodMeta.previousEnd]);
+    },
+  });
 
-  if (loading) {
+  const activeTeamId = selectedTeamId;
+
+  const summaries = useMemo<CloserSummary[]>(() => {
+    if (!data) return [];
+    const closerRoleIds = new Set(data.closerRoles.map((role) => role.user_id));
+    const visibleClosers = data.closers.filter((closer) => (
+      closerRoleIds.has(closer.id)
+      && (!isAdmin || !activeTeamId || closer.team_id === activeTeamId)
+    ));
+    const closerById = new Map(visibleClosers.map((closer) => [closer.id, closer]));
+    const summaryByCloser = new Map<string, CloserSummary>();
+
+    visibleClosers.forEach((closer) => {
+      summaryByCloser.set(closer.id, {
+        closer,
+        yesterdayCost: 0,
+        yesterdayRevenue: 0,
+        yesterdayCount: 0,
+        monthCost: 0,
+        monthRevenue: 0,
+        yesterdayRecords: [],
+      });
+    });
+
+    data.records.forEach((record) => {
+      const closer = closerById.get(record.closer_id);
+      if (!closer) return;
+      const summary = summaryByCloser.get(record.closer_id);
+      if (!summary) return;
+      const cost = Number(record.valor_pago) || 0;
+      const revenue = Number(record.faturamento) || 0;
+
+      if (record.date >= currentMonthStart && record.date <= today) {
+        summary.monthCost += cost;
+        summary.monthRevenue += revenue;
+      }
+      if (record.date === yesterday) {
+        summary.yesterdayCost += cost;
+        summary.yesterdayRevenue += revenue;
+        summary.yesterdayCount += 1;
+        summary.yesterdayRecords.push(record);
+      }
+      summaryByCloser.set(record.closer_id, summary);
+    });
+
+    return Array.from(summaryByCloser.values())
+      .sort((a, b) => (
+        Number(b.yesterdayCount > 0 || b.monthCost > 0 || b.monthRevenue > 0)
+        - Number(a.yesterdayCount > 0 || a.monthCost > 0 || a.monthRevenue > 0)
+        || b.yesterdayCost - a.yesterdayCost
+        || a.closer.nome.localeCompare(b.closer.nome, "pt-BR")
+      ));
+  }, [activeTeamId, currentMonthStart, data, isAdmin, today, yesterday]);
+
+  const totals = useMemo(() => summaries.reduce(
+    (result, summary) => ({
+      yesterdayCost: result.yesterdayCost + summary.yesterdayCost,
+      monthCost: result.monthCost + summary.monthCost,
+      monthRevenue: result.monthRevenue + summary.monthRevenue,
+    }),
+    { yesterdayCost: 0, monthCost: 0, monthRevenue: 0 },
+  ), [summaries]);
+
+  if (isLoading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
-  const financeiroContent = (
-    <>
-      <FinanceiroSummaryCards
-        currentData={currentData}
-        currentLabel={periodMeta.currentLabel}
-        partial={periodMeta.partial}
-        previousData={previousData}
-        previousLabel={periodMeta.previousLabel}
-      />
-
-      <div className="space-y-6 mt-6">
-        <FinanceiroDeltaStrip byDate={byDate} today={today} filterStart={filterStart} filterEnd={filterEnd} />
-        <FinanceiroDetailBlocks
-          currentData={currentData}
-          currentLabel={periodMeta.currentLabel}
-          partial={periodMeta.partial}
-          previousData={previousData}
-          previousLabel={periodMeta.previousLabel}
-          previousDeltaBase={previousDeltaBase}
-          previousDeltaBaseLabel={periodMeta.showDeltaBase ? (preset === "today" ? "anteontem" : "dia anterior") : undefined}
-        />
-        <FinanceiroChart byDate={byDate} today={today} filterStart={filterStart} filterEnd={filterEnd} />
-        <FinanceiroEmployeeSection
-          byCloser={byCloser}
-          closers={teamClosers}
-          onSelectCloser={setSelectedCloser}
-          currentLabel={periodMeta.currentLabel}
-          previousLabel={periodMeta.previousLabel}
-        />
-        <FinanceiroHistory byDate={byDate} today={today} yesterday={yesterday} filterStart={filterStart} filterEnd={filterEnd} />
-        <TeamThermometersSection />
-      </div>
-    </>
-  );
-
   return (
-    <div className="min-h-screen bg-[#F6F4F0]">
+    <div className="min-h-screen bg-background">
       <PageHeader
         eyebrow="Financeiro"
         icon={DollarSign}
-        title="Operação financeira"
-        subtitle="Acompanhe receita, investimento e resultado por closer e por time, com leitura executiva do período."
-        right={
-          <FinanceiroPeriodFilter
-            preset={preset}
-            customStart={customStart}
-            customEnd={customEnd}
-            onPresetChange={setPreset}
-            onCustomRange={(s, e) => { setCustomStart(s); setCustomEnd(e); }}
-          />
-        }
+        title="Fechamento dos closers"
+        subtitle="Gastos de ontem e consolidado de gastos e faturamento do mês atual."
       >
-        {isAdmin && teams.length > 1 && (
-          <div className="flex flex-wrap items-center gap-3">
-            <Tabs value={selectedTeamId} onValueChange={setSelectedTeamId}>
-              <TabsList className={brandTabsListClass + " w-full sm:w-auto overflow-x-auto"}>
-                {teams.map(t => (
-                  <TabsTrigger key={t.id} value={t.id} className={brandTabsTriggerClass}>{t.name}</TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-
-            <Button
-              size="sm"
-              className="h-9 gap-1.5 rounded-full font-semibold bg-amber-500 hover:bg-amber-600 text-white shadow-sm"
-              onClick={() => navigate("/registro?tab=ranking")}
-            >
-              <Trophy className="h-4 w-4" />
-              Ranking
-            </Button>
-          </div>
+        {isAdmin && data && data.teams.length > 1 && (
+          <Tabs
+            value={activeTeamId || "all"}
+            onValueChange={(teamId) => {
+              setSelectedTeamId(teamId === "all" ? "" : teamId);
+              setExpandedCloserId(null);
+            }}
+          >
+            <TabsList className={`${brandTabsListClass} max-w-full overflow-x-auto`}>
+              <TabsTrigger value="all" className={brandTabsTriggerClass}>
+                Todas as equipes
+              </TabsTrigger>
+              {data.teams.map((team) => (
+                <TabsTrigger key={team.id} value={team.id} className={brandTabsTriggerClass}>
+                  {team.name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
         )}
       </PageHeader>
 
-      <div className="container px-4 sm:px-6 lg:px-8 py-6">
-        {financeiroContent}
-      </div>
+      <main className="px-6 pb-12 pt-6 lg:px-8">
+        {error ? (
+          <div className="rounded-2xl border border-destructive/20 bg-card px-6 py-12 text-center text-sm text-destructive">
+            Não foi possível carregar os dados financeiros.
+          </div>
+        ) : (
+          <section className="overflow-hidden rounded-[24px] border border-border bg-card shadow-sm">
+            <div className="grid gap-px border-b border-border bg-border md:grid-cols-3">
+              <Metric label="Gasto de ontem" value={totals.yesterdayCost} />
+              <Metric label="Gasto no mês" value={totals.monthCost} />
+              <Metric label="Faturamento no mês" value={totals.monthRevenue} />
+            </div>
 
-      {/* Employee Detail Drawer */}
-      <Sheet open={!!selectedCloser} onOpenChange={(open) => !open && setSelectedCloser(null)}>
-        <SheetContent className="w-[460px] sm:max-w-[460px] p-0 flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b bg-card">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <User className="h-4 w-4 text-primary" />
+            <div className="flex items-center justify-between gap-4 border-b border-border px-5 py-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Por closer</p>
+                <p className="mt-1 text-sm text-foreground">
+                  Ontem: {new Date(`${yesterday}T12:00:00`).toLocaleDateString("pt-BR")}
+                </p>
               </div>
-              <div className="min-w-0">
-                <h2 className="text-base font-semibold truncate">{selectedCloser?.nome}</h2>
-                <p className="text-xs text-muted-foreground">Detalhamento financeiro</p>
+              <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-xs text-muted-foreground">
+                <Users className="h-3.5 w-3.5" />
+                {summaries.length} closers
               </div>
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setSelectedCloser(null)}>
-              <X className="h-4 w-4" />
-              <span className="sr-only">Fechar</span>
-            </Button>
-          </div>
 
-          {selectedCloser && (() => {
-            const empData = byCloser.get(selectedCloser.id);
-            if (!empData) return null;
-            const items = [
-              { label: `Custo ${periodMeta.currentLabel}`, value: empData.costCurrent },
-              { label: `Fat. ${periodMeta.previousLabel}`, value: empData.revPrevious },
-              { label: `Custo ${periodMeta.previousLabel}`, value: empData.costPrevious },
-            ];
-            return (
-              <div className="grid grid-cols-3 gap-px bg-border/40">
-                {items.map((item) => (
-                  <div key={item.label} className="bg-card px-3 py-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{item.label}</p>
-                    <p className="text-sm font-semibold tabular-nums">
-                      {item.value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            );
-          })()}
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[820px] border-collapse">
+                <thead>
+                  <tr className="border-b border-border bg-muted/50 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    <th className="px-5 py-3">Closer</th>
+                    <th className="px-5 py-3 text-right">Gasto de ontem</th>
+                    <th className="px-5 py-3 text-right">Fat. de ontem</th>
+                    <th className="px-5 py-3 text-right">Lançamentos</th>
+                    <th className="px-5 py-3 text-right">Gasto no mês</th>
+                    <th className="px-5 py-3 text-right">Fat. no mês</th>
+                    <th className="w-12 px-3 py-3" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {summaries.map((summary) => {
+                    const expanded = expandedCloserId === summary.closer.id;
+                    return (
+                      <Fragment key={summary.closer.id}>
+                        <tr
+                          className="cursor-pointer border-b border-border transition-colors hover:bg-muted/40"
+                          onClick={() => setExpandedCloserId(expanded ? null : summary.closer.id)}
+                        >
+                          <td className="px-5 py-4 text-sm font-semibold text-foreground">{summary.closer.nome}</td>
+                          <MoneyCell value={summary.yesterdayCost} emphasis />
+                          <MoneyCell value={summary.yesterdayRevenue} />
+                          <td className="px-5 py-4 text-right text-sm tabular-nums text-muted-foreground">{summary.yesterdayCount}</td>
+                          <MoneyCell value={summary.monthCost} />
+                          <MoneyCell value={summary.monthRevenue} positive />
+                          <td className="px-3 py-4 text-muted-foreground">
+                            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                          </td>
+                        </tr>
+                        {expanded && (
+                          <tr key={`${summary.closer.id}-detail`} className="border-b border-border bg-muted/25">
+                            <td colSpan={7} className="px-5 py-4">
+                              <CloserDayDetail records={summary.yesterdayRecords} />
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                  {summaries.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-16 text-center text-sm text-muted-foreground">
+                        Nenhum lançamento financeiro encontrado neste mês.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+      </main>
+    </div>
+  );
+}
 
-          <div className="flex-1 overflow-y-auto px-5 py-4">
-            {selectedCloser && <FinanceiroEmployeeDrawerContent closerId={selectedCloser.id} />}
+function Metric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="bg-card px-6 py-5">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
+      <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground tabular-nums">{formatBRL(value)}</p>
+    </div>
+  );
+}
+
+function MoneyCell({ value, emphasis = false, positive = false }: { value: number; emphasis?: boolean; positive?: boolean }) {
+  return (
+    <td className={`px-5 py-4 text-right text-sm tabular-nums ${emphasis ? "font-semibold text-foreground" : positive ? "font-semibold text-primary" : "text-foreground"}`}>
+      {formatBRL(value)}
+    </td>
+  );
+}
+
+function CloserDayDetail({ records }: { records: FinancialRecord[] }) {
+  if (records.length === 0) {
+    return <p className="py-3 text-center text-sm text-muted-foreground">Este closer não teve gastos ontem.</p>;
+  }
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="grid grid-cols-[1fr_150px_150px] border-b border-border bg-muted/50 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        <span>Influenciador</span>
+        <span className="text-right">Gasto</span>
+        <span className="text-right">Faturamento</span>
+      </div>
+      {records
+        .slice()
+        .sort((a, b) => (Number(b.valor_pago) || 0) - (Number(a.valor_pago) || 0))
+        .map((record) => (
+          <div key={record.id} className="grid grid-cols-[1fr_150px_150px] border-b border-border px-4 py-2.5 text-sm last:border-0">
+            <span className="font-medium text-foreground">{record.influencers?.handle ?? "Influenciador não identificado"}</span>
+            <span className="text-right tabular-nums text-foreground">{formatBRL(Number(record.valor_pago) || 0)}</span>
+            <span className="text-right tabular-nums text-muted-foreground">{formatBRL(Number(record.faturamento) || 0)}</span>
           </div>
-        </SheetContent>
-      </Sheet>
+        ))}
     </div>
   );
 }

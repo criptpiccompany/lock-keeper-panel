@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart3, FileText, LayoutGrid, ListChecks, Loader2, User, Users } from "lucide-react";
-import PlanilhamentoCalendarWorkspace from "@/components/planilhamento/PlanilhamentoCalendarWorkspace";
+import PlanilhaBeta from "@/components/planilhamento/PlanilhaBeta";
 import Balanco from "@/components/planilhamento/Balanco";
 import ListaDoMes from "@/components/planilhamento/ListaDoMes";
 
@@ -9,7 +9,7 @@ interface Closer { id: string; nome: string; team_id: string | null }
 interface Team { id: string; name: string }
 
 const subTabs = [
-  { id: "diario", label: "Planilhamento Diário", icon: FileText },
+  { id: "diario", label: "Diário", icon: FileText },
   { id: "balanco", label: "Balanço", icon: BarChart3 },
   { id: "lista-mes", label: "Lista do Mês", icon: ListChecks },
 ] as const;
@@ -154,7 +154,14 @@ export default function FinanceiroEspelhamento() {
           </div>
 
           <div>
-            {subTab === "diario" && <PlanilhamentoCalendarWorkspace key={`diario-${closerId}`} closerId={closerId} />}
+            {subTab === "diario" && (
+              <PlanilhaBeta
+                key={`diario-${closerId}`}
+                closerId={closerId}
+                closerName={selectedCloser?.nome}
+                closerTeamId={selectedCloser?.team_id}
+              />
+            )}
             {subTab === "balanco" && <Balanco key={`balanco-${closerId}`} closerId={closerId} />}
             {subTab === "lista-mes" && <ListaDoMes key={`lista-${closerId}`} closerId={closerId} />}
           </div>
